@@ -1,0 +1,48 @@
+﻿@page
+@model WikiWikiWorld.Web.Pages.Article.CreateModel
+@{
+	ViewData["Title"] = "Create New Article";
+}
+<article>
+	<h1 class="title">Create a New Article</h1>
+	@if (!User.Identity?.IsAuthenticated ?? true)
+	{
+		<div class="alert alert-danger">
+			You must be logged in to create an article. <a href="/login">Login here</a>.
+		</div>
+	}
+	else
+	{
+		@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+		{
+			<div class="alert alert-danger">@Model.ErrorMessage</div>
+		}
+		<form method="post" enctype="multipart/form-data">
+			<div>
+				<label for="Title">Title:</label>
+				<input type="text" id="Title" asp-for="Title" required />
+			</div>
+			<div>
+				<label for="DisplayTitle">Display Title:</label>
+				<textarea id="DisplayTitle" asp-for="DisplayTitle" rows="3"></textarea>
+			</div>
+			<div>
+				<label for="UrlSlug">URL Slug:</label>
+				<input type="text" id="UrlSlug" asp-for="UrlSlug" required />
+			</div>
+			<div>
+				<label for="SelectedType">Article Type:</label>
+				<select id="SelectedType" asp-for="SelectedType" asp-items="@(new SelectList(Model.AvailableArticleTypes))"></select>
+			</div>
+			<div>
+				<label for="UploadedFile">File (optional):</label>
+				<input type="file" id="UploadedFile" asp-for="UploadedFile" />
+			</div>
+			<div>
+				<label for="ArticleText">Content:</label>
+				<textarea id="ArticleText" asp-for="ArticleText" rows="20" required></textarea>
+			</div>
+			<button type="submit">Create Article</button>
+		</form>
+	}
+</article>

@@ -1,0 +1,52 @@
+﻿@page
+@model ArticleHistoryModel
+@using WikiWikiWorld.Data.Models
+@{
+	ViewData["Title"] = "Article Revision History";
+}
+
+<article>
+
+	<h1 class="title">Revision History for "@Model.UrlSlug"</h1>
+
+	@if (Model.ArticleRevisions.Count > 0)
+	{
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Revision Date</th>
+				</tr>
+			</thead>
+			<tbody>
+				@{
+					bool IsFirstRow = true;
+				}
+				@foreach (ArticleRevision Revision in Model.ArticleRevisions)
+				{
+					string RevisionTimestamp = ArticleHistoryModel.FormatRevisionTimestamp(Revision.DateCreated);
+					string RevisionUrl = $"/{Model.UrlSlug}/revision/{RevisionTimestamp}";
+					string RevisionDateFormatted = Revision.DateCreated.ToString("dd MMMM yyyy HH:mm");
+
+					<tr>
+						<td>@Revision.Title</td>
+						<td>
+							<a href="@RevisionUrl">
+								@RevisionDateFormatted
+							</a>
+							@if (IsFirstRow)
+							{
+								<text> (current)</text>
+								IsFirstRow = false; // Ensure only the first row gets "(current)"
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+	else
+	{
+		<p>No revisions found for this article.</p>
+	}
+</article>

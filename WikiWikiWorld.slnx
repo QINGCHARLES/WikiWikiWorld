@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WikiWikiWorld.Data/WikiWikiWorld.Data.csproj" />
+    <Project Path="src/WikiWikiWorld.Database/WikiWikiWorld.Database.csproj" />
+    <Project Path="src/WikiWikiWorld.Web/WikiWikiWorld.Web.csproj" />
+  </Folder>
+</Solution>

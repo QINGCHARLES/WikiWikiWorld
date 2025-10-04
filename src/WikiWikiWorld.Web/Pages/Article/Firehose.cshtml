@@ -1,0 +1,68 @@
+﻿@page
+@model WikiWikiWorld.Web.Pages.Article.FirehoseModel
+@{
+	ViewData["Title"] = "Recent Article Revisions";
+}
+
+<figure>
+	<h1 class="title">Firehose</h1>
+</figure>
+
+<article>
+
+	@if (!Model.RecentRevisions.Any())
+	{
+		<p>No recent revisions found.</p>
+	}
+	else
+	{
+		<p>
+			<table>
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Edited By</th>
+						<th>Revision Date</th>
+						<th>Reason</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (WikiWikiWorld.Data.Models.ArticleRevision Revision in Model.RecentRevisions)
+					{
+						string RevisionTimestamp = Revision.DateCreated.ToString("yyyyMMddHHmmssfffffff");
+
+						<tr>
+							<td>
+								@if (Revision.Type == WikiWikiWorld.Data.Models.ArticleType.File)
+								{
+									<a href="/file:@Revision.UrlSlug">@Revision.Title</a>
+								}
+								else
+								{
+									<a href="/@Revision.UrlSlug">@Revision.Title</a>
+								}
+							</td>
+
+							<td>
+								@if (Model.Users.TryGetValue(Revision.CreatedByUserId, out WikiWikiWorld.Data.Models.User? User))
+								{
+									<a href="/@@@User.UserName">@User.UserName</a>
+								}
+								else
+								{
+									<span>Unknown</span>
+								}
+							</td>
+							<td>
+								<a href="/@Revision.UrlSlug/revision/@RevisionTimestamp">
+									@Revision.DateCreated.ToString("dd MMM yyyy HH:mm")
+								</a>
+							</td>
+							<td>@Revision.RevisionReason</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</p>
+	}
+</article>

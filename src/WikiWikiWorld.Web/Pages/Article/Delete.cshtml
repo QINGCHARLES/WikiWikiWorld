@@ -1,0 +1,34 @@
+﻿@page
+@model WikiWikiWorld.Web.Pages.Article.DeleteModel
+@{
+	ViewData["Title"] = "Delete Article";
+}
+
+<article>
+	<h1 class="title">Delete Article</h1>
+
+	@if (!User.Identity?.IsAuthenticated ?? true)
+	{
+		<div class="alert alert-danger">
+			You must be logged in to delete articles. <a href="/login">Login here</a>.
+		</div>
+	}
+	else
+	{
+		@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+		{
+			<div class="alert alert-danger">@Model.ErrorMessage</div>
+		}
+
+		<div class="alert alert-warning">
+			<strong>Are you sure you want to delete this article?</strong><br>
+			This will remove it from public view but can be restored later.
+		</div>
+
+		<form method="post">
+			<input type="hidden" asp-for="UrlSlug" />
+			<button type="submit" class="btn btn-danger">Yes, Delete</button>
+			<a href="/@Model.UrlSlug/edit" class="btn btn-secondary">Cancel</a>
+		</form>
+	}
+</article>
