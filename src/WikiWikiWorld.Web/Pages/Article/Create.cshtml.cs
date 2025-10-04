@@ -99,8 +99,8 @@ public sealed class CreateModel(
 				string FileExtension = Path.GetExtension(OriginalFileName);
 				string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
 
-				// Create site files directory if it doesn't exist
-				string SiteFilesDirectory = Path.Combine(WebHostEnvironment.WebRootPath, "sitefiles", SiteId.ToString());
+				// Create site files images directory if it doesn't exist
+				string SiteFilesDirectory = Path.Combine(WebHostEnvironment.WebRootPath, "sitefiles", SiteId.ToString(), "images");
 				Directory.CreateDirectory(SiteFilesDirectory);
 
 				// Save the file to the file system
