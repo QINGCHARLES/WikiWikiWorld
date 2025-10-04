@@ -18,32 +18,37 @@ WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
 
 Builder.Host.UseSystemd();
 
-Builder.WebHost.ConfigureKestrel(Options =>
+// Only configure Kestrel manually for development
+// In production, use appsettings.Production.json configuration
+if (Builder.Environment.IsDevelopment())
 {
-	Options.ListenAnyIP(7126, ListenOptions =>
+	Builder.WebHost.ConfigureKestrel(Options =>
 	{
-		// Use the development certificate for subdomain support
-		using System.Security.Cryptography.X509Certificates.X509Store CertStore = new(
-			System.Security.Cryptography.X509Certificates.StoreName.My,
-			System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser);
-		CertStore.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
-		
-		System.Security.Cryptography.X509Certificates.X509Certificate2Collection Certs = CertStore.Certificates.Find(
-			System.Security.Cryptography.X509Certificates.X509FindType.FindBySubjectName,
-			"en.localhost",
-			validOnly: false);
-		
-		if (Certs.Count > 0)
+		Options.ListenAnyIP(7126, ListenOptions =>
 		{
-			ListenOptions.UseHttps(Certs[0]);
-		}
-		else
-		{
-			ListenOptions.UseHttps(); // Fall back to default cert
-		}
+			// Use the development certificate for subdomain support
+			using System.Security.Cryptography.X509Certificates.X509Store CertStore = new(
+				System.Security.Cryptography.X509Certificates.StoreName.My,
+				System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser);
+			CertStore.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
+			
+			System.Security.Cryptography.X509Certificates.X509Certificate2Collection Certs = CertStore.Certificates.Find(
+				System.Security.Cryptography.X509Certificates.X509FindType.FindBySubjectName,
+				"en.localhost",
+				validOnly: false);
+			
+			if (Certs.Count > 0)
+			{
+				ListenOptions.UseHttps(Certs[0]);
+			}
+			else
+			{
+				ListenOptions.UseHttps(); // Fall back to default cert
+			}
+		});
+		Options.ListenAnyIP(5097); // ✅ HTTP
 	});
-	Options.ListenAnyIP(5097); // ✅ HTTP
-});
+}
 
 Builder.Services.Configure<SiteConfiguration>(Builder.Configuration.GetSection("SiteConfiguration"));
 
