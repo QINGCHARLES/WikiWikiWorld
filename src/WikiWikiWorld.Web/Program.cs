@@ -58,8 +58,13 @@ Builder.Services.AddMemoryCache();
 // ✅ Register Database Connection Factory
 ConnectionOptions ConnectionOptions = new();
 DatabaseConnectionFactory ConnectionFactory = new(ConnectionOptions);
-// Database is in the workspace root's data folder, not the Web project's folder
-string DatabasePath = Path.Combine(Builder.Environment.ContentRootPath, "..", "..", "data", "WikiWikiWorld.db");
+
+// In development, database is in workspace root's data folder
+// In production, database is in the same directory as the published app
+string DatabasePath = Builder.Environment.IsDevelopment()
+	? Path.Combine(Builder.Environment.ContentRootPath, "..", "..", "data", "WikiWikiWorld.db")
+	: Path.Combine(Builder.Environment.ContentRootPath, "WikiWikiWorld.db");
+
 await ConnectionFactory.InitializeAsync(DatabasePath);
 Builder.Services.AddSingleton<IDatabaseConnectionFactory>(ConnectionFactory);
 
