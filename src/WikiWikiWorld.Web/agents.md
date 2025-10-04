@@ -10,7 +10,7 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Tabs for indentation; opening brace on its own line.
 * Nullability **enabled**; treat warnings as errors.
 * Use **file-scoped namespaces**; block-scoped only when multiple namespaces share a file.
-* Embrace modern C# (12–14): primary constructors, collection expressions `[]`, pattern matching, `new(y, m, d)`, expression-bodied members when clearer.
+* Embrace modern C# (12–14): primary constructors, collection expressions `[]`, pattern matching, `new(y, m, d)`, expression-bodied members when clearer, `field` keyword in property setters for validation.
   * **Collection expressions:** Use `[]` / `[..]` when target type is known
     * `new[] { '{' }` → `['{']` (with target like `char[]`)
     * `new()` → `[]` for empty collections (`List<Article> Articles = [];`)
@@ -26,7 +26,12 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
   * **When NOT to use `[..]`: Keep LINQ when explicit typing harms readability, or for special behavior (`ToHashSet(CustomComparer)`, `ToDictionary` with projections)
   * **Immutability:** Prefer `IReadOnlyList<T>` for return types; consider `ImmutableArray<T>`/`FrozenSet<T>`/`FrozenDictionary<TKey, TValue>` for hot paths
 * Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate.
-* Use `ReadOnlySpan<T>`/`Span<T>` where it helps without hurting clarity.
+* Use `ReadOnlySpan<T>`/`Span<T>` where it helps without hurting clarity. Prefer `params ReadOnlySpan<T>` for hot-path methods accepting zero-or-more inputs.
+* **Threading:** Use `System.Threading.Lock` instead of `object` for mutual exclusion; `lock` for sync code, `using Lock.EnterScope()` for async.
+* **Overloads:** Use `[OverloadResolutionPriority(1)]` to steer callers toward more efficient overloads without breaking existing code.
+* **Null-conditional assignment:** Permit `Target?.Member = Value;` when clearer than explicit `if`.
+* **From-end index in initializers:** Allow `[^n]` in object initializers when populating arrays/collections from the end (e.g., reverse-order rankings, tail-biased buffers). Use sparingly; comment intent.
+* **`\e` escape:** Prefer `"\e"` over `"\x1b"` for ANSI escape sequences.
 * Front end: vanilla CSS & JS; must be responsive. JS may use `!!` for concise booleans.
 * Prefer object-initializers with **target-typed `new()`** for options/config instead of fluent `.SetXxx()` chains.
 * Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
@@ -53,6 +58,7 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 
 * Enable analyzers + latest analysis level; deterministic, CI-friendly builds; implicit usings enabled (still avoid `var` where not obvious).
 * Suggested `Directory.Build.props` keys: `TargetFramework=net9.0`, `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnableNETAnalyzers=true`, `AnalysisLevel=latest`, `Deterministic=true`, `ContinuousIntegrationBuild=true`, `ImplicitUsings=enable`.
+* **Language version:** .NET 9 ⇒ C# 13 (default); .NET 10 ⇒ C# 14 (default). Only set `<LangVersion>` for preview features.
 
 ## Razor Pages specifics
 
