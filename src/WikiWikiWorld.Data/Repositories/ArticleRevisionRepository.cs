@@ -60,6 +60,12 @@ public interface IArticleRevisionRepository
 		int SiteId,
 		string Culture,
 		CancellationToken CancellationToken = default);
+
+	Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithMagazineInfoboxAsync(
+		int SiteId,
+		string Culture,
+		int Limit = 100,
+		CancellationToken CancellationToken = default);
 }
 
 public sealed class ArticleRevisionRepository : IArticleRevisionRepository
@@ -367,6 +373,35 @@ ORDER BY DateCreated DESC;";
 				cancellationToken: CancellationToken);
 
 			IEnumerable<ArticleSitemapEntry> Articles = await Connection.QueryAsync<ArticleSitemapEntry>(Command).ConfigureAwait(false);
+			return [.. Articles];
+		}, CancellationToken).ConfigureAwait(false);
+	}
+
+	public async Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithMagazineInfoboxAsync(
+		int SiteId,
+		string Culture,
+		int Limit = 100,
+		CancellationToken CancellationToken = default)
+	{
+		const string Query = @"
+SELECT *
+FROM ArticleRevisions
+WHERE SiteId = @SiteId
+  AND Culture = @Culture
+  AND IsCurrent = 1
+  AND DateDeleted IS NULL
+  AND Text LIKE '%{{MagazineInfobox%CoverImage=%'
+ORDER BY DateCreated DESC
+LIMIT @Limit;";
+
+		return await ConnectionFactory.ExecuteWithRetryAsync<IReadOnlyList<ArticleRevision>>(ConnectionMode.Read, async Connection =>
+		{
+			CommandDefinition Command = new(
+				Query,
+				new { SiteId, Culture, Limit },
+				cancellationToken: CancellationToken);
+
+			IEnumerable<ArticleRevision> Articles = await Connection.QueryAsync<ArticleRevision>(Command).ConfigureAwait(false);
 			return [.. Articles];
 		}, CancellationToken).ConfigureAwait(false);
 	}
