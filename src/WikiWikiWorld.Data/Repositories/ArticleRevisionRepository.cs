@@ -61,7 +61,7 @@ public interface IArticleRevisionRepository
 		string Culture,
 		CancellationToken CancellationToken = default);
 
-	Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithMagazineInfoboxAsync(
+	Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithPublicationIssueInfoboxAsync(
 		int SiteId,
 		string Culture,
 		int Limit = 100,
@@ -377,7 +377,7 @@ ORDER BY DateCreated DESC;";
 		}, CancellationToken).ConfigureAwait(false);
 	}
 
-	public async Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithMagazineInfoboxAsync(
+	public async Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithPublicationIssueInfoboxAsync(
 		int SiteId,
 		string Culture,
 		int Limit = 100,
@@ -390,7 +390,7 @@ WHERE SiteId = @SiteId
   AND Culture = @Culture
   AND IsCurrent = 1
   AND DateDeleted IS NULL
-  AND Text LIKE '%{{MagazineInfobox%CoverImage=%'
+  AND Text LIKE '%{{PublicationIssueInfobox%CoverImage=%'
 ORDER BY DateCreated DESC
 LIMIT @Limit;";
 

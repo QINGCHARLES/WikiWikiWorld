@@ -111,8 +111,8 @@ public class CoverGridRenderer(int SiteId, string Culture, IArticleRevisionRepos
 				continue;
 			}
 
-			// Check if the article text contains a MagazineInfobox
-			if (!Article.Text.Contains("{{MagazineInfobox", StringComparison.OrdinalIgnoreCase))
+			// Check if the article text contains a PublicationIssueInfobox
+			if (!Article.Text.Contains("{{PublicationIssueInfobox", StringComparison.OrdinalIgnoreCase))
 			{
 				// Add a missing image placeholder
 				CoverImages.Add(($"/sitefiles/{SiteId}/cover-missing.png", Article.Title, UrlSlug));
@@ -164,7 +164,7 @@ public class CoverGridRenderer(int SiteId, string Culture, IArticleRevisionRepos
 	private string? ExtractCoverImageFromInfobox(string Text)
 	{
 		// Find the start of the infobox
-		int Start = Text.IndexOf("{{MagazineInfobox", StringComparison.OrdinalIgnoreCase);
+		int Start = Text.IndexOf("{{PublicationIssueInfobox", StringComparison.OrdinalIgnoreCase);
 		if (Start == -1)
 		{
 			return null;

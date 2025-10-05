@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Markdig;
 using Markdig.Helpers;
 using Markdig.Parsers;
@@ -8,18 +8,18 @@ using Markdig.Syntax;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
-public class MagazineInfoboxBlock(BlockParser Parser) : LeafBlock(Parser)
+public class PublicationIssueInfoboxBlock(BlockParser Parser) : LeafBlock(Parser)
 {
 	public StringBuilder RawContent { get; } = new();
 	public Dictionary<string, List<string>> Properties { get; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
-public class MagazineInfoboxBlockParser : BlockParser
+public class PublicationIssueInfoboxBlockParser : BlockParser
 {
-	private const string MarkerStart = "{{MagazineInfobox";
+	private const string MarkerStart = "{{PublicationIssueInfobox";
 	private const string MarkerEnd = "}}";
 
-	public MagazineInfoboxBlockParser() => OpeningCharacters = ['{'];
+	public PublicationIssueInfoboxBlockParser() => OpeningCharacters = ['{'];
 
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
@@ -29,7 +29,7 @@ public class MagazineInfoboxBlockParser : BlockParser
 			return BlockState.None;
 		}
 
-		MagazineInfoboxBlock MagazineBlock = new(this)
+		PublicationIssueInfoboxBlock IssueBlock = new(this)
 		{
 			Line = Processor.LineIndex,
 			Column = Processor.Column
@@ -42,14 +42,14 @@ public class MagazineInfoboxBlockParser : BlockParser
 			int EndPos = Remaining.IndexOf(MarkerEnd, StringComparison.Ordinal);
 			if (EndPos != -1)
 			{
-				MagazineBlock.RawContent.AppendLine(Remaining[..EndPos]);
-				Processor.NewBlocks.Push(MagazineBlock);
+				IssueBlock.RawContent.AppendLine(Remaining[..EndPos]);
+				Processor.NewBlocks.Push(IssueBlock);
 				return BlockState.Break;
 			}
-			MagazineBlock.RawContent.AppendLine(Remaining);
+			IssueBlock.RawContent.AppendLine(Remaining);
 		}
 
-		Processor.NewBlocks.Push(MagazineBlock);
+		Processor.NewBlocks.Push(IssueBlock);
 		return BlockState.Continue;
 	}
 
@@ -58,19 +58,19 @@ public class MagazineInfoboxBlockParser : BlockParser
 		StringSlice Slice = Processor.Line;
 		string Line = Slice.ToString();
 		int EndPos = Line.IndexOf(MarkerEnd, StringComparison.Ordinal);
-		MagazineInfoboxBlock MagazineBlock = CurrentBlock as MagazineInfoboxBlock ?? throw new InvalidOperationException("Block is not a MagazineInfoboxBlock.");
+		PublicationIssueInfoboxBlock IssueBlock = CurrentBlock as PublicationIssueInfoboxBlock ?? throw new InvalidOperationException("Block is not a PublicationIssueInfoboxBlock.");
 
 		if (EndPos != -1)
 		{
-			MagazineBlock.RawContent.AppendLine(Line[..EndPos]);
+			IssueBlock.RawContent.AppendLine(Line[..EndPos]);
 			return BlockState.Break;
 		}
-		MagazineBlock.RawContent.AppendLine(Line);
+		IssueBlock.RawContent.AppendLine(Line);
 		return BlockState.Continue;
 	}
 }
 
-public class MagazineInfoboxRenderer(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository) : HtmlObjectRenderer<MagazineInfoboxBlock>
+public class PublicationIssueInfoboxRenderer(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository) : HtmlObjectRenderer<PublicationIssueInfoboxBlock>
 {
 	// Default number of slides in the standard CSS
 	private const int MaxSlides = 3;
@@ -78,7 +78,7 @@ public class MagazineInfoboxRenderer(int SiteId, string Culture, IArticleRevisio
 	// Maximum number of slides we'll support with inline CSS
 	private const int MaxTotalSlides = 10;
 
-	protected override void Write(HtmlRenderer Renderer, MagazineInfoboxBlock Block)
+	protected override void Write(HtmlRenderer Renderer, PublicationIssueInfoboxBlock Block)
 	{
 		ArgumentNullException.ThrowIfNull(Renderer);
 		ArgumentNullException.ThrowIfNull(Block);
@@ -148,7 +148,7 @@ public class MagazineInfoboxRenderer(int SiteId, string Culture, IArticleRevisio
 				}
 
 				string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
-				Images.Add((ImageUrl, Article.Title ?? "Magazine Cover"));
+				Images.Add((ImageUrl, Article.Title ?? "Publication Cover"));
 			}
 
 			// If there's only one image, render it directly
@@ -305,22 +305,22 @@ public class MagazineInfoboxRenderer(int SiteId, string Culture, IArticleRevisio
 	};
 }
 
-public class MagazineInfoboxExtension(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository) : IMarkdownExtension
+public class PublicationIssueInfoboxExtension(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository) : IMarkdownExtension
 {
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
-		if (!Pipeline.BlockParsers.Contains<MagazineInfoboxBlockParser>())
+		if (!Pipeline.BlockParsers.Contains<PublicationIssueInfoboxBlockParser>())
 		{
-			Pipeline.BlockParsers.Insert(0, new MagazineInfoboxBlockParser());
+			Pipeline.BlockParsers.Insert(0, new PublicationIssueInfoboxBlockParser());
 		}
 	}
 
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
 		if (Renderer is HtmlRenderer HtmlRenderer &&
-			!HtmlRenderer.ObjectRenderers.Any(R => R is MagazineInfoboxRenderer))
+			!HtmlRenderer.ObjectRenderers.Any(R => R is PublicationIssueInfoboxRenderer))
 		{
-			HtmlRenderer.ObjectRenderers.Add(new MagazineInfoboxRenderer(SiteId, Culture, ArticleRepository, FileRepository));
+			HtmlRenderer.ObjectRenderers.Add(new PublicationIssueInfoboxRenderer(SiteId, Culture, ArticleRepository, FileRepository));
 		}
 	}
 }

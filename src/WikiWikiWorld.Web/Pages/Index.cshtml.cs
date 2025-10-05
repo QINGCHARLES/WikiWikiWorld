@@ -9,9 +9,9 @@ public sealed class IndexModel(
 
 	public async Task OnGetAsync()
 	{
-		// Fetch the latest articles with magazine infoboxes (ordered by DateCreated DESC)
+		// Fetch the latest articles with publication issue infoboxes (ordered by DateCreated DESC)
 		IReadOnlyList<ArticleRevision> Articles = await ArticleRevisionRepository
-			.GetLatestArticlesWithMagazineInfoboxAsync(SiteId, Culture, 50);
+			.GetLatestArticlesWithPublicationIssueInfoboxAsync(SiteId, Culture, 50);
 
 		// Extract cover images for each article, preserving the date order
 		foreach (ArticleRevision Article in Articles)
@@ -53,7 +53,7 @@ public sealed class IndexModel(
 	private static string? ExtractCoverImageFromInfobox(string Text)
 	{
 		// Find the start of the infobox
-		int Start = Text.IndexOf("{{MagazineInfobox", StringComparison.OrdinalIgnoreCase);
+		int Start = Text.IndexOf("{{PublicationIssueInfobox", StringComparison.OrdinalIgnoreCase);
 		if (Start == -1)
 		{
 			return null;

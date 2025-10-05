@@ -85,7 +85,7 @@ public sealed class ViewModel(
 		CitationsExtension CitationsExtension = new(Citations);
 		CitationExtension CitationExtension = new(Citations);
 
-		MagazineInfoboxExtension MagazineInfoboxExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
+		PublicationIssueInfoboxExtension PublicationIssueInfoboxExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
 		CoverGridExtension CoverGridExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
 
 		MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
@@ -99,7 +99,7 @@ public sealed class ViewModel(
 							.Use(FootnoteExtension)
 							.Use(CitationsExtension)
 							.Use(CitationExtension)
-							.Use(MagazineInfoboxExtension)
+							.Use(PublicationIssueInfoboxExtension)
 							.Use(CoverGridExtension)
 							.Use(DownloadsBoxExtension)
 							.Use(PullQuoteExtension)
