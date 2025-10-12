@@ -35,6 +35,8 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Front end: vanilla CSS & JS; must be responsive. JS may use `!!` for concise booleans.
 * Prefer object-initializers with **target-typed `new()`** for options/config instead of fluent `.SetXxx()` chains.
 * Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
+* Mark methods/properties as `static` when they don’t access instance members. Prefer static helpers where feasible.
+* Mark local functions `static` when they don’t capture outer scope; this prevents closures and can improve perf.
 
 ## Using directives management
 

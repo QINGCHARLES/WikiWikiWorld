@@ -1,42 +1,81 @@
-﻿using System.Text;
+﻿#nullable enable
+
+using System.Text;
 using AngleSharp;
 using AngleSharp.Html.Parser;
-using AngleSharp.Html;
 
 namespace WikiWikiWorld.Web;
 
-public class HtmlPrettifyMiddleware(RequestDelegate Next)
+public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
 {
 	public async Task Invoke(HttpContext Context)
 	{
-		// Capture original response stream
 		Stream OriginalBodyStream = Context.Response.Body;
-		using MemoryStream NewBodyStream = new();
-		Context.Response.Body = NewBodyStream;
+		using MemoryStream CaptureStream = new();
+		Context.Response.Body = CaptureStream;
 
-		await Next(Context); // Execute request pipeline
-
-		// Ensure we have the full response
-		NewBodyStream.Seek(0, SeekOrigin.Begin);
-		using StreamReader StreamReader = new(NewBodyStream);
-		string RawHtml = await StreamReader.ReadToEndAsync();
-
-		// Check if it's an HTML response AFTER processing
-		if (Context.Response.Headers.TryGetValue("Content-Type", out Microsoft.Extensions.Primitives.StringValues ContentType) &&
-			ContentType.ToString().Contains("text/html", StringComparison.OrdinalIgnoreCase))
+		try
 		{
+			await Next(Context);
+
+			if (!IsHtmlResponse(Context.Response))
+			{
+				CaptureStream.Seek(0, SeekOrigin.Begin);
+				await CaptureStream.CopyToAsync(OriginalBodyStream, Context.RequestAborted);
+				return;
+			}
+
+			CaptureStream.Seek(0, SeekOrigin.Begin);
+
+			Encoding SelectedEncoding = GetEncoding(Context.Response.ContentType) ?? Encoding.UTF8;
+			using StreamReader Reader = new(CaptureStream, SelectedEncoding, true, 1024, leaveOpen: true);
+			string RawHtml = await Reader.ReadToEndAsync(Context.RequestAborted);
+
 			string FormattedHtml = await PrettifyHtmlAsync(RawHtml);
 
-			byte[] ResponseBytes = Encoding.UTF8.GetBytes(FormattedHtml);
+			// Let the server decide framing (chunked/compressed). Avoid mismatched Content-Length.
+			Context.Response.Headers.ContentLength = null;
 			Context.Response.Body = OriginalBodyStream;
-			Context.Response.ContentLength = ResponseBytes.Length;
-			await Context.Response.Body.WriteAsync(ResponseBytes.AsMemory(), Context.RequestAborted);
+
+			byte[] ResponseBytes = SelectedEncoding.GetBytes(FormattedHtml);
+			await Context.Response.Body.WriteAsync(ResponseBytes, Context.RequestAborted);
 		}
-		else
+		finally
 		{
-			// If not HTML, return the original content
-			NewBodyStream.Seek(0, SeekOrigin.Begin);
-			await NewBodyStream.CopyToAsync(OriginalBodyStream);
+			// Ensure Body is always restored even on exceptions / non-HTML paths
+			Context.Response.Body = OriginalBodyStream;
+		}
+	}
+
+	private static bool IsHtmlResponse(HttpResponse Response)
+	{
+		string? ContentType = Response.ContentType;
+		return !string.IsNullOrWhiteSpace(ContentType)
+			&& ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static Encoding? GetEncoding(string? ContentType)
+	{
+		if (string.IsNullOrWhiteSpace(ContentType))
+		{
+			return null;
+		}
+
+		int Index = ContentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase);
+		if (Index < 0)
+		{
+			return null;
+		}
+
+		string Charset = ContentType[(Index + "charset=".Length)..].Trim().Trim(';').Trim();
+
+		try
+		{
+			return Encoding.GetEncoding(Charset);
+		}
+		catch (ArgumentException)
+		{
+			return null;
 		}
 	}
 
@@ -44,10 +83,20 @@ public class HtmlPrettifyMiddleware(RequestDelegate Next)
 	{
 		HtmlParser Parser = new();
 		AngleSharp.Dom.IDocument Document = await Parser.ParseDocumentAsync(Html);
-		return Document.ToHtml(new PrettyMarkupFormatter
+
+		InlineAwarePrettyFormatter Formatter = new()
 		{
 			Indentation = "\t",
 			NewLine = "\n"
-		});
+		};
+
+		// No NormalizeDocument, no regex hacks needed
+		return Document.ToHtml(Formatter);
 	}
+}
+
+public static class HtmlPrettifyMiddlewareExtensions
+{
+	public static IApplicationBuilder UseHtmlPrettify(this IApplicationBuilder ApplicationBuilder) =>
+		ApplicationBuilder.UseMiddleware<HtmlPrettifyMiddleware>();
 }

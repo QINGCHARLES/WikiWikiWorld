@@ -95,7 +95,7 @@ SELECT last_insert_rowid();";
 				cancellationToken: CancellationToken);
 
 			return await Connection.ExecuteScalarAsync<long>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<ArticleTalkSubjectPost?> GetByIdAsync(
@@ -117,7 +117,7 @@ LIMIT 1;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<ArticleTalkSubjectPost>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleTalkSubjectPost>> GetBySubjectIdAsync(
@@ -140,7 +140,7 @@ ORDER BY DateCreated ASC;";
 
 			IEnumerable<ArticleTalkSubjectPost> Posts = await Connection.QueryAsync<ArticleTalkSubjectPost>(Command).ConfigureAwait(false);
 			return [.. Posts];
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleTalkSubjectPost>> GetByParentIdAsync(
@@ -163,7 +163,7 @@ ORDER BY DateCreated ASC;";
 
 			IEnumerable<ArticleTalkSubjectPost> Posts = await Connection.QueryAsync<ArticleTalkSubjectPost>(Command).ConfigureAwait(false);
 			return [.. Posts];
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleTalkSubjectPost>> GetTopLevelPostsBySubjectIdAsync(
@@ -187,7 +187,7 @@ ORDER BY DateCreated ASC;";
 
 			IEnumerable<ArticleTalkSubjectPost> Posts = await Connection.QueryAsync<ArticleTalkSubjectPost>(Command).ConfigureAwait(false);
 			return [.. Posts];
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> UpdateTextAsync(
@@ -218,7 +218,7 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> MarkAsEditedAsync(
@@ -246,7 +246,7 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> DeleteAsync(
@@ -273,6 +273,6 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

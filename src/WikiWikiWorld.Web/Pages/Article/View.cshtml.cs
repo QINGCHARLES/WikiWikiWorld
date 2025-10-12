@@ -67,7 +67,7 @@ public sealed class ViewModel(
 
 		// Markdown processing
 		ShortDescriptionExtension ShortDescriptionExtension = new(this);
-		ImageExtension ImageExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository, this);
+ 		ImageExtension ImageExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
 		HeaderImageExtension HeaderImageExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository, this);
 		DownloadsBoxExtension DownloadsBoxExtension = new(SiteId, DownloadUrlsRepository, UserRepository);
 		PullQuoteExtension PullQuoteExtension = new();

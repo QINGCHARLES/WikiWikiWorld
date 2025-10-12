@@ -65,7 +65,7 @@ WHERE Id = @Id AND DateDeleted IS NULL;";
 
 				int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 				return RowsAffected > 0;
-			}, cancellationToken).ConfigureAwait(false);
+			}, Durability: WriteDurability.High, CancellationToken: cancellationToken).ConfigureAwait(false);
 
 			return Success
 				? IdentityResult.Success

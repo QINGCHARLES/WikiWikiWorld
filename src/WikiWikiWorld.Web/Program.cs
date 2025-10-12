@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
 using System.Text;
@@ -178,9 +179,9 @@ if (!App.Environment.IsDevelopment())
 	App.UseExceptionHandler("/Error");
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	App.UseHsts();
-
-	App.UseMiddleware<HtmlPrettifyMiddleware>();
 }
+
+App.UseMiddleware<HtmlPrettifyMiddleware>();
 
 // Inject IWebHostEnvironment to access the content root
 IWebHostEnvironment Environment = App.Services.GetRequiredService<IWebHostEnvironment>();
@@ -211,7 +212,22 @@ else
 
 App.UseHttpsRedirection();
 
+
 App.UseRouting();
+
+// Add headers to prevent this site from being embedded in iframes.
+// We attach them in OnStarting to ensure headers are set just before the response is sent.
+App.Use(async (Context, Next) =>
+{
+	Context.Response.OnStarting(() =>
+	{
+		Context.Response.Headers[HeaderNames.ContentSecurityPolicy] = "frame-ancestors 'none'"; // Modern browsers: Content Security Policy frame-ancestors
+		Context.Response.Headers[HeaderNames.XFrameOptions] = "DENY"; // Legacy fallback
+		return Task.CompletedTask;
+	});
+
+	await Next();
+});
 
 App.UseAuthorization();
 

@@ -1,6 +1,115 @@
 ﻿/*#region CSS Reset*/
 
-https://piccalil.li/blog/a-more-modern-css-reset/
+/*
+
+Core & Setup
+
+	reset.css
+
+	variables.css (CSS custom properties: colors, spacing, radius, shadows, z-index)
+
+	typography.css (font faces, scale, headings, paragraph defaults)
+
+	base.css (html/body, links, lists, images, forms’ baseline, box-sizing)
+
+Layout & Structure
+
+	layout.css (containers, wrappers, header/footer, sidebar, content regions)
+
+	grid.css (flex/grid helpers, columns, gutters)
+
+	spacing.css (margin/padding utility classes)
+
+	breakpoints.css (media queries, responsive helpers)
+
+Components (split per widget so changes don’t collide)
+
+	buttons.css
+
+	forms.css (inputs, selects, validation states)
+
+	tables.css
+
+	navigation.css (top nav, side nav, breadcrumbs)
+
+	cards.css
+
+	modal.css
+
+	alerts-badges.css
+
+	pagination.css
+
+	tabs-accordions.css
+
+	media.css (avatars, thumbnails)
+
+Utilities & Helpers
+
+	utilities.css (display, position, overflow, text, visibility, pointer-events)
+
+	accessibility.css (focus rings, skip links, reduced motion support)
+
+	print.css (print-specific tweaks)
+
+	animations.css (keyframes + motion tokens)
+
+	overrides.css (last-resort hacks, kept tiny)
+
+Theming & State
+
+	theme.light.css
+
+	theme.dark.css (prefers-color-scheme support)
+
+	high-contrast.css
+
+	states.css (loading, disabled, success/error/warning info states)
+
+
+wwwroot/
+└─ css/
+	├─ core/
+	│	├─ reset.css
+	│	├─ variables.css
+	│	├─ typography.css
+	│	└─ base.css
+	├─ layout/
+	│	├─ layout.css
+	│	├─ grid.css
+	│	├─ spacing.css
+	│	└─ breakpoints.css
+	├─ components/
+	│	├─ buttons.css
+	│	├─ forms.css
+	│	├─ tables.css
+	│	├─ navigation.css
+	│	├─ cards.css
+	│	├─ modal.css
+	│	├─ alerts-badges.css
+	│	├─ pagination.css
+	│	└─ tabs-accordions.css
+	├─ utilities/
+	│	├─ utilities.css
+	│	├─ accessibility.css
+	│	├─ animations.css
+	│	├─ print.css
+	│	└─ overrides.css
+	├─ themes/
+	│	├─ theme.light.css
+	│	├─ theme.dark.css
+	│	└─ high-contrast.css
+	├─ pages/
+	│	├─ home.css
+	│	├─ account.css
+	│	└─ admin.css
+	└─ vendor/
+		├─ vendor.normalize.css
+		└─ vendor-overrides.css
+*/
+
+
+/* https://piccalil.li/blog/a-more-modern-css-reset/ */
 /* Box sizing rules */
 *,
 *::before,
@@ -9,12 +118,18 @@ https://piccalil.li/blog/a-more-modern-css-reset/
 	box-sizing: border-box;
 }
 
+pre
+{
+	white-space: pre-wrap;
+}
+
 /* Prevent font size inflation */
 html
 {
 	-moz-text-size-adjust: none;
 	-webkit-text-size-adjust: none;
 	text-size-adjust: none;
+	word-break: break-word;
 }
 
 /* Remove default margin in favour of better control in authored CSS */

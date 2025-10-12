@@ -6,6 +6,12 @@ public enum ConnectionMode
 	Write
 }
 
+public enum WriteDurability
+{
+	Normal, // synchronous=NORMAL (fast; latest commit may roll back on power loss)
+	High    // synchronous=FULL   (slower; commit designed to survive power loss)
+}
+
 public interface IDbConnectionScope : IAsyncDisposable
 {
 	SqliteConnection Connection { get; }
@@ -40,13 +46,13 @@ public interface IDatabaseConnectionFactory
 	Task InitializeAsync(string DatabaseFilePath, CancellationToken CancellationToken = default);
 	Task ShutdownAsync();
 
-	Task<IDbConnectionScope> GetConnectionAsync(ConnectionMode Mode = ConnectionMode.Read, CancellationToken CancellationToken = default);
+	Task<IDbConnectionScope> GetConnectionAsync(ConnectionMode Mode = ConnectionMode.Read, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default);
 
-	Task<T> ExecuteWithRetryAsync<T>(ConnectionMode Mode, Func<IDbConnection, Task<T>> Operation, CancellationToken CancellationToken = default);
-	Task ExecuteWithRetryAsync(ConnectionMode Mode, Func<IDbConnection, Task> Operation, CancellationToken CancellationToken = default);
+	Task<T> ExecuteWithRetryAsync<T>(ConnectionMode Mode, Func<IDbConnection, Task<T>> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default);
+	Task ExecuteWithRetryAsync(ConnectionMode Mode, Func<IDbConnection, Task> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default);
 
-	Task<T> ExecuteWithRetryInTransactionAsync<T>(Func<IDbConnection, IDbTransaction, Task<T>> Operation, CancellationToken CancellationToken = default);
-	Task ExecuteWithRetryInTransactionAsync(Func<IDbConnection, IDbTransaction, Task> Operation, CancellationToken CancellationToken = default);
+	Task<T> ExecuteWithRetryInTransactionAsync<T>(Func<IDbConnection, IDbTransaction, Task<T>> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default);
+	Task ExecuteWithRetryInTransactionAsync(Func<IDbConnection, IDbTransaction, Task> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default);
 
 	(int ActiveReadConnections, int ActiveWriteConnections) GetStats();
 }
@@ -140,7 +146,7 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 		}
 	}
 
-	public async Task<IDbConnectionScope> GetConnectionAsync(ConnectionMode Mode = ConnectionMode.Read, CancellationToken CancellationToken = default)
+	public async Task<IDbConnectionScope> GetConnectionAsync(ConnectionMode Mode = ConnectionMode.Read, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default)
 	{
 		// Wait for initialization to complete (prevents visibility races)
 		await InitializationTcs.Task.ConfigureAwait(false);
@@ -148,6 +154,11 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 		if (AcceptingConnections is 0)
 		{
 			throw new InvalidOperationException("DatabaseConnectionFactory is not accepting new connections (shutting down).");
+		}
+
+		if (Mode is ConnectionMode.Read && Durability is not WriteDurability.Normal)
+		{
+			throw new ArgumentException("Durability can only be specified for write connections.", nameof(Durability));
 		}
 
 		SemaphoreSlim Gate = Mode is ConnectionMode.Read ? ReadGate : WriteGate;
@@ -160,6 +171,11 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 		{
 			await Connection.OpenAsync(CancellationToken).ConfigureAwait(false);
 			await ApplyConnectionPragmasAsync(Connection, CancellationToken).ConfigureAwait(false);
+
+			if (Mode is ConnectionMode.Write)
+			{
+				await ApplyDurabilityPragmasAsync(Connection, Durability, CancellationToken).ConfigureAwait(false);
+			}
 
 			if (Mode is ConnectionMode.Read)
 			{
@@ -214,12 +230,12 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 		}
 	}
 
-	public async Task<T> ExecuteWithRetryAsync<T>(ConnectionMode Mode, Func<IDbConnection, Task<T>> Operation, CancellationToken CancellationToken = default)
+	public async Task<T> ExecuteWithRetryAsync<T>(ConnectionMode Mode, Func<IDbConnection, Task<T>> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default)
 	{
 		return await ExecuteWithRetryCoreAsync(
 			async () =>
 			{
-				await using IDbConnectionScope Scope = await GetConnectionAsync(Mode, CancellationToken).ConfigureAwait(false);
+				await using IDbConnectionScope Scope = await GetConnectionAsync(Mode, Durability, CancellationToken).ConfigureAwait(false);
 				return await Operation(Scope.Connection).ConfigureAwait(false);
 			},
 			Options.MaxRetryAttempts,
@@ -227,12 +243,12 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 			CancellationToken).ConfigureAwait(false);
 	}
 
-	public async Task ExecuteWithRetryAsync(ConnectionMode Mode, Func<IDbConnection, Task> Operation, CancellationToken CancellationToken = default)
+	public async Task ExecuteWithRetryAsync(ConnectionMode Mode, Func<IDbConnection, Task> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default)
 	{
 		await ExecuteWithRetryCoreAsync(
 			async () =>
 			{
-				await using IDbConnectionScope Scope = await GetConnectionAsync(Mode, CancellationToken).ConfigureAwait(false);
+				await using IDbConnectionScope Scope = await GetConnectionAsync(Mode, Durability, CancellationToken).ConfigureAwait(false);
 				await Operation(Scope.Connection).ConfigureAwait(false);
 				return true;
 			},
@@ -241,7 +257,7 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 			CancellationToken).ConfigureAwait(false);
 	}
 
-	public async Task<T> ExecuteWithRetryInTransactionAsync<T>(Func<IDbConnection, IDbTransaction, Task<T>> Operation, CancellationToken CancellationToken = default)
+	public async Task<T> ExecuteWithRetryInTransactionAsync<T>(Func<IDbConnection, IDbTransaction, Task<T>> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default)
 	{
 		return await ExecuteWithRetryAsync(ConnectionMode.Write, async Connection =>
 		{
@@ -268,10 +284,10 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 
 				throw;
 			}
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability, CancellationToken).ConfigureAwait(false);
 	}
 
-	public async Task ExecuteWithRetryInTransactionAsync(Func<IDbConnection, IDbTransaction, Task> Operation, CancellationToken CancellationToken = default)
+	public async Task ExecuteWithRetryInTransactionAsync(Func<IDbConnection, IDbTransaction, Task> Operation, WriteDurability Durability = WriteDurability.Normal, CancellationToken CancellationToken = default)
 	{
 		await ExecuteWithRetryAsync(ConnectionMode.Write, async Connection =>
 		{
@@ -297,7 +313,7 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 
 				throw;
 			}
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability, CancellationToken).ConfigureAwait(false);
 	}
 
 	public (int ActiveReadConnections, int ActiveWriteConnections) GetStats()
@@ -381,6 +397,22 @@ public sealed class DatabaseConnectionFactory : IDatabaseConnectionFactory, IAsy
 			$"PRAGMA mmap_size = {Options.MmapSizeBytes}",
 			"PRAGMA temp_store = MEMORY",
 			"PRAGMA foreign_keys = ON"
+		];
+
+		using SqliteCommand Command = Connection.CreateCommand();
+		Command.CommandText = string.Join(";\n", Pragmas) + ";";
+		await Command.ExecuteNonQueryAsync(CancellationToken).ConfigureAwait(false);
+	}
+
+	private static async Task ApplyDurabilityPragmasAsync(SqliteConnection Connection, WriteDurability Durability, CancellationToken CancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(Connection);
+
+		string SynchronousValue = Durability is WriteDurability.High ? "FULL" : "NORMAL";
+
+		List<string> Pragmas =
+		[
+			$"PRAGMA synchronous = {SynchronousValue}"
 		];
 
 		using SqliteCommand Command = Connection.CreateCommand();

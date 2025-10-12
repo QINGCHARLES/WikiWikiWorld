@@ -107,7 +107,7 @@ INSERT INTO ArticleTalkSubjects (
 			}
 
 			return Id;
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<ArticleTalkSubject?> GetByIdAsync(
@@ -129,7 +129,7 @@ LIMIT 1;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<ArticleTalkSubject>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleTalkSubject>> GetByArticleIdAsync(
@@ -154,7 +154,7 @@ ORDER BY DateCreated DESC;";
 
 			IEnumerable<ArticleTalkSubject> Subjects = await Connection.QueryAsync<ArticleTalkSubject>(Command).ConfigureAwait(false);
 			return Subjects.AsList();
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<ArticleTalkSubject?> GetByUrlSlugAsync(
@@ -180,7 +180,7 @@ LIMIT 1;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<ArticleTalkSubject>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> UpdateAsync(
@@ -211,7 +211,7 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> MarkAsEditedAsync(
@@ -239,7 +239,7 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> DeleteAsync(
@@ -266,6 +266,6 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

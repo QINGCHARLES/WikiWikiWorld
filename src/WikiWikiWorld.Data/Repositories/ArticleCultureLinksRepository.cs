@@ -80,7 +80,7 @@ SELECT last_insert_rowid();";
 				cancellationToken: CancellationToken);
 
 			return await Connection.ExecuteScalarAsync<long>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleCultureLink>> GetByCanonicalArticleIdAsync(
@@ -104,8 +104,10 @@ WHERE SiteId = @SiteId
 
 		IEnumerable<ArticleCultureLink> Links = await Connection.QueryAsync<ArticleCultureLink>(Command).ConfigureAwait(false);
 		return (IReadOnlyList<ArticleCultureLink>)[.. Links];
-	}, CancellationToken).ConfigureAwait(false);
-}	public async Task<IReadOnlyList<ArticleCultureLink>> GetByGroupIdAsync(
+	}, CancellationToken: CancellationToken).ConfigureAwait(false);
+}
+
+public async Task<IReadOnlyList<ArticleCultureLink>> GetByGroupIdAsync(
 		int SiteId,
 		Guid ArticleCultureLinkGroupId,
 		CancellationToken CancellationToken = default)
@@ -126,8 +128,10 @@ WHERE SiteId = @SiteId
 
 		IEnumerable<ArticleCultureLink> Links = await Connection.QueryAsync<ArticleCultureLink>(Command).ConfigureAwait(false);
 		return (IReadOnlyList<ArticleCultureLink>)[.. Links];
-	}, CancellationToken).ConfigureAwait(false);
-}	public async Task<bool> DeleteAsync(
+	}, CancellationToken: CancellationToken).ConfigureAwait(false);
+}
+
+public async Task<bool> DeleteAsync(
 		int SiteId,
 		Guid CanonicalArticleId,
 		Guid DeletedByUserId,
@@ -157,6 +161,6 @@ WHERE SiteId = @SiteId
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

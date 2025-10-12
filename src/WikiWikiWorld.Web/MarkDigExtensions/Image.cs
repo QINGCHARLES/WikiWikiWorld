@@ -4,6 +4,7 @@ using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax.Inlines;
+using System.Net;
 using WikiWikiWorld.Web.Pages;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
@@ -11,7 +12,9 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 public class ImageInline : LeafInline
 {
 	public required string UrlSlug { get; init; }
-	public string? Type { get; init; }
+	public string? Layout { get; init; }
+	public string? Caption { get; init; }
+	public string? Alt { get; init; }
 }
 
 public class ImageInlineParser : InlineParser
@@ -43,8 +46,10 @@ public class ImageInlineParser : InlineParser
 
 		// Extract main data before "|#|"
 		int AttributeStart = Slice.Text.IndexOf(AttributeSeparator, Slice.Start, EndPos - Slice.Start, StringComparison.Ordinal);
-		string UrlSlug;
-		string? Type = null;
+	string UrlSlug;
+	string? Layout = null;
+	string? Alt = null;
+	string? Caption = null;
 
 		if (AttributeStart != -1)
 		{
@@ -56,9 +61,25 @@ public class ImageInlineParser : InlineParser
 			foreach (string Attribute in Attributes)
 			{
 				string[] Parts = Attribute.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
-				if (Parts.Length == 2 && Parts[0].Trim().Equals("Type", StringComparison.OrdinalIgnoreCase))
+				if (Parts.Length != 2)
 				{
-					Type = Parts[1].Trim();
+					continue;
+				}
+
+				string Key = Parts[0].Trim();
+				string Value = Parts[1].Trim();
+
+				if (Key.Equals("Layout", StringComparison.OrdinalIgnoreCase))
+				{
+					Layout = Value;
+				}
+				else if (Key.Equals("Alt", StringComparison.OrdinalIgnoreCase))
+				{
+					Alt = Value;
+				}
+				else if (Key.Equals("Caption", StringComparison.OrdinalIgnoreCase))
+				{
+					Caption = Value;
 				}
 			}
 		}
@@ -71,7 +92,9 @@ public class ImageInlineParser : InlineParser
 		ImageInline InlineElement = new()
 		{
 			UrlSlug = UrlSlug,
-			Type = Type
+			Layout = Layout,
+			Alt = Alt,
+			Caption = Caption
 		};
 
 		Processor.Inline = InlineElement;
@@ -80,7 +103,7 @@ public class ImageInlineParser : InlineParser
 	}
 }
 
-public class ImageInlineRenderer(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository, BasePageModel PageModel) : HtmlObjectRenderer<ImageInline>
+public class ImageInlineRenderer(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository) : HtmlObjectRenderer<ImageInline>
 {
 	protected override void Write(HtmlRenderer Renderer, ImageInline InlineElement)
 	{
@@ -112,35 +135,27 @@ public class ImageInlineRenderer(int SiteId, string Culture, IArticleRevisionRep
 
 		string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
 
-		// Handle "Header" type as a CSS background
-		if (InlineElement.Type?.Equals("Header", StringComparison.OrdinalIgnoreCase) == true)
+		// Header images are handled by HeaderImage block; inline images always render <img> with optional layout classes
+		string? CssClass = InlineElement.Layout?.ToLowerInvariant() switch
 		{
-			// Set the HeaderImage property on the PageModel
-			PageModel.HeaderImage = ImageUrl;
-		}
-		else
-		{
-			// Determine the class based on the type
-			string? Class = InlineElement.Type?.ToLower() switch
-			{
-				"full" => "full",
-				"breakout" => "breakout",
-				"max" => "max",
-				_ => null
-			};
+			"full" => "full",
+			"breakout" => "breakout",
+			"max" => "max",
+			_ => null
+		};
 
-			// Regular <img> tag with optional class
-			Renderer.Write($"<img src=\"{ImageUrl}\" alt=\"{Article.Title}\"");
-			if (Class is not null)
-			{
-				Renderer.Write($" class=\"{Class}\"");
-			}
-			Renderer.Write(" />");
+		// Regular <img> tag with optional class. Use provided Alt if present, otherwise fall back to Article.Title
+		string AltText = InlineElement.Alt ?? Article.Title;
+		Renderer.Write($"<img src=\"{ImageUrl}\" alt=\"{WebUtility.HtmlEncode(AltText)}\"");
+		if (CssClass is not null)
+		{
+			Renderer.Write($" class=\"{CssClass}\"");
 		}
+		Renderer.Write(" />");
 	}
 }
 
-public class ImageExtension(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository, BasePageModel PageModel) : IMarkdownExtension
+public class ImageExtension(int SiteId, string Culture, IArticleRevisionRepository ArticleRepository, IFileRevisionRepository FileRepository) : IMarkdownExtension
 {
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
@@ -155,7 +170,7 @@ public class ImageExtension(int SiteId, string Culture, IArticleRevisionReposito
 		if (Renderer is HtmlRenderer HtmlRenderer &&
 			!HtmlRenderer.ObjectRenderers.Any(r => r is ImageInlineRenderer))
 		{
-			HtmlRenderer.ObjectRenderers.Add(new ImageInlineRenderer(SiteId, Culture, ArticleRepository, FileRepository, PageModel));
+			HtmlRenderer.ObjectRenderers.Add(new ImageInlineRenderer(SiteId, Culture, ArticleRepository, FileRepository));
 		}
 	}
 }

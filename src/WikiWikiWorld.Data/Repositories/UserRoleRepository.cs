@@ -44,7 +44,7 @@ VALUES (@UserId, @RoleId, @DateCreated, NULL);";
 				cancellationToken: CancellationToken);
 
 			await Connection.ExecuteAsync(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> RemoveRoleAsync(
@@ -72,7 +72,7 @@ WHERE UserId = @UserId AND RoleId = @RoleId AND DateDeleted IS NULL;";
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IEnumerable<Guid>> GetUserRolesAsync(
@@ -92,7 +92,7 @@ WHERE UserId = @UserId AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QueryAsync<Guid>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IEnumerable<Guid>> GetUsersInRoleAsync(
@@ -112,6 +112,6 @@ WHERE RoleId = @RoleId AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QueryAsync<Guid>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

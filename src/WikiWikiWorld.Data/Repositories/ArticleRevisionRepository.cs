@@ -143,7 +143,7 @@ SELECT last_insert_rowid();";
 				cancellationToken: CancellationToken);
 
 			return await Connection.ExecuteScalarAsync<long>(InsertCommand).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<ArticleRevision?> GetCurrentBySiteIdCultureAndUrlSlugAsync(
@@ -170,7 +170,7 @@ LIMIT 1;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<ArticleRevision>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<(ArticleRevision? Current, ArticleRevision? Specific)> GetRevisionBySiteIdCultureUrlSlugAndDateAsync(
@@ -219,7 +219,7 @@ LIMIT 1;";
 			ArticleRevision? Specific = await Connection.QuerySingleOrDefaultAsync<ArticleRevision>(RevisionCommand).ConfigureAwait(false);
 
 			return (Current, Specific);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleRevision>> GetAllRevisionsBySiteIdCultureAndUrlSlugAsync(
@@ -266,7 +266,7 @@ ORDER BY DateCreated DESC;";
 			IEnumerable<ArticleRevision> Revisions = await Connection.QueryAsync<ArticleRevision>(RevisionsCommand).ConfigureAwait(false);
 			IReadOnlyList<ArticleRevision> Result = [.. Revisions];
 			return Result;
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleRevision>> GetRecentRevisionsAsync(
@@ -293,7 +293,7 @@ LIMIT @Limit;";
 
 			IEnumerable<ArticleRevision> Revisions = await Connection.QueryAsync<ArticleRevision>(Command).ConfigureAwait(false);
 			return [.. Revisions];
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> DeleteByCanonicalIdAsync(
@@ -320,7 +320,7 @@ WHERE CanonicalArticleId = @CanonicalArticleId
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleAuthor>> GetRecentAuthorsForArticleAsync(
@@ -348,7 +348,7 @@ LIMIT 10;";
 
 			IEnumerable<ArticleAuthor> Authors = await Connection.QueryAsync<ArticleAuthor>(Command).ConfigureAwait(false);
 			return [.. Authors];
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleSitemapEntry>> GetAllCurrentArticlesForSitemapAsync(
@@ -374,7 +374,7 @@ ORDER BY DateCreated DESC;";
 
 			IEnumerable<ArticleSitemapEntry> Articles = await Connection.QueryAsync<ArticleSitemapEntry>(Command).ConfigureAwait(false);
 			return [.. Articles];
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<IReadOnlyList<ArticleRevision>> GetLatestArticlesWithPublicationIssueInfoboxAsync(
@@ -403,7 +403,7 @@ LIMIT @Limit;";
 
 			IEnumerable<ArticleRevision> Articles = await Connection.QueryAsync<ArticleRevision>(Command).ConfigureAwait(false);
 			return [.. Articles];
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }
 

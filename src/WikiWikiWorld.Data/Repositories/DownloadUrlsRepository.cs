@@ -114,7 +114,7 @@ SELECT last_insert_rowid();";
 				cancellationToken: CancellationToken);
 
 			return await Connection.ExecuteScalarAsync<long>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<DownloadUrl?> GetByHashAsync(
@@ -152,7 +152,7 @@ LIMIT 1;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<DownloadUrl>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> UpdateAsync(
@@ -203,7 +203,7 @@ WHERE Id = @Id
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> DeleteAsync(
@@ -233,6 +233,6 @@ WHERE SiteId = @SiteId
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

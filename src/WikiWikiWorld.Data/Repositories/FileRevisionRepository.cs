@@ -111,7 +111,7 @@ SELECT last_insert_rowid();";
 				cancellationToken: CancellationToken);
 
 			return await Connection.ExecuteScalarAsync<long>(InsertCommand).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<FileRevision?> GetCurrentByCanonicalFileIdAsync(
@@ -133,6 +133,6 @@ WHERE CanonicalFileId = @CanonicalFileId
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<FileRevision>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

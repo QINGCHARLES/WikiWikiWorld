@@ -73,7 +73,7 @@ INSERT INTO Roles (
 			}
 
 			return RoleId;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<Role?> GetByIdAsync(
@@ -93,7 +93,7 @@ WHERE Id = @RoleId AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<Role>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<Role?> GetByNameAsync(
@@ -113,7 +113,7 @@ WHERE NormalizedName = @NormalizedName AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<Role>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> SoftDeleteAsync(
@@ -139,6 +139,6 @@ WHERE Id = @RoleId AND DateDeleted IS NULL;";
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }

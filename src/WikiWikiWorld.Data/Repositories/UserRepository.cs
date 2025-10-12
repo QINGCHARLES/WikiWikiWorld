@@ -141,7 +141,7 @@ INSERT INTO Users (
 			}
 
 			return UserId;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<User?> GetByIdAsync(
@@ -161,7 +161,7 @@ WHERE Id = @UserId AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<User>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<User?> GetByEmailAsync(
@@ -181,7 +181,7 @@ WHERE NormalizedEmail = @NormalizedEmail AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<User>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<User?> GetByUserNameAsync(
@@ -201,7 +201,7 @@ WHERE NormalizedUserName = @NormalizedUserName AND DateDeleted IS NULL;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<User>(Command).ConfigureAwait(false);
-		}, CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> UpdatePasswordAsync(
@@ -228,7 +228,7 @@ WHERE Id = @UserId AND DateDeleted IS NULL;";
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<bool> SoftDeleteAsync(
@@ -254,6 +254,6 @@ WHERE Id = @UserId AND DateDeleted IS NULL;";
 
 			int RowsAffected = await Connection.ExecuteAsync(Command).ConfigureAwait(false);
 			return RowsAffected > 0;
-		}, CancellationToken).ConfigureAwait(false);
+		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 }
