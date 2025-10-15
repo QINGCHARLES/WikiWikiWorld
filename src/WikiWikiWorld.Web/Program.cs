@@ -14,6 +14,7 @@ using WikiWikiWorld.Data.TypeHandlers;
 using WikiWikiWorld.Identity;
 using WikiWikiWorld.Web;
 using WikiWikiWorld.Web.Configuration;
+using WikiWikiWorld.Web.Infrastructure;
 
 WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
 
@@ -150,7 +151,10 @@ Builder.Services.AddResponseCompression(options =>
 Builder.Services.AddAuthorization();
 
 // Add services to the container.
-Builder.Services.AddRazorPages();
+Builder.Services.AddRazorPages(options =>
+{
+	options.Conventions.ConfigureFilter(new ThemePageFilter());
+});
 Builder.Services.AddControllers();
 Builder.Services.AddTransient<IArticleRevisionRepository, ArticleRevisionRepository>();
 Builder.Services.AddTransient<IFileRevisionRepository, FileRevisionRepository>();

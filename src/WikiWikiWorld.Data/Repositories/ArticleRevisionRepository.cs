@@ -170,7 +170,7 @@ LIMIT 1;";
 				cancellationToken: CancellationToken);
 
 			return await Connection.QuerySingleOrDefaultAsync<ArticleRevision>(Command).ConfigureAwait(false);
-		}, Durability: WriteDurability.High, CancellationToken: CancellationToken).ConfigureAwait(false);
+		}, CancellationToken: CancellationToken).ConfigureAwait(false);
 	}
 
 	public async Task<(ArticleRevision? Current, ArticleRevision? Specific)> GetRevisionBySiteIdCultureUrlSlugAndDateAsync(

@@ -48,6 +48,10 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/Terms" />
 		</rule>
 		<rule enabled="true">
+			<match url="^settings/theme:" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Settings/Theme" />
+		</rule>
+		<rule enabled="true">
 			<match url="^firehose:" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/Firehose" />
 		</rule>
@@ -80,7 +84,7 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/NotFound?UrlSlug={R:1}" />
 		</rule>
 		<rule name="Rewrite Rule">
-			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/Create)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Edit)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
+			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/Create)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Edit)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
 			<action type="Rewrite" url="Article/View?UrlSlug={R:1}" appendQueryString="true" />
 		</rule>
 	</rules>

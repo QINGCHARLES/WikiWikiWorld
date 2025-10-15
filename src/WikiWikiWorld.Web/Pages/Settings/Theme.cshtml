@@ -1,0 +1,32 @@
+@page
+@model WikiWikiWorld.Web.Pages.Settings.ThemeModel
+@{
+	ViewData["Title"] = "Theme";
+	string Current = (ViewData["PreferredTheme"] as string) ?? "system";
+}
+
+<h1>Theme</h1>
+<p>Choose how Magazedia should look on this device. Your selection stores a cookie so we remember it next time.</p>
+
+<form method="post" asp-antiforgery="true">
+	<fieldset>
+		<legend>Choose Theme</legend>
+
+		<label for="theme-system">
+			<input id="theme-system" type="radio" name="Theme" value="system" @(Current == "system" ? "checked" : string.Empty) />
+			System (follow device)
+		</label>
+
+		<label for="theme-light">
+			<input id="theme-light" type="radio" name="Theme" value="light" @(Current == "light" ? "checked" : string.Empty) />
+			Light
+		</label>
+
+		<label for="theme-dark">
+			<input id="theme-dark" type="radio" name="Theme" value="dark" @(Current == "dark" ? "checked" : string.Empty) />
+			Dark
+		</label>
+
+		<button type="submit">Save</button>
+	</fieldset>
+</form>
