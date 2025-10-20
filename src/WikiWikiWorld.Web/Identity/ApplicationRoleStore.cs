@@ -1,4 +1,6 @@
+using Dapper;
 using Microsoft.AspNetCore.Identity;
+using WikiWikiWorld.Database;
 
 namespace WikiWikiWorld.Identity;
 
