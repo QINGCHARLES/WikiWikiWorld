@@ -1,7 +1,5 @@
 #nullable enable
 
-using System.Linq;
-
 namespace WikiWikiWorld.Data.Repositories;
 
 public interface IArticleRevisionRepository

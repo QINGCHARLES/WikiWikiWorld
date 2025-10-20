@@ -1,10 +1,9 @@
-﻿using Markdig;
+using Markdig;
 using Markdig.Helpers;
 using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax.Inlines;
-using WikiWikiWorld.Data.Models;
 
 namespace WikiWikiWorld.MarkdigExtensions;
 

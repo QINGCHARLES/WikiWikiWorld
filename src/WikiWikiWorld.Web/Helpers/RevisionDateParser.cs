@@ -1,5 +1,3 @@
-﻿using System.Globalization;
-
 namespace WikiWikiWorld.Web.Helpers;
 
 public static class RevisionDateParser

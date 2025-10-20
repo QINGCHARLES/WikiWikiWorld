@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace WikiWikiWorld.Data.Repositories;
 
 public interface IArticleCultureLinkRepository
