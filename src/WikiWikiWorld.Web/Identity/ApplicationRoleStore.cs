@@ -1,11 +1,6 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using WikiWikiWorld.Database;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Repositories;
 
 namespace WikiWikiWorld.Identity;
 

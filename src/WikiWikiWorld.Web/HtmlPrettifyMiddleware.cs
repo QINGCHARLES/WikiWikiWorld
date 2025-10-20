@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using System.Text;
 using AngleSharp;
 using AngleSharp.Html.Parser;
 

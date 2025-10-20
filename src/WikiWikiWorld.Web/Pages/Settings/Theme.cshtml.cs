@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using WikiWikiWorld.Web.Pages;
 
 namespace WikiWikiWorld.Web.Pages.Settings

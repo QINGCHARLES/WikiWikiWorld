@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
-using System.Linq;
-using System.Text;
 using WikiWikiWorld.Database;
 using WikiWikiWorld.Data.TypeHandlers;
 using WikiWikiWorld.Identity;
