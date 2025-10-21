@@ -6,9 +6,7 @@ This document contains the exact commands needed to compile WikiWikiWorld in a f
 
 ```bash
 bash scripts/install_dotnet9.sh && \
-export TARGET_PROXY_HOST=$(echo $HTTPS_PROXY | cut -d@ -f2 | cut -d: -f1) && \
-export TARGET_PROXY_PORT=$(echo $HTTPS_PROXY | cut -d@ -f2 | cut -d: -f2) && \
-export PROXY_BEARER=$(python3 -c "import os; from urllib.parse import urlsplit; s = urlsplit(os.environ.get('HTTPS_PROXY','')); print(s.password or '')") && \
+eval "$(python3 -c "import os; from urllib.parse import urlsplit; s = urlsplit(os.environ.get('HTTPS_PROXY','')); print(f'export TARGET_PROXY_HOST={s.hostname}'); print(f'export TARGET_PROXY_PORT={s.port}'); print(f'export PROXY_BEARER={s.password or \"\"}')")" && \
 python3 scripts/bearer_proxy.py --listen 127.0.0.1:8888 --also-auth-header --with-basic > /tmp/bearer_proxy.log 2>&1 & sleep 2 && \
 unset http_proxy https_proxy && \
 export HTTPS_PROXY=http://127.0.0.1:8888 HTTP_PROXY=http://127.0.0.1:8888 ALL_PROXY=http://127.0.0.1:8888 PATH=/usr/local/dotnet:$PATH && \
@@ -43,10 +41,8 @@ bash scripts/install_dotnet9.sh
 ### Step 2: Start the Bearer Proxy
 
 ```bash
-# Extract current proxy credentials from environment
-export TARGET_PROXY_HOST=$(echo $HTTPS_PROXY | cut -d@ -f2 | cut -d: -f1)
-export TARGET_PROXY_PORT=$(echo $HTTPS_PROXY | cut -d@ -f2 | cut -d: -f2)
-export PROXY_BEARER=$(python3 -c "import os; from urllib.parse import urlsplit; s = urlsplit(os.environ.get('HTTPS_PROXY','')); print(s.password or '')")
+# Extract current proxy credentials from environment using Python (more reliable than cut)
+eval "$(python3 -c "import os; from urllib.parse import urlsplit; s = urlsplit(os.environ.get('HTTPS_PROXY','')); print(f'export TARGET_PROXY_HOST={s.hostname}'); print(f'export TARGET_PROXY_PORT={s.port}'); print(f'export PROXY_BEARER={s.password or \"\"}')")"
 
 # Start the bearer proxy in background
 python3 scripts/bearer_proxy.py --listen 127.0.0.1:8888 --also-auth-header --with-basic > /tmp/bearer_proxy.log 2>&1 &
