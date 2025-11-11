@@ -1,0 +1,446 @@
+@page
+@model WikiWikiWorld.Web.Pages.Article.CreateEditModel
+@{
+	ViewData["Title"] = Model.IsEditMode ? $"Editing: {Model.Title}" : "Create New Article";
+	Model.AllowSearchEngineIndexingOfPage = !Model.IsEditMode;
+}
+
+<article class="article-editor">
+	<header class="editor-header">
+		<h1 class="title">@(Model.IsEditMode ? "Edit Article" : "Create a New Article")</h1>
+		@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+		{
+			<div class="alert alert-error" role="alert">
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="8" x2="12" y2="12"></line>
+					<line x1="12" y1="16" x2="12.01" y2="16"></line>
+				</svg>
+				<span>@Model.ErrorMessage</span>
+			</div>
+		}
+	</header>
+
+	@if (!User.Identity?.IsAuthenticated ?? true)
+	{
+		<div class="alert alert-warning" role="alert">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+				<line x1="12" y1="9" x2="12" y2="13"></line>
+				<line x1="12" y1="17" x2="12.01" y2="17"></line>
+			</svg>
+			<span>You must be logged in to @(Model.IsEditMode ? "edit" : "create") articles. <a href="/login:">Login here</a>.</span>
+		</div>
+	}
+	else
+	{
+		<form method="post" enctype="multipart/form-data" class="article-form">
+			@if (Model.IsEditMode)
+			{
+				<input type="hidden" asp-for="OriginalUrlSlug" />
+			}
+
+			<div class="form-grid">
+				<div class="form-group form-group-full">
+					<label for="Title" class="form-label">
+						<span class="label-text">Title</span>
+						<span class="label-required" aria-label="required">*</span>
+					</label>
+					<input 
+						type="text" 
+						id="Title" 
+						asp-for="Title" 
+						class="form-input" 
+						placeholder="Enter the article title"
+						required 
+						autofocus />
+					<span class="form-help">The main title of your article</span>
+				</div>
+
+				<div class="form-group form-group-full">
+					<label for="DisplayTitle" class="form-label">
+						<span class="label-text">Display Title</span>
+					</label>
+					<textarea 
+						id="DisplayTitle" 
+						asp-for="DisplayTitle" 
+						class="form-textarea" 
+						rows="3"
+						placeholder="Optional: Custom display title with formatting"></textarea>
+					<span class="form-help">Optional multi-line title with custom formatting</span>
+				</div>
+
+				<div class="form-group">
+					<label for="UrlSlug" class="form-label">
+						<span class="label-text">URL Slug</span>
+						<span class="label-required" aria-label="required">*</span>
+					</label>
+					<input 
+						type="text" 
+						id="UrlSlug" 
+						asp-for="UrlSlug" 
+						class="form-input" 
+						placeholder="article-url-slug"
+						pattern="[a-z0-9\-]+"
+						required />
+					<span class="form-help">Lowercase letters, numbers, and hyphens only</span>
+				</div>
+
+				<div class="form-group">
+					<label for="SelectedType" class="form-label">
+						<span class="label-text">Article Type</span>
+					</label>
+					<select 
+						id="SelectedType" 
+						asp-for="SelectedType" 
+						asp-items="@(new SelectList(Model.AvailableArticleTypes))" 
+						class="form-select">
+					</select>
+					<span class="form-help">Category of the article</span>
+				</div>
+
+				@if (!Model.IsEditMode)
+				{
+					<div class="form-group form-group-full">
+						<label for="UploadedFile" class="form-label">
+							<span class="label-text">Featured Image</span>
+						</label>
+						<input 
+							type="file" 
+							id="UploadedFile" 
+							asp-for="UploadedFile" 
+							class="form-file"
+							accept="image/*" />
+						<span class="form-help">Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)</span>
+					</div>
+				}
+
+				<div class="form-group form-group-full">
+					<label for="ArticleText" class="form-label">
+						<span class="label-text">Article Content</span>
+						<span class="label-required" aria-label="required">*</span>
+					</label>
+					<textarea 
+						id="ArticleText" 
+						asp-for="ArticleText" 
+						class="form-textarea form-textarea-large" 
+						rows="20"
+						placeholder="Write your article content here using Markdown..."
+						required></textarea>
+					<span class="form-help">Use Markdown formatting for rich text</span>
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="submit" class="button button-primary" data-button-variant="primary">
+					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+						<polyline points="17 21 17 13 7 13 7 21"></polyline>
+						<polyline points="7 3 7 8 15 8"></polyline>
+					</svg>
+					<span>@(Model.IsEditMode ? "Save Changes" : "Create Article")</span>
+				</button>
+				
+				<a href="/@(Model.IsEditMode ? Model.OriginalUrlSlug : string.Empty)" class="button button-secondary">
+					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					</svg>
+					<span>Cancel</span>
+				</a>
+			</div>
+		</form>
+
+		@if (Model.IsEditMode)
+		{
+			<div class="danger-zone">
+				<h2 class="danger-zone-title">Danger Zone</h2>
+				<form method="get" action="/Article/Delete" class="danger-zone-form">
+					<input type="hidden" name="UrlSlug" value="@Model.OriginalUrlSlug" />
+					<button type="submit" class="button button-danger" data-button-variant="negative">
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="3 6 5 6 21 6"></polyline>
+							<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+							<line x1="10" y1="11" x2="10" y2="17"></line>
+							<line x1="14" y1="11" x2="14" y2="17"></line>
+						</svg>
+						<span>Delete Article</span>
+					</button>
+					<p class="danger-zone-description">Once you delete an article, there is no going back. Please be certain.</p>
+				</form>
+			</div>
+		}
+	}
+</article>
+
+<style>
+	.article-editor {
+		max-width: 900px;
+		margin: 0 auto;
+		padding: var(--grid-gutter);
+	}
+
+	.editor-header {
+		margin-bottom: 2rem;
+	}
+
+	.editor-header .title {
+		margin-bottom: 1rem;
+		font-size: var(--step-3);
+		color: var(--color-title);
+	}
+
+	/* Alert Styles */
+	.alert {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 1rem 1.25rem;
+		margin-bottom: 1.5rem;
+		border-radius: 0.5rem;
+		border: 2px solid;
+		font-size: var(--step-0);
+		line-height: 1.5;
+	}
+
+	.alert svg {
+		flex-shrink: 0;
+		margin-top: 0.125rem;
+	}
+
+	.alert-error {
+		background-color: #fee;
+		border-color: #dc2626;
+		color: #991b1b;
+	}
+
+	.alert-warning {
+		background-color: #fffbeb;
+		border-color: #f59e0b;
+		color: #92400e;
+	}
+
+	.alert a {
+		color: inherit;
+		text-decoration: underline;
+		font-weight: 600;
+	}
+
+	/* Form Styles */
+	.article-form {
+		background: var(--color-surface, #fff);
+		border: 2px solid var(--color-border, #e5e5e5);
+		border-radius: 1rem;
+		padding: 2rem;
+		margin-bottom: 2rem;
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.form-group-full {
+		grid-column: 1 / -1;
+	}
+
+	.form-label {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-weight: 600;
+		font-size: var(--step-0);
+		color: var(--color-foreground);
+	}
+
+	.label-text {
+		flex: 1;
+	}
+
+	.label-required {
+		color: #dc2626;
+		font-weight: 700;
+	}
+
+	.form-input,
+	.form-select,
+	.form-textarea {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		font-size: var(--step-0);
+		line-height: 1.5;
+		color: var(--color-foreground);
+		background-color: var(--color-background, #fff);
+		border: 2px solid var(--color-border, #d1d5db);
+		border-radius: 0.5rem;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	}
+
+	.form-input:focus,
+	.form-select:focus,
+	.form-textarea:focus {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 3px rgba(243, 222, 138, 0.3);
+	}
+
+	.form-input::placeholder,
+	.form-textarea::placeholder {
+		color: var(--color-muted, #9ca3af);
+	}
+
+	.form-textarea {
+		resize: vertical;
+		min-height: 100px;
+		font-family: 'Courier New', monospace;
+	}
+
+	.form-textarea-large {
+		min-height: 400px;
+	}
+
+	.form-file {
+		padding: 0.5rem;
+		font-size: var(--step--1);
+		color: var(--color-foreground);
+		background-color: var(--color-background);
+		border: 2px dashed var(--color-border, #d1d5db);
+		border-radius: 0.5rem;
+		cursor: pointer;
+		transition: border-color 0.15s ease;
+	}
+
+	.form-file:hover {
+		border-color: var(--color-primary);
+	}
+
+	.form-help {
+		font-size: var(--step--1);
+		color: var(--color-muted, #6b7280);
+		line-height: 1.4;
+	}
+
+	/* Form Actions */
+	.form-actions {
+		display: flex;
+		gap: 1rem;
+		margin-top: 2rem;
+		padding-top: 2rem;
+		border-top: 2px solid var(--color-border, #e5e5e5);
+	}
+
+	.button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.875rem 1.5rem;
+		font-size: var(--step-0);
+		font-weight: 600;
+		text-decoration: none;
+		border: 2px solid;
+		border-radius: 0.5rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.button svg {
+		flex-shrink: 0;
+	}
+
+	.button-primary {
+		background-color: var(--color-primary, #f3de8a);
+		color: #342a21;
+		border-color: var(--color-primary, #f3de8a);
+	}
+
+	.button-primary:hover {
+		background-color: #f1d979;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+
+	.button-secondary {
+		background-color: transparent;
+		color: var(--color-foreground);
+		border-color: var(--color-border, #d1d5db);
+	}
+
+	.button-secondary:hover {
+		background-color: var(--color-surface-alt, #f3f4f6);
+	}
+
+	/* Danger Zone */
+	.danger-zone {
+		background: #fee;
+		border: 2px solid #dc2626;
+		border-radius: 1rem;
+		padding: 2rem;
+		margin-top: 3rem;
+	}
+
+	.danger-zone-title {
+		font-size: var(--step-1);
+		color: #991b1b;
+		margin-bottom: 1rem;
+	}
+
+	.danger-zone-form {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.danger-zone-description {
+		flex: 1;
+		font-size: var(--step--1);
+		color: #991b1b;
+		margin: 0;
+	}
+
+	.button-danger {
+		background-color: #dc2626;
+		color: #fff;
+		border-color: #dc2626;
+	}
+
+	.button-danger:hover {
+		background-color: #b91c1c;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
+	}
+
+	/* Responsive Design */
+	@@media (max-width: 768px) {
+		.form-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.article-form {
+			padding: 1.5rem;
+		}
+
+		.form-actions {
+			flex-direction: column;
+		}
+
+		.button {
+			justify-content: center;
+		}
+
+		.danger-zone-form {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.danger-zone-description {
+			text-align: center;
+		}
+	}
+</style>

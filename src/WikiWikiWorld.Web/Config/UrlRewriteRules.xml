@@ -57,7 +57,7 @@
 		</rule>
 		<rule enabled="true">
 			<match url="^create:" />
-			<action type="Rewrite" url="https://{HTTP_HOST}/Article/Create" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Article/CreateEdit" />
 		</rule>
 		<rule enabled="true">
 			<match url="^file:(.+)" />
@@ -65,7 +65,7 @@
 		</rule>
 		<rule enabled="true">
 			<match url="(.+)/edit" />
-			<action type="Rewrite" url="https://{HTTP_HOST}/Article/Edit?UrlSlug={R:1}" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Article/CreateEdit?UrlSlug={R:1}" />
 		</rule>
 		<rule enabled="true">
 			<match url="(.+)/history$" />
@@ -84,7 +84,7 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/NotFound?UrlSlug={R:1}" />
 		</rule>
 		<rule name="Rewrite Rule">
-			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/Create)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Edit)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
+			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
 			<action type="Rewrite" url="Article/View?UrlSlug={R:1}" appendQueryString="true" />
 		</rule>
 	</rules>

@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Identity;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
-[Authorize] // ✅ Requires user authentication
-public sealed class CreateModel(
+[Authorize]
+public sealed class CreateEditModel(
 	IArticleRevisionRepository ArticleRevisionRepository,
 	IFileRevisionRepository FileRevisionRepository,
 	UserManager<ApplicationUser> UserManager,
@@ -25,6 +25,14 @@ public sealed class CreateModel(
 		"image/webp", "image/avif", "image/heic"
 	};
 
+	// Used to determine edit mode - if UrlSlug is provided via query string, we're editing
+	[BindProperty(SupportsGet = true)]
+	public string? UrlSlug { get; set; }
+
+	// Original slug for edit mode (persists the original value during postback)
+	[BindProperty]
+	public string OriginalUrlSlug { get; set; } = string.Empty;
+
 	[BindProperty]
 	public string Title { get; set; } = string.Empty;
 
@@ -32,13 +40,10 @@ public sealed class CreateModel(
 	public string DisplayTitle { get; set; } = string.Empty;
 
 	[BindProperty]
-	public string UrlSlug { get; set; } = string.Empty;
-
-	[BindProperty]
 	public string ArticleText { get; set; } = string.Empty;
 
 	[BindProperty]
-	public ArticleType SelectedType { get; set; } = ArticleType.Article; // ✅ Default to "Article"
+	public ArticleType SelectedType { get; set; } = ArticleType.Article;
 
 	[BindProperty]
 	public IFormFile? UploadedFile { get; set; }
@@ -46,28 +51,75 @@ public sealed class CreateModel(
 	public string ErrorMessage { get; private set; } = string.Empty;
 
 	public List<ArticleType> AvailableArticleTypes { get; } = [.. Enum.GetValues<ArticleType>()
-		.Where(Type => Type != ArticleType.User)]; // ✅ Exclude "User"
+		.Where(Type => Type != ArticleType.User)];
+
+	// Determines if we're in edit mode based on presence of UrlSlug
+	public bool IsEditMode => !string.IsNullOrWhiteSpace(UrlSlug);
+
+	public async Task<IActionResult> OnGetAsync()
+	{
+		if (!User.Identity?.IsAuthenticated ?? true)
+		{
+			return Challenge();
+		}
+
+		// Edit mode: Load existing article data
+		if (IsEditMode)
+		{
+			ArticleRevision? CurrentArticle = await ArticleRevisionRepository
+				.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, UrlSlug!);
+
+			if (CurrentArticle is null)
+			{
+				return NotFound("Article not found.");
+			}
+
+			// Populate form with existing data
+			OriginalUrlSlug = CurrentArticle.UrlSlug;
+			Title = CurrentArticle.Title;
+			DisplayTitle = CurrentArticle.DisplayTitle ?? string.Empty;
+			ArticleText = CurrentArticle.Text;
+			SelectedType = CurrentArticle.Type;
+		}
+		// Create mode: Form starts blank
+
+		return Page();
+	}
 
 	public async Task<IActionResult> OnPostAsync()
 	{
+		// Validate required fields
 		if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(UrlSlug) || string.IsNullOrWhiteSpace(ArticleText))
 		{
-			ErrorMessage = "All fields are required.";
+			ErrorMessage = "All required fields must be filled out.";
 			return Page();
 		}
 
-		// ✅ Ensure user is logged in
+		// Ensure user is authenticated
 		Guid? CurrentUserId = GetCurrentUserId();
 		if (CurrentUserId is null)
 		{
 			return Challenge();
 		}
 
-		// ✅ Check if the article already exists
-		ArticleRevision? ExistingArticle = await ArticleRevisionRepository.GetCurrentBySiteIdCultureAndUrlSlugAsync(
-			SiteId,
-			Culture,
-			UrlSlug);
+		// In POST, determine mode by checking if OriginalUrlSlug was set (edit mode)
+		bool IsEditModePost = !string.IsNullOrWhiteSpace(OriginalUrlSlug);
+
+		if (IsEditModePost)
+		{
+			return await HandleEditAsync(CurrentUserId.Value);
+		}
+		else
+		{
+			return await HandleCreateAsync(CurrentUserId.Value);
+		}
+	}
+
+	private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId)
+	{
+		// Check if article with this slug already exists
+		ArticleRevision? ExistingArticle = await ArticleRevisionRepository
+			.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, UrlSlug!);
 
 		if (ExistingArticle is not null)
 		{
@@ -75,14 +127,13 @@ public sealed class CreateModel(
 			return Page();
 		}
 
-		// Generate a canonical article ID
+		// Generate canonical article ID
 		Guid CanonicalArticleId = Guid.NewGuid();
 
 		// Handle file upload if present
 		Guid? CanonicalFileId = null;
 		if (UploadedFile is not null && UploadedFile.Length > 0)
 		{
-			// Validate image file
 			if (!IsValidImageFile(UploadedFile, out string ValidationError))
 			{
 				ErrorMessage = ValidationError;
@@ -91,22 +142,22 @@ public sealed class CreateModel(
 
 			try
 			{
-				// Generate file ID and path
 				CanonicalFileId = Guid.NewGuid();
 				string OriginalFileName = Path.GetFileName(UploadedFile.FileName);
 				string FileExtension = Path.GetExtension(OriginalFileName);
 				string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
 
-				// Create site files images directory if it doesn't exist
-				string SiteFilesDirectory = Path.Combine(WebHostEnvironment.WebRootPath, "sitefiles", SiteId.ToString(), "images");
+				string SiteFilesDirectory = Path.Combine(
+					WebHostEnvironment.WebRootPath,
+					"sitefiles",
+					SiteId.ToString(),
+					"images");
 				Directory.CreateDirectory(SiteFilesDirectory);
 
-				// Save the file to the file system
 				string FilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
 				using FileStream FileStream = new(FilePath, FileMode.Create);
 				await UploadedFile.CopyToAsync(FileStream);
 
-				// Save the file revision to database
 				await FileRevisionRepository.InsertAsync(
 					CanonicalFileId: CanonicalFileId,
 					Type: FileType.Image2D,
@@ -116,9 +167,8 @@ public sealed class CreateModel(
 					Source: null,
 					RevisionReason: "Initial upload",
 					SourceAndRevisionReasonCulture: Culture,
-					CreatedByUserId: CurrentUserId.Value);
+					CreatedByUserId: CurrentUserId);
 
-				// If this is a file-type article, update the article type
 				SelectedType = ArticleType.File;
 			}
 			catch (Exception Ex)
@@ -128,65 +178,94 @@ public sealed class CreateModel(
 			}
 		}
 
-		// ✅ Insert new article
+		// Insert new article
 		await ArticleRevisionRepository.InsertAsync(
 			CanonicalArticleId: CanonicalArticleId,
 			SiteId: SiteId,
 			Culture: Culture,
 			Title: Title,
-			DisplayTitle: DisplayTitle, // Use the DisplayTitle from the form
-			UrlSlug: UrlSlug,
-			Type: SelectedType, // ✅ Store selected type
+			DisplayTitle: DisplayTitle,
+			UrlSlug: UrlSlug!,
+			Type: SelectedType,
 			CanonicalFileId: CanonicalFileId,
 			Text: ArticleText,
 			RevisionReason: "New article creation",
-			CreatedByUserId: CurrentUserId.Value);
+			CreatedByUserId: CurrentUserId);
 
-		// Redirect to the newly created article
 		return Redirect($"/{UrlSlug}");
 	}
 
-	// ✅ Helper method to get the current user ID
+	private async Task<IActionResult> HandleEditAsync(Guid CurrentUserId)
+	{
+		// Fetch existing article using original slug
+		ArticleRevision? CurrentArticle = await ArticleRevisionRepository
+			.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, OriginalUrlSlug);
+
+		if (CurrentArticle is null)
+		{
+			return NotFound("Article not found.");
+		}
+
+		// Check if new URL slug conflicts with another article
+		if (!OriginalUrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase))
+		{
+			ArticleRevision? ExistingArticle = await ArticleRevisionRepository
+				.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, UrlSlug!);
+
+			if (ExistingArticle is not null)
+			{
+				ErrorMessage = "An article with this URL Slug already exists.";
+				return Page();
+			}
+		}
+
+		// Insert new revision with updates
+		await ArticleRevisionRepository.InsertAsync(
+			CanonicalArticleId: CurrentArticle.CanonicalArticleId,
+			SiteId: SiteId,
+			Culture: Culture,
+			Title: Title,
+			DisplayTitle: DisplayTitle,
+			UrlSlug: UrlSlug!,
+			Type: SelectedType,
+			CanonicalFileId: CurrentArticle.CanonicalFileId,
+			Text: ArticleText,
+			RevisionReason: "User edit",
+			CreatedByUserId: CurrentUserId);
+
+		return Redirect($"/{UrlSlug}");
+	}
+
 	private Guid? GetCurrentUserId()
 	{
 		string? UserIdString = UserManager.GetUserId(User);
 		return Guid.TryParse(UserIdString, out Guid ParsedId) ? ParsedId : null;
 	}
 
-	/// <summary>
-	/// Validates that the uploaded file is a valid image by checking:
-	/// 1. The file extension matches allowed image extensions
-	/// 2. The MIME type is an allowed image type
-	/// 3. The file size is reasonable for an image
-	/// </summary>
 	private static bool IsValidImageFile(IFormFile UploadedFile, out string ValidationError)
 	{
 		ValidationError = string.Empty;
 
-		// Check file extension
 		string FileExtension = Path.GetExtension(UploadedFile.FileName);
 		if (!AllowedImageExtensions.Contains(FileExtension))
 		{
-			ValidationError = $"File extension {FileExtension} is not allowed. Allowed image extensions: {string.Join(", ", AllowedImageExtensions)}";
+			ValidationError = $"File extension {FileExtension} is not allowed. Allowed extensions: {string.Join(", ", AllowedImageExtensions)}";
 			return false;
 		}
 
-		// Check MIME type
 		if (!AllowedMimeTypes.Contains(UploadedFile.ContentType))
 		{
 			ValidationError = $"File type {UploadedFile.ContentType} is not allowed. Only image files are permitted.";
 			return false;
 		}
 
-		// Check file size (limit to 10 MB)
 		const long MaxFileSizeBytes = 10 * 1024 * 1024;
 		if (UploadedFile.Length > MaxFileSizeBytes)
 		{
-			ValidationError = $"File size exceeds the maximum allowed size of 10 MB.";
+			ValidationError = "File size exceeds the maximum allowed size of 10 MB.";
 			return false;
 		}
 
-		// Basic signature check - read first few bytes to verify it's an image
 		try
 		{
 			using Stream Stream = UploadedFile.OpenReadStream();
@@ -208,9 +287,6 @@ public sealed class CreateModel(
 		}
 	}
 
-	/// <summary>
-	/// Checks file signatures against known image format signatures
-	/// </summary>
 	private static bool IsImageFileSignature(byte[] Signature, string FileExtension)
 	{
 		// JPEG: FF D8 FF
@@ -247,8 +323,7 @@ public sealed class CreateModel(
 				   Signature[3] == 0x38;
 		}
 
-		// WebP: 52 49 46 46 ?? ?? ?? ?? 57 45 42 50
-		// We can check only the first 4 bytes (RIFF) as a simplification
+		// WebP: 52 49 46 46 (RIFF)
 		if (FileExtension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
 		{
 			return Signature.Length >= 4 &&
@@ -258,8 +333,7 @@ public sealed class CreateModel(
 				   Signature[3] == 0x46;
 		}
 
-		// For AVIF and HEIC, we would need more complex checks
-		// For now, we'll trust the extension and MIME type for these formats
+		// For AVIF and HEIC, trust extension and MIME type
 		if (FileExtension.Equals(".avif", StringComparison.OrdinalIgnoreCase) ||
 			FileExtension.Equals(".heic", StringComparison.OrdinalIgnoreCase))
 		{

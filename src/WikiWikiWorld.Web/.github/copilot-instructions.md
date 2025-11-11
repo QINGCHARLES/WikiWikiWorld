@@ -7,6 +7,14 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Strong explicit typing; avoid `var` unless the type is truly obvious or required.
 * **PascalCase every identifier** (types, members, variables, parameters, generics, Razor artifacts, generated names like `App`/`Builder`).
 * Exception: simple loop counters (`i`, `j`, `k`, `w`, `h`, `x`, `y`, `z`).
+* **Units in variable names:** Always include units in variable/parameter/property names when the type doesn't inherently express them:
+  * Time: `DelaySeconds`, `TimeoutMs`, `DurationMinutes` (not just `Delay`, `Timeout`, `Duration`)
+  * Size/Memory: `BufferSizeKb`, `MaxMemoryMb`, `FileSizeBytes` (not just `BufferSize`, `MaxMemory`, `FileSize`)
+  * Distance: `DistanceMeters`, `RangeKm` (not just `Distance`, `Range`)
+  * Weight: `WeightKg`, `MassGrams` (not just `Weight`, `Mass`)
+  * Temperature: `TempCelsius`, `TempFahrenheit` (not just `Temperature`)
+  * Exceptions: When using types that inherently express units (`TimeSpan`, `DateTimeOffset`, `DateOnly`, `TimeOnly`) or when the context is unambiguous (loop counters, array indices)
+  * This applies to **all contexts**: C# code, config files (JSON/XML), database columns, API contracts, etc.
 * Tabs for indentation; opening brace on its own line.
 * Nullability **enabled**; treat warnings as errors.
 * Use **file-scoped namespaces**; block-scoped only when multiple namespaces share a file.
@@ -37,6 +45,23 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
 * Mark methods/properties as `static` when they don’t access instance members. Prefer static helpers where feasible.
 * Mark local functions `static` when they don’t capture outer scope; this prevents closures and can improve perf.
+* **Remember to use new language features when it makes sense without hurting code readability and understanding:**
+  * C# 14: extension members; modifiers on simple lambda parameters (`ref`/`in`/`out` on simple lambdas); `nameof` works with unbound generics; implicit `Span<T>`/`ReadOnlySpan<T>` conversions; partial events & partial constructors; user-defined compound assignment operators
+  * C# 13: `params` on collections (e.g., `IEnumerable<T>`, `ReadOnlySpan<T>`); method-group “natural type” improvements; `ref`/`unsafe` allowed in iterators & `async` methods; `ref struct` can implement interfaces; `allows ref struct` generic constraint; partial properties & partial indexers
+  * C# 12: default parameters in lambdas; inline arrays; `ref readonly` parameters; alias any type
+
+## C# XML Documentation Comments
+
+* Always maintain C# XML documentation comments (///) for: public/internal types, constructors, methods, properties, events, indexers.
+* Update comments whenever signatures, nullability, units, defaults, or thrown exceptions change.
+* Use:
+  * <summary> — one clear sentence.
+  * <param> / <typeparam> — match names exactly.
+  * <returns> — when not void.
+  * <exception> — list only what is actually thrown.
+  * <remarks> — only when needed for nuance.
+  * <inheritdoc/> for overrides/interface implementations unless behavior differs.
+  * Reference members with <see cref="Type.Member"/>.
 
 ## Using directives management
 
@@ -121,3 +146,4 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 
 * Validate compliance with every bullet before sending. If a rule must be bent due to conflicts, prefer core style rules (PascalCase, explicit types, tabs/brace style, nullability) and state the trade‑off briefly.
 * Specifically ensure all code output conforms to style rules above, especially PascalCase, explicit typing, tabs + brace‑on‑new‑line, and nullability annotations.
+* After changes, ensure the project compiles cleanly with no warnings/errors.
