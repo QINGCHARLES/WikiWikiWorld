@@ -33,6 +33,10 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
     * Use typed local: `IReadOnlyList<Post> Result = [.. Posts]; return Result;`
   * **When NOT to use `[..]`: Keep LINQ when explicit typing harms readability, or for special behavior (`ToHashSet(CustomComparer)`, `ToDictionary` with projections)
   * **Immutability:** Prefer `IReadOnlyList<T>` for return types; consider `ImmutableArray<T>`/`FrozenSet<T>`/`FrozenDictionary<TKey, TValue>` for hot paths
+* Collections & nullability: For any collection return type (IEnumerable<T>, IReadOnlyList<T>, arrays, dictionaries, etc.), never return null.
+  * Use Enumerable.Empty<T>() for IEnumerable<T> or IAsyncEnumerable<T>.
+  * Use [] / [..] for concrete types (List<T>, T[], Dictionary<TKey, TValue>, etc.).
+  * “No results” ⇒ empty collection; reserve null for “no value / not applicable” on non-collection types.
 * Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate.
 * Use `ReadOnlySpan<T>`/`Span<T>` where it helps without hurting clarity. Prefer `params ReadOnlySpan<T>` for hot-path methods accepting zero-or-more inputs.
 * **Threading:** Use `System.Threading.Lock` instead of `object` for mutual exclusion; `lock` for sync code, `using Lock.EnterScope()` for async.
