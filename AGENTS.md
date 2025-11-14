@@ -122,6 +122,11 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Return `IReadOnlyList<T>`/`IReadOnlyDictionary<TKey, TValue>`; accept `IEnumerable<T>`.
 * Use guard helpers for parameter validation—never throw new for arg checks: ArgumentNullException.ThrowIfNull(X), ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Value, nameof(Value)), ArgumentException.ThrowIfNullOrWhiteSpace(Text)
 * Prefer `Path.Join` and async I/O (`File.ReadAllTextAsync(..., CancellationToken)`).
+* For Minimal APIs on .NET 10:
+  * Mark input DTOs with [ValidatableType] and call builder.Services.AddValidation(); so requests are auto-validated before handlers run.
+  * Keep [ValidatableType] DTOs in normal C# files (not generated) so the source generator can emit efficient validation metadata.
+  * Use data-annotation attributes ([Required], [Range], [EmailAddress], etc.) on [ValidatableType] DTO properties; invalid requests should never reach the endpoint body.
+  * Favor one “request DTO” parameter per endpoint (instead of many primitives) so Minimal API validation + [ValidatableType] stays predictable and discoverable.
 
 ## JSON & serialization
 
