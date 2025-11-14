@@ -38,7 +38,25 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
   * Use [] / [..] for concrete types (List<T>, T[], Dictionary<TKey, TValue>, etc.).
   * “No results” ⇒ empty collection; reserve null for “no value / not applicable” on non-collection types.
 * Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate.
-* Use `ReadOnlySpan<T>`/`Span<T>` where it helps without hurting clarity. Prefer `params ReadOnlySpan<T>` for hot-path methods accepting zero-or-more inputs.
+* **Span usage guidelines:**
+  * **The async limitation:** `ReadOnlySpan<T>`/`Span<T>` are ref structs—they **cannot** be used in async methods, as fields, or captured in closures. This is a hard constraint.
+  * **When to use spans (synchronous methods only):**
+    * String parsing/validation helpers (`TryParseRevisionDate(ReadOnlySpan<char> Input)`)
+    * Binary signature validation (`IsImageFileSignature(ReadOnlySpan<byte> Signature, ReadOnlySpan<char> Extension)`)
+    * Hot-path string manipulation where substring allocations matter
+    * URL slug validation, format conversion, other sync utilities
+  * **When NOT to use spans (keep string parameters):**
+    * Repository methods—all async + Dapper expects `string` ⇒ no benefit, only friction
+    * Razor Page properties—model binding requires `string`
+    * Controller action parameters—model binding requires `string`
+    * Any async method signature—compiler error; use `string` or `ReadOnlyMemory<char>` if truly needed
+    * Methods that call async code—propagating spans forces everything sync
+  * **Implementation style:**
+    * Make span-accepting methods **span-only**—no dual `string`/`ReadOnlySpan<char>` overloads
+    * Callers use `.AsSpan()`: `IsValidSlug(UrlSlug.AsSpan())`—zero runtime cost, self-documenting
+    * Mark span helpers `internal` or `private`; keep public APIs string-based unless performance-critical
+  * **Memory<T> alternative:** For async methods needing span-like benefits, use `ReadOnlyMemory<char>`—can cross await boundaries, call `.Span` for sync processing. Rare in database-backed apps; usually not worth the complexity.
+  * **params spans:** Prefer `params ReadOnlySpan<T>` for hot-path methods accepting zero-or-more inputs (e.g., logging, formatting).
 * **Threading:** Use `System.Threading.Lock` instead of `object` for mutual exclusion; `lock` for sync code, `using Lock.EnterScope()` for async.
 * **Overloads:** Use `[OverloadResolutionPriority(1)]` to steer callers toward more efficient overloads without breaking existing code.
 * **Null-conditional assignment:** Permit `Target?.Member = Value;` when clearer than explicit `if`.
