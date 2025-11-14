@@ -38,7 +38,7 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
   * Use [] / [..] for concrete types (List<T>, T[], Dictionary<TKey, TValue>, etc.).
   * “No results” ⇒ empty collection; reserve null for “no value / not applicable” on non-collection types.
 * Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate.
-* Use `ReadOnlySpan<T>`/`Span<T>` where it helps without hurting clarity. Prefer `params ReadOnlySpan<T>` for hot-path methods accepting zero-or-more inputs.
+* Use `ReadOnlySpan<T>`/`Span<T>` **only in synchronous methods** (ref struct ⇒ cannot be used in async methods, as fields, or in closures). Good for: string parsing/validation, binary signature checks, hot-path substring-free manipulation. Keep `string` for: repositories (async + Dapper), Razor/controller model binding, any async signature. Make span methods **span-only** (no dual overloads); callers use `.AsSpan()` with zero cost. Prefer `params ReadOnlySpan<T>` for hot-path varargs.
 * **Threading:** Use `System.Threading.Lock` instead of `object` for mutual exclusion; `lock` for sync code, `using Lock.EnterScope()` for async.
 * **Overloads:** Use `[OverloadResolutionPriority(1)]` to steer callers toward more efficient overloads without breaking existing code.
 * **Null-conditional assignment:** Permit `Target?.Member = Value;` when clearer than explicit `if`.
