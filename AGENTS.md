@@ -106,12 +106,13 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10.
 * Use `await using` for `IAsyncDisposable`.
 * Use `CultureInfo.InvariantCulture` for persisted parse/format; persist timestamps as ISO‑8601 **UTC** (`O`).
 
-## Data access (Dapper + SQLite)
+## Data access (EF Core 10 + SQLite)
 
-* Stack: SQLite with either Dapper or EF Core 10
+* Stack: SQLite with EF Core 10
 * Connections via `Microsoft.Data.Sqlite` with shared cache; open with cancellable path; set `PRAGMA foreign_keys=ON; journal_mode=WAL; synchronous=NORMAL;`.
 * SQL is idempotent; create minimal indexes.
 * Map to immutable DTOs (`record class` + `required`).
+* Use the Specification Pattern for query reuse. It avoids duplication and keeps complex queries composable.
 
 ## Options & configuration
 
@@ -143,7 +144,6 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10.
 * Front‑end examples: plain CSS & JS—no frameworks.
 * Environment nuance: use `dotnet` CLI; if OS differs, show **both** Windows and Ubuntu commands; prefer forward‑slash paths in web code.
 * Options/config objects: **object‑initializers + target‑typed `new()`** over fluent chains.
-* Assume **Dapper + SQLite**; include schema/connection only when pertinent.
 * If a request conflicts with these rules, ask which rule to relax.
 * When unsure, ask clarifying questions first.
 
