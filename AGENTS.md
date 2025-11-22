@@ -1,6 +1,6 @@
-# What AI agents should know about me -- v1
+# What AI agents should know about me -- v2
 
-C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10.
+C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10/C#14.
 
 ## Coding standards & conventions
 
