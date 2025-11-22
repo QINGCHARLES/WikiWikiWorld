@@ -1,6 +1,6 @@
-# What AI agents should know about me
+# What AI agents should know about me -- v1
 
-C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
+C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10.
 
 ## Coding standards & conventions
 
@@ -37,7 +37,7 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
   * Use Enumerable.Empty<T>() for IEnumerable<T> or IAsyncEnumerable<T>.
   * Use [] / [..] for concrete types (List<T>, T[], Dictionary<TKey, TValue>, etc.).
   * “No results” ⇒ empty collection; reserve null for “no value / not applicable” on non-collection types.
-* Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate.
+* Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate. Prefer `DateTimeOffset` over `DateTime`.
 * Use `ReadOnlySpan<T>`/`Span<T>` where it helps without hurting clarity. Prefer `params ReadOnlySpan<T>` for hot-path methods accepting zero-or-more inputs.
 * **Threading:** Use `System.Threading.Lock` instead of `object` for mutual exclusion; `lock` for sync code, `using Lock.EnterScope()` for async.
 * **Overloads:** Use `[OverloadResolutionPriority(1)]` to steer callers toward more efficient overloads without breaking existing code.
@@ -49,6 +49,7 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
 * Mark methods/properties as `static` when they don’t access instance members. Prefer static helpers where feasible.
 * Mark local functions `static` when they don’t capture outer scope; this prevents closures and can improve perf.
+* Use the new `slnx` format over the deprecated `sln` format for solutions.
 * **Remember to use new language features when it makes sense without hurting code readability and understanding:**
   * C# 14: extension members; modifiers on simple lambda parameters (`ref`/`in`/`out` on simple lambdas); `nameof` works with unbound generics; implicit `Span<T>`/`ReadOnlySpan<T>` conversions; partial events & partial constructors; user-defined compound assignment operators
   * C# 13: `params` on collections (e.g., `IEnumerable<T>`, `ReadOnlySpan<T>`); method-group “natural type” improvements; `ref`/`unsafe` allowed in iterators & `async` methods; `ref struct` can implement interfaces; `allows ref struct` generic constraint; partial properties & partial indexers
@@ -107,7 +108,7 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 
 ## Data access (Dapper + SQLite)
 
-* Stack: **Dapper + SQLite** (no EF).
+* Stack: SQLite with either Dapper or EF Core 10
 * Connections via `Microsoft.Data.Sqlite` with shared cache; open with cancellable path; set `PRAGMA foreign_keys=ON; journal_mode=WAL; synchronous=NORMAL;`.
 * SQL is idempotent; create minimal indexes.
 * Map to immutable DTOs (`record class` + `required`).
@@ -122,11 +123,6 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 * Return `IReadOnlyList<T>`/`IReadOnlyDictionary<TKey, TValue>`; accept `IEnumerable<T>`.
 * Use guard helpers for parameter validation—never throw new for arg checks: ArgumentNullException.ThrowIfNull(X), ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Value, nameof(Value)), ArgumentException.ThrowIfNullOrWhiteSpace(Text)
 * Prefer `Path.Join` and async I/O (`File.ReadAllTextAsync(..., CancellationToken)`).
-* For Minimal APIs on .NET 10:
-  * Mark input DTOs with [ValidatableType] and call builder.Services.AddValidation(); so requests are auto-validated before handlers run.
-  * Keep [ValidatableType] DTOs in normal C# files (not generated) so the source generator can emit efficient validation metadata.
-  * Use data-annotation attributes ([Required], [Range], [EmailAddress], etc.) on [ValidatableType] DTO properties; invalid requests should never reach the endpoint body.
-  * Favor one “request DTO” parameter per endpoint (instead of many primitives) so Minimal API validation + [ValidatableType] stays predictable and discoverable.
 
 ## JSON & serialization
 
@@ -155,4 +151,4 @@ C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 8–10.
 
 * Validate compliance with every bullet before sending. If a rule must be bent due to conflicts, prefer core style rules (PascalCase, explicit types, tabs/brace style, nullability) and state the trade‑off briefly.
 * Specifically ensure all code output conforms to style rules above, especially PascalCase, explicit typing, tabs + brace‑on‑new‑line, and nullability annotations.
-* After changes, ensure the project compiles cleanly with no warnings/errors.
+* After changes, ensure the project compiles and builds cleanly with no warnings/errors.

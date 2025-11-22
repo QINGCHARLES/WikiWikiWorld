@@ -3,6 +3,5 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <LangVersion>12</LangVersion>
   </PropertyGroup>
 </Project>
