@@ -1,59 +1,75 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using WikiWikiWorld.Data;
+using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Data.Specifications;
+using WikiWikiWorld.Data.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
 [Authorize] // ✅ Requires authentication
-public sealed class DeleteModel(IArticleRevisionRepository ArticleRevisionRepository, UserManager<ApplicationUser> UserManager, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+public sealed class DeleteModel(WikiWikiWorldDbContext Context, UserManager<User> UserManager, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
-	private readonly UserManager<ApplicationUser> UserManager = UserManager;
+    private readonly UserManager<User> UserManager = UserManager;
 
-	[BindProperty(SupportsGet = true)]
-	public string UrlSlug { get; set; } = string.Empty;
+    [BindProperty(SupportsGet = true)]
+    public string UrlSlug { get; set; } = string.Empty;
 
-	public string ErrorMessage { get; private set; } = string.Empty;
+    public string ErrorMessage { get; private set; } = string.Empty;
 
-	public async Task<IActionResult> OnPostAsync()
-	{
-		if (string.IsNullOrWhiteSpace(UrlSlug))
-		{
-			ErrorMessage = "Invalid article identifier.";
-			return Page();
-		}
+    public async Task<IActionResult> OnPostAsync()
+    {
+        if (string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            ErrorMessage = "Invalid article identifier.";
+            return Page();
+        }
 
-		// ✅ Ensure the user is logged in
-		if (!User.Identity?.IsAuthenticated ?? true)
-		{
-			return Challenge();
-		}
+        // ✅ Ensure the user is logged in
+        if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            return Challenge();
+        }
 
-		// ✅ Fetch the article
-		ArticleRevision? CurrentArticle = await ArticleRevisionRepository
-			.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, UrlSlug);
+        // ✅ Fetch the article
+        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, UrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
-		if (CurrentArticle is null)
-		{
-			return NotFound("Article not found.");
-		}
+        if (CurrentArticle is null)
+        {
+            return NotFound("Article not found.");
+        }
 
-		// ✅ Get current user ID
-		Guid? CurrentUserId = GetCurrentUserId();
-		if (CurrentUserId is null)
-		{
-			return Challenge();
-		}
+        // ✅ Get current user ID
+        Guid? CurrentUserId = GetCurrentUserId();
+        if (CurrentUserId is null)
+        {
+            return Challenge();
+        }
 
-		// ✅ Perform a soft delete (sets DateDeleted on all revisions)
-		await ArticleRevisionRepository.DeleteByCanonicalIdAsync(SiteId, Culture, CurrentArticle.CanonicalArticleId);
+        // ✅ Perform a soft delete (sets DateDeleted on all revisions)
+        // Get all revisions
+        var AllRevisionsSpec = new ArticleRevisionsByCanonicalIdSpec(CurrentArticle.CanonicalArticleId, null);
+        IReadOnlyList<ArticleRevision> Revisions = await Context.ArticleRevisions.WithSpecification(AllRevisionsSpec).ToListAsync();
 
-		// ✅ Redirect after deletion
-		return Redirect("/");
-	}
+        foreach (var Revision in Revisions)
+        {
+            Revision.DateDeleted = DateTimeOffset.UtcNow;
+            Revision.IsCurrent = false; // Also ensure it's not current anymore
+            Context.ArticleRevisions.Update(Revision);
+        }
 
-	// ✅ Helper method to get current user ID
-	private Guid? GetCurrentUserId()
-	{
-		string? UserIdString = UserManager.GetUserId(User);
-		return Guid.TryParse(UserIdString, out Guid ParsedId) ? ParsedId : null;
-	}
+        await Context.SaveChangesAsync();
+
+        // ✅ Redirect after deletion
+        return Redirect("/");
+    }
+
+    // ✅ Helper method to get current user ID
+    private Guid? GetCurrentUserId()
+    {
+        string? UserIdString = UserManager.GetUserId(User);
+        return Guid.TryParse(UserIdString, out Guid ParsedId) ? ParsedId : null;
+    }
 }

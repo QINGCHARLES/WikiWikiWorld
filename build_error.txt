@@ -1,0 +1,23 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  WikiWikiWorld.Database -> E:\source\WikiWikiWorld\src\WikiWikiWorld.Database\bin\Debug\net10.0\WikiWikiWorld.Database.dll
+  WikiWikiWorld.Data -> E:\source\WikiWikiWorld\src\WikiWikiWorld.Data\bin\Debug\net10.0\WikiWikiWorld.Data.dll
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleRevisions' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.FileRevisions' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleCultureLinks' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.DownloadUrls' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleTalkSubjects' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleTalkSubjectPosts' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+
+Build FAILED.
+
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleRevisions' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.FileRevisions' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleCultureLinks' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.DownloadUrls' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleTalkSubjects' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\Program.cs(13,25): error CS9035: Required member 'WikiWikiWorldDbContext.ArticleTalkSubjectPosts' must be set in the object initializer or attribute constructor. [E:\source\WikiWikiWorld\src\WikiWikiWorld.DebugConsole\WikiWikiWorld.DebugConsole.csproj]
+    0 Warning(s)
+    6 Error(s)
+
+Time Elapsed 00:00:01.98

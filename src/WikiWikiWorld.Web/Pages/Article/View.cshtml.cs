@@ -1,143 +1,185 @@
 ﻿using AngleSharp.Dom;
 using Markdig;
+using Markdig.Renderers;
+using Markdig.Renderers.Html;
 using WikiWikiWorld.MarkdigExtensions;
 using WikiWikiWorld.Web.MarkdigExtensions;
+using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Data.Specifications;
+using WikiWikiWorld.Data;
+using WikiWikiWorld.Data.Extensions;
+using Microsoft.EntityFrameworkCore;
+using Markdig.Syntax;
+using System.IO;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
 public sealed class ViewModel(
-	IArticleRevisionRepository ArticleRevisionRepository,
-	IFileRevisionRepository FileRevisionRepository,
-	IDownloadUrlsRepository DownloadUrlsRepository,
-	IUserRepository UserRepository,
-	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+    WikiWikiWorldDbContext Context,
+    SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
-	[BindProperty(SupportsGet = true)]
-	public string UrlSlug { get; set; } = string.Empty;
+    [BindProperty(SupportsGet = true)]
+    public string UrlSlug { get; set; } = string.Empty;
 
-	[BindProperty(SupportsGet = true)]
-	public string? Revision { get; set; }
+    [BindProperty(SupportsGet = true)]
+    public string? Revision { get; set; }
 
-	public ArticleRevision? DisplayedRevision { get; set; }
-	public ArticleRevision? CurrentRevision { get; private set; }
-	public bool IsViewingCurrentRevision { get; private set; } = false;
-	public string ArticleRevisionHtml { get; set; } = string.Empty;
+    public ArticleRevision? DisplayedRevision { get; set; }
+    public ArticleRevision? CurrentRevision { get; private set; }
+    public bool IsViewingCurrentRevision { get; private set; } = false;
+    public string ArticleRevisionHtml { get; set; } = string.Empty;
 
-	// New property to hold the recent authors as a list of (username, profilePicGuid) tuples.
-	public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = Array.Empty<ArticleAuthor>();
+    // New property to hold the recent authors as a list of (username, profilePicGuid) tuples.
+    public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = Array.Empty<ArticleAuthor>();
 
-	public async Task<IActionResult> OnGetAsync()
-	{
-		if (SiteId < 1 || string.IsNullOrWhiteSpace(Culture) || string.IsNullOrWhiteSpace(UrlSlug))
-		{
-			return BadRequest("Invalid parameters.");
-		}
+    public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
+    {
+        if (SiteId < 1 || string.IsNullOrWhiteSpace(Culture) || string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            return BadRequest("Invalid parameters.");
+        }
 
-		UrlSlug = UrlSlug.Replace("file:", string.Empty);
+        UrlSlug = UrlSlug.Replace("file:", string.Empty);
 
-		ArticleRevision? SpecificRevision = null;
+        ArticleRevision? SpecificRevision = null;
 
-		// Check if a revision is specified
-		if (!string.IsNullOrWhiteSpace(Revision) && TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
-		{
-			(CurrentRevision, SpecificRevision) = await ArticleRevisionRepository
-				.GetRevisionBySiteIdCultureUrlSlugAndDateAsync(SiteId, Culture, UrlSlug, RevisionDate);
+        // Check if a revision is specified
+        if (!string.IsNullOrWhiteSpace(Revision) && TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
+        {
+            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(SiteId, Culture, UrlSlug, RevisionDate);
+            SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
 
-			// ✅ Determine if this revision is the latest one
-			IsViewingCurrentRevision = SpecificRevision is not null && SpecificRevision.DateCreated == CurrentRevision?.DateCreated;
-		}
-		else
-		{
-			CurrentRevision = await ArticleRevisionRepository
-				.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, UrlSlug);
-		}
+            ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+            CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
 
-		DisplayedRevision = SpecificRevision ?? CurrentRevision;
+            // Determine if this revision is the latest one
+            IsViewingCurrentRevision = SpecificRevision is not null && CurrentRevision is not null && SpecificRevision.DateCreated == CurrentRevision.DateCreated;
+        }
+        else
+        {
+            ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+            CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
+        }
 
-		if (DisplayedRevision is null)
-		{
-			return NotFound();
-		}
+        DisplayedRevision = SpecificRevision ?? CurrentRevision;
 
-		// Fetch recent authors (username and profile pic GUID) for this article.
-		DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
-		RecentAuthors = await ArticleRevisionRepository.GetRecentAuthorsForArticleAsync(
-			DisplayedRevision.CanonicalArticleId,
-			MaxRevisionDate);
+        if (DisplayedRevision is null)
+        {
+            return NotFound();
+        }
 
-		// Markdown processing
-		ShortDescriptionExtension ShortDescriptionExtension = new(this);
- 		ImageExtension ImageExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
-		HeaderImageExtension HeaderImageExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository, this);
-		DownloadsBoxExtension DownloadsBoxExtension = new(SiteId, DownloadUrlsRepository, UserRepository);
-		PullQuoteExtension PullQuoteExtension = new();
-		TestExtension TestExtension = new();
+        // Fetch recent authors (username and profile pic GUID) for this article.
+        DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
+        ArticleRevisionsByCanonicalIdSpec AuthorsSpec = new(DisplayedRevision.CanonicalArticleId, MaxRevisionDate);
+        IReadOnlyList<ArticleRevision> Revisions = await Context.ArticleRevisions.WithSpecification(AuthorsSpec).ToListAsync(CancellationToken);
 
-		List<Category> Categories = [];
-		CategoriesExtension CategoriesExtension = new(Categories);
-		CategoryExtension CategoryExtension = new(Categories);
+        // Get distinct User IDs preserving order of appearance (Recent first)
+        List<Guid> DistinctUserIds = Revisions.Select(r => r.CreatedByUserId).Distinct().ToList();
+        
+        // Fetch all users in one query
+        UserByIdsSpec UserSpec = new(DistinctUserIds);
+        List<User> Users = await Context.Users.WithSpecification(UserSpec).ToListAsync(CancellationToken);
+        
+        List<ArticleAuthor> Authors = [];
+        foreach (Guid UserId in DistinctUserIds)
+        {
+            User? User = Users.FirstOrDefault(u => u.Id == UserId);
+            if (User is not null && User.UserName is not null)
+            {
+                Authors.Add(new ArticleAuthor(User.UserName, User.ProfilePicGuid));
+            }
+        }
+        RecentAuthors = Authors;
 
-		List<Footnote> Footnotes = [];
-		FootnotesExtension FootnotesExtension = new(Footnotes);
-		FootnoteExtension FootnoteExtension = new(Footnotes);
+        // Markdown processing
+        ShortDescriptionExtension ShortDescExt = new(this);
+        ImageExtension ImageExt = new(SiteId, Culture, Context);
+        HeaderImageExtension HeaderImageExt = new(SiteId, Culture, Context, this);
+        DownloadsBoxExtension DownloadsBoxExt = new();
+        PullQuoteExtension PullQuoteExt = new();
+        TestExtension TestExt = new();
 
-		Dictionary<string, Citation> Citations = [];
-		CitationsExtension CitationsExtension = new(Citations);
-		CitationExtension CitationExtension = new(Citations);
+        List<Category> Categories = [];
+        CategoriesExtension CategoriesExt = new(Categories);
+        CategoryExtension CategoryExt = new(Categories);
 
-		PublicationIssueInfoboxExtension PublicationIssueInfoboxExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
-		CoverGridExtension CoverGridExtension = new(SiteId, Culture, ArticleRevisionRepository, FileRevisionRepository);
+        List<Footnote> Footnotes = [];
+        FootnotesExtension FootnotesExt = new(Footnotes);
+        FootnoteExtension FootnoteExt = new(Footnotes);
 
-		MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
-							.Use(ShortDescriptionExtension)
-							.Use(TestExtension)
-							.Use(ImageExtension)
-							.Use(HeaderImageExtension)
-							.Use(CategoriesExtension)
-							.Use(CategoryExtension)
-							.Use(FootnotesExtension)
-							.Use(FootnoteExtension)
-							.Use(CitationsExtension)
-							.Use(CitationExtension)
-							.Use(PublicationIssueInfoboxExtension)
-							.Use(CoverGridExtension)
-							.Use(DownloadsBoxExtension)
-							.Use(PullQuoteExtension)
-							.UseAdvancedExtensions();
+        Dictionary<string, Citation> Citations = [];
+        CitationsExtension CitationsExt = new(Citations);
+        CitationExtension CitationExt = new(Citations);
 
-		MarkdownPipeline Pipeline = Builder.Build();
-		ArticleRevisionHtml = Markdown.ToHtml(DisplayedRevision.Text, Pipeline);
+        PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new(SiteId, Culture, Context);
+        CoverGridExtension CoverGridExt = new(SiteId, Culture, Context);
 
-		return Page();
-	}
+        MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
+                            .Use(ShortDescExt)
+                            .Use(TestExt)
+                            .Use(ImageExt)
+                            .Use(HeaderImageExt)
+                            .Use(CategoriesExt)
+                            .Use(CategoryExt)
+                            .Use(FootnotesExt)
+                            .Use(FootnoteExt)
+                            .Use(CitationsExt)
+                            .Use(CitationExt)
+                            .Use(PublicationIssueInfoboxExt)
+                            .Use(CoverGridExt)
+                            .Use(DownloadsBoxExt)
+                            .Use(PullQuoteExt)
+                            .UseAdvancedExtensions();
 
-	private static bool TryParseRevisionDate(string Revision, out DateTimeOffset DateTime)
-	{
-		DateTime = default;
+        MarkdownPipeline Pipeline = Builder.Build();
+        MarkdownDocument Document = Markdown.Parse(DisplayedRevision.Text, Pipeline);
 
-		if (Revision.Length == 14)
-		{
-			if (DateTimeOffset.TryParseExact(
-				Revision, "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
-				DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedDate14))
-			{
-				DateTime = ParsedDate14;
-				return true;
-			}
-		}
-		else if (Revision.Length >= 15 && Revision.Length <= 21)
-		{
-			string NormalizedRevision = Revision.PadRight(21, '0'); // Ensure proper format
+        // Enrich the document with async data
+        await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture);
+        await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
+        await PublicationIssueInfoboxExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
+        await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
+        await DownloadsBoxExtension.EnrichAsync(Document, Context, SiteId, CancellationToken);
 
-			if (DateTimeOffset.TryParseExact(
-				NormalizedRevision, "yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture,
-				DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedDateFull))
-			{
-				DateTime = ParsedDateFull;
-				return true;
-			}
-		}
+        // Render to HTML
+        StringWriter Writer = new();
+        HtmlRenderer Renderer = new(Writer);
+        Pipeline.Setup(Renderer);
+        Renderer.Render(Document);
+        Writer.Flush();
+        
+        ArticleRevisionHtml = Writer.ToString();
 
-		return false;
-	}
+        return Page();
+    }
+
+    private static bool TryParseRevisionDate(string Revision, out DateTimeOffset DateTime)
+    {
+        DateTime = default;
+
+        if (Revision.Length == 14)
+        {
+            if (DateTimeOffset.TryParseExact(
+                Revision, "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedDate14))
+            {
+                DateTime = ParsedDate14;
+                return true;
+            }
+        }
+        else if (Revision.Length >= 15 && Revision.Length <= 21)
+        {
+            string NormalizedRevision = Revision.PadRight(21, '0'); // Ensure proper format
+
+            if (DateTimeOffset.TryParseExact(
+                NormalizedRevision, "yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedDateFull))
+            {
+                DateTime = ParsedDateFull;
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

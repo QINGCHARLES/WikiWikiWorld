@@ -822,25 +822,26 @@ table
 {
 	border-collapse: collapse;
 	text-align: left;
+	width: 100%;
 }
 
 th
 {
-	background-color: #f2f2f2;
-	color: #333;
+	background-color: var(--color-surface);
+	color: var(--color-foreground);
 	font-weight: bold;
 	padding: 0.625rem 0.9375rem;
-	border-bottom: 0.125rem solid #ddd;
+	border-bottom: 0.125rem solid var(--color-border);
 }
 
 tr
 {
-	border-bottom: 0.0625rem solid #eee;
+	border-bottom: 0.0625rem solid var(--color-border);
 }
 
 	tr:nth-child(even)
 	{
-		background-color: #f7f7f7;
+		background-color: var(--color-surface-alt);
 	}
 
 td
@@ -851,7 +852,7 @@ td
 
 tr:hover
 {
-	background-color: #e6e6e6;
+	background-color: var(--color-surface);
 }
 
 /*#endregion Article*/

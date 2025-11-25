@@ -2,107 +2,114 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Data.Specifications;
+using WikiWikiWorld.Data.Extensions;
+using Microsoft.EntityFrameworkCore;
 
-namespace WikiWikiWorld.Web.Controllers.Api
+namespace WikiWikiWorld.Web.Controllers.Api;
+ 
+[Route("api/article")]
+[ApiController]
+public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverService SiteResolverService) : ControllerBase
 {
-	[Route("api/article")]
-	[ApiController]
-	public class ArticleApiController(IArticleRevisionRepository ArticleRevisionRepository, SiteResolverService SiteResolverService) : ControllerBase
-	{
-		[HttpGet("{UrlSlug}")]
-		public async Task<IActionResult> GetArticleRevision(string UrlSlug, [FromQuery] string? Revision)
-		{
-			if (string.IsNullOrWhiteSpace(UrlSlug))
-			{
-				return BadRequest("Invalid parameters.");
-			}
+    [HttpGet("{UrlSlug}")]
+    public async Task<IActionResult> GetArticleRevision(string UrlSlug, [FromQuery] string? Revision)
+    {
+        if (string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            return BadRequest("Invalid parameters.");
+        }
 
-			(int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
+        (int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
 
-			ArticleRevision? SpecificRevision = null;
-			ArticleRevision? CurrentRevision;
+        ArticleRevision? SpecificRevision = null;
+        ArticleRevision? CurrentRevision;
 
-			// If a revision is specified, parse the date and retrieve the specific revision
-			if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
-			{
-				(CurrentRevision, SpecificRevision) = await ArticleRevisionRepository
-					.GetRevisionBySiteIdCultureUrlSlugAndDateAsync(SiteId, Culture, UrlSlug, RevisionDate);
+        // If a revision is specified, parse the date and retrieve the specific revision
+        if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
+        {
+            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(SiteId, Culture, UrlSlug, RevisionDate);
+            SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync();
+        }
 
-				// If specific revision exists, return it
-				if (SpecificRevision is not null)
-				{
-					return Ok(SpecificRevision);
-				}
-			}
+        // Return the current revision
+        ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+        CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync();
 
-			// If no specific revision found, return the current revision
-			CurrentRevision = await ArticleRevisionRepository
-				.GetCurrentBySiteIdCultureAndUrlSlugAsync(SiteId, Culture, UrlSlug);
+        if (SpecificRevision is not null)
+        {
+            return Ok(SpecificRevision);
+        }
 
-			if (CurrentRevision is null)
-			{
-				return NotFound("Article revision not found.");
-			}
+        if (CurrentRevision is null)
+        {
+            return NotFound("Article revision not found.");
+        }
 
-			return Ok(CurrentRevision);
-		}
+        return Ok(CurrentRevision);
+    }
 
-		[HttpPut("{UrlSlug}")]
-		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-		public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model)
-		{
-			if (string.IsNullOrWhiteSpace(UrlSlug) || Model == null)
-			{
-				return BadRequest("Invalid parameters.");
-			}
+    [HttpPut("{UrlSlug}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model)
+    {
+        if (string.IsNullOrWhiteSpace(UrlSlug) || Model == null)
+        {
+            return BadRequest("Invalid parameters.");
+        }
 
-			(int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
+        (int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
 
-			var UserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-			if (UserId == null)
-			{
-				return Unauthorized("User ID not found in token.");
-			}
+        string? UserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (UserId == null)
+        {
+            return Unauthorized("User ID not found in token.");
+        }
 
-		var ArticleRevision = new ArticleRevision
-		{
-			CanonicalArticleId = Model.CanonicalArticleId ?? Guid.NewGuid(),
-			SiteId = SiteId,
-			Culture = Culture,
-			Title = Model.Title,
-			DisplayTitle = Model.DisplayTitle,
-			UrlSlug = UrlSlug,
-			Type = Model.Type,
-			CanonicalFileId = Model.CanonicalFileId,
-			Text = Model.Text,
-			RevisionReason = Model.RevisionReason,
-			CreatedByUserId = Guid.Parse(UserId)
-		};			await ArticleRevisionRepository.InsertAsync(
-				Model.CanonicalArticleId,
-				SiteId,
-				Culture,
-				Model.Title,
-				Model.DisplayTitle,
-				UrlSlug,
-				Model.Type,
-				Model.CanonicalFileId,
-				Model.Text,
-				Model.RevisionReason,
-				Guid.Parse(UserId)
-			);
+        // Find current revision and set IsCurrent = false
+        ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync();
 
-			return Ok("Article revision updated successfully.");
-		}
-	}
+        if (CurrentRevision is not null)
+        {
+            CurrentRevision.IsCurrent = false;
+            Context.ArticleRevisions.Update(CurrentRevision);
+            await Context.SaveChangesAsync();
+        }
 
-	public class UpdateArticleRevisionModel
-	{
-		public Guid? CanonicalArticleId { get; set; }
-		public required string Title { get; set; }
-		public string? DisplayTitle { get; set; }
-		public ArticleType Type { get; set; }
-		public Guid? CanonicalFileId { get; set; }
-		public required string Text { get; set; }
-		public required string RevisionReason { get; set; }
-	}
+        ArticleRevision ArticleRevision = new()
+        {
+            CanonicalArticleId = Model.CanonicalArticleId ?? Guid.NewGuid(),
+            SiteId = SiteId,
+            Culture = Culture,
+            Title = Model.Title,
+            DisplayTitle = Model.DisplayTitle,
+            UrlSlug = UrlSlug,
+            Type = Model.Type,
+            CanonicalFileId = Model.CanonicalFileId,
+            Text = Model.Text,
+            RevisionReason = Model.RevisionReason,
+            CreatedByUserId = Guid.Parse(UserId),
+            DateCreated = DateTimeOffset.UtcNow,
+            IsCurrent = true
+        };
+
+        Context.ArticleRevisions.Add(ArticleRevision);
+        await Context.SaveChangesAsync();
+
+        return Ok("Article revision updated successfully.");
+    }
+}
+
+public class UpdateArticleRevisionModel
+{
+    public Guid? CanonicalArticleId { get; set; }
+    public required string Title { get; set; }
+    public string? DisplayTitle { get; set; }
+    public ArticleType Type { get; set; }
+    public Guid? CanonicalFileId { get; set; }
+    public required string Text { get; set; }
+    public required string RevisionReason { get; set; }
 }

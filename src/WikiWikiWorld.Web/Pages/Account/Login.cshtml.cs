@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using WikiWikiWorld.Data.Models;
 
 namespace WikiWikiWorld.Web.Pages.Account;
 
-public sealed class LoginModel(SignInManager<ApplicationUser> SignInManager, UserManager<ApplicationUser> UserManager, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+public sealed class LoginModel(SignInManager<User> SignInManager, UserManager<User> UserManager, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
-	private readonly SignInManager<ApplicationUser> SignInManager = SignInManager;
-	private readonly UserManager<ApplicationUser> UserManager = UserManager;
+	private readonly SignInManager<User> SignInManager = SignInManager;
+	private readonly UserManager<User> UserManager = UserManager;
 
 	[BindProperty]
 	public required LoginInputModel Input { get; set; }
@@ -25,15 +26,15 @@ public sealed class LoginModel(SignInManager<ApplicationUser> SignInManager, Use
 		}
 
 		// ✅ Find user by UserName (instead of Email)
-		ApplicationUser? User = await UserManager.FindByNameAsync(Input.UserName);
-		if (User is null)
+		User? TargetUser = await UserManager.FindByNameAsync(Input.UserName);
+		if (TargetUser is null)
 		{
 			ModelState.AddModelError(string.Empty, "Invalid username or password.");
 			return Page();
 		}
 
 		// ✅ Authenticate user by username & password
-		Microsoft.AspNetCore.Identity.SignInResult Result = await SignInManager.PasswordSignInAsync(User, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+		Microsoft.AspNetCore.Identity.SignInResult Result = await SignInManager.PasswordSignInAsync(TargetUser, Input.Password, Input.RememberMe, lockoutOnFailure: true);
 		if (Result.Succeeded)
 		{
 			return RedirectToPage("/Index");
