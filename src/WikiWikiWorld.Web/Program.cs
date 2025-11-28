@@ -92,6 +92,7 @@ Builder.Services.Configure<IdentityOptions>(options =>
 
     // User settings
     options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedAccount = false;
 });
 
 // ✅ Add Authentication & Authorization Middleware with JWT and Cookies

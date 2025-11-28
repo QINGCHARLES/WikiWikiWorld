@@ -4,9 +4,11 @@
 	ViewData["Title"] = "Delete Article";
 }
 
-<article>
-	<h1 class="title">Delete Article</h1>
+<figure>
+	<h1>Delete Article</h1>
+</figure>
 
+<article>
 	@if (!User.Identity?.IsAuthenticated ?? true)
 	{
 		<div class="alert alert-danger">

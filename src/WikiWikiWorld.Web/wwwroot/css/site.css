@@ -1789,3 +1789,35 @@ ul.categories a
 }
 
 /* "بايت الشرق الأوسط" (Bayt al-Sharq al-Awsaṭ) Byte Middle East */
+
+/*#region Cards*/
+.card
+{
+	background-color: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+	overflow: hidden;
+	margin-bottom: var(--space-m);
+}
+
+.card > table
+{
+	margin-bottom: 0;
+	width: 100%;
+}
+
+.card > table th
+{
+	background-color: var(--color-surface-alt);
+}
+
+.card-wide
+{
+	width: clamp(100%, 100vw - 4 * var(--grid-gutter), calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter)));
+	max-width: none;
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%);
+}
+/*#endregion Cards*/

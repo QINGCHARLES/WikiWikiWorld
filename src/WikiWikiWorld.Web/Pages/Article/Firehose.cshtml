@@ -5,10 +5,11 @@
 }
 
 <figure>
-	<h1 class="title">Firehose</h1>
+	<h1>Firehose</h1>
 </figure>
 
 <article>
+	<p>Recent changes to the wiki.</p>
 
 	@if (!Model.RecentRevisions.Any())
 	{
@@ -16,6 +17,7 @@
 	}
 	else
 	{
+		<div class="card card-wide">
 			<table>
 				<thead>
 					<tr>
@@ -62,5 +64,6 @@
 					}
 				</tbody>
 			</table>
+		</div>
 	}
 </article>

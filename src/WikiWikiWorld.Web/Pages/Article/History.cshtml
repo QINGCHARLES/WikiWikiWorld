@@ -5,9 +5,11 @@
 	ViewData["Title"] = "Article Revision History";
 }
 
-<article>
+<figure>
+	<h1>Revision History for "@Model.UrlSlug"</h1>
+</figure>
 
-	<h1 class="title">Revision History for "@Model.UrlSlug"</h1>
+<article>
 
 	@if (Model.ArticleRevisions.Count > 0)
 	{

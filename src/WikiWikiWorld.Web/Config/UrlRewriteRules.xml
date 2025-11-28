@@ -33,7 +33,7 @@
 		</rule>
 		<rule enabled="true">
 			<match url="^register:" />
-			<action type="Rewrite" url="https://{HTTP_HOST}/Identity/Account/Register" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Account/Register" />
 		</rule>
 		<rule enabled="true">
 			<match url="^dmca:" />
