@@ -82,7 +82,7 @@ public class HeaderImageBlockRenderer(int SiteId, BasePageModel PageModel)
     }
 }
 
-public class HeaderImageExtension(int SiteId, string Culture, WikiWikiWorldDbContext Context, BasePageModel PageModel)
+public class HeaderImageExtension(int SiteId, BasePageModel PageModel)
     : IMarkdownExtension
 {
     public void Setup(MarkdownPipelineBuilder Pipeline)

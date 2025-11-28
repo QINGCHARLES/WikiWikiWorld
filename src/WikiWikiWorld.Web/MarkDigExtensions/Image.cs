@@ -161,7 +161,7 @@ public class ImageInlineRenderer(int SiteId) : HtmlObjectRenderer<ImageInline>
     }
 }
 
-public class ImageExtension(int SiteId, string Culture, WikiWikiWorldDbContext Context) : IMarkdownExtension
+public class ImageExtension(int SiteId) : IMarkdownExtension
 {
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {

@@ -10,10 +10,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
+/// <summary>
+/// API controller for managing articles.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 [Route("api/article")]
 [ApiController]
 public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverService SiteResolverService) : ControllerBase
 {
+    /// <summary>
+    /// Gets an article revision.
+    /// </summary>
+    /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="Revision">The optional revision date string.</param>
+    /// <returns>The article revision.</returns>
     [HttpGet("{UrlSlug}")]
     public async Task<IActionResult> GetArticleRevision(string UrlSlug, [FromQuery] string? Revision)
     {
@@ -51,6 +62,12 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
         return Ok(CurrentRevision);
     }
 
+    /// <summary>
+    /// Updates an article revision.
+    /// </summary>
+    /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="Model">The update model.</param>
+    /// <returns>The result of the update operation.</returns>
     [HttpPut("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model)
@@ -103,13 +120,43 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
     }
 }
 
+/// <summary>
+/// Model for updating an article revision.
+/// </summary>
 public class UpdateArticleRevisionModel
 {
+    /// <summary>
+    /// Gets or sets the canonical article identifier.
+    /// </summary>
     public Guid? CanonicalArticleId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the title of the article.
+    /// </summary>
     public required string Title { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display title of the article.
+    /// </summary>
     public string? DisplayTitle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type of the article.
+    /// </summary>
     public ArticleType Type { get; set; }
+
+    /// <summary>
+    /// Gets or sets the canonical file identifier.
+    /// </summary>
     public Guid? CanonicalFileId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text content of the article.
+    /// </summary>
     public required string Text { get; set; }
+
+    /// <summary>
+    /// Gets or sets the reason for the revision.
+    /// </summary>
     public required string RevisionReason { get; set; }
 }

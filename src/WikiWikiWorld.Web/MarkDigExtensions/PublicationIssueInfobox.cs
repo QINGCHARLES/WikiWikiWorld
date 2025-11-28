@@ -76,7 +76,7 @@ public class PublicationIssueInfoboxBlockParser : BlockParser
     }
 }
 
-public class PublicationIssueInfoboxRenderer(int SiteId) : HtmlObjectRenderer<PublicationIssueInfoboxBlock>
+public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIssueInfoboxBlock>
 {
     // Default number of slides in the standard CSS
     private const int MaxSlides = 3;
@@ -276,7 +276,7 @@ public class PublicationIssueInfoboxRenderer(int SiteId) : HtmlObjectRenderer<Pu
     };
 }
 
-public class PublicationIssueInfoboxExtension(int SiteId, string Culture, WikiWikiWorldDbContext Context) : IMarkdownExtension
+public class PublicationIssueInfoboxExtension : IMarkdownExtension
 {
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
@@ -291,7 +291,7 @@ public class PublicationIssueInfoboxExtension(int SiteId, string Culture, WikiWi
         if (Renderer is HtmlRenderer HtmlRenderer &&
             !HtmlRenderer.ObjectRenderers.Any(R => R is PublicationIssueInfoboxRenderer))
         {
-            HtmlRenderer.ObjectRenderers.Add(new PublicationIssueInfoboxRenderer(SiteId));
+            HtmlRenderer.ObjectRenderers.Add(new PublicationIssueInfoboxRenderer());
         }
     }
 

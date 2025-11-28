@@ -6,6 +6,9 @@ using AngleSharp.Html;
 
 namespace WikiWikiWorld.Web;
 
+/// <summary>
+/// A pretty markup formatter that is aware of inline elements and avoids adding unnecessary whitespace around them.
+/// </summary>
 public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
 {
 	private enum ContainerMode

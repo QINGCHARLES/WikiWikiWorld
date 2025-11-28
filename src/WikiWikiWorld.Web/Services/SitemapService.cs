@@ -7,11 +7,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Services;
 
+/// <summary>
+/// Interface for the sitemap service.
+/// </summary>
 public interface ISitemapService
 {
+    /// <summary>
+    /// Generates the sitemap XML.
+    /// </summary>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    /// <returns>The sitemap XML as a string.</returns>
     Task<string> GenerateSitemapAsync(CancellationToken CancellationToken = default);
 }
 
+/// <summary>
+/// Service to generate the sitemap.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolver">The site resolver service.</param>
+/// <param name="MemoryCache">The memory cache.</param>
+/// <param name="HttpContextAccessor">The HTTP context accessor.</param>
 public sealed class SitemapService(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolver,
@@ -22,6 +37,7 @@ public sealed class SitemapService(
     private const string SitemapCacheKeyPrefix = "Sitemap_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(6); // Cache for 6 hours
 
+    /// <inheritdoc/>
     public async Task<string> GenerateSitemapAsync(CancellationToken CancellationToken = default)
     {
         // Get the current site context using the resolver

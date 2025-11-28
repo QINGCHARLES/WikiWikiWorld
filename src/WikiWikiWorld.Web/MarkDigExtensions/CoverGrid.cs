@@ -157,7 +157,7 @@ public class CoverGridRenderer(string Culture) : HtmlObjectRenderer<CoverGridBlo
     }
 }
 
-public class CoverGridExtension(int SiteId, string Culture, WikiWikiWorldDbContext Context) : IMarkdownExtension
+public class CoverGridExtension(string Culture) : IMarkdownExtension
 {
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {

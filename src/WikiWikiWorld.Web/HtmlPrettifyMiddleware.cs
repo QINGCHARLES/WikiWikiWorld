@@ -5,8 +5,17 @@ using AngleSharp.Html.Parser;
 
 namespace WikiWikiWorld.Web;
 
+/// <summary>
+/// Middleware to prettify HTML responses.
+/// </summary>
+/// <param name="Next">The next delegate/middleware in the pipeline.</param>
 public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
 {
+	/// <summary>
+	/// Invokes the middleware.
+	/// </summary>
+	/// <param name="Context">The HTTP context.</param>
+	/// <returns>A task that represents the completion of request processing.</returns>
 	public async Task Invoke(HttpContext Context)
 	{
 		Stream OriginalBodyStream = Context.Response.Body;
@@ -94,8 +103,16 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
 	}
 }
 
+/// <summary>
+/// Extension methods for the HTML prettify middleware.
+/// </summary>
 public static class HtmlPrettifyMiddlewareExtensions
 {
+	/// <summary>
+	/// Adds the HTML prettify middleware to the pipeline.
+	/// </summary>
+	/// <param name="ApplicationBuilder">The application builder.</param>
+	/// <returns>The application builder.</returns>
 	public static IApplicationBuilder UseHtmlPrettify(this IApplicationBuilder ApplicationBuilder) =>
 		ApplicationBuilder.UseMiddleware<HtmlPrettifyMiddleware>();
 }

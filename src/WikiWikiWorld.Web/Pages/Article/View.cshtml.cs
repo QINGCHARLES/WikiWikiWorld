@@ -93,8 +93,8 @@ public sealed class ViewModel(
 
         // Markdown processing
         ShortDescriptionExtension ShortDescExt = new(this);
-        ImageExtension ImageExt = new(SiteId, Culture, Context);
-        HeaderImageExtension HeaderImageExt = new(SiteId, Culture, Context, this);
+        ImageExtension ImageExt = new(SiteId);
+        HeaderImageExtension HeaderImageExt = new(SiteId, this);
         DownloadsBoxExtension DownloadsBoxExt = new();
         PullQuoteExtension PullQuoteExt = new();
         TestExtension TestExt = new();
@@ -111,8 +111,8 @@ public sealed class ViewModel(
         CitationsExtension CitationsExt = new(Citations);
         CitationExtension CitationExt = new(Citations);
 
-        PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new(SiteId, Culture, Context);
-        CoverGridExtension CoverGridExt = new(SiteId, Culture, Context);
+        PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
+        CoverGridExtension CoverGridExt = new(Culture);
 
         MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
                             .Use(ShortDescExt)

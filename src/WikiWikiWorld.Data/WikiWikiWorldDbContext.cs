@@ -4,68 +4,91 @@ using WikiWikiWorld.Data.Models;
 
 namespace WikiWikiWorld.Data;
 
+/// <summary>
+/// The database context for the WikiWikiWorld application.
+/// </summary>
 public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WikiWikiWorldDbContext"/> class.
+    /// </summary>
+    /// <param name="options">The options for this context.</param>
     public WikiWikiWorldDbContext(DbContextOptions<WikiWikiWorldDbContext> options) : base(options)
     {
     }
 
+    /// <summary>
+    /// Gets or sets the article revisions.
+    /// </summary>
     public DbSet<ArticleRevision> ArticleRevisions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the file revisions.
+    /// </summary>
     public DbSet<FileRevision> FileRevisions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the article culture links.
+    /// </summary>
     public DbSet<ArticleCultureLink> ArticleCultureLinks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the download URLs.
+    /// </summary>
     public DbSet<DownloadUrl> DownloadUrls { get; set; }
+
+    /// <summary>
+    /// Gets or sets the article talk subjects.
+    /// </summary>
     public DbSet<ArticleTalkSubject> ArticleTalkSubjects { get; set; }
+
+    /// <summary>
+    /// Gets or sets the article talk subject posts.
+    /// </summary>
     public DbSet<ArticleTalkSubjectPost> ArticleTalkSubjectPosts { get; set; }
 
+    /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder Builder)
     {
         base.OnModelCreating(Builder);
 
-        // Configure Users
         Builder.Entity<User>(b =>
         {
             b.ToTable("Users");
             b.HasQueryFilter(u => u.DateDeleted == null);
         });
 
-        // Configure Roles
         Builder.Entity<Role>(b =>
         {
             b.ToTable("Roles");
             b.HasQueryFilter(r => r.DateDeleted == null);
         });
 
-        // Configure UserRoles
         Builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserRole<Guid>>(b =>
         {
             b.ToTable("UserRoles");
         });
 
-        // Configure UserClaims
         Builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserClaim<Guid>>(b =>
         {
             b.ToTable("UserClaims");
         });
 
-        // Configure UserLogins
         Builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserLogin<Guid>>(b =>
         {
             b.ToTable("UserLogins");
         });
 
-        // Configure RoleClaims
         Builder.Entity<Microsoft.AspNetCore.Identity.IdentityRoleClaim<Guid>>(b =>
         {
             b.ToTable("RoleClaims");
         });
 
-        // Configure UserTokens
         Builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserToken<Guid>>(b =>
         {
             b.ToTable("UserTokens");
         });
 
-        // Configure ArticleRevision
         Builder.Entity<ArticleRevision>(b =>
         {
             b.HasKey(e => e.Id);
@@ -74,7 +97,6 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
             b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.IsCurrent }).HasFilter("IsCurrent = 1 AND DateDeleted IS NULL");
         });
 
-        // Configure FileRevision
         Builder.Entity<FileRevision>(b =>
         {
             b.HasKey(e => e.Id);
@@ -82,7 +104,6 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
             b.HasIndex(e => new { e.CanonicalFileId, e.DateCreated });
         });
 
-        // Configure ArticleCultureLink
         Builder.Entity<ArticleCultureLink>(b =>
         {
             b.HasKey(e => e.Id);
@@ -90,7 +111,6 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
             b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
         });
 
-        // Configure DownloadUrl
         Builder.Entity<DownloadUrl>(b =>
         {
             b.HasKey(e => e.Id);
@@ -98,7 +118,6 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
             b.HasIndex(e => new { e.SiteId, e.HashSha256 });
         });
 
-        // Configure ArticleTalkSubject
         Builder.Entity<ArticleTalkSubject>(b =>
         {
             b.HasKey(e => e.Id);
@@ -106,7 +125,6 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
             b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
         });
 
-        // Configure ArticleTalkSubjectPost
         Builder.Entity<ArticleTalkSubjectPost>(b =>
         {
             b.HasKey(e => e.Id);
