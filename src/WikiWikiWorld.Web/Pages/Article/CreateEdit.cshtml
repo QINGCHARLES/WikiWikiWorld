@@ -41,19 +41,12 @@
 			}
 
 			<div class="form-grid">
-				<div class="form-group form-group-full">
-					<label for="Title" class="form-label">
-						<span class="label-text">Title</span>
-						<span class="label-required" aria-label="required">*</span>
-					</label>
-					<input 
-						type="text" 
-						id="Title" 
-						asp-for="Title" 
-						class="form-input" 
-						placeholder="Enter the article title"
-						required 
-						autofocus />
+				<div class="form-group-full">
+					<div class="md3-field md3-filled">
+						<input asp-for="Title" placeholder=" " />
+						<label asp-for="Title">Title</label>
+						<span class="md-line"></span>
+					</div>
 					<span class="form-help">The main title of your article</span>
 				</div>
 
@@ -70,32 +63,27 @@
 					<span class="form-help">Optional multi-line title with custom formatting</span>
 				</div>
 
-				<div class="form-group">
-					<label for="UrlSlug" class="form-label">
-						<span class="label-text">URL Slug</span>
-						<span class="label-required" aria-label="required">*</span>
-					</label>
-					<input 
-						type="text" 
-						id="UrlSlug" 
-						asp-for="UrlSlug" 
-						class="form-input" 
-						placeholder="article-url-slug"
-						pattern="[a-z0-9\-]+"
-						required />
+				<div>
+					<div class="md3-field md3-filled">
+						<input asp-for="UrlSlug" placeholder=" " pattern="[a-z0-9\-]+" />
+						<label asp-for="UrlSlug">URL Slug</label>
+						<span class="md-line"></span>
+					</div>
 					<span class="form-help">Lowercase letters, numbers, and hyphens only</span>
 				</div>
 
-				<div class="form-group">
-					<label for="SelectedType" class="form-label">
-						<span class="label-text">Article Type</span>
-					</label>
-					<select 
-						id="SelectedType" 
-						asp-for="SelectedType" 
-						asp-items="@(new SelectList(Model.AvailableArticleTypes))" 
-						class="form-select">
-					</select>
+				<div>
+					<div class="md3-field md3-filled">
+						<select asp-for="SelectedType" asp-items="@(new SelectList(Model.AvailableArticleTypes))">
+						</select>
+						<label asp-for="SelectedType">Article Type</label>
+						<div class="md-icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="m6 9 6 6 6-6"/>
+							</svg>
+						</div>
+						<span class="md-line"></span>
+					</div>
 					<span class="form-help">Category of the article</span>
 				</div>
 
