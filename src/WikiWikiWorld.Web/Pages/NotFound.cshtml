@@ -1,0 +1,87 @@
+@page
+@model WikiWikiWorld.Web.Pages.NotFoundModel
+@{
+    ViewData["Title"] = "Page Not Found";
+    Response.StatusCode = 404;
+}
+
+<div class="not-found-container">
+    <div class="not-found-content">
+        <h1 class="not-found-title">404</h1>
+        <h2 class="not-found-subtitle">Page Not Found</h2>
+        <p class="not-found-message">
+            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        </p>
+        
+        @if (!string.IsNullOrWhiteSpace(Model.UrlSlug))
+        {
+            <div class="not-found-slug">
+                Requested: <code>@Model.UrlSlug</code>
+            </div>
+        }
+
+        <div class="not-found-actions">
+            @if (!string.IsNullOrWhiteSpace(Model.UrlSlug))
+            {
+                <a href="/@Model.UrlSlug/edit" class="button button-primary">Create this Page</a>
+            }
+            <a href="/" class="button button-secondary">Go Home</a>
+            <a href="javascript:history.back()" class="button button-secondary">Go Back</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .not-found-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .not-found-content {
+        max-width: 600px;
+    }
+
+    .not-found-title {
+        font-size: 8rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 0;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary, #f3de8a) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 0.8;
+    }
+
+    .not-found-subtitle {
+        font-size: 2rem;
+        margin: 1rem 0;
+        color: var(--color-title);
+    }
+
+    .not-found-message {
+        font-size: 1.125rem;
+        color: var(--color-muted);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .not-found-slug {
+        margin-bottom: 2rem;
+        padding: 0.5rem 1rem;
+        background: var(--color-surface-alt);
+        border-radius: 0.5rem;
+        display: inline-block;
+        font-family: monospace;
+        color: var(--color-foreground);
+    }
+
+    .not-found-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+</style>

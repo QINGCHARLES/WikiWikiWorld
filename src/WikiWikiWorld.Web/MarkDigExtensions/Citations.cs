@@ -6,81 +6,133 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
-namespace WikiWikiWorld.MarkdigExtensions;
+namespace WikiWikiWorld.Web.MarkdigExtensions;
 
-/// <summary>
-/// Block representing the {{Citations}} marker
-/// </summary>
-public sealed class CitationsBlock : LeafBlock
+// --- Data Models (AST Nodes) ---
+
+public sealed class CitationInline : LeafInline
 {
-	public CitationsBlock(BlockParser Parser) : base(Parser) { }
+	public required StringSlice Data { get; init; }
+	public required string CitationId { get; init; }
+	public int CitationNumber { get; set; }
+	public string BackRefId { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Parser that identifies the {{Citations}} marker
-/// </summary>
-public sealed class CitationsParser : BlockParser
+public class Citation
+{
+	public int Number { get; set; }
+	public required string Id { get; set; }
+	public required Dictionary<string, List<string>> Properties { get; set; }
+	public required List<string> ReferencedBy { get; set; }
+}
+
+public sealed class CitationsBlock(BlockParser Parser) : LeafBlock(Parser)
+{
+	public Dictionary<string, Citation> Citations { get; set; } = [];
+}
+
+// --- Parsers ---
+
+public sealed class CitationParser : InlineParser
+{
+	private const string MarkerStart = "{{Citation ";
+	private const string MarkerEnd = "}}";
+
+	public CitationParser() => OpeningCharacters = ['{'];
+
+	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
+	{
+		int StartPosition = Slice.Start;
+		if (!Slice.Match(MarkerStart)) return false;
+
+		Slice.Start += MarkerStart.Length;
+		int EndPos = Slice.Text.IndexOf(MarkerEnd, Slice.Start, StringComparison.Ordinal);
+		
+		if (EndPos == -1)
+		{
+			Slice.Start = StartPosition;
+			return false;
+		}
+
+		string CitationContent = Slice.Text.Substring(Slice.Start, EndPos - Slice.Start).Trim();
+		string CitationId = GenerateCitationId(CitationContent);
+
+		int InlineStart = Processor.GetSourcePosition(Slice.Start, out int Line, out int Column);
+
+		Processor.Inline = new CitationInline
+		{
+			Span = new SourceSpan(InlineStart, InlineStart + (EndPos - Slice.Start)),
+			Line = Line,
+			Column = Column,
+			Data = new StringSlice(Slice.Text, Slice.Start, EndPos - 1),
+			CitationId = CitationId,
+			CitationNumber = 0 // Assigned in ReprocessCitations
+		};
+
+		Slice.Start = EndPos + MarkerEnd.Length;
+		return true;
+	}
+
+	private static string GenerateCitationId(string Content)
+	{
+		int Hash = 0;
+		foreach (char C in Content)
+		{
+			Hash = (Hash * 31) + C;
+		}
+		return $"cit_{Math.Abs(Hash)}";
+	}
+}
+
+public sealed class CitationsBlockParser : BlockParser
 {
 	private const string Marker = "{{Citations}}";
 
-	public CitationsParser()
-	{
-		OpeningCharacters = ['{'];
-	}
+	public CitationsBlockParser() => OpeningCharacters = ['{'];
 
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
-		// Check if the line starts with "{{Citations}}"
-		if (!Processor.Line.Match(Marker))
-		{
-			return BlockState.None;
-		}
+		if (!Processor.Line.Match(Marker)) return BlockState.None;
 
-		// Move cursor forward to avoid infinite loop
 		Processor.Line.Start += Marker.Length;
-
-		// Push new block
 		Processor.NewBlocks.Push(new CitationsBlock(this));
 		return BlockState.BreakDiscard;
 	}
 }
 
-/// <summary>
-/// Renderer that outputs the list of citations in HTML
-/// </summary>
+// --- Renderers ---
+
+public sealed class CitationRenderer : HtmlObjectRenderer<CitationInline>
+{
+	protected override void Write(HtmlRenderer Renderer, CitationInline Inline)
+	{
+		string Display = Inline.CitationNumber > 0 ? Inline.CitationNumber.ToString() : "?";
+		string Id = !string.IsNullOrEmpty(Inline.BackRefId) ? Inline.BackRefId : $"citref:{Display}";
+
+		Renderer.Write($"<sup id=\"{Id}\" class=\"citation-ref\">");
+		Renderer.Write($"<a href=\"#cit:{Display}\">†{Display}</a>");
+		Renderer.Write("</sup>");
+	}
+}
+
 public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 {
-	private readonly Dictionary<string, Citation> Citations;
-
-	public CitationsRenderer(Dictionary<string, Citation> Citations)
-	{
-		this.Citations = Citations;
-	}
-
 	protected override void Write(HtmlRenderer Renderer, CitationsBlock Block)
 	{
-		if (Citations is null || Citations.Count == 0)
-		{
+		if (Block.Citations is null || Block.Citations.Count == 0)
 			return;
-		}
 
-		// Start citations section
 		Renderer.Write("<div class=\"citations\">");
 		Renderer.Write("<hr />");
 		Renderer.Write("<h3>Citations</h3>");
 		Renderer.Write("<ol class=\"citation-list\">");
 
-		// Write each citation
-		foreach (Citation Citation in Citations.Values.OrderBy(c => c.Number))
+		foreach (Citation Citation in Block.Citations.Values.OrderBy(c => c.Number))
 		{
-			Renderer.Write("<li id=\"cit:");
-			Renderer.Write(Citation.Number.ToString());
-			Renderer.Write("\" class=\"citation-item\">");
+			Renderer.Write($"<li id=\"cit:{Citation.Number}\" class=\"citation-item\">");
 
-			// Write the citation in a structured format
 			WriteFormattedCitation(Renderer, Citation);
 
-			// Add back-references
 			if (Citation.ReferencedBy.Count > 0)
 			{
 				Renderer.Write("<div class=\"citation-references\">");
@@ -88,21 +140,14 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 
 				for (int i = 0; i < Citation.ReferencedBy.Count; i++)
 				{
-					if (i > 0)
-					{
-						Renderer.Write(", ");
-					}
+					if (i > 0) Renderer.Write(", ");
 
 					string RefId = Citation.ReferencedBy[i];
-					Renderer.Write("<a href=\"#");
-					Renderer.Write(RefId);
-					Renderer.Write("\" class=\"citation-backref\">†");
-					Renderer.Write(Citation.Number.ToString());
-					if (i + 1 < Citation.ReferencedBy.Count)
+					Renderer.Write($"<a href=\"#{RefId}\" class=\"citation-backref\">†{Citation.Number}");
+					
+					if (Citation.ReferencedBy.Count > 1)
 					{
-						Renderer.Write("<sup>");
-						Renderer.Write((i + 1).ToString());
-						Renderer.Write("</sup>");
+						Renderer.Write($"<sup>{i + 1}</sup>");
 					}
 					Renderer.Write("</a>");
 				}
@@ -113,19 +158,12 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			Renderer.Write("</li>");
 		}
 
-		// End citations section
 		Renderer.Write("</ol>");
 		Renderer.Write("</div>");
 	}
 
-	/// <summary>
-	/// Writes a formatted citation based on available properties
-	/// </summary>
 	private static void WriteFormattedCitation(HtmlRenderer Renderer, Citation Citation)
 	{
-		// Format the citation based on available properties
-		// This is a simplified version that can be expanded for different citation styles
-
 		// Author(s)
 		if (Citation.Properties.TryGetValue("author", out List<string>? Authors))
 		{
@@ -136,138 +174,164 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		// Title
 		if (Citation.Properties.TryGetValue("title", out List<string>? Titles) && Titles.Count > 0)
 		{
-			Renderer.Write("<em>");
-			Renderer.Write(Titles[0]);
-			Renderer.Write("</em>");
-
-			if (!Titles[0].EndsWith('.'))
-			{
-				Renderer.Write(".");
-			}
-
+			Renderer.Write($"<em>{Titles[0]}</em>");
+			if (!Titles[0].EndsWith('.')) Renderer.Write(".");
 			Renderer.Write(" ");
 		}
 
 		// Journal/Publication
 		if (Citation.Properties.TryGetValue("journal", out List<string>? Journals) && Journals.Count > 0)
 		{
-			Renderer.Write("<em>");
-			Renderer.Write(Journals[0]);
-			Renderer.Write("</em>");
-			Renderer.Write(", ");
+			Renderer.Write($"<em>{Journals[0]}</em>, ");
 		}
 		else if (Citation.Properties.TryGetValue("publisher", out List<string>? Publishers) && Publishers.Count > 0)
 		{
-			Renderer.Write(Publishers[0]);
-			Renderer.Write(", ");
+			Renderer.Write($"{Publishers[0]}, ");
 		}
 
-		// Volume/Issue
+		// Volume
 		if (Citation.Properties.TryGetValue("volume", out List<string>? Volumes) && Volumes.Count > 0)
 		{
-			Renderer.Write("vol. ");
-			Renderer.Write(Volumes[0]);
-
+			Renderer.Write($"vol. {Volumes[0]}");
 			if (Citation.Properties.TryGetValue("issue", out List<string>? Issues) && Issues.Count > 0)
 			{
-				Renderer.Write(", no. ");
-				Renderer.Write(Issues[0]);
+				Renderer.Write($", no. {Issues[0]}");
 			}
-
 			Renderer.Write(", ");
 		}
 
 		// Pages
 		if (Citation.Properties.TryGetValue("pages", out List<string>? Pages) && Pages.Count > 0)
 		{
-			Renderer.Write("pp. ");
-			Renderer.Write(Pages[0]);
-			Renderer.Write(", ");
+			Renderer.Write($"pp. {Pages[0]}, ");
 		}
 
 		// Year
 		if (Citation.Properties.TryGetValue("year", out List<string>? Years) && Years.Count > 0)
 		{
-			Renderer.Write(Years[0]);
-			Renderer.Write(". ");
+			Renderer.Write($"{Years[0]}. ");
 		}
 
 		// DOI
 		if (Citation.Properties.TryGetValue("doi", out List<string>? Dois) && Dois.Count > 0)
 		{
-			Renderer.Write("DOI: <a href=\"https://doi.org/");
-			Renderer.Write(Dois[0]);
-			Renderer.Write("\" target=\"_blank\">");
-			Renderer.Write(Dois[0]);
-			Renderer.Write("</a>");
+			Renderer.Write($"DOI: <a href=\"https://doi.org/{Dois[0]}\" target=\"_blank\">{Dois[0]}</a>");
 		}
 
 		// URL
 		if (Citation.Properties.TryGetValue("url", out List<string>? Urls) && Urls.Count > 0)
 		{
-			Renderer.Write("URL: <a href=\"");
-			Renderer.Write(Urls[0]);
-			Renderer.Write("\" target=\"_blank\">");
-			Renderer.Write(Urls[0]);
-			Renderer.Write("</a>");
-	}
-
-	// Write any other properties not specifically handled
-	foreach (KeyValuePair<string, List<string>> Property in Citation.Properties)
-	{
-		string[] KnownProperties = ["author", "title", "journal", "publisher", "volume", "issue", "pages", "year", "doi", "url"];
-		if (!KnownProperties.Contains(Property.Key, StringComparer.OrdinalIgnoreCase))
-		{
-			Renderer.Write("<br/>");
-			Renderer.Write("<strong>");
-			Renderer.Write(Property.Key);
-			Renderer.Write("</strong>: ");
-			Renderer.Write(string.Join(", ", Property.Value));
+			Renderer.Write($"URL: <a href=\"{Urls[0]}\" target=\"_blank\">{Urls[0]}</a>");
 		}
 	}
-}	/// <summary>
-	/// Formats and writes author names
-	/// </summary>
+
 	private static void WriteAuthors(HtmlRenderer Renderer, List<string> Authors)
 	{
 		for (int i = 0; i < Authors.Count; i++)
 		{
 			if (i > 0)
 			{
-				if (i == Authors.Count - 1)
-				{
-					Renderer.Write(" and ");
-				}
-				else
-				{
-					Renderer.Write(", ");
-				}
+				Renderer.Write(i == Authors.Count - 1 ? " and " : ", ");
 			}
-
 			Renderer.Write(Authors[i]);
 		}
 	}
 }
 
-/// <summary>
-/// Main extension class that registers the parser and renderer for the citations block
-/// </summary>
-public sealed class CitationsExtension(Dictionary<string, Citation> Citations) : IMarkdownExtension
+// --- Extension Definition ---
+
+public sealed class CitationExtension : IMarkdownExtension
 {
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
-		if (!Pipeline.BlockParsers.Contains<CitationsParser>())
-		{
-			Pipeline.BlockParsers.Add(new CitationsParser());
-		}
+		if (!Pipeline.InlineParsers.Contains<CitationParser>())
+			Pipeline.InlineParsers.Add(new CitationParser());
+		
+		if (!Pipeline.BlockParsers.Contains<CitationsBlockParser>())
+			Pipeline.BlockParsers.Add(new CitationsBlockParser());
 	}
 
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
-		if (Renderer is HtmlRenderer HtmlRendererInstance &&
-			!HtmlRendererInstance.ObjectRenderers.Contains<CitationsRenderer>())
+		if (Renderer is HtmlRenderer HtmlRenderer)
 		{
-			HtmlRendererInstance.ObjectRenderers.Add(new CitationsRenderer(Citations));
+			if (!HtmlRenderer.ObjectRenderers.Contains<CitationRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new CitationRenderer());
+			
+			if (!HtmlRenderer.ObjectRenderers.Contains<CitationsRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new CitationsRenderer());
 		}
+	}
+
+	public static void ReprocessCitations(MarkdownDocument Document)
+	{
+		List<CitationInline> Inlines = [.. Document.Descendants<CitationInline>()];
+		if (Inlines.Count == 0) return;
+
+		Dictionary<string, Citation> CitationsMap = [];
+		int Counter = 1;
+		
+		foreach (CitationInline Inline in Inlines)
+		{
+			Citation Citation;
+			if (CitationsMap.TryGetValue(Inline.CitationId, out Citation? ExistingCitation))
+			{
+				Citation = ExistingCitation;
+			}
+			else
+			{
+				Citation = ParseCitation(Inline.Data.ToString(), Inline.CitationId);
+				Citation.Number = Counter++;
+				CitationsMap[Inline.CitationId] = Citation;
+			}
+
+			Inline.CitationNumber = Citation.Number;
+			
+			// Generate a unique ID for this specific reference occurrence
+			string BackRefId = $"citref:{Citation.Number}-{Citation.ReferencedBy.Count + 1}";
+			
+			Inline.BackRefId = BackRefId;
+			Citation.ReferencedBy.Add(BackRefId);
+		}
+
+		CitationsBlock? Block = Document.Descendants<CitationsBlock>().FirstOrDefault();
+		if (Block != null)
+		{
+			Block.Citations = CitationsMap;
+		}
+	}
+
+	private static Citation ParseCitation(string Content, string CitationId)
+	{
+		Dictionary<string, List<string>> Properties = new(StringComparer.OrdinalIgnoreCase);
+		const string AttributeSeparator = "|#|";
+		string[] Tokens = Content.Split(AttributeSeparator, StringSplitOptions.RemoveEmptyEntries);
+
+		foreach (string Token in Tokens)
+		{
+			string Trimmed = Token.Trim();
+			if (string.IsNullOrEmpty(Trimmed)) continue;
+
+			int EqPos = Trimmed.IndexOf('=');
+			if (EqPos <= 0) continue;
+
+			string Key = Trimmed[..EqPos].Trim();
+			string Value = Trimmed[(EqPos + 1)..].Trim();
+
+			if (!Properties.TryGetValue(Key, out List<string>? List))
+			{
+				List = [];
+				Properties[Key] = List;
+			}
+			List.Add(Value);
+		}
+
+		return new Citation
+		{
+			Number = 0,
+			Id = CitationId,
+			Properties = Properties,
+			ReferencedBy = []
+		};
 	}
 }

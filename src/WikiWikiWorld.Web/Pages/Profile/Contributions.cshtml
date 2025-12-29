@@ -1,0 +1,178 @@
+@page
+@model WikiWikiWorld.Web.Pages.Profile.ContributionsModel
+@{
+    ViewData["Title"] = $"{Model.Username}'s Contributions";
+}
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            @if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
+            {
+                <img src="@Model.ProfilePicPath" alt="@Model.Username" />
+            }
+            else
+            {
+                <span class="avatar-initial">@Model.Username?[0].ToString().ToUpperInvariant()</span>
+            }
+        </div>
+        <div class="profile-info">
+            <h1>@Model.Username</h1>
+            <p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
+        </div>
+    </div>
+
+    <div class="profile-nav">
+        <a href="/@@@Model.Username/profile" class="nav-link">Profile</a>
+        <a href="/@@@Model.Username/contributions" class="nav-link active">Contributions</a>
+        @if (Model.IsViewingOwnProfile)
+        {
+            <a href="/@@@Model.Username/messages" class="nav-link">Messages</a>
+        }
+    </div>
+
+    <div class="contributions-list">
+        <h2>Contributions</h2>
+        @if (Model.Contributions.Count > 0)
+        {
+            <ul class="revision-list">
+                @foreach (var Revision in Model.Contributions)
+                {
+                    <li class="revision-item">
+                        <div class="revision-meta">
+                            <span class="revision-date">@Revision.DateCreated.ToString("MMM dd, yyyy HH:mm")</span>
+                            <span class="revision-type">@Revision.Type</span>
+                        </div>
+                        <div class="revision-content">
+                            <a href="/@Revision.UrlSlug/revision/@Revision.DateCreated.ToString("yyyyMMddHHmmss")" class="revision-title">@Revision.Title</a>
+                            <p class="revision-reason">@Revision.RevisionReason</p>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">No contributions found.</p>
+        }
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: var(--color-surface);
+        border-radius: 1rem;
+        border: 1px solid var(--color-border);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--color-surface-alt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--color-surface);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-initial {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--color-foreground);
+    }
+
+    .profile-info h1 {
+        margin: 0;
+        font-size: 2rem;
+        color: var(--color-title);
+    }
+
+    .profile-joined {
+        margin-top: 0.25rem;
+        color: var(--color-muted);
+    }
+
+    .profile-nav {
+        display: flex;
+        gap: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 2rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        color: var(--color-muted);
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+        color: var(--color-foreground);
+    }
+
+    .nav-link.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+    }
+
+    .revision-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .revision-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .revision-item:last-child {
+        border-bottom: none;
+    }
+
+    .revision-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .revision-title {
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--color-primary);
+        font-size: 1.125rem;
+    }
+
+    .revision-title:hover {
+        text-decoration: underline;
+    }
+
+    .revision-reason {
+        margin: 0.25rem 0 0;
+        color: var(--color-foreground);
+        font-style: italic;
+    }
+</style>

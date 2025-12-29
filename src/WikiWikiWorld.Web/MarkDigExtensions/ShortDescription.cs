@@ -9,12 +9,7 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 
 public sealed class ShortDescriptionExtension : IMarkdownExtension
 {
-	private readonly Pages.BasePageModel PageModel;
-
-	public ShortDescriptionExtension(Pages.BasePageModel PageModel)
-	{
-		this.PageModel = PageModel;
-	}
+	public const string DocumentKey = "ShortDescription";
 
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
@@ -29,7 +24,16 @@ public sealed class ShortDescriptionExtension : IMarkdownExtension
 		if (Renderer is HtmlRenderer HtmlRendererInstance &&
 			!HtmlRendererInstance.ObjectRenderers.Contains<ShortDescriptionRenderer>())
 		{
-			HtmlRendererInstance.ObjectRenderers.Add(new ShortDescriptionRenderer(PageModel));
+			HtmlRendererInstance.ObjectRenderers.Add(new ShortDescriptionRenderer());
+		}
+	}
+
+	public static void Enrich(MarkdownDocument Document)
+	{
+		ShortDescriptionBlock? Block = Document.Descendants<ShortDescriptionBlock>().FirstOrDefault();
+		if (Block is not null)
+		{
+			Document.SetData(DocumentKey, Block.Content);
 		}
 	}
 }
@@ -92,17 +96,13 @@ public sealed class ShortDescriptionBlock : LeafBlock
 
 public sealed class ShortDescriptionRenderer : HtmlObjectRenderer<ShortDescriptionBlock>
 {
-	private readonly Pages.BasePageModel PageModel;
-
-	public ShortDescriptionRenderer(Pages.BasePageModel PageModel)
-	{
-		this.PageModel = PageModel;
-	}
-
 	protected override void Write(HtmlRenderer Renderer, ShortDescriptionBlock Block)
 	{
-		// Save the extracted short description into the page model.
-		PageModel.MetaDescription = Block.Content;
-		// Do not output any HTML - this is metadata
+		// Metadata only, no visible output
+		// We output a hidden comment for debugging.
+		if (Renderer.EnableHtmlForBlock)
+		{
+			Renderer.Write($"<!-- Short Description: {Block.Content} -->");
+		}
 	}
 }

@@ -8,17 +8,17 @@ public sealed record ArticleTalkSubjectPost
     /// <summary>
     /// Gets the unique identifier for this post.
     /// </summary>
-    public Guid Id { get; init; }
+    public int Id { get; init; }
 
     /// <summary>
     /// Gets the identifier of the talk subject this post belongs to.
     /// </summary>
-    public Guid ArticleTalkSubjectId { get; init; }
+    public int ArticleTalkSubjectId { get; init; }
 
     /// <summary>
     /// Gets the identifier of the parent post, if this is a reply.
     /// </summary>
-    public Guid? ParentTalkSubjectPostId { get; init; }
+    public int? ParentTalkSubjectPostId { get; init; }
 
     /// <summary>
     /// Gets the text content of the post.
@@ -50,3 +50,4 @@ public sealed record ArticleTalkSubjectPost
     /// </summary>
     public DateTimeOffset? DateDeleted { get; init; }
 }
+

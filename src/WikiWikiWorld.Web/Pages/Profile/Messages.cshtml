@@ -1,0 +1,277 @@
+@page
+@model WikiWikiWorld.Web.Pages.Profile.MessagesModel
+@{
+	ViewData["Title"] = $"{Model.Username}'s Messages";
+}
+
+<div class="profile-container">
+	<div class="profile-header">
+		<div class="profile-avatar">
+			@if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
+			{
+				<img src="@Model.ProfilePicPath" alt="@Model.Username" />
+			}
+			else
+			{
+				<span class="avatar-initial">@Model.Username?[0].ToString().ToUpperInvariant()</span>
+			}
+		</div>
+		<div class="profile-info">
+			<h1>@Model.Username</h1>
+			<p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
+		</div>
+	</div>
+
+	<div class="profile-nav">
+		<a href="/@@@Model.Username/profile" class="nav-link">Profile</a>
+		<a href="/@@@Model.Username/contributions" class="nav-link">Contributions</a>
+		<a href="/@@@Model.Username/messages" class="nav-link active">Messages</a>
+	</div>
+
+	<div class="messages-inbox">
+		<div class="inbox-header">
+			<div class="inbox-tabs">
+				<a href="/@@@Model.Username/messages" class="tab-link @(Model.Tab == "inbox" ? "active" : "")">
+					Inbox <span class="tab-count">@Model.InboxCount</span>
+				</a>
+				<a href="/@@@Model.Username/messages/sent" class="tab-link @(Model.Tab == "sent" ? "active" : "")">
+					Sent <span class="tab-count">@Model.SentCount</span>
+				</a>
+			</div>
+			<a href="/message/new" class="button button-primary">New Message</a>
+		</div>
+
+		@if (Model.Tab == "inbox")
+		{
+			@if (Model.InboxMessages.Count > 0)
+			{
+				<ul class="message-list">
+					@foreach (var Message in Model.InboxMessages)
+					{
+						string SenderName = Model.MessageUsers.TryGetValue(Message.CreatedByUserId, out var Sender) ? Sender.UserName ?? "Unknown" : "Unknown";
+						<li class="message-item">
+							<div class="message-sender">
+								<strong>From: @SenderName</strong>
+							</div>
+							<div class="message-subject">
+								<a href="/@@Model.Username/talk/@Message.UrlSlug">@Message.Subject</a>
+							</div>
+							<div class="message-date">
+								@Message.DateCreated.ToString("MMM dd, yyyy HH:mm")
+							</div>
+						</li>
+					}
+				</ul>
+			}
+			else
+			{
+				<div class="empty-inbox">
+					<p class="text-muted">Your inbox is empty.</p>
+					<p>Messages from other users will appear here.</p>
+				</div>
+			}
+		}
+		else
+		{
+			@if (Model.SentMessages.Count > 0)
+			{
+				<ul class="message-list">
+					@foreach (var Message in Model.SentMessages)
+					{
+						string RecipientName = Model.RecipientUsernames.TryGetValue(Message.CanonicalArticleId, out var RName) ? RName : "(unknown)";
+						<li class="message-item">
+							<div class="message-sender">
+								<strong>To: @RecipientName</strong>
+							</div>
+							<div class="message-subject">
+								<a href="/@@@RecipientName.TrimStart('@')/talk/@Message.UrlSlug">@Message.Subject</a>
+							</div>
+							<div class="message-date">
+								@Message.DateCreated.ToString("MMM dd, yyyy HH:mm")
+							</div>
+						</li>
+					}
+				</ul>
+			}
+			else
+			{
+				<div class="empty-inbox">
+					<p class="text-muted">You haven't sent any messages yet.</p>
+				</div>
+			}
+		}
+	</div>
+</div>
+
+<style>
+	.profile-container {
+		max-width: 800px;
+		margin: 2rem auto;
+		padding: 2rem;
+		background: var(--color-surface);
+		border-radius: 1rem;
+		border: 1px solid var(--color-border);
+	}
+
+	.profile-header {
+		display: flex;
+		align-items: center;
+		gap: 2rem;
+		margin-bottom: 2rem;
+	}
+
+	.profile-avatar {
+		width: 120px;
+		height: 120px;
+		border-radius: 50%;
+		overflow: hidden;
+		background: var(--color-surface-alt);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 4px solid var(--color-surface);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	}
+
+	.profile-avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.avatar-initial {
+		font-size: 3rem;
+		font-weight: bold;
+		color: var(--color-foreground);
+	}
+
+	.profile-info h1 {
+		margin: 0;
+		font-size: 2.5rem;
+		color: var(--color-title);
+	}
+
+	.profile-joined {
+		margin-top: 0.5rem;
+		color: var(--color-muted);
+	}
+
+	.profile-nav {
+		display: flex;
+		gap: 1rem;
+		border-bottom: 1px solid var(--color-border);
+		margin-bottom: 2rem;
+	}
+
+	.nav-link {
+		padding: 0.5rem 1rem;
+		text-decoration: none;
+		color: var(--color-muted);
+		font-weight: 600;
+		border-bottom: 2px solid transparent;
+		transition: all 0.2s;
+	}
+
+	.nav-link:hover {
+		color: var(--color-foreground);
+	}
+
+	.nav-link.active {
+		color: var(--color-primary);
+		border-bottom-color: var(--color-primary);
+	}
+
+	.inbox-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1.5rem;
+	}
+
+	.inbox-header h2 {
+		margin: 0;
+		color: var(--color-title);
+	}
+
+	.inbox-tabs {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.tab-link {
+		padding: 0.5rem 1rem;
+		text-decoration: none;
+		color: var(--color-muted);
+		font-weight: 600;
+		background: var(--color-surface-alt);
+		border-radius: 0.5rem;
+		transition: all 0.2s;
+	}
+
+	.tab-link:hover {
+		color: var(--color-foreground);
+		background: var(--color-border);
+	}
+
+	.tab-link.active {
+		color: var(--color-primary);
+		background: rgba(var(--color-primary-rgb), 0.1);
+	}
+
+	.tab-count {
+		display: inline-block;
+		margin-left: 0.25rem;
+		padding: 0.125rem 0.5rem;
+		font-size: 0.75rem;
+		background: var(--color-border);
+		border-radius: 1rem;
+	}
+
+	.message-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.message-item {
+		display: grid;
+		grid-template-columns: 1fr 2fr auto;
+		gap: 1rem;
+		padding: 1rem;
+		border-bottom: 1px solid var(--color-border);
+		align-items: center;
+	}
+
+	.message-item:hover {
+		background: var(--color-surface-alt);
+	}
+
+	.message-sender {
+		color: var(--color-foreground);
+	}
+
+	.message-subject a {
+		color: var(--color-hyperlinks);
+		text-decoration: none;
+	}
+
+	.message-subject a:hover {
+		text-decoration: underline;
+	}
+
+	.message-date {
+		color: var(--color-muted);
+		font-size: 0.875rem;
+	}
+
+	.empty-inbox {
+		text-align: center;
+		padding: 2rem;
+		background: var(--color-surface-alt);
+		border-radius: 0.5rem;
+	}
+
+	.empty-inbox p {
+		margin: 0.5rem 0;
+	}
+</style>

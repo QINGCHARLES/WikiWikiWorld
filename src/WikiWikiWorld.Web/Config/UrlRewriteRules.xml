@@ -59,6 +59,30 @@
 			<match url="^create:" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/CreateEdit" />
 		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^@(.+)/profile$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/View?Username={R:1}" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^@(.+)/contributions$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/Contributions?Username={R:1}" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^@(.+)/messages$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/Messages?Username={R:1}" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^@(.+)/messages/sent$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/Messages?Username={R:1}&amp;Tab=sent" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^message/new$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/NewMessage" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^@(.+)/message/new$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/NewMessage?Recipient={R:1}" />
+		</rule>
 		<rule enabled="true">
 			<match url="^file:(.+)" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/View?UrlSlug=file:{R:1}" />
@@ -80,11 +104,15 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/View?UrlSlug={R:1}&amp;Revision={R:2}" appendQueryString="true" />
 		</rule>
 		<rule enabled="true">
+			<match url="^@(.+)/talk/(.+)$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Article/TalkSubject?UrlSlug={R:2}" />
+		</rule>
+		<rule enabled="true">
 			<match url="^404:(.+)" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/NotFound?UrlSlug={R:1}" />
 		</rule>
 		<rule name="Rewrite Rule">
-			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
+			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!Profile\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
 			<action type="Rewrite" url="Article/View?UrlSlug={R:1}" appendQueryString="true" />
 		</rule>
 	</rules>

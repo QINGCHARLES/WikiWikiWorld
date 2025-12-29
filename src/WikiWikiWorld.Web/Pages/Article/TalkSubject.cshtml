@@ -1,0 +1,207 @@
+@page
+@model WikiWikiWorld.Web.Pages.Article.TalkSubjectModel
+@{
+    ViewData["Title"] = Model.TalkSubject?.Subject ?? "Message";
+}
+
+<div class="talk-container">
+    <div class="talk-header">
+        <h1>@Model.TalkSubject?.Subject</h1>
+        <div class="talk-meta">
+            @if (!string.IsNullOrEmpty(Model.CreatorName))
+            {
+                <div class="talk-participant">
+                    <span class="meta-label">From:</span>
+                    <a href="/@@@Model.CreatorName/profile" class="participant-link">@@@Model.CreatorName</a>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.RecipientName))
+            {
+                 <div class="talk-participant">
+                    <span class="meta-label">To:</span>
+                    <a href="/@@@Model.RecipientName/profile" class="participant-link">@@@Model.RecipientName</a>
+                </div>
+            }
+            <div class="talk-date">
+                Started on @Model.TalkSubject?.DateCreated.ToString("MMMM dd, yyyy")
+            </div>
+        </div>
+        <a href="javascript:history.back()" class="back-link">← Back to Messages</a>
+    </div>
+
+    <div class="posts-list">
+        @foreach (var Post in Model.TalkSubject!.ArticleTalkSubjectPosts.OrderBy(p => p.DateCreated))
+        {
+            string AuthorName = Model.PostAuthors.TryGetValue(Post.CreatedByUserId, out var Author) ? Author.UserName ?? "Unknown" : "Unknown";
+            string? AuthorPic = Model.PostAuthors.TryGetValue(Post.CreatedByUserId, out var AuthorObj) ? AuthorObj.ProfilePicGuid?.ToString() : null;
+            string? AuthorPicPath = !string.IsNullOrEmpty(AuthorPic) ? $"/sitefiles/{Model.SiteId}/profilepics/{AuthorPic}.png" : null;
+
+            <div class="post-item">
+                <div class="post-sidebar">
+                    <div class="post-avatar">
+                        @if (AuthorPicPath != null)
+                        {
+                            <img src="@AuthorPicPath" alt="@AuthorName" />
+                        }
+                        else
+                        {
+                            <span class="avatar-initial">@AuthorName[0].ToString().ToUpperInvariant()</span>
+                        }
+                    </div>
+                </div>
+                <div class="post-content-wrapper">
+                    <div class="post-header">
+                        <a href="/@@@AuthorName/profile" class="post-author">@AuthorName</a>
+                        <span class="post-date">@Post.DateCreated.ToString("MMM dd, yyyy HH:mm")</span>
+                    </div>
+                    <div class="post-body">
+                        @Post.Text
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .talk-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: var(--color-surface);
+        border-radius: 1rem;
+        border: 1px solid var(--color-border);
+    }
+
+    .talk-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 1rem;
+    }
+
+    .talk-header h1 {
+        margin: 0 0 0.5rem 0;
+        color: var(--color-title);
+    }
+
+    .talk-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        color: var(--color-foreground);
+    }
+
+    .talk-participant {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .meta-label {
+        color: var(--color-muted);
+        font-weight: 500;
+        min-width: 45px;
+    }
+
+    .participant-link {
+        font-weight: 600;
+        color: var(--color-foreground);
+        text-decoration: none;
+    }
+
+    .participant-link:hover {
+        text-decoration: underline;
+        color: var(--color-primary);
+    }
+
+    .talk-date {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+    }
+
+    .back-link {
+        color: var(--color-hyperlinks);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .posts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .post-item {
+        display: flex;
+        gap: 1rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .post-item:last-child {
+        border-bottom: none;
+    }
+
+    .post-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--color-surface-alt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .post-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-initial {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: var(--color-foreground);
+    }
+
+    .post-content-wrapper {
+        flex: 1;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .post-author {
+        font-weight: 700;
+        color: var(--color-foreground);
+        text-decoration: none;
+    }
+
+    .post-author:hover {
+        text-decoration: underline;
+    }
+
+    .post-date {
+        font-size: 0.75rem;
+        color: var(--color-muted);
+    }
+
+    .post-body {
+        color: var(--color-foreground);
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+</style>

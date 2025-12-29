@@ -20,7 +20,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>@ViewData["Title"] - Magazedia</title>
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<environment include="Development,Staging">
+		<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/header.css" />
+		<link rel="stylesheet" href="~/css/sidebar.css" />
+		<link rel="stylesheet" href="~/css/footer.css" />
+	</environment>
+	<environment exclude="Development">
+		<link rel="stylesheet" href="~/css/bundle.min.css" asp-append-version="true" />
+	</environment>
 	@if (!string.IsNullOrWhiteSpace(Model.MetaDescription))
 	{
 		<meta name="description" content="@Model.MetaDescription" />
@@ -78,7 +86,7 @@
 					{
 						SiteId = 1;
 					}
-					string ProfileUrl = $"/@{UserName}";
+					string ProfileUrl = $"/@{UserName}/profile";
 					string? ProfilePicGuid = CurrentUser?.ProfilePicGuid;
 					string? AvatarPath = !string.IsNullOrWhiteSpace(ProfilePicGuid)
 						? Url.Content($"~/sitefiles/{SiteId}/profilepics/{ProfilePicGuid}.png")
@@ -99,8 +107,8 @@
 				}
 				else
 				{
-					<a class="button" href="/login:" data-button-variant="ghost">Log In</a>
-					<a class="button" href="/register:">Sign Up</a>
+					<a class="button" href="/Account/Login" data-button-variant="ghost">Log In</a>
+					<a class="button" href="/Account/Register">Sign Up</a>
 				}
 @* 				<partial name="_LoginPartial" /> *@
 			</div>

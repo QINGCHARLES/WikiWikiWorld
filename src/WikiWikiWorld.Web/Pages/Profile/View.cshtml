@@ -1,0 +1,154 @@
+@page
+@model WikiWikiWorld.Web.Pages.Profile.ViewModel
+@{
+    ViewData["Title"] = $"{Model.Username}'s Profile";
+}
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            @if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
+            {
+                <img src="@Model.ProfilePicPath" alt="@Model.Username" />
+            }
+            else
+            {
+                <span class="avatar-initial">@Model.Username?[0].ToString().ToUpperInvariant()</span>
+            }
+        </div>
+        <div class="profile-info">
+            <h1>@Model.Username</h1>
+            <p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
+        </div>
+    </div>
+
+    <div class="profile-nav">
+        <a href="/@@@Model.Username/profile" class="nav-link active">Profile</a>
+        <a href="/@@@Model.Username/contributions" class="nav-link">Contributions</a>
+        @if (Model.IsViewingOwnProfile)
+        {
+            <a href="/@@@Model.Username/messages" class="nav-link">Messages</a>
+        }
+    </div>
+
+    <div class="profile-actions">
+        @if (Model.IsAuthenticated && !Model.IsViewingOwnProfile)
+        {
+            <a href="/@@@Model.Username/message/new" class="button button-primary">Send Message</a>
+        }
+        @if (Model.HasHomePage)
+        {
+            <a href="/@@@Model.Username" class="button @(Model.IsViewingOwnProfile ? "button-primary" : "button-secondary")">Visit Home Page</a>
+        }
+        else if (Model.IsViewingOwnProfile)
+        {
+            <div class="alert alert-info">
+                <p>You haven't created your home page yet.</p>
+                <a href="/Article/CreateEdit?UrlSlug=@@@Model.Username" class="button button-primary">Create Home Page</a>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">This user has not created a home page yet.</p>
+        }
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: var(--color-surface);
+        border-radius: 1rem;
+        border: 1px solid var(--color-border);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--color-surface-alt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid var(--color-surface);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-initial {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--color-foreground);
+    }
+
+    .profile-info h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        color: var(--color-title);
+    }
+
+    .profile-joined {
+        margin-top: 0.5rem;
+        color: var(--color-muted);
+    }
+
+    .profile-nav {
+        display: flex;
+        gap: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 2rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        color: var(--color-muted);
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+        color: var(--color-foreground);
+    }
+
+    .nav-link.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+    }
+
+    .profile-actions {
+        border-top: 1px solid var(--color-border);
+        padding-top: 2rem;
+    }
+
+    .alert {
+        background: var(--color-surface-alt);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .alert p {
+        margin: 0;
+    }
+</style>

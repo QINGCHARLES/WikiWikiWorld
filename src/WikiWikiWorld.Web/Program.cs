@@ -13,6 +13,7 @@ using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Web;
 using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Infrastructure;
+using WikiWikiWorld.Web.Services;
 using System.Text;
 
 WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
@@ -67,6 +68,7 @@ Builder.Services.AddDbContext<WikiWikiWorldDbContext>(options =>
 // ✅ Register Repositories
 
 Builder.Services.AddScoped<SiteResolverService>();
+Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddTransient<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
 
@@ -162,6 +164,8 @@ if (!App.Environment.IsDevelopment())
     App.UseExceptionHandler("/Error");
     App.UseHsts();
 }
+
+App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
 
 
 

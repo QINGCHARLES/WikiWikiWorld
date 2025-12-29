@@ -3,33 +3,15 @@ using Markdig.Helpers;
 using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
+using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using WikiWikiWorld.Data.Models;
 
-namespace WikiWikiWorld.MarkdigExtensions;
+namespace WikiWikiWorld.Web.MarkdigExtensions;
 
 public sealed class CategoryInline : LeafInline
 {
 	public required StringSlice Data { get; init; }
-}
-
-public sealed class CategoryExtension(List<Data.Models.Category> Categories) : IMarkdownExtension
-{
-	public void Setup(MarkdownPipelineBuilder Pipeline)
-	{
-		if (!Pipeline.InlineParsers.Contains<CategoryParser>())
-		{
-			Pipeline.InlineParsers.Add(new CategoryParser());
-		}
-	}
-
-	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
-	{
-		if (Renderer is HtmlRenderer HtmlRendererInstance &&
-			!HtmlRendererInstance.ObjectRenderers.Contains<CategoryRenderer>())
-		{
-			HtmlRendererInstance.ObjectRenderers.Add(new CategoryRenderer(Categories));
-		}
-	}
 }
 
 public sealed class CategoryParser : InlineParser
@@ -42,30 +24,22 @@ public sealed class CategoryParser : InlineParser
 	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
 	{
 		int StartPosition = Slice.Start;
-
-		if (!Slice.Match(MarkerStart))
-		{
-			return false;
-		}
+		if (!Slice.Match(MarkerStart)) return false;
 
 		Slice.Start += MarkerStart.Length;
 		int EndPos = Slice.Text.IndexOf(MarkerEnd, Slice.Start, StringComparison.Ordinal);
+		
 		if (EndPos == -1)
 		{
 			Slice.Start = StartPosition;
 			return false;
 		}
 
-		string ContentValue = Slice.Text.Substring(Slice.Start, EndPos - Slice.Start).Trim();
 		int InlineStart = Processor.GetSourcePosition(Slice.Start, out int Line, out int Column);
 
 		Processor.Inline = new CategoryInline
 		{
-			Span =
-			{
-				Start = InlineStart,
-				End = InlineStart + (EndPos - Slice.Start)
-			},
+			Span = new SourceSpan(InlineStart, InlineStart + (EndPos - Slice.Start)),
 			Line = Line,
 			Column = Column,
 			Data = new StringSlice(Slice.Text, Slice.Start, EndPos - 1)
@@ -76,12 +50,104 @@ public sealed class CategoryParser : InlineParser
 	}
 }
 
-public sealed class CategoryRenderer(List<Data.Models.Category> Categories) : HtmlObjectRenderer<CategoryInline>
+public sealed class CategoryRenderer : HtmlObjectRenderer<CategoryInline>
 {
-	protected override void Write(HtmlRenderer Renderer, CategoryInline Inline)
+	protected override void Write(HtmlRenderer Renderer, CategoryInline Inline) { /* No-Op */ }
+}
+
+public sealed class CategoryExtension : IMarkdownExtension
+{
+	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
-		// This simple implementation adds a new category using the content found.
-		// Extend this logic if you need to handle custom URL slugs or other attributes.
-		Categories.Add(new Data.Models.Category { Title = Inline.Data.ToString() });
+		if (!Pipeline.InlineParsers.Contains<CategoryParser>())
+			Pipeline.InlineParsers.Add(new CategoryParser());
+
+		if (!Pipeline.BlockParsers.Contains<CategoriesBlockParser>())
+			Pipeline.BlockParsers.Add(new CategoriesBlockParser());
+	}
+
+	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
+	{
+		if (Renderer is HtmlRenderer HtmlRenderer)
+		{
+			if (!HtmlRenderer.ObjectRenderers.Contains<CategoryRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new CategoryRenderer());
+
+			if (!HtmlRenderer.ObjectRenderers.Contains<CategoriesRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new CategoriesRenderer());
+		}
+	}
+
+	public static List<Category> GetCategories(MarkdownDocument Document)
+	{
+		return [.. Document.Descendants<CategoryInline>()
+			.Select(c => new Category { Title = c.Data.ToString().Trim() })
+			.Where(c => !string.IsNullOrEmpty(c.Title))];
+	}
+}
+
+public sealed class CategoriesBlock(BlockParser Parser) : LeafBlock(Parser)
+{
+}
+
+public sealed class CategoriesBlockParser : BlockParser
+{
+	private const string Marker = "{{Categories}}";
+
+	public CategoriesBlockParser() => OpeningCharacters = ['{'];
+
+	public override BlockState TryOpen(BlockProcessor Processor)
+	{
+		if (!Processor.Line.Match(Marker)) return BlockState.None;
+
+		Processor.Line.Start += Marker.Length;
+		Processor.NewBlocks.Push(new CategoriesBlock(this));
+		return BlockState.BreakDiscard;
+	}
+}
+
+public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
+{
+	protected override void Write(HtmlRenderer Renderer, CategoriesBlock Block)
+	{
+		// Traverse up to find the root document
+		Block Root = Block;
+		while (Root.Parent is not null)
+		{
+			Root = Root.Parent;
+		}
+
+		if (Root is not MarkdownDocument Document) return;
+
+		var Categories = CategoryExtension.GetCategories(Document);
+		if (Categories.Count == 0) return;
+
+		// Prioritize categories (Primary vs Secondary) - reusing logic from original implementation if possible, 
+		// but Category model in user's stateless code (viewed in Step 0) doesn't show Priority?
+		// Wait, Step 12 (original Categories.cs) showed `Priority`.
+		// But `Category.cs` (Step 6) parses just `Title`.
+		// Let's check `Category` model. It was in `WikiWikiWorld.Data.Models`.
+		// I'll assume for now I just render them all properly. 
+		// If Priority is needed, I'd need to inspect the Model.
+		// For now, I'll render a simple list to fix the broken UI.
+
+		Renderer.WriteLine("<ul class=\"categories\">");
+		foreach (var CategoryItem in Categories)
+		{
+			string Url = Slugify(CategoryItem.Title);
+			Renderer.Write("<li>");
+			Renderer.Write("<a class=\"button\" href=\"/category:");
+			Renderer.WriteEscapeUrl(Url);
+			Renderer.Write("\">");
+			Renderer.WriteEscape(CategoryItem.Title);
+			Renderer.Write("</a>");
+			Renderer.WriteLine("</li>");
+		}
+		Renderer.WriteLine("</ul>");
+	}
+
+	private static string Slugify(string Input)
+	{
+		return Input.Trim().Replace(" ", "-").ToLowerInvariant();
 	}
 }

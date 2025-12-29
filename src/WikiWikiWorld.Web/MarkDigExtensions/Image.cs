@@ -22,6 +22,7 @@ public class ImageInline : LeafInline
     public string? Alt { get; init; }
     public ArticleRevision? CachedArticle { get; set; }
     public FileRevision? CachedFile { get; set; }
+    public int SiteId { get; set; }
 }
 
 public class ImageInlineParser : InlineParser
@@ -110,7 +111,7 @@ public class ImageInlineParser : InlineParser
     }
 }
 
-public class ImageInlineRenderer(int SiteId) : HtmlObjectRenderer<ImageInline>
+public class ImageInlineRenderer : HtmlObjectRenderer<ImageInline>
 {
     protected override void Write(HtmlRenderer Renderer, ImageInline InlineElement)
     {
@@ -119,14 +120,14 @@ public class ImageInlineRenderer(int SiteId) : HtmlObjectRenderer<ImageInline>
         if (Article is null)
         {
             Renderer.Write($"<!-- Article not found for UrlSlug: {InlineElement.UrlSlug}  -->");
-            Renderer.Write($"<img src=\"/sitefiles/{SiteId}/missing-image.png\" alt=\"Missing Image\" />");
+            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"Missing Image\" />");
             return;
         }
 
         if (Article.CanonicalFileId is null)
         {
             Renderer.Write($"<!-- Article has no CanonicalFileId: {InlineElement.UrlSlug} -->");
-            Renderer.Write($"<img src=\"/sitefiles/{SiteId}/missing-image.png\" alt=\"Missing Image\" />");
+            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"Missing Image\" />");
             return;
         }
 
@@ -135,11 +136,11 @@ public class ImageInlineRenderer(int SiteId) : HtmlObjectRenderer<ImageInline>
         if (File is null)
         {
             Renderer.Write($"<!-- File not found for CanonicalFileId: {Article.CanonicalFileId} -->");
-            Renderer.Write($"<img src=\"/sitefiles/{SiteId}/missing-image.png\" alt=\"Missing Image\" />");
+            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"Missing Image\" />");
             return;
         }
 
-        string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
+        string ImageUrl = $"/sitefiles/{InlineElement.SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
 
         // Header images are handled by HeaderImage block; inline images always render <img> with optional layout classes
         string? CssClass = InlineElement.Layout?.ToLowerInvariant() switch
@@ -161,7 +162,7 @@ public class ImageInlineRenderer(int SiteId) : HtmlObjectRenderer<ImageInline>
     }
 }
 
-public class ImageExtension(int SiteId) : IMarkdownExtension
+public class ImageExtension : IMarkdownExtension
 {
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
@@ -176,14 +177,14 @@ public class ImageExtension(int SiteId) : IMarkdownExtension
         if (Renderer is HtmlRenderer HtmlRenderer &&
             !HtmlRenderer.ObjectRenderers.Any(r => r is ImageInlineRenderer))
         {
-            HtmlRenderer.ObjectRenderers.Add(new ImageInlineRenderer(SiteId));
+            HtmlRenderer.ObjectRenderers.Add(new ImageInlineRenderer());
         }
     }
 
     public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken = default)
     {
         // 1. Find the inlines
-        List<ImageInline> ImageInlines = Document.Descendants<ImageInline>().ToList();
+        List<ImageInline> ImageInlines = [.. Document.Descendants<ImageInline>()];
 
         if (ImageInlines.Count == 0) return;
 
@@ -220,6 +221,7 @@ public class ImageExtension(int SiteId) : IMarkdownExtension
         // 6. Update Inlines
         foreach (ImageInline Inline in ImageInlines)
         {
+            Inline.SiteId = SiteId;
             string Slug = Inline.UrlSlug.Replace("file:", "");
             if (ArticleLookup.TryGetValue(Slug, out ArticleRevision? Article))
             {

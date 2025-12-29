@@ -8,7 +8,7 @@ public sealed record ArticleTalkSubject
     /// <summary>
     /// Gets the unique identifier for this subject.
     /// </summary>
-    public Guid Id { get; init; }
+    public int Id { get; init; }
 
     /// <summary>
     /// Gets the site identifier.
@@ -54,4 +54,10 @@ public sealed record ArticleTalkSubject
     /// Gets the date and time when this subject was deleted, if applicable.
     /// </summary>
     public DateTimeOffset? DateDeleted { get; init; }
+
+    /// <summary>
+    /// Gets the posts associated with this subject.
+    /// </summary>
+    public ICollection<ArticleTalkSubjectPost> ArticleTalkSubjectPosts { get; init; } = [];
 }
+

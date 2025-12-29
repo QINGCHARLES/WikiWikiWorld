@@ -1,0 +1,452 @@
+@page
+@model WikiWikiWorld.Web.Pages.Profile.NewMessageModel
+@{
+	ViewData["Title"] = Model.HasPresetRecipient ? $"Message to {Model.RecipientDisplayName}" : "New Message";
+}
+
+<div class="message-compose-container">
+	<div class="compose-header">
+		<h1>@(Model.HasPresetRecipient ? "Send Message" : "New Message")</h1>
+		@if (Model.HasPresetRecipient)
+		{
+			<div class="recipient-badge">
+				@if (!string.IsNullOrEmpty(Model.RecipientProfilePicPath))
+				{
+					<img src="@Model.RecipientProfilePicPath" alt="" class="recipient-avatar" />
+				}
+				<span class="recipient-name">To: <strong>@Model.RecipientDisplayName</strong></span>
+			</div>
+		}
+	</div>
+
+	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+	{
+		<div class="alert alert-error">
+			<i class="alert-icon">⚠️</i>
+			@Model.ErrorMessage
+		</div>
+	}
+
+	<form method="post" class="compose-form">
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+		@if (!Model.HasPresetRecipient)
+		{
+			<div class="form-group">
+				<div class="autocomplete-wrapper">
+					<div class="md3-field md3-filled">
+						<input asp-for="Input.Recipient" placeholder=" " autocomplete="off" id="recipient-input" />
+						<label asp-for="Input.Recipient">To (username)</label>
+						<span class="md-line"></span>
+					</div>
+					<div id="autocomplete-list" class="autocomplete-items"></div>
+				</div>
+				<span asp-validation-for="Input.Recipient" class="validation-message"></span>
+			</div>
+		}
+
+		<div class="form-group">
+			<div class="md3-field md3-filled">
+				<input asp-for="Input.Subject" placeholder=" " />
+				<label asp-for="Input.Subject">Subject</label>
+				<span class="md-line"></span>
+			</div>
+			<span asp-validation-for="Input.Subject" class="validation-message"></span>
+		</div>
+
+		<div class="form-group">
+			<label asp-for="Input.Message" class="textarea-label">Message</label>
+			<textarea asp-for="Input.Message" rows="8" class="message-textarea" placeholder="Write your message here..."></textarea>
+			<span asp-validation-for="Input.Message" class="validation-message"></span>
+		</div>
+
+		<div class="compose-actions">
+			@if (Model.HasPresetRecipient)
+			{
+				<a href="/@@@Model.Recipient/profile" class="button button-text">Cancel</a>
+			}
+			else
+			{
+				<a href="javascript:history.back()" class="button button-text">Cancel</a>
+			}
+			<button type="submit" class="button button-primary">
+				<span class="button-icon">✉️</span> Send Message
+			</button>
+		</div>
+	</form>
+</div>
+
+<style>
+	.message-compose-container {
+		max-width: 700px;
+		margin: 3rem auto;
+		padding: 2.5rem;
+		background: var(--color-surface);
+		border-radius: 1.5rem;
+		border: 1px solid var(--color-border);
+		box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+	}
+
+	.compose-header {
+		margin-bottom: 2.5rem;
+		text-align: center;
+	}
+
+	.compose-header h1 {
+		margin: 0 0 1rem 0;
+		color: var(--color-title);
+		font-size: 2rem;
+		font-weight: 700;
+	}
+
+	.recipient-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		background: var(--color-surface-alt);
+		padding: 0.5rem 1rem;
+		border-radius: 2rem;
+		border: 1px solid var(--color-border);
+	}
+
+	.recipient-avatar {
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	.recipient-name {
+		color: var(--color-foreground);
+	}
+
+	.compose-form {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	/* Material 3 Field Overrides/Enhancements */
+	.md3-field {
+		position: relative;
+		background: var(--color-surface-alt);
+		border-radius: 0.75rem 0.75rem 0 0;
+		height: 3.5rem;
+		transition: background 0.2s;
+	}
+
+	.md3-field:hover {
+		background: var(--color-action-hover);
+	}
+
+	.md3-field input {
+		width: 100%;
+		height: 100%;
+		padding: 1.5rem 1rem 0.5rem;
+		background: transparent;
+		border: none;
+		outline: none;
+		color: var(--color-foreground);
+		font-size: 1rem;
+		font-family: inherit;
+	}
+
+	.md3-field label {
+		position: absolute;
+		left: 1rem;
+		top: 1rem;
+		color: var(--color-muted);
+		pointer-events: none;
+		transition: all 0.2s ease;
+		font-size: 1rem;
+	}
+
+	.md3-field input:focus ~ label,
+	.md3-field input:not(:placeholder-shown) ~ label {
+		top: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--color-primary);
+	}
+
+	.md-line {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		height: 1px;
+		background: var(--color-border);
+		transition: height 0.2s, background 0.2s;
+	}
+
+	.md3-field input:focus ~ .md-line {
+		height: 2px;
+		background: var(--color-primary);
+	}
+
+	.textarea-label {
+		font-weight: 600;
+		color: var(--color-foreground);
+		margin-left: 0.5rem;
+	}
+
+	.message-textarea {
+		width: 100%;
+		padding: 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: 1rem;
+		background: var(--color-surface-alt);
+		color: var(--color-foreground);
+		font-family: inherit;
+		font-size: 1rem;
+		resize: vertical;
+		min-height: 150px;
+		transition: all 0.2s;
+	}
+
+	.message-textarea:focus {
+		outline: none;
+		border-color: var(--color-primary);
+		background: var(--color-surface);
+		box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.1);
+	}
+
+	.validation-message {
+		color: var(--color-error);
+		font-size: 0.875rem;
+		margin-left: 0.5rem;
+	}
+
+	.compose-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 1rem;
+		margin-top: 1rem;
+		align-items: center;
+	}
+
+	.button-text {
+		color: var(--color-muted);
+		background: transparent;
+		padding: 0.75rem 1.5rem;
+		text-decoration: none;
+		font-weight: 600;
+		border-radius: 2rem;
+		transition: all 0.2s;
+	}
+
+	.button-text:hover {
+		color: var(--color-foreground);
+		background: var(--color-surface-alt);
+	}
+
+	.button-primary {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 2rem;
+		border-radius: 2rem;
+		font-weight: 600;
+		transition: transform 0.1s;
+	}
+	
+	.button-primary:active {
+		transform: scale(0.98);
+	}
+
+	.alert-error {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		background: rgba(255, 59, 48, 0.1);
+		color: #ff3b30;
+		padding: 1rem;
+		border-radius: 0.75rem;
+		margin-bottom: 2rem;
+		border: 1px solid rgba(255, 59, 48, 0.2);
+	}
+
+	.alert-icon {
+		font-style: normal;
+	}
+
+    /* Autocomplete Styles */
+    .autocomplete-wrapper {
+        position: relative;
+    }
+
+    .autocomplete-items {
+        position: absolute;
+        border: 1px solid var(--color-border);
+        border-bottom: none;
+        border-top: none;
+        z-index: 99;
+        top: 100%;
+        left: 0;
+        right: 0;
+        border-radius: 0 0 1rem 1rem;
+        background: var(--color-surface);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none; /* Hidden by default */
+    }
+
+    .autocomplete-items.show {
+        display: block;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .autocomplete-item {
+        padding: 10px;
+        cursor: pointer;
+        background-color: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: background 0.1s;
+    }
+
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+        background-color: var(--color-surface-alt);
+    }
+
+    .autocomplete-item.active {
+        background-color: var(--color-primary);
+        color: white; /* Contrast text */
+    }
+
+    .autocomplete-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        background-color: var(--color-surface-alt);
+    }
+    
+    .autocomplete-initial {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--color-surface-alt);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: var(--color-foreground);
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById("recipient-input");
+        const list = document.getElementById("autocomplete-list");
+        if (!input || !list) return;
+
+        let currentFocus = -1;
+        let debounceTimer;
+
+        // Hide list initially
+        list.classList.remove("show");
+
+        input.addEventListener("input", function (e) {
+            const val = this.value;
+            closeAllLists();
+            if (!val) return false;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetch(`?handler=SearchUsers&term=${encodeURIComponent(val)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) return;
+                        
+                        list.classList.add("show");
+                        
+                        data.forEach(user => {
+                            const item = document.createElement("div");
+                            item.className = "autocomplete-item";
+                            
+                            // Avatar logic
+                            let avatarHtml = '';
+                            if (user.profilePicGuid) {
+                                avatarHtml = `<img src="/sitefiles/@Model.SiteId/profilepics/${user.profilePicGuid}.png" class="autocomplete-avatar" alt="">`;
+                            } else {
+                                const initial = user.userName.charAt(0).toUpperCase();
+                                avatarHtml = `<div class="autocomplete-initial">${initial}</div>`;
+                            }
+                            
+                            item.innerHTML = `${avatarHtml}<span>${user.userName}</span>`;
+                            item.innerHTML += `<input type='hidden' value='${user.userName}'>`;
+                            
+                            item.addEventListener("click", function (e) {
+                                input.value = this.getElementsByTagName("input")[0].value;
+                                closeAllLists();
+                            });
+                            
+                            list.appendChild(item);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching users:', error));
+            }, 300); // 300ms debounce
+        });
+
+        input.addEventListener("keydown", function (e) {
+            let x = list.getElementsByTagName("div");
+            if (e.keyCode == 40) { // Arrow Down
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode == 38) { // Arrow Up
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode == 13) { // Enter
+                if (currentFocus > -1) {
+                    if (x) {
+                        e.preventDefault();
+                        x[currentFocus].click();
+                    }
+                }
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("active");
+            x[currentFocus].scrollIntoView({ block: "nearest" });
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("active");
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            while (list.firstChild) {
+                list.removeChild(list.firstChild);
+            }
+            list.classList.remove("show");
+            currentFocus = -1;
+        }
+
+        document.addEventListener("click", function (e) {
+            if (e.target !== input) {
+                closeAllLists();
+            }
+        });
+    });
+</script>

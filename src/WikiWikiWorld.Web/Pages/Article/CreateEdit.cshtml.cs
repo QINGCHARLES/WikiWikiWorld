@@ -61,6 +61,8 @@ public sealed class CreateEditModel(
     // Determines if we're in edit mode based on presence of UrlSlug
     public bool IsEditMode => !string.IsNullOrWhiteSpace(UrlSlug);
 
+    public bool CanRevert { get; private set; }
+
     public async Task<IActionResult> OnGetAsync()
     {
         if (!User.Identity?.IsAuthenticated ?? true)
@@ -85,10 +87,102 @@ public sealed class CreateEditModel(
             DisplayTitle = CurrentArticle.DisplayTitle ?? string.Empty;
             ArticleText = CurrentArticle.Text;
             SelectedType = CurrentArticle.Type;
+
+            // Check if there is a previous revision to revert to
+            // We need to find any revision for the same CanonicalArticleId that is NOT the current one (IsCurrent = false)
+            // and is not deleted.
+            var PreviousRevisionSpec = new ArticleRevisionsByCanonicalIdSpec(CurrentArticle.CanonicalArticleId, null);
+            // We just need to know if ANY exist, so AnyAsync is sufficient.
+            // Note: ArticleRevisionsByCanonicalIdSpec might return all revisions, we need to filter.
+            // But Spec implementation isn't visible here, assuming it filters by CanonicalId only.
+            // Let's manually construct the query to be safe and efficient.
+            CanRevert = await Context.ArticleRevisions
+                .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && 
+                            x.SiteId == SiteId &&
+                            x.Culture == Culture &&
+                            !x.IsCurrent && 
+                            x.DateDeleted == null)
+                .AnyAsync();
         }
         // Create mode: Form starts blank
+        if (!IsEditMode && !string.IsNullOrWhiteSpace(UrlSlug) && UrlSlug.StartsWith('@'))
+        {
+            // User Home Page Creation Mode
+            string Username = UrlSlug[1..];
+
+            // Verify that the current user matches the requested username
+            if (!string.Equals(User.Identity?.Name, Username, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            Title = UrlSlug;
+            DisplayTitle = $"User: {Username}";
+            SelectedType = ArticleType.User;
+        }
 
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostRevertAsync()
+    {
+        // Ensure user is authenticated
+        if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            return Challenge();
+        }
+
+        Guid? CurrentUserId = GetCurrentUserId();
+        if (CurrentUserId is null)
+        {
+            return Challenge();
+        }
+
+        if (string.IsNullOrWhiteSpace(OriginalUrlSlug))
+        {
+             return NotFound("Article not found.");
+        }
+
+        // Fetch the current revision
+        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, OriginalUrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
+
+        if (CurrentArticle is null)
+        {
+             return NotFound("Article not found.");
+        }
+
+        // Fetch the most recent previous revision
+        var PreviousRevision = await Context.ArticleRevisions
+            .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
+                        x.SiteId == SiteId &&
+                        x.Culture == Culture &&
+                        !x.IsCurrent &&
+                        x.DateDeleted == null)
+            .OrderByDescending(x => x.DateCreated)
+            .FirstOrDefaultAsync();
+
+        if (PreviousRevision is null)
+        {
+             ErrorMessage = "No previous revision found to revert to.";
+             return await OnGetAsync(); // Reload page with error
+        }
+
+        // Soft delete the current revision
+        CurrentArticle.IsCurrent = false;
+        CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
+        Context.ArticleRevisions.Update(CurrentArticle);
+
+        // Restore the previous revision
+        PreviousRevision.IsCurrent = true;
+        
+        // Optionally, we could create a NEW revision that helps track who did the revert,
+        // but the user requirement was specific: "updates the flags in the db to soft delete the current revision, unflag it as current revision and reflag the previous one as current revision."
+        Context.ArticleRevisions.Update(PreviousRevision);
+        
+        await Context.SaveChangesAsync();
+
+        return Redirect($"/{PreviousRevision.UrlSlug}");
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -109,6 +203,19 @@ public sealed class CreateEditModel(
 
         // In POST, determine mode by checking if OriginalUrlSlug was set (edit mode)
         bool IsEditModePost = !string.IsNullOrWhiteSpace(OriginalUrlSlug);
+
+        // Enforce ArticleType.User for user home pages
+        if (UrlSlug?.StartsWith('@') == true)
+        {
+            string Username = UrlSlug[1..];
+            // Verify that the current user matches the requested username
+            if (!string.Equals(User.Identity?.Name, Username, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            SelectedType = ArticleType.User;
+        }
 
         if (IsEditModePost)
         {
@@ -142,6 +249,7 @@ public sealed class CreateEditModel(
             if (!IsValidImageFile(UploadedFile, out string ValidationError))
             {
                 ErrorMessage = ValidationError;
+                // Re-evaluate CanRevert logic if needed, but this is create mode so no revert.
                 return Page();
             }
 
@@ -234,6 +342,14 @@ public sealed class CreateEditModel(
             if (ExistingArticle is not null)
             {
                 ErrorMessage = "An article with this URL Slug already exists.";
+                // Need to re-populate CanRevert before returning Page()
+                CanRevert = await Context.ArticleRevisions
+                    .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && 
+                                x.SiteId == SiteId &&
+                                x.Culture == Culture &&
+                                !x.IsCurrent && 
+                                x.DateDeleted == null)
+                    .AnyAsync();
                 return Page();
             }
         }

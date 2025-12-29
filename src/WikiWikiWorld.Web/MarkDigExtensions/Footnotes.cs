@@ -1,143 +1,200 @@
 ﻿using Markdig;
+using Markdig.Helpers;
 using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
-using System.Text.RegularExpressions;
+using Markdig.Syntax.Inlines;
 
-namespace WikiWikiWorld.MarkdigExtensions;
+namespace WikiWikiWorld.Web.MarkdigExtensions;
 
-/// <summary>
-/// Extension that renders the collected footnotes at the {{Footnotes}} marker
-/// </summary>
-public sealed class FootnotesExtension(List<Footnote> Footnotes) : IMarkdownExtension
+// --- Data Models (AST Nodes) ---
+
+public sealed class FootnoteInline : LeafInline
 {
-	public void Setup(MarkdownPipelineBuilder Pipeline)
-	{
-		if (!Pipeline.BlockParsers.Contains<FootnotesParser>())
-		{
-			Pipeline.BlockParsers.Add(new FootnotesParser());
-		}
-	}
+	public required StringSlice Data { get; init; }
+	public int FootnoteNumber { get; set; }
+}
 
-	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
+public sealed class Footnote(BlockParser? Parser) : ContainerBlock(Parser)
+{
+	public int Number { get; set; }
+}
+
+public sealed class FootnotesBlock(BlockParser Parser) : ContainerBlock(Parser)
+{
+}
+
+// --- Parsers ---
+
+public sealed class FootnoteParser : InlineParser
+{
+	private const string MarkerStart = "{{Footnote ";
+	private const string MarkerEnd = "}}";
+
+	public FootnoteParser() => OpeningCharacters = ['{'];
+
+	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
 	{
-		if (Renderer is HtmlRenderer HtmlRendererInstance &&
-			!HtmlRendererInstance.ObjectRenderers.Contains<FootnotesRenderer>())
+		int StartPosition = Slice.Start;
+		if (!Slice.Match(MarkerStart)) return false;
+
+		Slice.Start += MarkerStart.Length;
+		int EndPos = Slice.Text.IndexOf(MarkerEnd, Slice.Start, StringComparison.Ordinal);
+		
+		if (EndPos == -1)
 		{
-			HtmlRendererInstance.ObjectRenderers.Add(new FootnotesRenderer(Footnotes));
+			Slice.Start = StartPosition;
+			return false;
 		}
+
+		int InlineStart = Processor.GetSourcePosition(Slice.Start, out int Line, out int Column);
+
+		Processor.Inline = new FootnoteInline
+		{
+			Span = new SourceSpan(InlineStart, InlineStart + (EndPos - Slice.Start)),
+			Line = Line,
+			Column = Column,
+			Data = new StringSlice(Slice.Text, Slice.Start, EndPos - 1),
+			FootnoteNumber = 0 // Assigned in ReprocessFootnotes
+		};
+
+		Slice.Start = EndPos + MarkerEnd.Length;
+		return true;
 	}
 }
 
-/// <summary>
-/// Parser that identifies the {{Footnotes}} marker
-/// </summary>
-public sealed class FootnotesParser : BlockParser
+public sealed class FootnotesBlockParser : BlockParser
 {
 	private const string Marker = "{{Footnotes}}";
 
-	public FootnotesParser()
-	{
-		OpeningCharacters = ['{'];
-	}
+	public FootnotesBlockParser() => OpeningCharacters = ['{'];
 
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
-		// Check if the line starts with "{{Footnotes}}"
-		if (!Processor.Line.Match(Marker))
-		{
-			return BlockState.None;
-		}
+		if (!Processor.Line.Match(Marker)) return BlockState.None;
 
-		// Move cursor forward to avoid infinite loop
 		Processor.Line.Start += Marker.Length;
-
-		// Push new block
 		Processor.NewBlocks.Push(new FootnotesBlock(this));
 		return BlockState.BreakDiscard;
 	}
 }
 
-/// <summary>
-/// Block representing the {{Footnotes}} marker
-/// </summary>
-public sealed class FootnotesBlock : LeafBlock
+// --- Renderers ---
+
+public sealed class FootnoteInlineRenderer : HtmlObjectRenderer<FootnoteInline>
 {
-	public FootnotesBlock(BlockParser Parser) : base(Parser) { }
+	protected override void Write(HtmlRenderer Renderer, FootnoteInline Inline)
+	{
+		string Display = Inline.FootnoteNumber > 0 ? Inline.FootnoteNumber.ToString() : "?";
+		Renderer.Write($"<sup id=\"fnref:{Display}\"><a href=\"#fn:{Display}\">{Display}</a></sup>");
+	}
 }
 
-/// <summary>
-/// Renderer that outputs the list of footnotes in HTML
-/// </summary>
-public sealed class FootnotesRenderer(List<Footnote> Footnotes) : HtmlObjectRenderer<FootnotesBlock>
+public sealed class FootnotesBlockRenderer : HtmlObjectRenderer<FootnotesBlock>
 {
 	protected override void Write(HtmlRenderer Renderer, FootnotesBlock Block)
 	{
-		if (Footnotes is not null && Footnotes.Count > 0)
+		if (Block.Count > 0)
 		{
-			// Start footnotes section
 			Renderer.Write("<div class=\"footnotes\">");
 			Renderer.Write("<hr />");
 			Renderer.Write("<ol>");
-
-			// Write each footnote
-			foreach (Footnote Footnote in Footnotes)
-			{
-				Renderer.Write("<li id=\"fn:");
-				Renderer.Write(Footnote.Number.ToString());
-				Renderer.Write("\">");
-
-				// Process the footnote text as markdown
-				string ProcessedText = ProcessFootnoteMarkdown(Footnote.Text);
-				Renderer.WriteLine(ProcessedText);
-
-				// Add back-reference link
-				Renderer.Write(" <a href=\"#fnref:");
-				Renderer.Write(Footnote.Number.ToString());
-				Renderer.Write("\" class=\"footnote-backref\">↩</a>");
-
-				Renderer.Write("</li>");
-			}
-
-			// End footnotes section
+			Renderer.WriteChildren(Block);
 			Renderer.Write("</ol>");
 			Renderer.Write("</div>");
 		}
 	}
+}
 
-	/// <summary>
-	/// Processes the footnote text as markdown
-	/// </summary>
-	private string ProcessFootnoteMarkdown(string MarkdownText)
+	public sealed class FootnoteItemRenderer : HtmlObjectRenderer<Footnote>
+{
+	protected override void Write(HtmlRenderer Renderer, Footnote Block)
 	{
-		// Create a temporary inline processor to handle the markdown content
-		// This prevents infinite recursion if there are footnotes inside footnotes
-		MarkdownPipeline TempPipeline = new MarkdownPipelineBuilder()
-			.UseAdvancedExtensions()
-			.Build();
-
-		// Process the markdown text to HTML
-		string ProcessedHtml = Markdown.ToHtml(MarkdownText, TempPipeline);
-
-		// Remove surrounding paragraph tags if they exist
-		if (ProcessedHtml.StartsWith("<p>") && ProcessedHtml.EndsWith("</p>\n"))
+		Renderer.Write($"<li id=\"fn:{Block.Number}\">");
+		
+		// If the footnote contains a single paragraph, render its content directly to avoid wrapping <p> tags
+		if (Block.Count == 1 && Block[0] is ParagraphBlock Paragraph)
 		{
-			ProcessedHtml = ProcessedHtml.Substring(3, ProcessedHtml.Length - 8);
+			Renderer.WriteLeafInline(Paragraph);
 		}
-
-		return ProcessedHtml;
+		else
+		{
+			// Otherwise render children normally
+			Renderer.WriteChildren(Block);
+		}
+		
+		// Add back-reference
+		Renderer.Write($" <a href=\"#fnref:{Block.Number}\" class=\"footnote-backref\">↩</a>");
+		Renderer.Write("</li>");
 	}
 }
 
-/// <summary>
-/// Extension method to easily add the footnotes extension to a Markdig pipeline
-/// </summary>
-public static class FootnotesExtensionMethod
+// --- Extension Definition ---
+
+public sealed class FootnoteExtension : IMarkdownExtension
 {
-	public static MarkdownPipelineBuilder UseFootnotes(this MarkdownPipelineBuilder Pipeline, List<Footnote> Footnotes)
+	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
-		Pipeline.Extensions.AddIfNotAlready(new FootnotesExtension(Footnotes));
-		return Pipeline;
+		if (!Pipeline.InlineParsers.Contains<FootnoteParser>())
+			Pipeline.InlineParsers.Add(new FootnoteParser());
+		
+		if (!Pipeline.BlockParsers.Contains<FootnotesBlockParser>())
+			Pipeline.BlockParsers.Add(new FootnotesBlockParser());
+	}
+
+	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
+	{
+		if (Renderer is HtmlRenderer HtmlRenderer)
+		{
+			if (!HtmlRenderer.ObjectRenderers.Contains<FootnoteInlineRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new FootnoteInlineRenderer());
+			
+			if (!HtmlRenderer.ObjectRenderers.Contains<FootnotesBlockRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new FootnotesBlockRenderer());
+
+			if (!HtmlRenderer.ObjectRenderers.Contains<FootnoteItemRenderer>())
+				HtmlRenderer.ObjectRenderers.Add(new FootnoteItemRenderer());
+		}
+	}
+
+	/// <summary>
+	/// Reprocesses document to number footnotes and parses their content using the Singleton Pipeline.
+	/// </summary>
+	public static void ReprocessFootnotes(MarkdownDocument Document, MarkdownPipeline Pipeline)
+	{
+		List<FootnoteInline> Inlines = [.. Document.Descendants<FootnoteInline>()];
+		if (Inlines.Count == 0) return;
+
+		FootnotesBlock? TargetBlock = Document.Descendants<FootnotesBlock>().FirstOrDefault();
+		int Counter = 1;
+
+		foreach (FootnoteInline Inline in Inlines)
+		{
+			Inline.FootnoteNumber = Counter;
+
+			if (TargetBlock is not null)
+			{
+				// 1. Parse the inner markdown using the Singleton Pipeline.
+				// This avoids creating a new pipeline per footnote.
+				MarkdownDocument InnerDoc = Markdown.Parse(Inline.Data.ToString(), Pipeline);
+
+				// 2. Create the container
+				Footnote FootnoteItem = new(null) { Number = Counter };
+
+				// 3. Move blocks from InnerDoc to FootnoteItem
+				// We act on a snapshot list to safely modify the tree
+				List<Block> Children = [.. InnerDoc];
+				foreach (Block Child in Children)
+				{
+					InnerDoc.Remove(Child); 
+					FootnoteItem.Add(Child);
+				}
+
+				TargetBlock.Add(FootnoteItem);
+			}
+
+			Counter++;
+		}
 	}
 }

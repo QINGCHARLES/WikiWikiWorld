@@ -2,7 +2,6 @@
 using Markdig;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
-using WikiWikiWorld.MarkdigExtensions;
 using WikiWikiWorld.Web.MarkdigExtensions;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
@@ -11,12 +10,16 @@ using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Markdig.Syntax;
 using System.IO;
+using Microsoft.AspNetCore.Identity;
+using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
-    SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+    SiteResolverService SiteResolverService,
+    UserManager<User> UserManager,
+    IMarkdownPipelineFactory MarkdownPipelineFactory) : BasePageModel(SiteResolverService)
 {
     [BindProperty(SupportsGet = true)]
     public string UrlSlug { get; set; } = string.Empty;
@@ -29,8 +32,14 @@ public sealed class ViewModel(
     public bool IsViewingCurrentRevision { get; private set; } = false;
     public string ArticleRevisionHtml { get; set; } = string.Empty;
 
+    public bool IsPriorRevision { get; set; }
+    public bool HasTitleChanged { get; set; }
+    public bool HasUrlSlugChanged { get; set; }
+
     // New property to hold the recent authors as a list of (username, profilePicGuid) tuples.
     public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = Array.Empty<ArticleAuthor>();
+
+    public IReadOnlyList<Category> Categories { get; set; } = Array.Empty<Category>();
 
     public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
     {
@@ -38,6 +47,8 @@ public sealed class ViewModel(
         {
             return BadRequest("Invalid parameters.");
         }
+// ... (skip unchanged lines)
+
 
         UrlSlug = UrlSlug.Replace("file:", string.Empty);
 
@@ -65,22 +76,47 @@ public sealed class ViewModel(
 
         if (DisplayedRevision is null)
         {
+            // Check if this is a user home page request (starts with @)
+            if (UrlSlug.StartsWith('@'))
+            {
+                string TargetUsername = UrlSlug[1..];
+                User? TargetUser = await UserManager.FindByNameAsync(TargetUsername);
+
+                if (TargetUser is not null)
+                {
+                    // Check if the current user is the owner of this profile
+                    User? CurrentUser = await UserManager.GetUserAsync(User);
+                    if (CurrentUser is not null && CurrentUser.Id == TargetUser.Id)
+                    {
+                        // Redirect to create the home page
+                        return Redirect($"/Article/CreateEdit?UrlSlug={UrlSlug}");
+                    }
+                }
+            }
+
             return NotFound();
         }
 
         // Fetch recent authors (username and profile pic GUID) for this article.
         DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
         ArticleRevisionsByCanonicalIdSpec AuthorsSpec = new(DisplayedRevision.CanonicalArticleId, MaxRevisionDate);
-        IReadOnlyList<ArticleRevision> Revisions = await Context.ArticleRevisions.WithSpecification(AuthorsSpec).ToListAsync(CancellationToken);
-
-        // Get distinct User IDs preserving order of appearance (Recent first)
-        List<Guid> DistinctUserIds = Revisions.Select(r => r.CreatedByUserId).Distinct().ToList();
         
+        // OPTIMIZATION: Fetch distinct User IDs directly from the database, ordered by most recent contribution.
+        // We use GroupBy and OrderByDescending(Max(DateCreated)) to ensure the list is sorted by recency.
+        List<Guid> DistinctUserIds = await Context.ArticleRevisions
+            .WithSpecification(AuthorsSpec)
+            .GroupBy(r => r.CreatedByUserId)
+            .Select(g => new { UserId = g.Key, MaxDate = g.Max(r => r.DateCreated) })
+            .OrderByDescending(x => x.MaxDate)
+            .Select(x => x.UserId)
+            .ToListAsync(CancellationToken);
+
         // Fetch all users in one query
         UserByIdsSpec UserSpec = new(DistinctUserIds);
         List<User> Users = await Context.Users.WithSpecification(UserSpec).ToListAsync(CancellationToken);
         
         List<ArticleAuthor> Authors = [];
+        // Iterate through DistinctUserIds to preserve the order returned by the query
         foreach (Guid UserId in DistinctUserIds)
         {
             User? User = Users.FirstOrDefault(u => u.Id == UserId);
@@ -91,55 +127,48 @@ public sealed class ViewModel(
         }
         RecentAuthors = Authors;
 
+        // Calculate View Properties
+        // Note: Logic moved from View.cshtml
+        IsPriorRevision = Revision is not null && DisplayedRevision?.DateCreated != CurrentRevision?.DateCreated;
+        
+        if (IsPriorRevision)
+        {
+            HasTitleChanged = DisplayedRevision?.Title != CurrentRevision?.Title;
+            HasUrlSlugChanged = UrlSlug != CurrentRevision?.UrlSlug;
+            AllowSearchEngineIndexingOfPage = false;
+        }
+        else
+        {
+             AllowSearchEngineIndexingOfPage = true;
+        }
+
         // Markdown processing
-        ShortDescriptionExtension ShortDescExt = new(this);
-        ImageExtension ImageExt = new(SiteId);
-        HeaderImageExtension HeaderImageExt = new(SiteId, this);
-        DownloadsBoxExtension DownloadsBoxExt = new();
-        PullQuoteExtension PullQuoteExt = new();
-        TestExtension TestExt = new();
-
-        List<Category> Categories = [];
-        CategoriesExtension CategoriesExt = new(Categories);
-        CategoryExtension CategoryExt = new(Categories);
-
-        List<Footnote> Footnotes = [];
-        FootnotesExtension FootnotesExt = new(Footnotes);
-        FootnoteExtension FootnoteExt = new(Footnotes);
-
-        Dictionary<string, Citation> Citations = [];
-        CitationsExtension CitationsExt = new(Citations);
-        CitationExtension CitationExt = new(Citations);
-
-        PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
-        CoverGridExtension CoverGridExt = new(Culture);
-
-        MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
-                            .Use(ShortDescExt)
-                            .Use(TestExt)
-                            .Use(ImageExt)
-                            .Use(HeaderImageExt)
-                            .Use(CategoriesExt)
-                            .Use(CategoryExt)
-                            .Use(FootnotesExt)
-                            .Use(FootnoteExt)
-                            .Use(CitationsExt)
-                            .Use(CitationExt)
-                            .Use(PublicationIssueInfoboxExt)
-                            .Use(CoverGridExt)
-                            .Use(DownloadsBoxExt)
-                            .Use(PullQuoteExt)
-                            .UseAdvancedExtensions();
-
-        MarkdownPipeline Pipeline = Builder.Build();
-        MarkdownDocument Document = Markdown.Parse(DisplayedRevision.Text, Pipeline);
+        MarkdownPipeline Pipeline = MarkdownPipelineFactory.GetPipeline();
+        MarkdownDocument Document = Markdown.Parse(DisplayedRevision!.Text, Pipeline);
 
         // Enrich the document with async data
+        ShortDescriptionExtension.Enrich(Document);
         await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture);
         await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
         await PublicationIssueInfoboxExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
         await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
         await DownloadsBoxExtension.EnrichAsync(Document, Context, SiteId, CancellationToken);
+
+        // Extract metadata and reprocess content
+        Categories = CategoryExtension.GetCategories(Document);
+
+        FootnoteExtension.ReprocessFootnotes(Document, Pipeline);
+        CitationExtension.ReprocessCitations(Document);
+
+        if (Document.GetData(HeaderImageExtension.DocumentKey) is string ResolvedHeaderImage)
+        {
+            HeaderImage = ResolvedHeaderImage;
+        }
+
+        if (Document.GetData(ShortDescriptionExtension.DocumentKey) is string ResolvedDescription)
+        {
+            MetaDescription = ResolvedDescription;
+        }
 
         // Render to HTML
         StringWriter Writer = new();

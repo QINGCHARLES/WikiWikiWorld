@@ -18,6 +18,7 @@ public class CoverGridBlock(BlockParser Parser) : LeafBlock(Parser)
     public StringBuilder RawContent { get; } = new();
     public List<string> UrlSlugs { get; } = [];
     public List<(string ImageUrl, string Title, string UrlSlug)> CachedCoverImages { get; set; } = [];
+    public string Culture { get; set; } = "en";
 }
 
 public class CoverGridBlockParser : BlockParser
@@ -76,7 +77,7 @@ public class CoverGridBlockParser : BlockParser
     }
 }
 
-public class CoverGridRenderer(string Culture) : HtmlObjectRenderer<CoverGridBlock>
+public class CoverGridRenderer : HtmlObjectRenderer<CoverGridBlock>
 {
     protected override void Write(HtmlRenderer Renderer, CoverGridBlock Block)
     {
@@ -90,10 +91,10 @@ public class CoverGridRenderer(string Culture) : HtmlObjectRenderer<CoverGridBlo
         }
 
         // Render the grid of cover images
-        RenderCoverGrid(Renderer, Block.CachedCoverImages);
+        RenderCoverGrid(Renderer, Block.CachedCoverImages, Block.Culture);
     }
 
-    private void RenderCoverGrid(HtmlRenderer Renderer, List<(string ImageUrl, string Title, string UrlSlug)> CoverImages)
+    private void RenderCoverGrid(HtmlRenderer Renderer, List<(string ImageUrl, string Title, string UrlSlug)> CoverImages, string Culture)
     {
         // Start the grid container
         Renderer.Write("<div class=\"cover-grid\">");
@@ -157,7 +158,7 @@ public class CoverGridRenderer(string Culture) : HtmlObjectRenderer<CoverGridBlo
     }
 }
 
-public class CoverGridExtension(string Culture) : IMarkdownExtension
+public class CoverGridExtension : IMarkdownExtension
 {
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
@@ -172,14 +173,14 @@ public class CoverGridExtension(string Culture) : IMarkdownExtension
         if (Renderer is HtmlRenderer HtmlRenderer &&
             !HtmlRenderer.ObjectRenderers.Any(R => R is CoverGridRenderer))
         {
-            HtmlRenderer.ObjectRenderers.Add(new CoverGridRenderer(Culture));
+            HtmlRenderer.ObjectRenderers.Add(new CoverGridRenderer());
         }
     }
 
     public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken = default)
     {
         // 1. Find the blocks
-        List<CoverGridBlock> GridBlocks = Document.Descendants<CoverGridBlock>().ToList();
+        List<CoverGridBlock> GridBlocks = [.. Document.Descendants<CoverGridBlock>()];
 
         if (GridBlocks.Count == 0) return;
 
@@ -188,6 +189,7 @@ public class CoverGridExtension(string Culture) : IMarkdownExtension
 
         foreach (CoverGridBlock Block in GridBlocks)
         {
+            Block.Culture = Culture;
             string Raw = Block.RawContent.ToString();
             string[] Lines = Raw.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
             foreach (string Line in Lines)
