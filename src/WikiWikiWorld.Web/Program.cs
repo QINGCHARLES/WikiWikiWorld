@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
@@ -57,13 +58,31 @@ Builder.Services.Configure<SiteConfiguration>(Builder.Configuration.GetSection("
 // Add memory cache service
 Builder.Services.AddMemoryCache();
 
-// ✅ Register Database Context
-string DatabasePath = Builder.Environment.IsDevelopment()
-    ? Path.Combine(Builder.Environment.ContentRootPath, "..", "..", "data", "WikiWikiWorld.db")
-    : Path.Combine(Builder.Environment.ContentRootPath, "WikiWikiWorld.db");
+// Add memory cache service
+Builder.Services.AddMemoryCache();
 
-Builder.Services.AddDbContext<WikiWikiWorldDbContext>(options =>
-    options.UseSqlite($"Data Source={DatabasePath}"));
+// Configured Static File Path
+string DataPath = Builder.Environment.IsDevelopment()
+    ? Path.Combine(Builder.Environment.ContentRootPath, "..", "..", "data")
+    : Path.Combine(Builder.Environment.ContentRootPath, "data");
+
+string SiteFilesPath = Path.Combine(DataPath, "sitefiles");
+
+// Register Options
+Builder.Services.Configure<FileStorageOptions>(options =>
+{
+    options.SiteFilesPath = SiteFilesPath;
+});
+string? ConnectionString = Builder.Configuration.GetConnectionString("DefaultConnection");
+
+// FALLBACK: If no config found, calculate the default path (Local Dev or Default Prod)
+if (string.IsNullOrWhiteSpace(ConnectionString))
+{
+    ConnectionString = $"Data Source={Path.Combine(DataPath, "WikiWikiWorld.db")}";
+}
+
+Builder.Services.AddDbContext<WikiWikiWorldDbContext>(Options =>
+    Options.UseSqlite(ConnectionString));
 
 // ✅ Register Repositories
 
@@ -156,7 +175,6 @@ ContentTypeProvider.Mappings[".avif"] = "image/avif";
 WebApplication App = Builder.Build();
 
 App.UseAuthentication(); // Enables Identity Authentication
-App.UseAuthorization(); // Enables Identity Authorization
 
 // Configure the HTTP request pipeline.
 if (!App.Environment.IsDevelopment())
@@ -214,6 +232,18 @@ App.UseAuthorization();
 
 App.UseStaticFiles(new StaticFileOptions
 {
+    ContentTypeProvider = ContentTypeProvider
+});
+
+if (!Directory.Exists(SiteFilesPath))
+{
+    Directory.CreateDirectory(SiteFilesPath);
+}
+
+App.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(SiteFilesPath),
+    RequestPath = "/sitefiles",
     ContentTypeProvider = ContentTypeProvider
 });
 

@@ -29,6 +29,8 @@ msbuild.wrn
 # Visual Studio 2015/2017/2019/2022
 .vs/
 *.vscode/
+!.vscode/tasks.json
+
 
 
 # .NET Core

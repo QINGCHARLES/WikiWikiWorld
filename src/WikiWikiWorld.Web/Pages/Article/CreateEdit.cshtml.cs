@@ -9,13 +9,16 @@ using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.Extensions.Options;
+using WikiWikiWorld.Web.Configuration;
+
 namespace WikiWikiWorld.Web.Pages.Article;
 
 [Authorize]
 public sealed class CreateEditModel(
     WikiWikiWorldDbContext Context,
     UserManager<User> UserManager,
-    IWebHostEnvironment WebHostEnvironment,
+    IOptions<FileStorageOptions> FileStorageOptions,
     SiteResolverService SiteResolverService)
     : BasePageModel(SiteResolverService)
 {
@@ -261,8 +264,7 @@ public sealed class CreateEditModel(
                 string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
 
                 string SiteFilesDirectory = Path.Combine(
-                    WebHostEnvironment.WebRootPath,
-                    "sitefiles",
+                    FileStorageOptions.Value.SiteFilesPath,
                     SiteId.ToString(),
                     "images");
                 Directory.CreateDirectory(SiteFilesDirectory);

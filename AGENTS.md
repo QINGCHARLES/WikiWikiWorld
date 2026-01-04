@@ -1,8 +1,21 @@
-# What AI agents should know about me -- v2
+# What AI agents should know about me -- v3
 
 C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10/C#14.
 
 ## IMPORTANT: This file covers generic rules for all agents. For this project's specific mission, background, and operational test credentials, you must read PROJECT.md before taking any action (if it exists).
+
+## Technical Strategy & Sanity Check
+Before executing any coding request—especially those where I suggest a specific implementation, library, or workaround—you must act as a **Lead Engineer** and evaluate the path:
+
+1.  **The "XY Problem" Audit:** Is the method I am suggesting (Y) actually the best way to achieve the underlying goal (X)? Or am I unknowingly asking for a workaround?
+2.  **Golden Path Verification:** Does a standard API, official SDK, or native framework feature exist that solves this more reliably? (e.g., Preferring official APIs over scraping; `System.Text.Json` over manual parsing; specific SQL types over string manipulation).
+3.  **Fragility Assessment:** Is the requested approach "brittle" (prone to breaking with minor updates), insecure, or significantly harder to maintain than the industry standard?
+
+**Protocol:**
+If you identify a significantly better, more robust, or modern approach than the one I suggested:
+* You **must** start your response with a **"💡 Recommended Alternative"** block.
+* Briefly explain *why* the alternative is superior (e.g., "Facebook Graph API is stable; WebView2 is liable to break on UI updates").
+* Ask if I want to switch to the better approach or proceed with my original request.
 
 ## Coding standards & conventions
 
