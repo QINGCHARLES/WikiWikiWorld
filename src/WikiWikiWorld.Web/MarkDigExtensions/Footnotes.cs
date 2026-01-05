@@ -10,30 +10,58 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 
 // --- Data Models (AST Nodes) ---
 
+/// <summary>
+/// A Markdown inline element representing a footnote reference (e.g., [^1]).
+/// </summary>
 public sealed class FootnoteInline : LeafInline
 {
+	/// <summary>
+	/// Gets or initializes the raw footnote content.
+	/// </summary>
 	public required StringSlice Data { get; init; }
+
+	/// <summary>
+	/// Gets or sets the assigned footnote number.
+	/// </summary>
 	public int FootnoteNumber { get; set; }
 }
 
+/// <summary>
+/// A container block for a single footnote item's content.
+/// </summary>
+/// <param name="Parser">The block parser.</param>
 public sealed class Footnote(BlockParser? Parser) : ContainerBlock(Parser)
 {
+	/// <summary>
+	/// Gets or sets the sequential number of this footnote.
+	/// </summary>
 	public int Number { get; set; }
 }
 
+/// <summary>
+/// A container block holding all footnotes at the bottom of the document.
+/// </summary>
+/// <param name="Parser">The block parser.</param>
 public sealed class FootnotesBlock(BlockParser Parser) : ContainerBlock(Parser)
 {
 }
 
 // --- Parsers ---
 
+/// <summary>
+/// Parses {{Footnote ...}} inline syntax.
+/// </summary>
 public sealed class FootnoteParser : InlineParser
 {
 	private const string MarkerStart = "{{Footnote ";
 	private const string MarkerEnd = "}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="FootnoteParser"/> class.
+	/// </summary>
 	public FootnoteParser() => OpeningCharacters = ['{'];
 
+	/// <inheritdoc/>
 	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
 	{
 		int StartPosition = Slice.Start;
@@ -64,12 +92,19 @@ public sealed class FootnoteParser : InlineParser
 	}
 }
 
+/// <summary>
+/// Parses the {{Footnotes}} block syntax.
+/// </summary>
 public sealed class FootnotesBlockParser : BlockParser
 {
 	private const string Marker = "{{Footnotes}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="FootnotesBlockParser"/> class.
+	/// </summary>
 	public FootnotesBlockParser() => OpeningCharacters = ['{'];
 
+	/// <inheritdoc/>
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
 		if (!Processor.Line.Match(Marker)) return BlockState.None;
@@ -82,8 +117,12 @@ public sealed class FootnotesBlockParser : BlockParser
 
 // --- Renderers ---
 
+/// <summary>
+/// Renders a <see cref="FootnoteInline"/> as a superscript link.
+/// </summary>
 public sealed class FootnoteInlineRenderer : HtmlObjectRenderer<FootnoteInline>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, FootnoteInline Inline)
 	{
 		string Display = Inline.FootnoteNumber > 0 ? Inline.FootnoteNumber.ToString() : "?";
@@ -91,8 +130,12 @@ public sealed class FootnoteInlineRenderer : HtmlObjectRenderer<FootnoteInline>
 	}
 }
 
+/// <summary>
+/// Renders the <see cref="FootnotesBlock"/> container.
+/// </summary>
 public sealed class FootnotesBlockRenderer : HtmlObjectRenderer<FootnotesBlock>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, FootnotesBlock Block)
 	{
 		if (Block.Count > 0)
@@ -107,8 +150,12 @@ public sealed class FootnotesBlockRenderer : HtmlObjectRenderer<FootnotesBlock>
 	}
 }
 
-	public sealed class FootnoteItemRenderer : HtmlObjectRenderer<Footnote>
+/// <summary>
+/// Renders an individual <see cref="Footnote"/> item within the list.
+/// </summary>
+public sealed class FootnoteItemRenderer : HtmlObjectRenderer<Footnote>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, Footnote Block)
 	{
 		Renderer.Write($"<li id=\"fn:{Block.Number}\">");
@@ -132,8 +179,12 @@ public sealed class FootnotesBlockRenderer : HtmlObjectRenderer<FootnotesBlock>
 
 // --- Extension Definition ---
 
+/// <summary>
+/// A Markdig extension that adds support for footnotes.
+/// </summary>
 public sealed class FootnoteExtension : IMarkdownExtension
 {
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
 		if (!Pipeline.InlineParsers.Contains<FootnoteParser>())
@@ -143,6 +194,7 @@ public sealed class FootnoteExtension : IMarkdownExtension
 			Pipeline.BlockParsers.Add(new FootnotesBlockParser());
 	}
 
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
 		if (Renderer is HtmlRenderer HtmlRenderer)

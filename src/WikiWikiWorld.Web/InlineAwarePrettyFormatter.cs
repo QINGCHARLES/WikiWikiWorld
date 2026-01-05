@@ -6,6 +6,9 @@ using AngleSharp.Html;
 
 namespace WikiWikiWorld.Web;
 
+/// <summary>
+/// A HTML markup formatter that is aware of inline and block elements to applying pretty formatting.
+/// </summary>
 public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
 {
     private enum ContainerMode
@@ -32,12 +35,14 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
     private static readonly IMarkupFormatter Plain = HtmlMarkupFormatter.Instance;
     private readonly Stack<ContainerMode> ModeStack = new();
 
+    /// <inheritdoc/>
     public override string Doctype(IDocumentType Doctype)
     {
         // Fix merged doctype/html tag
         return base.Doctype(Doctype) + NewLine;
     }
 
+    /// <inheritdoc/>
     public override string OpenTag(IElement Element, bool SelfClosing)
     {
         ContainerMode Mode = Classify(Element);
@@ -58,6 +63,7 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
         return base.OpenTag(Element, SelfClosing);
     }
 
+    /// <inheritdoc/>
     public override string CloseTag(IElement Element, bool SelfClosing)
     {
         ContainerMode Mode = ModeStack.Count > 0 ? ModeStack.Pop() : ContainerMode.Block;
@@ -77,6 +83,7 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
         return base.CloseTag(Element, SelfClosing);
     }
 
+    /// <inheritdoc/>
     public override string Text(ICharacterData Text)
     {
         // Use Plain formatter for preserved text (textarea, pre) to avoid accidental re-indentation

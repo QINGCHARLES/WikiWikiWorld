@@ -15,32 +15,82 @@ using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
+/// <summary>
+/// Page model for viewing an article or revision.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="UserManager">The user manager.</param>
+/// <param name="MarkdownPipelineFactory">The markdown pipeline factory.</param>
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     UserManager<User> UserManager,
     IMarkdownPipelineFactory MarkdownPipelineFactory) : BasePageModel(SiteResolverService)
 {
+    /// <summary>
+    /// Gets or sets the URL slug of the article.
+    /// </summary>
     [BindProperty(SupportsGet = true)]
     public string UrlSlug { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the specific revision timestamp to view (optional).
+    /// </summary>
     [BindProperty(SupportsGet = true)]
     public string? Revision { get; set; }
 
+    /// <summary>
+    /// Gets or sets the revision currently being displayed (could be current or history).
+    /// </summary>
     public ArticleRevision? DisplayedRevision { get; set; }
+
+    /// <summary>
+    /// Gets the current (latest) revision of the article.
+    /// </summary>
     public ArticleRevision? CurrentRevision { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the displayed revision is the current one.
+    /// </summary>
     public bool IsViewingCurrentRevision { get; private set; } = false;
+
+    /// <summary>
+    /// Gets or sets the rendered HTML content of the article.
+    /// </summary>
     public string ArticleRevisionHtml { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether this is a prior revision.
+    /// </summary>
     public bool IsPriorRevision { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the title has changed compared to the current revision.
+    /// </summary>
     public bool HasTitleChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the URL slug has changed.
+    /// </summary>
     public bool HasUrlSlugChanged { get; set; }
 
+    /// <summary>
+    /// Gets or sets the list of recent authors.
+    /// </summary>
     // New property to hold the recent authors as a list of (username, profilePicGuid) tuples.
     public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = Array.Empty<ArticleAuthor>();
 
+    /// <summary>
+    /// Gets or sets the categories associated with the article.
+    /// </summary>
     public IReadOnlyList<Category> Categories { get; set; } = Array.Empty<Category>();
 
+    /// <summary>
+    /// Handles the GET request to view the article.
+    /// </summary>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>The page or result.</returns>
     public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
     {
         if (SiteId < 1 || string.IsNullOrWhiteSpace(Culture) || string.IsNullOrWhiteSpace(UrlSlug))

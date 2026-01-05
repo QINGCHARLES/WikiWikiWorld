@@ -6,11 +6,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
+/// <summary>
+/// Page model for displaying the "firehose" of recent changes.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 public sealed class FirehoseModel(WikiWikiWorldDbContext Context, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
+    /// <summary>
+    /// Gets the list of recent article revisions.
+    /// </summary>
     public IReadOnlyList<ArticleRevision> RecentRevisions { get; private set; } = [];
+
+    /// <summary>
+    /// Gets the dictionary of users associated with the revisions.
+    /// </summary>
     public Dictionary<Guid, User> Users { get; private set; } = [];
 
+    /// <summary>
+    /// Handles the GET request to view recent changes.
+    /// </summary>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>The page.</returns>
     public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
     {
         RecentRevisions = await Context.ArticleRevisions

@@ -3,17 +3,31 @@ using WikiWikiWorld.Web.Pages;
 
 namespace WikiWikiWorld.Web.Pages.Settings
 {
+	/// <summary>
+	/// Page model for handling theme selection (light/dark/system).
+	/// </summary>
+	/// <param name="SiteResolverService">The site resolver service.</param>
 	[ValidateAntiForgeryToken]
 	public sealed class ThemeModel(SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 	{
+		/// <summary>
+		/// Gets or sets the selected theme.
+		/// </summary>
 		[BindProperty]
 		public string? Theme { get; set; }
 
+		/// <summary>
+		/// Handles the GET request for the theme settings page.
+		/// </summary>
 		public void OnGet()
 		{
 			// ThemePageFilter seeds ViewData with the resolved preference.
 		}
 
+		/// <summary>
+		/// Handles the POST request to save the theme preference.
+		/// </summary>
+		/// <returns>A redirect to the previous page or home.</returns>
 		public IActionResult OnPost()
 		{
 			string Normalized = Theme?.ToLowerInvariant() switch

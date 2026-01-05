@@ -8,18 +8,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
+/// <summary>
+/// Page model for viewing a talk subject (discussion thread).
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 public class TalkSubjectModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
+    /// <summary>
+    /// Gets or sets the URL slug of the talk subject.
+    /// </summary>
     [BindProperty(SupportsGet = true)]
     public string UrlSlug { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the talk subject entity.
+    /// </summary>
     public ArticleTalkSubject? TalkSubject { get; set; }
+
+    /// <summary>
+    /// Gets or sets the dictionary of authors who posted in the thread.
+    /// </summary>
     public Dictionary<Guid, User> PostAuthors { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the name of the creator of the thread.
+    /// </summary>
     public string? CreatorName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of the recipient (article owner).
+    /// </summary>
     public string? RecipientName { get; set; }
 
+    /// <summary>
+    /// Handles the GET request to view the talk thread.
+    /// </summary>
+    /// <returns>The page or NotFound.</returns>
     public async Task<IActionResult> OnGetAsync()
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))

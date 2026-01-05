@@ -10,36 +10,86 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 
 // --- Data Models (AST Nodes) ---
 
+/// <summary>
+/// A Markdown inline element representing a citation reference (e.g., [1]).
+/// </summary>
 public sealed class CitationInline : LeafInline
 {
+	/// <summary>
+	/// Gets or initializes the raw content of the citation tag.
+	/// </summary>
 	public required StringSlice Data { get; init; }
+
+	/// <summary>
+	/// Gets or initializes the unique identifier for this citation.
+	/// </summary>
 	public required string CitationId { get; init; }
+
+	/// <summary>
+	/// Gets or sets the assigned sequential number for this citation.
+	/// </summary>
 	public int CitationNumber { get; set; }
+
+	/// <summary>
+	/// Gets or sets the HTML ID used for back-reference linking.
+	/// </summary>
 	public string BackRefId { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Represents additional metadata and properties for a single citation.
+/// </summary>
 public class Citation
 {
+	/// <summary>
+	/// Gets or sets the sequential number assigned to this citation.
+	/// </summary>
 	public int Number { get; set; }
+
+	/// <summary>
+	/// Gets or sets the unique string identifier for this citation.
+	/// </summary>
 	public required string Id { get; set; }
+
+	/// <summary>
+	/// Gets or sets the collection of key-value properties parsed from the citation.
+	/// </summary>
 	public required Dictionary<string, List<string>> Properties { get; set; }
+
+	/// <summary>
+	/// Gets or sets a list of IDs of elements that reference this citation.
+	/// </summary>
 	public required List<string> ReferencedBy { get; set; }
 }
 
+/// <summary>
+/// A block element representing the unified list of citations at the end of a document.
+/// </summary>
+/// <param name="Parser">The block parser used to create this block.</param>
 public sealed class CitationsBlock(BlockParser Parser) : LeafBlock(Parser)
 {
+	/// <summary>
+	/// Gets or sets the collection of citations to be rendered in this block.
+	/// </summary>
 	public Dictionary<string, Citation> Citations { get; set; } = [];
 }
 
 // --- Parsers ---
 
+/// <summary>
+/// Parses {{Citation ...}} syntaxes in Markdown.
+/// </summary>
 public sealed class CitationParser : InlineParser
 {
 	private const string MarkerStart = "{{Citation ";
 	private const string MarkerEnd = "}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CitationParser"/> class.
+	/// </summary>
 	public CitationParser() => OpeningCharacters = ['{'];
 
+	/// <inheritdoc/>
 	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
 	{
 		int StartPosition = Slice.Start;
@@ -84,12 +134,19 @@ public sealed class CitationParser : InlineParser
 	}
 }
 
+/// <summary>
+/// Parses the {{Citations}} block marker.
+/// </summary>
 public sealed class CitationsBlockParser : BlockParser
 {
 	private const string Marker = "{{Citations}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CitationsBlockParser"/> class.
+	/// </summary>
 	public CitationsBlockParser() => OpeningCharacters = ['{'];
 
+	/// <inheritdoc/>
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
 		if (!Processor.Line.Match(Marker)) return BlockState.None;
@@ -102,8 +159,12 @@ public sealed class CitationsBlockParser : BlockParser
 
 // --- Renderers ---
 
+/// <summary>
+/// Renders a <see cref="CitationInline"/> into HTML (typically a superscript number).
+/// </summary>
 public sealed class CitationRenderer : HtmlObjectRenderer<CitationInline>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, CitationInline Inline)
 	{
 		string Display = Inline.CitationNumber > 0 ? Inline.CitationNumber.ToString() : "?";
@@ -115,8 +176,12 @@ public sealed class CitationRenderer : HtmlObjectRenderer<CitationInline>
 	}
 }
 
+/// <summary>
+/// Renders a <see cref="CitationsBlock"/> as a formatted bibliography.
+/// </summary>
 public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, CitationsBlock Block)
 	{
 		if (Block.Citations is null || Block.Citations.Count == 0)
@@ -240,8 +305,12 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 
 // --- Extension Definition ---
 
+/// <summary>
+/// A Markdig extension that adds support for citations and bibliographies.
+/// </summary>
 public sealed class CitationExtension : IMarkdownExtension
 {
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
 		if (!Pipeline.InlineParsers.Contains<CitationParser>())
@@ -251,6 +320,7 @@ public sealed class CitationExtension : IMarkdownExtension
 			Pipeline.BlockParsers.Add(new CitationsBlockParser());
 	}
 
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
 		if (Renderer is HtmlRenderer HtmlRenderer)
@@ -263,6 +333,10 @@ public sealed class CitationExtension : IMarkdownExtension
 		}
 	}
 
+	/// <summary>
+	/// Reprocesses citation inlines and aggregates them into the citations block.
+	/// </summary>
+	/// <param name="Document">The markdown document to process.</param>
 	public static void ReprocessCitations(MarkdownDocument Document)
 	{
 		List<CitationInline> Inlines = [.. Document.Descendants<CitationInline>()];

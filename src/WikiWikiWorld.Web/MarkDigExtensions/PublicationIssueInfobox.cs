@@ -13,20 +13,42 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
+/// <summary>
+/// A block element representing an infobox for a publication issue.
+/// </summary>
+/// <param name="Parser">The block parser.</param>
 public class PublicationIssueInfoboxBlock(BlockParser Parser) : LeafBlock(Parser)
 {
+    /// <summary>
+    /// Gets the raw content of the infobox.
+    /// </summary>
     public StringBuilder RawContent { get; } = new();
+
+    /// <summary>
+    /// Gets the collection of parsed properties.
+    /// </summary>
     public Dictionary<string, List<string>> Properties { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets or sets the cached list of cover images to display.
+    /// </summary>
     public List<(string ImageUrl, string AltText)> CachedCoverImages { get; set; } = [];
 }
 
+/// <summary>
+/// Parses the {{PublicationIssueInfobox ...}} block syntax.
+/// </summary>
 public class PublicationIssueInfoboxBlockParser : BlockParser
 {
     private const string MarkerStart = "{{PublicationIssueInfobox";
     private const string MarkerEnd = "}}";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PublicationIssueInfoboxBlockParser"/> class.
+    /// </summary>
     public PublicationIssueInfoboxBlockParser() => OpeningCharacters = ['{'];
 
+    /// <inheritdoc/>
     public override BlockState TryOpen(BlockProcessor Processor)
     {
         StringSlice Slice = Processor.Line;
@@ -59,6 +81,7 @@ public class PublicationIssueInfoboxBlockParser : BlockParser
         return BlockState.Continue;
     }
 
+    /// <inheritdoc/>
     public override BlockState TryContinue(BlockProcessor Processor, Block CurrentBlock)
     {
         StringSlice Slice = Processor.Line;
@@ -76,6 +99,9 @@ public class PublicationIssueInfoboxBlockParser : BlockParser
     }
 }
 
+/// <summary>
+/// Renders the <see cref="PublicationIssueInfoboxBlock"/> as an HTML aside element with image carousel.
+/// </summary>
 public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIssueInfoboxBlock>
 {
     // Default number of slides in the standard CSS
@@ -84,6 +110,7 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
     // Maximum number of slides we'll support with inline CSS
     private const int MaxTotalSlides = 10;
 
+    /// <inheritdoc/>
     protected override void Write(HtmlRenderer Renderer, PublicationIssueInfoboxBlock Block)
     {
         ArgumentNullException.ThrowIfNull(Renderer);
@@ -276,8 +303,12 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
     };
 }
 
+/// <summary>
+/// A Markdig extension that adds support for publication issue infoboxes.
+/// </summary>
 public class PublicationIssueInfoboxExtension : IMarkdownExtension
 {
+    /// <inheritdoc/>
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
         if (!Pipeline.BlockParsers.Contains<PublicationIssueInfoboxBlockParser>())
@@ -286,6 +317,7 @@ public class PublicationIssueInfoboxExtension : IMarkdownExtension
         }
     }
 
+    /// <inheritdoc/>
     public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
     {
         if (Renderer is HtmlRenderer HtmlRenderer &&
@@ -295,6 +327,14 @@ public class PublicationIssueInfoboxExtension : IMarkdownExtension
         }
     }
 
+    /// <summary>
+    /// Asynchronously fetches cover images for publication issue infoboxes.
+    /// </summary>
+    /// <param name="Document">The markdown document.</param>
+    /// <param name="Context">The database context.</param>
+    /// <param name="SiteId">The current site ID.</param>
+    /// <param name="Culture">The culture code.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
     public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken = default)
     {
         // 1. Find the blocks

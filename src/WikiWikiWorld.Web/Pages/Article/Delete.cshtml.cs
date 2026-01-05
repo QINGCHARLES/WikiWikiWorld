@@ -8,16 +8,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
+/// <summary>
+/// Page model for deleting articles.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="UserManager">The user manager.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 [Authorize] // ✅ Requires authentication
 public sealed class DeleteModel(WikiWikiWorldDbContext Context, UserManager<User> UserManager, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
     private readonly UserManager<User> UserManager = UserManager;
 
+    /// <summary>
+    /// Gets or sets the URL slug of the article to delete.
+    /// </summary>
     [BindProperty(SupportsGet = true)]
     public string UrlSlug { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets any error message generated during processing.
+    /// </summary>
     public string ErrorMessage { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// Handles the POST request to delete an article.
+    /// </summary>
+    /// <returns>A redirect to the home page or page with errors.</returns>
     public async Task<IActionResult> OnPostAsync()
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))

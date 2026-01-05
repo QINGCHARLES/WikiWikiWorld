@@ -8,6 +8,14 @@ using WikiWikiWorld.Data.Specifications;
 
 namespace WikiWikiWorld.Web.Pages.Account;
 
+/// <summary>
+/// Page model for the login page, handling user authentication.
+/// </summary>
+/// <param name="SignInManager">The sign-in manager.</param>
+/// <param name="UserManager">The user manager.</param>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="Environment">The web host environment.</param>
 public sealed class LoginModel(
 	SignInManager<User> SignInManager,
 	UserManager<User> UserManager,
@@ -18,15 +26,25 @@ public sealed class LoginModel(
 	private readonly SignInManager<User> SignInManager = SignInManager;
 	private readonly UserManager<User> UserManager = UserManager;
 
+	/// <summary>
+	/// Gets or sets the login input model.
+	/// </summary>
 	[BindProperty]
 	public required LoginInputModel Input { get; set; }
 
+	/// <summary>
+	/// Handles the GET request to display the login page.
+	/// </summary>
 	public void OnGet()
 	{
 		ViewData["SiteId"] = SiteId;
 		ViewData["Culture"] = Culture;
 	}
 
+	/// <summary>
+	/// Handles the POST request to authenticate the user.
+	/// </summary>
+	/// <returns>A redirect to the home page on success, or the page with errors on failure.</returns>
 	public async Task<IActionResult> OnPostAsync()
 	{
 		if (!ModelState.IsValid)
@@ -105,15 +123,27 @@ public sealed class LoginModel(
 		}
 	}
 
+	/// <summary>
+	/// Input model for the login form.
+	/// </summary>
 	public sealed class LoginInputModel
 	{
+		/// <summary>
+		/// Gets or sets the username.
+		/// </summary>
 		[Required]
 		public required string UserName { get; set; }
 
+		/// <summary>
+		/// Gets or sets the password.
+		/// </summary>
 		[Required]
 		[DataType(DataType.Password)]
 		public required string Password { get; set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether to remember the user's login session.
+		/// </summary>
 		[Display(Name = "Remember Me")]
 		public bool RememberMe { get; set; }
 	}

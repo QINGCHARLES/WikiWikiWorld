@@ -1,5 +1,8 @@
 ﻿namespace WikiWikiWorld.Web.Helpers
 {
+	/// <summary>
+	/// Helper class for calculating relative time strings.
+	/// </summary>
 	public static class TimeAgo
 	{
 		/// <summary>

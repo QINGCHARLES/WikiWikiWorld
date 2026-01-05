@@ -14,6 +14,11 @@ namespace WikiWikiWorld.Web;
 /// </summary>
 public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
 {
+    /// <summary>
+    /// Invokes the middleware.
+    /// </summary>
+    /// <param name="Context">The HTTP context.</param>
+    /// <returns>A task that represents the completion of request processing.</returns>
     public async Task Invoke(HttpContext Context)
     {
         Stream OriginalBodyStream = Context.Response.Body;
@@ -173,7 +178,7 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
 
     /// <summary>
     /// Checks if the element is within a context where whitespace must be preserved exactly.
-    /// Includes <textarea>, <pre>, <code>, and any element with contenteditable="true".
+    /// Includes &lt;textarea&gt;, &lt;pre&gt;, &lt;code&gt;, and any element with contenteditable="true".
     /// </summary>
     private static bool IsPreservedScope(IElement? element)
     {
@@ -215,8 +220,16 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
     }
 }
 
+/// <summary>
+/// Extension methods for adding the <see cref="HtmlPrettifyMiddleware"/>.
+/// </summary>
 public static class HtmlPrettifyMiddlewareExtensions
 {
+    /// <summary>
+    /// Adds the <see cref="HtmlPrettifyMiddleware"/> to the application's request pipeline.
+    /// </summary>
+    /// <param name="ApplicationBuilder">The <see cref="IApplicationBuilder"/> instance.</param>
+    /// <returns>The <see cref="IApplicationBuilder"/> instance.</returns>
     public static IApplicationBuilder UseHtmlPrettify(this IApplicationBuilder ApplicationBuilder) =>
         ApplicationBuilder.UseMiddleware<HtmlPrettifyMiddleware>();
 }

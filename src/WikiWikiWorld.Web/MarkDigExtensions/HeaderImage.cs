@@ -10,25 +10,42 @@ using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
+/// <summary>
+/// A block element representing the header image of an article.
+/// </summary>
+/// <param name="Parser">The block parser.</param>
 public sealed class HeaderImageBlock(BlockParser Parser) : LeafBlock(Parser)
 {
+	/// <summary>
+	/// Gets or initializes the URL slug for the header image.
+	/// </summary>
 	public required string UrlSlug { get; init; }
 
 	// Stored here during Enrichment; retrieved by the Renderer (debug) 
 	// or the PageModel (via Document.SetData)
+	/// <summary>
+	/// Gets or sets the resolved URL of the image after enrichment.
+	/// </summary>
 	public string? ResolvedUrl { get; set; }
 }
 
+/// <summary>
+/// Parses the {{HeaderImage ...}} block syntax.
+/// </summary>
 public sealed class HeaderImageBlockParser : BlockParser
 {
 	private const string MarkerStart = "{{HeaderImage ";
 	private const string MarkerEnd = "}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="HeaderImageBlockParser"/> class.
+	/// </summary>
 	public HeaderImageBlockParser()
 	{
 		OpeningCharacters = ['{'];
 	}
 
+	/// <inheritdoc/>
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
 		StringSlice Slice = Processor.Line;
@@ -64,8 +81,12 @@ public sealed class HeaderImageBlockParser : BlockParser
 	}
 }
 
+/// <summary>
+/// Renders a diagnostic comment for the <see cref="HeaderImageBlock"/>.
+/// </summary>
 public sealed class HeaderImageBlockRenderer : HtmlObjectRenderer<HeaderImageBlock>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, HeaderImageBlock Block)
 	{
 		// We output a hidden comment for debugging.
@@ -79,10 +100,17 @@ public sealed class HeaderImageBlockRenderer : HtmlObjectRenderer<HeaderImageBlo
 	}
 }
 
+/// <summary>
+/// A Markdig extension that supports article header images.
+/// </summary>
 public sealed class HeaderImageExtension : IMarkdownExtension
 {
+	/// <summary>
+	/// The key used to store the resolved header image URL in the document metadata.
+	/// </summary>
 	public const string DocumentKey = "HeaderImage";
 
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
 		if (!Pipeline.BlockParsers.Contains<HeaderImageBlockParser>())
@@ -91,6 +119,7 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 		}
 	}
 
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
 		if (Renderer is HtmlRenderer HtmlRenderer &&

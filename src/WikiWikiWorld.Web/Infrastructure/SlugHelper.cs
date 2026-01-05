@@ -2,8 +2,16 @@ using System.Text.RegularExpressions;
 
 namespace WikiWikiWorld.Web.Infrastructure;
 
+/// <summary>
+/// Helper for generating URL slugs.
+/// </summary>
 public static partial class SlugHelper
 {
+    /// <summary>
+    /// Generates a URL-friendly slug from the input string.
+    /// </summary>
+    /// <param name="input">The input string to slugify.</param>
+    /// <returns>A URL-friendly slug.</returns>
     public static string GenerateSlug(string input)
     {
         if (string.IsNullOrWhiteSpace(input))

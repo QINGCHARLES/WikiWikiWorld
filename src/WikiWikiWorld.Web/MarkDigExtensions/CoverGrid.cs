@@ -13,21 +13,47 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
+/// <summary>
+/// A block element representing a grid of cover images for a set of articles.
+/// </summary>
+/// <param name="Parser">The block parser used to create this block.</param>
 public class CoverGridBlock(BlockParser Parser) : LeafBlock(Parser)
 {
+    /// <summary>
+    /// Gets the raw content of the block (the list of slugs).
+    /// </summary>
     public StringBuilder RawContent { get; } = new();
+
+    /// <summary>
+    /// Gets the list of parsed URL slugs from the content.
+    /// </summary>
     public List<string> UrlSlugs { get; } = [];
+
+    /// <summary>
+    /// Gets or sets the cached cover image data (URL, Title, Slug).
+    /// </summary>
     public List<(string ImageUrl, string Title, string UrlSlug)> CachedCoverImages { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the culture code for linking.
+    /// </summary>
     public string Culture { get; set; } = "en";
 }
 
+/// <summary>
+/// Parses the {{CoverGrid}} block marker.
+/// </summary>
 public class CoverGridBlockParser : BlockParser
 {
     private const string MarkerStart = "{{CoverGrid";
     private const string MarkerEnd = "}}";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CoverGridBlockParser"/> class.
+    /// </summary>
     public CoverGridBlockParser() => OpeningCharacters = ['{'];
 
+    /// <inheritdoc/>
     public override BlockState TryOpen(BlockProcessor Processor)
     {
         StringSlice Slice = Processor.Line;
@@ -60,6 +86,7 @@ public class CoverGridBlockParser : BlockParser
         return BlockState.Continue;
     }
 
+    /// <inheritdoc/>
     public override BlockState TryContinue(BlockProcessor Processor, Block CurrentBlock)
     {
         StringSlice Slice = Processor.Line;
@@ -77,8 +104,12 @@ public class CoverGridBlockParser : BlockParser
     }
 }
 
+/// <summary>
+/// Renders a <see cref="CoverGridBlock"/> as a responsive grid of images.
+/// </summary>
 public class CoverGridRenderer : HtmlObjectRenderer<CoverGridBlock>
 {
+    /// <inheritdoc/>
     protected override void Write(HtmlRenderer Renderer, CoverGridBlock Block)
     {
         ArgumentNullException.ThrowIfNull(Renderer);
@@ -158,8 +189,12 @@ public class CoverGridRenderer : HtmlObjectRenderer<CoverGridBlock>
     }
 }
 
+/// <summary>
+/// A Markdig extension that adds support for displaying a grid of article covers.
+/// </summary>
 public class CoverGridExtension : IMarkdownExtension
 {
+    /// <inheritdoc/>
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
         if (!Pipeline.BlockParsers.Contains<CoverGridBlockParser>())
@@ -168,6 +203,7 @@ public class CoverGridExtension : IMarkdownExtension
         }
     }
 
+    /// <inheritdoc/>
     public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
     {
         if (Renderer is HtmlRenderer HtmlRenderer &&
@@ -177,6 +213,14 @@ public class CoverGridExtension : IMarkdownExtension
         }
     }
 
+    /// <summary>
+    /// Asynchronously populates the cover image data for cover grid blocks in the document.
+    /// </summary>
+    /// <param name="Document">The markdown document to process.</param>
+    /// <param name="Context">The database context (for fetching article and file info).</param>
+    /// <param name="SiteId">The current site ID.</param>
+    /// <param name="Culture">The current culture code.</param>
+    /// <param name="CancellationToken">A token to cancel the operation.</param>
     public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken = default)
     {
         // 1. Find the blocks

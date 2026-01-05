@@ -12,24 +12,42 @@ using Microsoft.EntityFrameworkCore;
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
 // Block-level element for the DownloadsBox
+/// <summary>
+/// Block-level element representing a download box for a specific file hash.
+/// </summary>
+/// <param name="Parser">The block parser used to create this block.</param>
 public class DownloadsBoxBlock(BlockParser Parser) : ContainerBlock(Parser)
 {
+    /// <summary>
+    /// Gets or initializes the SHA256 hash of the file to download.
+    /// </summary>
     public required String Hash { get; init; }
+
+    /// <summary>
+    /// Gets or sets the cached download URL information.
+    /// </summary>
     public DownloadUrl? CachedDownload { get; set; }
 }
 
 // Block parser for DownloadsBoxBlock
+/// <summary>
+/// Parser for the {{DownloadsBox ...}} block.
+/// </summary>
 public class DownloadsBoxBlockParser : BlockParser
 {
     private const String MarkerStart = "{{DownloadsBox ";
     private const String MarkerEnd = "}}";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DownloadsBoxBlockParser"/> class.
+    /// </summary>
     public DownloadsBoxBlockParser()
     {
         // Trigger when a line starts with '{'
         OpeningCharacters = ['{'];
     }
 
+    /// <inheritdoc/>
     public override BlockState TryOpen(BlockProcessor Processor)
     {
         Markdig.Helpers.StringSlice Slice = Processor.Line;
@@ -71,10 +89,17 @@ public class DownloadsBoxBlockParser : BlockParser
 }
 
 // Block renderer for DownloadsBoxBlock
+/// <summary>
+/// Renders the <see cref="DownloadsBoxBlock"/> as an HTML aside element.
+/// </summary>
 public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DownloadsBoxBlockRenderer"/> class.
+    /// </summary>
     public DownloadsBoxBlockRenderer() { }
 
+    /// <inheritdoc/>
     protected override void Write(HtmlRenderer Renderer, DownloadsBoxBlock Block)
     {
         ArgumentNullException.ThrowIfNull(Renderer);
@@ -153,8 +178,12 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
 }
 
 // Extension to register the DownloadsBox block parser and renderer
+/// <summary>
+/// Extension to register the DownloadsBox block parser and renderer.
+/// </summary>
 public class DownloadsBoxExtension : IMarkdownExtension
 {
+    /// <inheritdoc/>
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
         if (!Pipeline.BlockParsers.Contains<DownloadsBoxBlockParser>())
@@ -163,6 +192,7 @@ public class DownloadsBoxExtension : IMarkdownExtension
         }
     }
 
+    /// <inheritdoc/>
     public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
     {
         if (Renderer is HtmlRenderer HtmlRenderer &&
@@ -172,6 +202,13 @@ public class DownloadsBoxExtension : IMarkdownExtension
         }
     }
 
+    /// <summary>
+    /// Asynchronously fetches download information for all download boxes in the document.
+    /// </summary>
+    /// <param name="Document">The markdown document to process.</param>
+    /// <param name="Context">The database context.</param>
+    /// <param name="SiteId">The current site ID.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
     public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, CancellationToken CancellationToken = default)
     {
         // 1. Find the blocks specifically for this extension

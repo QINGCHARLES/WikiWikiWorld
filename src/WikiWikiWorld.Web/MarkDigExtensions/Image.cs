@@ -14,28 +14,65 @@ using System.Net;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
+/// <summary>
+/// A Markdown inline element representing an embedded image from the WikiWikiWorld database.
+/// </summary>
 public class ImageInline : LeafInline
 {
+    /// <summary>
+    /// Gets or initializes the URL slug of the image article.
+    /// </summary>
     public required string UrlSlug { get; init; }
+
+    /// <summary>
+    /// Gets or initializes the optional layout style (e.g., 'full', 'breakout').
+    /// </summary>
     public string? Layout { get; init; }
+
+    /// <summary>
+    /// Gets or initializes the optional caption for the image.
+    /// </summary>
     public string? Caption { get; init; }
+
+    /// <summary>
+    /// Gets or initializes the alternate text for the image.
+    /// </summary>
     public string? Alt { get; init; }
+
+    /// <summary>
+    /// Gets or sets the cached article revision for this image.
+    /// </summary>
     public ArticleRevision? CachedArticle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the cached file revision for this image.
+    /// </summary>
     public FileRevision? CachedFile { get; set; }
+
+    /// <summary>
+    /// Gets or sets the site ID context for this image.
+    /// </summary>
     public int SiteId { get; set; }
 }
 
+/// <summary>
+/// Parses the {{Image ...}} inline syntax.
+/// </summary>
 public class ImageInlineParser : InlineParser
 {
     private const string MarkerStart = "{{Image ";
     private const string MarkerEnd = "}}";
     private const string AttributeSeparator = "|#|";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ImageInlineParser"/> class.
+    /// </summary>
     public ImageInlineParser()
     {
         OpeningCharacters = ['{'];
     }
 
+    /// <inheritdoc/>
     public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
     {
         int StartPosition = Slice.Start;
@@ -111,8 +148,12 @@ public class ImageInlineParser : InlineParser
     }
 }
 
+/// <summary>
+/// Renders an <see cref="ImageInline"/> to HTML.
+/// </summary>
 public class ImageInlineRenderer : HtmlObjectRenderer<ImageInline>
 {
+    /// <inheritdoc/>
     protected override void Write(HtmlRenderer Renderer, ImageInline InlineElement)
     {
         ArticleRevision? Article = InlineElement.CachedArticle;
@@ -162,8 +203,12 @@ public class ImageInlineRenderer : HtmlObjectRenderer<ImageInline>
     }
 }
 
+/// <summary>
+/// A Markdig extension that adds support for embedding wiki images.
+/// </summary>
 public class ImageExtension : IMarkdownExtension
 {
+    /// <inheritdoc/>
     public void Setup(MarkdownPipelineBuilder Pipeline)
     {
         if (!Pipeline.InlineParsers.Contains<ImageInlineParser>())
@@ -172,6 +217,7 @@ public class ImageExtension : IMarkdownExtension
         }
     }
 
+    /// <inheritdoc/>
     public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
     {
         if (Renderer is HtmlRenderer HtmlRenderer &&
@@ -181,6 +227,14 @@ public class ImageExtension : IMarkdownExtension
         }
     }
 
+    /// <summary>
+    /// Asynchronously resolves image references in the document to file URLs.
+    /// </summary>
+    /// <param name="Document">The markdown document.</param>
+    /// <param name="Context">The database context.</param>
+    /// <param name="SiteId">The current site ID.</param>
+    /// <param name="Culture">The culture code.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
     public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken = default)
     {
         // 1. Find the inlines

@@ -7,12 +7,24 @@ using WikiWikiWorld.Data.Extensions;
 using WikiWikiWorld.Web.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
+/// <summary>
+/// Page model for the home page, displaying a grid of recent articles with covers.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 public sealed class IndexModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
+    /// <summary>
+    /// Gets the list of articles with their cover image information to display.
+    /// </summary>
     public List<ArticleWithCover> ArticlesWithCovers { get; private set; } = [];
 
+    /// <summary>
+    /// Handles the GET request to populate the article grid.
+    /// </summary>
+    /// <param name="CancellationToken">A cancellation token.</param>
     public async Task OnGetAsync(CancellationToken CancellationToken)
     {
         // Fetch the latest articles with publication issue infoboxes (ordered by DateCreated DESC)
@@ -138,4 +150,11 @@ public sealed class IndexModel(
     }
 }
 
+/// <summary>
+/// Represents an article summary with its cover image for display on the index page.
+/// </summary>
+/// <param name="Title">The title of the article.</param>
+/// <param name="UrlSlug">The URL slug of the article.</param>
+/// <param name="ImageUrl">The URL of the cover image.</param>
+/// <param name="DateCreated">The creation date of the article.</param>
 public sealed record ArticleWithCover(string Title, string UrlSlug, string ImageUrl, DateTimeOffset DateCreated);

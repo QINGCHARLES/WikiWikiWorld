@@ -5,6 +5,13 @@ using WikiWikiWorld.Data.Models;
 
 namespace WikiWikiWorld.Web.Pages.Account;
 
+/// <summary>
+/// Page model for the registration page, handling new user creation.
+/// </summary>
+/// <param name="UserManager">The user manager.</param>
+/// <param name="SignInManager">The sign-in manager.</param>
+/// <param name="Context">The database context.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 public sealed class RegisterModel(
 	UserManager<User> UserManager,
 	SignInManager<User> SignInManager,
@@ -14,15 +21,25 @@ public sealed class RegisterModel(
 	private readonly UserManager<User> UserManager = UserManager;
 	private readonly SignInManager<User> SignInManager = SignInManager;
 
+	/// <summary>
+	/// Gets or sets the registration input model.
+	/// </summary>
 	[BindProperty]
 	public required RegisterInputModel Input { get; set; }
 
+	/// <summary>
+	/// Handles the GET request to display the registration page.
+	/// </summary>
 	public void OnGet()
 	{
 		ViewData["SiteId"] = SiteId;
 		ViewData["Culture"] = Culture;
 	}
 
+	/// <summary>
+	/// Handles the POST request to register a new user.
+	/// </summary>
+	/// <returns>A redirect to the home page on success, or the page with errors on failure.</returns>
 	public async Task<IActionResult> OnPostAsync()
 	{
 		if (!ModelState.IsValid)
@@ -83,23 +100,38 @@ public sealed class RegisterModel(
 		}
 	}
 
+	/// <summary>
+	/// Input model for the registration form.
+	/// </summary>
 	public sealed class RegisterInputModel
 	{
+		/// <summary>
+		/// Gets or sets the username.
+		/// </summary>
 		[Required]
 		[Display(Name = "Username")]
 		public required string UserName { get; set; }
 
+		/// <summary>
+		/// Gets or sets the email address.
+		/// </summary>
 		[Required]
 		[EmailAddress]
 		[Display(Name = "Email")]
 		public required string Email { get; set; }
 
+		/// <summary>
+		/// Gets or sets the password.
+		/// </summary>
 		[Required]
 		[StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
 		[DataType(DataType.Password)]
 		[Display(Name = "Password")]
 		public required string Password { get; set; }
 
+		/// <summary>
+		/// Gets or sets the password confirmation.
+		/// </summary>
 		[DataType(DataType.Password)]
 		[Display(Name = "Confirm password")]
 		[Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]

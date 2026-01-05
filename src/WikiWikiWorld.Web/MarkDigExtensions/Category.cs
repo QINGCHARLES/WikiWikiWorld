@@ -9,18 +9,31 @@ using WikiWikiWorld.Data.Models;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
+/// <summary>
+/// A Markdown inline element representing a category tag.
+/// </summary>
 public sealed class CategoryInline : LeafInline
 {
+	/// <summary>
+	/// Gets or initializes the raw string data of the category.
+	/// </summary>
 	public required StringSlice Data { get; init; }
 }
 
+/// <summary>
+/// Parses {{Category ...}} syntaxes in Markdown.
+/// </summary>
 public sealed class CategoryParser : InlineParser
 {
 	private const string MarkerStart = "{{Category ";
 	private const string MarkerEnd = "}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CategoryParser"/> class.
+	/// </summary>
 	public CategoryParser() => OpeningCharacters = ['{'];
 
+	/// <inheritdoc/>
 	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
 	{
 		int StartPosition = Slice.Start;
@@ -50,13 +63,21 @@ public sealed class CategoryParser : InlineParser
 	}
 }
 
+/// <summary>
+/// Renders a <see cref="CategoryInline"/> into HTML (No-Op as categories are typically not rendered inline).
+/// </summary>
 public sealed class CategoryRenderer : HtmlObjectRenderer<CategoryInline>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, CategoryInline Inline) { /* No-Op */ }
 }
 
+/// <summary>
+/// A Markdig extension that adds support for categories.
+/// </summary>
 public sealed class CategoryExtension : IMarkdownExtension
 {
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
 		if (!Pipeline.InlineParsers.Contains<CategoryParser>())
@@ -66,6 +87,7 @@ public sealed class CategoryExtension : IMarkdownExtension
 			Pipeline.BlockParsers.Add(new CategoriesBlockParser());
 	}
 
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
 		if (Renderer is HtmlRenderer HtmlRenderer)
@@ -78,6 +100,11 @@ public sealed class CategoryExtension : IMarkdownExtension
 		}
 	}
 
+	/// <summary>
+	/// Extracts a list of categories from a parsed Markdown document.
+	/// </summary>
+	/// <param name="Document">The markdown document to inspect.</param>
+	/// <returns>A list of distinct categories found in the document.</returns>
 	public static List<Category> GetCategories(MarkdownDocument Document)
 	{
 		return [.. Document.Descendants<CategoryInline>()
@@ -86,16 +113,27 @@ public sealed class CategoryExtension : IMarkdownExtension
 	}
 }
 
+/// <summary>
+/// A block element representing the list of categories in a document.
+/// </summary>
+/// <param name="Parser">The block parser used to create this block.</param>
 public sealed class CategoriesBlock(BlockParser Parser) : LeafBlock(Parser)
 {
 }
 
+/// <summary>
+/// Parses the {{Categories}} block marker.
+/// </summary>
 public sealed class CategoriesBlockParser : BlockParser
 {
 	private const string Marker = "{{Categories}}";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CategoriesBlockParser"/> class.
+	/// </summary>
 	public CategoriesBlockParser() => OpeningCharacters = ['{'];
 
+	/// <inheritdoc/>
 	public override BlockState TryOpen(BlockProcessor Processor)
 	{
 		if (!Processor.Line.Match(Marker)) return BlockState.None;
@@ -106,8 +144,12 @@ public sealed class CategoriesBlockParser : BlockParser
 	}
 }
 
+/// <summary>
+/// Renders a <see cref="CategoriesBlock"/> as an HTML unordered list.
+/// </summary>
 public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, CategoriesBlock Block)
 	{
 		// Traverse up to find the root document

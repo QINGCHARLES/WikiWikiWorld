@@ -14,6 +14,13 @@ using WikiWikiWorld.Web.Configuration;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
+/// <summary>
+/// Page model for creating and editing articles.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="UserManager">The user manager.</param>
+/// <param name="FileStorageOptions">The file storage options.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 [Authorize]
 public sealed class CreateEditModel(
     WikiWikiWorldDbContext Context,
@@ -34,38 +41,75 @@ public sealed class CreateEditModel(
     };
 
     // Used to determine edit mode - if UrlSlug is provided via query string, we're editing
+    /// <summary>
+    /// Gets or sets the URL slug of the article (if editing).
+    /// </summary>
     [BindProperty(SupportsGet = true)]
     public string? UrlSlug { get; set; }
 
     // Original slug for edit mode (persists the original value during postback)
+    /// <summary>
+    /// Gets or sets the original URL slug to track changes during editing.
+    /// </summary>
     [BindProperty]
     public string OriginalUrlSlug { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the article title.
+    /// </summary>
     [BindProperty]
     public string Title { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the article display title.
+    /// </summary>
     [BindProperty]
     public string DisplayTitle { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the article markdown content.
+    /// </summary>
     [BindProperty]
     public string ArticleText { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the selected article type.
+    /// </summary>
     [BindProperty]
     public ArticleType SelectedType { get; set; } = ArticleType.Article;
 
+    /// <summary>
+    /// Gets or sets an optional file upload.
+    /// </summary>
     [BindProperty]
     public IFormFile? UploadedFile { get; set; }
 
+    /// <summary>
+    /// Gets any error message generated during processing.
+    /// </summary>
     public string ErrorMessage { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// Gets the list of available article types for selection.
+    /// </summary>
     public List<ArticleType> AvailableArticleTypes { get; } = [.. Enum.GetValues<ArticleType>()
         .Where(Type => Type != ArticleType.User)];
 
     // Determines if we're in edit mode based on presence of UrlSlug
+    /// <summary>
+    /// Gets a value indicating whether the page is in edit mode.
+    /// </summary>
     public bool IsEditMode => !string.IsNullOrWhiteSpace(UrlSlug);
 
+    /// <summary>
+    /// Gets a value indicating whether the current article can be reverted to a previous revision.
+    /// </summary>
     public bool CanRevert { get; private set; }
 
+    /// <summary>
+    /// Handles the GET request to load the form.
+    /// </summary>
+    /// <returns>The page or result.</returns>
     public async Task<IActionResult> OnGetAsync()
     {
         if (!User.Identity?.IsAuthenticated ?? true)
@@ -127,6 +171,10 @@ public sealed class CreateEditModel(
         return Page();
     }
 
+    /// <summary>
+    /// Handles the POST request to revert an article to a previous revision.
+    /// </summary>
+    /// <returns>A redirect or page result.</returns>
     public async Task<IActionResult> OnPostRevertAsync()
     {
         // Ensure user is authenticated
@@ -197,6 +245,10 @@ public sealed class CreateEditModel(
         return Redirect($"/{PreviousRevision.UrlSlug}");
     }
 
+    /// <summary>
+    /// Handles the POST request to create or update an article.
+    /// </summary>
+    /// <returns>A redirect or page result with errors.</returns>
     public async Task<IActionResult> OnPostAsync()
     {
         // Validate required fields

@@ -11,23 +11,54 @@ using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.Pages.Profile;
 
+/// <summary>
+/// Page model for composing and sending a new message.
+/// </summary>
+/// <param name="Context">The database context.</param>
+/// <param name="UserManager">The user manager.</param>
+/// <param name="SiteResolverService">The site resolver service.</param>
 [Authorize]
 public class NewMessageModel(
 	WikiWikiWorldDbContext Context,
 	UserManager<User> UserManager,
 	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
+	/// <summary>
+	/// Gets or sets the recipient username (from query string).
+	/// </summary>
 	[BindProperty(SupportsGet = true)]
 	public string? Recipient { get; set; }
 
+	/// <summary>
+	/// Gets or sets the new message input model.
+	/// </summary>
 	[BindProperty]
 	public required NewMessageInputModel Input { get; set; }
 
+	/// <summary>
+	/// Gets or sets the display name of the recipient.
+	/// </summary>
 	public string? RecipientDisplayName { get; set; }
+
+	/// <summary>
+	/// Gets or sets the path to the recipient's profile picture.
+	/// </summary>
 	public string? RecipientProfilePicPath { get; set; }
+
+	/// <summary>
+	/// Gets or sets the error message, if any.
+	/// </summary>
 	public string? ErrorMessage { get; set; }
+
+	/// <summary>
+	/// Gets or sets a value indicating whether a recipient was preset in the query string.
+	/// </summary>
 	public bool HasPresetRecipient { get; set; }
 
+	/// <summary>
+	/// Handles the GET request to display the new message form.
+	/// </summary>
+	/// <returns>The page.</returns>
 	public async Task<IActionResult> OnGetAsync()
 	{
 		// If no recipient is specified, show the compose form with a recipient input
@@ -66,6 +97,10 @@ public class NewMessageModel(
 		return Page();
 	}
 
+	/// <summary>
+	/// Handles the POST request to send the message.
+	/// </summary>
+	/// <returns>A redirect to the sent messages on success, or the page with errors.</returns>
 	public async Task<IActionResult> OnPostAsync()
 	{
 		User? CurrentUser = await UserManager.GetUserAsync(User);
@@ -179,6 +214,11 @@ public class NewMessageModel(
 		return LocalRedirect($"/@{CurrentUser.UserName}/messages");
 	}
 
+	/// <summary>
+	/// AJAX handler for searching users by username.
+	/// </summary>
+	/// <param name="term">The search term.</param>
+	/// <returns>A JSON list of matching users.</returns>
 	public async Task<IActionResult> OnGetSearchUsersAsync(string term)
 	{
 		if (string.IsNullOrWhiteSpace(term))
@@ -200,16 +240,28 @@ public class NewMessageModel(
 		return new JsonResult(Users);
 	}
 
+	/// <summary>
+	/// Input model for the new message form.
+	/// </summary>
 	public sealed class NewMessageInputModel
 	{
+		/// <summary>
+		/// Gets or sets the recipient username.
+		/// </summary>
 		[Display(Name = "To")]
 		public string? Recipient { get; set; }
 
+		/// <summary>
+		/// Gets or sets the subject of the message.
+		/// </summary>
 		[Required(ErrorMessage = "Subject is required.")]
 		[StringLength(200, ErrorMessage = "Subject must be 200 characters or less.")]
 		[Display(Name = "Subject")]
 		public required string Subject { get; set; }
 
+		/// <summary>
+		/// Gets or sets the body of the message.
+		/// </summary>
 		[Required(ErrorMessage = "Message is required.")]
 		[StringLength(10000, ErrorMessage = "Message must be 10,000 characters or less.")]
 		[Display(Name = "Message")]

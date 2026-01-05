@@ -7,23 +7,40 @@ using Markdig.Syntax.Inlines;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
+/// <summary>
+/// A Markdown inline element representing a pull quote.
+/// </summary>
 public class PullQuoteInline : LeafInline
 {
+	/// <summary>
+	/// Gets or initializes the text of the quote.
+	/// </summary>
 	public required string QuoteText { get; init; }
+
+	/// <summary>
+	/// Gets or initializes the attribution for the quote.
+	/// </summary>
 	public string? Attribution { get; init; }
 }
 
+/// <summary>
+/// Parses the {{PullQuote ...}} inline syntax.
+/// </summary>
 public class PullQuoteInlineParser : InlineParser
 {
 	private const string MarkerStart = "{{PullQuote ";
 	private const string MarkerEnd = "}}";
 	private const string AttributeSeparator = "|#|";
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="PullQuoteInlineParser"/> class.
+	/// </summary>
 	public PullQuoteInlineParser()
 	{
 		OpeningCharacters = ['{'];
 	}
 
+	/// <inheritdoc/>
 	public override bool Match(InlineProcessor Processor, ref StringSlice Slice)
 	{
 		int StartPosition = Slice.Start;
@@ -76,8 +93,12 @@ public class PullQuoteInlineParser : InlineParser
 	}
 }
 
+/// <summary>
+/// Renders a <see cref="PullQuoteInline"/> to HTML.
+/// </summary>
 public class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline>
 {
+	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, PullQuoteInline InlineElement)
 	{
 		// Generate HTML for the pull quote
@@ -97,8 +118,12 @@ public class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline>
 	}
 }
 
+/// <summary>
+/// A Markdig extension that adds support for pull quotes.
+/// </summary>
 public class PullQuoteExtension : IMarkdownExtension
 {
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
 		if (!Pipeline.InlineParsers.Contains<PullQuoteInlineParser>())
@@ -107,6 +132,7 @@ public class PullQuoteExtension : IMarkdownExtension
 		}
 	}
 
+	/// <inheritdoc/>
 	public void Setup(MarkdownPipeline Pipeline, IMarkdownRenderer Renderer)
 	{
 		if (Renderer is HtmlRenderer HtmlRenderer &&

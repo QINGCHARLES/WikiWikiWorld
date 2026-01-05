@@ -5,11 +5,21 @@ using WikiWikiWorld.Data;
 
 namespace WikiWikiWorld.Web.Pages;
 
+/// <summary>
+/// Page model for handling 404 Not Found errors.
+/// </summary>
+/// <param name="SiteResolverService">The site resolver service.</param>
 public class NotFoundModel(SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
+    /// <summary>
+    /// Gets or sets the URL slug that was not found (optional).
+    /// </summary>
     [BindProperty(SupportsGet = true)]
     public string? UrlSlug { get; set; }
 
+    /// <summary>
+    /// Handles the GET request to display the 404 page.
+    /// </summary>
     public void OnGet()
     {
         var Feature = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();

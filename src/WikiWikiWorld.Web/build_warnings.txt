@@ -1,0 +1,30 @@
+  Determining projects to restore...
+  Restored e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj (in 605 ms).
+  1 of 2 projects are up-to-date for restore.
+  WikiWikiWorld.Data -> e:\source\WikiWikiWorld\src\WikiWikiWorld.Data\bin\Debug\net10.0\WikiWikiWorld.Data.dll
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(182,11): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag 'code'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(183,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'pre'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(183,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'textarea'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(183,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Helpers\TimeAgo.cs(3,22): warning CS1591: Missing XML comment for publicly visible type or member 'TimeAgo' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\MarkDigExtensions\Category.cs(71,26): warning CS1591: Missing XML comment for publicly visible type or member 'CategoryRenderer.Write(HtmlRenderer, CategoryInline)' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Pages\Article\CreateEdit.cshtml.cs(45,20): warning CS1591: Missing XML comment for publicly visible type or member 'CreateEditModel.UrlSlug' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Pages\Article\CreateEdit.cshtml.cs(89,30): warning CS1591: Missing XML comment for publicly visible type or member 'CreateEditModel.AvailableArticleTypes' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Pages\Article\CreateEdit.cshtml.cs(93,17): warning CS1591: Missing XML comment for publicly visible type or member 'CreateEditModel.IsEditMode' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+  WikiWikiWorld.Web -> e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\bin\Debug\net10.0\WikiWikiWorld.Web.dll
+
+Build succeeded.
+
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(182,11): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag 'code'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(183,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'pre'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(183,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'textarea'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\HtmlPrettifyMiddleware.cs(183,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Helpers\TimeAgo.cs(3,22): warning CS1591: Missing XML comment for publicly visible type or member 'TimeAgo' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\MarkDigExtensions\Category.cs(71,26): warning CS1591: Missing XML comment for publicly visible type or member 'CategoryRenderer.Write(HtmlRenderer, CategoryInline)' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Pages\Article\CreateEdit.cshtml.cs(45,20): warning CS1591: Missing XML comment for publicly visible type or member 'CreateEditModel.UrlSlug' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Pages\Article\CreateEdit.cshtml.cs(89,30): warning CS1591: Missing XML comment for publicly visible type or member 'CreateEditModel.AvailableArticleTypes' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\Pages\Article\CreateEdit.cshtml.cs(93,17): warning CS1591: Missing XML comment for publicly visible type or member 'CreateEditModel.IsEditMode' [e:\source\WikiWikiWorld\src\WikiWikiWorld.Web\WikiWikiWorld.Web.csproj]
+    9 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.47
