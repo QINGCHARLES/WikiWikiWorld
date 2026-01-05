@@ -173,7 +173,9 @@ public sealed class CreateEditModel(
 
         // Use explicit transaction with high durability to ensure atomicity of the revision swap.
         // Revert operations modify audit trail and should survive crashes.
-        await using var Transaction = await Context.Database.BeginTransactionAsync();
+        // Use explicit transaction with high durability to ensure atomicity of the revision swap.
+        // Revert operations modify audit trail and should survive crashes.
+        await using var Transaction = await Context.Database.BeginImmediateTransactionAsync();
         using (WriteDurabilityScope.High())
         {
             // Soft delete the current revision
@@ -365,7 +367,9 @@ public sealed class CreateEditModel(
 
         // Use explicit transaction to ensure atomicity of the revision swap.
         // If creating the new revision fails, we don't want to leave the article with no current revision.
-        await using var Transaction = await Context.Database.BeginTransactionAsync();
+        // Use explicit transaction to ensure atomicity of the revision swap.
+        // If creating the new revision fails, we don't want to leave the article with no current revision.
+        await using var Transaction = await Context.Database.BeginImmediateTransactionAsync();
 
         // Set current revision to not current
         CurrentArticle.IsCurrent = false;

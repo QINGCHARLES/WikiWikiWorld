@@ -86,7 +86,7 @@ SqliteInitializer.Initialize(ConnectionString);
 
 // Create interceptors for per-connection PRAGMAs and durability
 SqlitePragmaInterceptor PragmaInterceptor = new(
-    BusyTimeoutMs: 5_000,
+    BusyTimeoutMs: 10_000,
     CacheSizePages: -20_000,
     MmapSizeBytes: 2_147_483_648
 );

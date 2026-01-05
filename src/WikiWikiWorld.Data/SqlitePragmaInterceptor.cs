@@ -11,7 +11,7 @@ using Microsoft.Data.Sqlite;
 /// <param name="CacheSizePages">Cache size. Negative = KB, positive = pages.</param>
 /// <param name="MmapSizeBytes">Memory-mapped I/O size in bytes.</param>
 public sealed class SqlitePragmaInterceptor(
-	int BusyTimeoutMs = 5_000,
+	int BusyTimeoutMs = 10_000,
 	int CacheSizePages = -20_000,
 	long MmapSizeBytes = 2_147_483_648) : DbConnectionInterceptor
 {

@@ -51,15 +51,16 @@ public sealed class SqliteRetryExecutionStrategy : ExecutionStrategy
 		// Check for retryable SQLite errors
 		if (Exception is SqliteException SqliteEx)
 		{
-			// Primary BUSY (5)
-			if (SqliteEx.SqliteErrorCode is 5)
+		// Primary BUSY (5) or LOCKED (6)
+			if (SqliteEx.SqliteErrorCode is 5 or 6)
 			{
 				return true;
 			}
 
 			// Extended BUSY variants: RECOVERY (261), SNAPSHOT (517), TIMEOUT (773)
+			// Extended LOCKED variant: SHAREDCACHE (262)
 			int Extended = SqliteEx.SqliteExtendedErrorCode;
-			return Extended is 261 or 517 or 773;
+			return Extended is 261 or 262 or 517 or 773;
 		}
 
 		return false;
