@@ -4,8 +4,8 @@ This repository’s coding standards and conventions are defined in `agents.md` 
 
 When generating or modifying code, GitHub Copilot should:
 
-1. **Read and follow all rules in `agents.md`.**
+1. **Read and follow all rules in `AGENTS.md`.**
 2. Prefer patterns and APIs that match the existing codebase.
-3. When in doubt, choose clarity over cleverness and stay consistent with `agents.md`.
+3. When in doubt, choose clarity over cleverness and stay consistent with `AGENTS.md`.
 
 @AGENTS.md

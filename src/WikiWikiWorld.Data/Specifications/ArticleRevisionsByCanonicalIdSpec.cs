@@ -15,7 +15,8 @@ public sealed class ArticleRevisionsByCanonicalIdSpec : Specification<ArticleRev
     /// <param name="MaxDate">Optional maximum date to filter revisions.</param>
     public ArticleRevisionsByCanonicalIdSpec(Guid CanonicalArticleId, DateTimeOffset? MaxDate)
     {
-        Query.Where(x => x.CanonicalArticleId == CanonicalArticleId);
+        Query.AsNoTracking()
+             .Where(x => x.CanonicalArticleId == CanonicalArticleId);
 
         if (MaxDate.HasValue)
         {

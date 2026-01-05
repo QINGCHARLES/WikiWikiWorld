@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WikiWikiWorld.Data\WikiWikiWorld.Data.csproj" />
-    <ProjectReference Include="..\WikiWikiWorld.Database\WikiWikiWorld.Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>

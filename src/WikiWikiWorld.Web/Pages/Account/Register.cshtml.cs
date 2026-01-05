@@ -75,7 +75,12 @@ public sealed class RegisterModel(
 		};
 
 		Context.ArticleRevisions.Add(NewUserArticle);
-		await Context.SaveChangesAsync();
+
+		// High durability: ensures user article persists even on power loss
+		using (WriteDurabilityScope.High())
+		{
+			await Context.SaveChangesAsync();
+		}
 	}
 
 	public sealed class RegisterInputModel

@@ -171,19 +171,26 @@ public sealed class CreateEditModel(
              return await OnGetAsync(); // Reload page with error
         }
 
-        // Soft delete the current revision
-        CurrentArticle.IsCurrent = false;
-        CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
-        Context.ArticleRevisions.Update(CurrentArticle);
+        // Use explicit transaction with high durability to ensure atomicity of the revision swap.
+        // Revert operations modify audit trail and should survive crashes.
+        await using var Transaction = await Context.Database.BeginTransactionAsync();
+        using (WriteDurabilityScope.High())
+        {
+            // Soft delete the current revision
+            CurrentArticle.IsCurrent = false;
+            CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
+            Context.ArticleRevisions.Update(CurrentArticle);
 
-        // Restore the previous revision
-        PreviousRevision.IsCurrent = true;
-        
-        // Optionally, we could create a NEW revision that helps track who did the revert,
-        // but the user requirement was specific: "updates the flags in the db to soft delete the current revision, unflag it as current revision and reflag the previous one as current revision."
-        Context.ArticleRevisions.Update(PreviousRevision);
-        
-        await Context.SaveChangesAsync();
+            // Restore the previous revision
+            PreviousRevision.IsCurrent = true;
+            
+            // Optionally, we could create a NEW revision that helps track who did the revert,
+            // but the user requirement was specific: "updates the flags in the db to soft delete the current revision, unflag it as current revision and reflag the previous one as current revision."
+            Context.ArticleRevisions.Update(PreviousRevision);
+            
+            await Context.SaveChangesAsync();
+        }
+        await Transaction.CommitAsync();
 
         return Redirect($"/{PreviousRevision.UrlSlug}");
     }
@@ -356,10 +363,13 @@ public sealed class CreateEditModel(
             }
         }
 
+        // Use explicit transaction to ensure atomicity of the revision swap.
+        // If creating the new revision fails, we don't want to leave the article with no current revision.
+        await using var Transaction = await Context.Database.BeginTransactionAsync();
+
         // Set current revision to not current
         CurrentArticle.IsCurrent = false;
         Context.ArticleRevisions.Update(CurrentArticle);
-        await Context.SaveChangesAsync();
 
         // Insert new revision with updates
         var NewRevision = new ArticleRevision
@@ -381,6 +391,7 @@ public sealed class CreateEditModel(
 
         Context.ArticleRevisions.Add(NewRevision);
         await Context.SaveChangesAsync();
+        await Transaction.CommitAsync();
 
         return Redirect($"/{UrlSlug}");
     }

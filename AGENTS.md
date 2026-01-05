@@ -128,6 +128,7 @@ If you identify a significantly better, more robust, or modern approach than the
 * SQL is idempotent; create minimal indexes.
 * Map to immutable DTOs (`record class` + `required`).
 * Use the Specification Pattern for query reuse. It avoids duplication and keeps complex queries composable.
+* For security-critical writes (account creation, password changes, role updates), wrap `SaveChangesAsync` in `using (WriteDurabilityScope.High())` to use `synchronous=FULL`, if feature available in data layer of project.
 
 ## Options & configuration
 

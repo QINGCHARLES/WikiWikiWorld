@@ -4,15 +4,14 @@ A wiki platform built with ASP.NET Core and SQLite.
 
 ## Project Structure
 
-- **WikiWikiWorld.Data** - Data models and repositories
-- **WikiWikiWorld.Database** - Database connection factory and utilities
-- **WikiWikiWorld.Web** - ASP.NET Core web application
+- **WikiWikiWorld.Data** - Data models, specifications, and EF Core DbContext
+- **WikiWikiWorld.Web** - ASP.NET Core Razor Pages web application
 
 ## Getting Started
 
 ### Prerequisites
 
-- .NET 8.0 SDK or later
+- .NET 10.0 SDK or later
 - SQLite
 
 ### Building

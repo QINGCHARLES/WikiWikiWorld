@@ -18,9 +18,6 @@
     <PackageReference Include="Ardalis.Specification.EntityFrameworkCore" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WikiWikiWorld.Database\WikiWikiWorld.Database.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Extensions\" />

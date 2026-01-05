@@ -104,37 +104,3 @@ To remove these certificates later:
 
 Write-Log "`nPress Enter to close this window..." "Yellow"
 Read-Host
-
-Write-Host "Certificate created with thumbprint: $($cert.Thumbprint)" -ForegroundColor Yellow
-
-# Export the certificate to a PFX file
-$certPasswordSecure = ConvertTo-SecureString -String $certPassword -Force -AsPlainText
-Export-PfxCertificate -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" -FilePath $certPath -Password $certPasswordSecure | Out-Null
-
-Write-Host "Certificate exported to: $certPath" -ForegroundColor Yellow
-
-# Import the certificate to Trusted Root Certification Authorities
-Write-Host "Installing certificate to Trusted Root..." -ForegroundColor Green
-Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\Root -Password $certPasswordSecure -Exportable | Out-Null
-
-Write-Host @"
-
-✓ Development certificate created successfully!
-
-The certificate is now trusted for:
-  - localhost
-  - *.localhost (including en.localhost, fr.localhost, etc.)
-
-You can now run your application with HTTPS on subdomain URLs.
-
-To remove this certificate later:
-  1. Open 'certmgr.msc'
-  2. Navigate to Personal > Certificates
-  3. Delete the certificate with friendly name 'ASP.NET Core Development Certificate (localhost subdomains)'
-  4. Navigate to Trusted Root Certification Authorities > Certificates
-  5. Delete the same certificate there
-
-"@ -ForegroundColor Green
-
-# Clean up the PFX file
-Remove-Item $certPath -Force -ErrorAction SilentlyContinue

@@ -122,15 +122,6 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 		var Categories = CategoryExtension.GetCategories(Document);
 		if (Categories.Count == 0) return;
 
-		// Prioritize categories (Primary vs Secondary) - reusing logic from original implementation if possible, 
-		// but Category model in user's stateless code (viewed in Step 0) doesn't show Priority?
-		// Wait, Step 12 (original Categories.cs) showed `Priority`.
-		// But `Category.cs` (Step 6) parses just `Title`.
-		// Let's check `Category` model. It was in `WikiWikiWorld.Data.Models`.
-		// I'll assume for now I just render them all properly. 
-		// If Priority is needed, I'd need to inspect the Model.
-		// For now, I'll render a simple list to fix the broken UI.
-
 		Renderer.WriteLine("<ul class=\"categories\">");
 		foreach (var CategoryItem in Categories)
 		{

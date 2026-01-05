@@ -81,8 +81,24 @@ if (string.IsNullOrWhiteSpace(ConnectionString))
     ConnectionString = $"Data Source={Path.Combine(DataPath, "WikiWikiWorld.db")}";
 }
 
+// Initialize SQLite database-level settings (WAL mode, page size)
+SqliteInitializer.Initialize(ConnectionString);
+
+// Create interceptors for per-connection PRAGMAs and durability
+SqlitePragmaInterceptor PragmaInterceptor = new(
+    BusyTimeoutMs: 5_000,
+    CacheSizePages: -20_000,
+    MmapSizeBytes: 2_147_483_648
+);
+SqliteDurabilityInterceptor DurabilityInterceptor = new();
+
 Builder.Services.AddDbContext<WikiWikiWorldDbContext>(Options =>
-    Options.UseSqlite(ConnectionString));
+    Options.UseSqlite(ConnectionString, SqliteOptions =>
+    {
+        SqliteOptions.ExecutionStrategy(Dependencies =>
+            new SqliteRetryExecutionStrategy(Dependencies, MaxRetryCount: 3));
+    })
+    .AddInterceptors(PragmaInterceptor, DurabilityInterceptor));
 
 // ✅ Register Repositories
 
