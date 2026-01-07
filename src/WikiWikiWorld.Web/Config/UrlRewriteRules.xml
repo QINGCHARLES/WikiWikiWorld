@@ -9,6 +9,24 @@
 			</conditions>
 			<action type="Redirect" url="https://{HTTP_HOST}{REQUEST_URI}" appendQueryString="false" redirectType="308" />
 		</rule>
+		<!-- Redirect www.magazedia.com, magazedia.wiki, www.magazedia.wiki to magazedia.com -->
+		<rule enabled="true" stopProcessing="true">
+			<match url="(.*)" />
+			<conditions logicalGrouping="MatchAny" trackAllCaptures="false">
+				<add input="{HTTP_HOST}" pattern="^www\.magazedia\.com$" />
+				<add input="{HTTP_HOST}" pattern="^magazedia\.wiki$" />
+				<add input="{HTTP_HOST}" pattern="^www\.magazedia\.wiki$" />
+			</conditions>
+			<action type="Redirect" url="https://magazedia.com/{R:1}" redirectType="308" />
+		</rule>
+		<!-- Redirect static.magazedia.wiki to static.magazedia.com -->
+		<rule enabled="true" stopProcessing="true">
+			<match url="(.*)" />
+			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
+				<add input="{HTTP_HOST}" pattern="^static\.magazedia\.wiki$" />
+			</conditions>
+			<action type="Redirect" url="https://static.magazedia.com/{R:1}" redirectType="308" />
+		</rule>
 		<rule enabled="true" stopProcessing="true">
 			<match url="^info:sitemap$" />
 			<action type="Rewrite" url="Sitemap" />
@@ -16,16 +34,16 @@
 		<rule enabled="true" stopProcessing="true">
 			<match url="^$" />
 			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
-				<add input="{HTTP_HOST}" pattern="^magazedia\.wiki$|^localhost(:[0-9]+)?$" />
+				<add input="{HTTP_HOST}" pattern="^magazedia\.com$|^localhost(:[0-9]+)?$" />
 			</conditions>
 			<action type="Rewrite" url="https://{HTTP_HOST}/CultureSelect" />
 		</rule>
 		<rule enabled="true">
 			<match url="(.*)" />
 			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
-				<add input="{HTTP_HOST}" pattern="^magazedia\.wiki$|^en\.magazedia\.wiki$|^xx-test\.magazedia\.wiki$|^ja\.magazedia\.wiki$|^ar\.magazedia\.wiki$|^localhost|^en\.localhost|^xx-test\.localhost|^ja\.localhost|^ar\.localhost|^crtr.world|^fanfare.wiki" negate="true" />
+				<add input="{HTTP_HOST}" pattern="^magazedia\.com$|^en\.magazedia\.com$|^xx-test\.magazedia\.com$|^ja\.magazedia\.com$|^ar\.magazedia\.com$|^localhost|^en\.localhost|^xx-test\.localhost|^ja\.localhost|^ar\.localhost|^crtr.world|^fanfare.wiki" negate="true" />
 			</conditions>
-			<action type="Redirect" url="https://en.magazedia.wiki/{R:1}" redirectType="308" />
+			<action type="Redirect" url="https://en.magazedia.com/{R:1}" redirectType="308" />
 		</rule>
 		<rule enabled="true">
 			<match url="^login:" />

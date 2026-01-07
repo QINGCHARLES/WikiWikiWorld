@@ -59,6 +59,11 @@ If you identify a significantly better, more robust, or modern approach than the
 * **Null-conditional assignment:** Permit `Target?.Member = Value;` when clearer than explicit `if`.
 * **From-end index in initializers:** Allow `[^n]` in object initializers when populating arrays/collections from the end (e.g., reverse-order rankings, tail-biased buffers). Use sparingly; comment intent.
 * **`\e` escape:** Prefer `"\e"` over `"\x1b"` for ANSI escape sequences.
+* **Switch expressions:** Prefer `switch` expressions over `if/else if` chains or legacy `switch` statements for returning values.
+* **Pattern matching:** Prefer `is not null` over `!= null`; use `is null` over `== null`.
+* **Immutable updates:** Use the `with` keyword for non-destructive mutation of records (`var UpdatedUser = User with { Age = NewAge };`).
+* **Scoped `using`:** Prefer `using var` declarations to reduce nesting depth over `using { }` blocks.
+* **Value Objects:** Use `readonly record struct` for small, immutable data carriers (money, coordinates, IDs) to reduce heap allocations.
 * Front end: vanilla CSS & JS; must be responsive. JS may use `!!` for concise booleans.
 * Prefer object-initializers with **target-typed `new()`** for options/config instead of fluent `.SetXxx()` chains.
 * Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
@@ -120,6 +125,10 @@ If you identify a significantly better, more robust, or modern approach than the
 * Public async methods accept `CancellationToken CancellationToken`; in handlers use `HttpContext.RequestAborted`.
 * Use `await using` for `IAsyncDisposable`.
 * Use `CultureInfo.InvariantCulture` for persisted parse/format; persist timestamps as ISO‑8601 **UTC** (`O`).
+* **Parallelism:** Use `Task.WhenAll` when tasks are independent; avoid awaiting tasks sequentially inside a loop.
+* **Throttling:** Use `SemaphoreSlim` to limit concurrency when using `Parallel.ForEachAsync` or manual parallelism.
+* **Producer/Consumer:** Prefer `System.Threading.Channels.Channel<T>` over `BlockingCollection` or raw locks for decoupling background work.
+* **Timers:** Use `PeriodicTimer` for async loops instead of `Thread.Sleep` or `Task.Delay` inside `while` loops.
 
 ## Data access (EF Core 10 + SQLite)
 
@@ -129,6 +138,11 @@ If you identify a significantly better, more robust, or modern approach than the
 * Map to immutable DTOs (`record class` + `required`).
 * Use the Specification Pattern for query reuse. It avoids duplication and keeps complex queries composable.
 * For security-critical writes (account creation, password changes, role updates), wrap `SaveChangesAsync` in `using (WriteDurabilityScope.High())` to use `synchronous=FULL`, if feature available in data layer of project.
+* **Read-Only Optimization:** Explicitly use `.AsNoTracking()` for all read-only queries (e.g., `OnGet` handlers) to reduce memory overhead and GC pressure.
+* **LINQ Optimization:**
+  * Use `.Any()` instead of `.Count() > 0`.
+  * Use `.Chunk(Size)` for batch processing.
+  * Use `.MaxBy(x => x.Prop)` / `.MinBy()` instead of ordering and taking the first.
 
 ## Options & configuration
 
@@ -140,10 +154,18 @@ If you identify a significantly better, more robust, or modern approach than the
 * Return `IReadOnlyList<T>`/`IReadOnlyDictionary<TKey, TValue>`; accept `IEnumerable<T>`.
 * Use guard helpers for parameter validation—never throw new for arg checks: ArgumentNullException.ThrowIfNull(X), ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Value, nameof(Value)), ArgumentException.ThrowIfNullOrWhiteSpace(Text)
 * Prefer `Path.Join` and async I/O (`File.ReadAllTextAsync(..., CancellationToken)`).
+* **Exception Filters:** Use `catch (Exception Ex) when (Log(Ex))` patterns to log exceptions without unwinding the stack when you aren't actually handling the error logic.
+* **HTTP Clients:** Use named `IHttpClientFactory` configurations for external services to centralize base URLs and headers, rather than instantiating `HttpClient` directly.
+* **JSON Streaming:** When reading large external API responses, use `ReadAsStreamAsync()` and deserialize directly from the stream to avoid allocating massive strings.
 
 ## JSON & serialization
 
 * `System.Text.Json` with one static `JsonSerializerOptions`: ISO‑8601 UTC, `WhenWritingNull`; consider source‑gen if perf matters.
+
+## ASP.NET Core, DI & Middleware
+
+* **Keyed Services:** Use `[FromKeyedServices("KeyName")]` when you need multiple implementations of the same interface (e.g., different storage providers).
+* **Structured Logging:** Use `Logger.BeginScope` to attach context (like `OrderId`) to a block of logs rather than manually adding it to every log message string.
 
 ## Idempotency & retries
 
