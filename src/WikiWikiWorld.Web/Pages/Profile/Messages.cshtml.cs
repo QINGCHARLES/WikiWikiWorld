@@ -117,7 +117,7 @@ public class MessagesModel(
 
 		// Get user's article to find inbox messages
 		string UserSlug = $"@{Username}";
-		ArticleRevisionsBySlugSpec ArticleSpec = new(SiteId, Culture, UserSlug, IsCurrent: true);
+		ArticleRevisionsBySlugSpec ArticleSpec = new(UserSlug, IsCurrent: true);
 		ArticleRevision? UserArticle = await Context.ArticleRevisions.WithSpecification(ArticleSpec).FirstOrDefaultAsync();
 
 		if (UserArticle is not null)
@@ -125,13 +125,13 @@ public class MessagesModel(
 			CanonicalArticleId = UserArticle.CanonicalArticleId;
 
 			// Get inbox messages (messages TO this user)
-			ArticleTalkSubjectsByCanonicalIdSpec InboxSpec = new(SiteId, UserArticle.CanonicalArticleId);
+			ArticleTalkSubjectsByCanonicalIdSpec InboxSpec = new(UserArticle.CanonicalArticleId);
 			InboxMessages = await Context.ArticleTalkSubjects.WithSpecification(InboxSpec).ToListAsync();
 			InboxCount = InboxMessages.Count;
 		}
 
 		// Get sent messages (messages FROM this user)
-		ArticleTalkSubjectsByCreatorSpec SentSpec = new(SiteId, TargetUser.Id);
+		ArticleTalkSubjectsByCreatorSpec SentSpec = new(TargetUser.Id);
 		SentMessages = await Context.ArticleTalkSubjects.WithSpecification(SentSpec).ToListAsync();
 		SentCount = SentMessages.Count;
 

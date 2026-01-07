@@ -103,6 +103,7 @@ Builder.Services.AddDbContext<WikiWikiWorldDbContext>(Options =>
 // ✅ Register Repositories
 
 Builder.Services.AddScoped<SiteResolverService>();
+Builder.Services.AddScoped<ISiteContextService, SiteContextService>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddTransient<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();

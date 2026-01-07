@@ -8,15 +8,14 @@ namespace WikiWikiWorld.Data.Specifications;
 /// </summary>
 public sealed class ArticleTalkSubjectsByCreatorSpec : Specification<ArticleTalkSubject>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ArticleTalkSubjectsByCreatorSpec"/> class.
-    /// </summary>
-    /// <param name="SiteId">The site ID.</param>
-    /// <param name="CreatedByUserId">The user ID who created the messages.</param>
-    public ArticleTalkSubjectsByCreatorSpec(int SiteId, Guid CreatedByUserId)
-    {
-        Query.AsNoTracking()
-             .Where(x => x.SiteId == SiteId && x.CreatedByUserId == CreatedByUserId && x.DateDeleted == null)
-             .OrderByDescending(x => x.DateCreated);
-    }
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ArticleTalkSubjectsByCreatorSpec"/> class.
+	/// </summary>
+	/// <param name="CreatedByUserId">The user ID who created the messages.</param>
+	public ArticleTalkSubjectsByCreatorSpec(Guid CreatedByUserId)
+	{
+		Query.AsNoTracking()
+			 .Where(x => x.CreatedByUserId == CreatedByUserId)
+			 .OrderByDescending(x => x.DateCreated);
+	}
 }

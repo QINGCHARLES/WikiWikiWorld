@@ -8,15 +8,14 @@ namespace WikiWikiWorld.Data.Specifications;
 /// </summary>
 public sealed class ArticleTalkSubjectsByCanonicalIdSpec : Specification<ArticleTalkSubject>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ArticleTalkSubjectsByCanonicalIdSpec"/> class.
-    /// </summary>
-    /// <param name="SiteId">The site ID.</param>
-    /// <param name="CanonicalArticleId">The canonical article identifier.</param>
-    public ArticleTalkSubjectsByCanonicalIdSpec(int SiteId, Guid CanonicalArticleId)
-    {
-        Query.AsNoTracking()
-             .Where(x => x.SiteId == SiteId && x.CanonicalArticleId == CanonicalArticleId && x.DateDeleted == null)
-             .OrderByDescending(x => x.DateCreated);
-    }
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ArticleTalkSubjectsByCanonicalIdSpec"/> class.
+	/// </summary>
+	/// <param name="CanonicalArticleId">The canonical article identifier.</param>
+	public ArticleTalkSubjectsByCanonicalIdSpec(Guid CanonicalArticleId)
+	{
+		Query.AsNoTracking()
+			 .Where(x => x.CanonicalArticleId == CanonicalArticleId)
+			 .OrderByDescending(x => x.DateCreated);
+	}
 }

@@ -120,7 +120,7 @@ public sealed class CreateEditModel(
         // Edit mode: Load existing article data
         if (IsEditMode)
         {
-            var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, UrlSlug!, IsCurrent: true);
+            ArticleRevisionsBySlugSpec Spec = new(UrlSlug!, IsCurrent: true);
             ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
             if (CurrentArticle is null)
@@ -144,11 +144,8 @@ public sealed class CreateEditModel(
             // But Spec implementation isn't visible here, assuming it filters by CanonicalId only.
             // Let's manually construct the query to be safe and efficient.
             CanRevert = await Context.ArticleRevisions
-                .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && 
-                            x.SiteId == SiteId &&
-                            x.Culture == Culture &&
-                            !x.IsCurrent && 
-                            x.DateDeleted == null)
+                .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
+                            !x.IsCurrent)
                 .AnyAsync();
         }
         // Create mode: Form starts blank
@@ -195,7 +192,7 @@ public sealed class CreateEditModel(
         }
 
         // Fetch the current revision
-        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, OriginalUrlSlug, IsCurrent: true);
+        ArticleRevisionsBySlugSpec Spec = new(OriginalUrlSlug, IsCurrent: true);
         ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
         if (CurrentArticle is null)
@@ -204,12 +201,9 @@ public sealed class CreateEditModel(
         }
 
         // Fetch the most recent previous revision
-        var PreviousRevision = await Context.ArticleRevisions
+        ArticleRevision? PreviousRevision = await Context.ArticleRevisions
             .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
-                        x.SiteId == SiteId &&
-                        x.Culture == Culture &&
-                        !x.IsCurrent &&
-                        x.DateDeleted == null)
+                        !x.IsCurrent)
             .OrderByDescending(x => x.DateCreated)
             .FirstOrDefaultAsync();
 
@@ -294,7 +288,7 @@ public sealed class CreateEditModel(
     private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId)
     {
         // Check if article with this slug already exists
-        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, UrlSlug!, IsCurrent: true);
+        ArticleRevisionsBySlugSpec Spec = new(UrlSlug!, IsCurrent: true);
         ArticleRevision? ExistingArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
         if (ExistingArticle is not null)
@@ -388,7 +382,7 @@ public sealed class CreateEditModel(
     private async Task<IActionResult> HandleEditAsync(Guid CurrentUserId)
     {
         // Fetch existing article using original slug
-        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, OriginalUrlSlug, IsCurrent: true);
+        ArticleRevisionsBySlugSpec Spec = new(OriginalUrlSlug, IsCurrent: true);
         ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
         if (CurrentArticle is null)
@@ -399,7 +393,7 @@ public sealed class CreateEditModel(
         // Check if new URL slug conflicts with another article
         if (!OriginalUrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase))
         {
-            var ConflictSpec = new ArticleRevisionsBySlugSpec(SiteId, Culture, UrlSlug!, IsCurrent: true);
+            ArticleRevisionsBySlugSpec ConflictSpec = new(UrlSlug!, IsCurrent: true);
             ArticleRevision? ExistingArticle = await Context.ArticleRevisions.WithSpecification(ConflictSpec).FirstOrDefaultAsync();
 
             if (ExistingArticle is not null)
@@ -407,11 +401,8 @@ public sealed class CreateEditModel(
                 ErrorMessage = "An article with this URL Slug already exists.";
                 // Need to re-populate CanRevert before returning Page()
                 CanRevert = await Context.ArticleRevisions
-                    .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && 
-                                x.SiteId == SiteId &&
-                                x.Culture == Culture &&
-                                !x.IsCurrent && 
-                                x.DateDeleted == null)
+                    .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
+                                !x.IsCurrent)
                     .AnyAsync();
                 return Page();
             }

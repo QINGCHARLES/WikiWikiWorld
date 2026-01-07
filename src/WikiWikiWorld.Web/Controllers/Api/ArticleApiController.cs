@@ -41,12 +41,12 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
         // If a revision is specified, parse the date and retrieve the specific revision
         if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
         {
-            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(SiteId, Culture, UrlSlug, RevisionDate);
+            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
             SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync();
         }
 
         // Return the current revision
-        ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+        ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
         CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync();
 
         if (SpecificRevision is not null)
@@ -86,7 +86,7 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
         }
 
         // Find current revision and set IsCurrent = false
-        ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+        ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
         ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync();
 
         if (CurrentRevision is not null)

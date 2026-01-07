@@ -40,7 +40,7 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
         }
 
         // Retrieve all revisions for the article.
-        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, UrlSlug, IsCurrent: null);
+        ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: null);
         ArticleRevisions = await Context.ArticleRevisions.WithSpecification(Spec).ToListAsync();
 
         if (ArticleRevisions.Count == 0)

@@ -54,7 +54,7 @@ public class TalkSubjectModel(
             return NotFound();
         }
 
-        ArticleTalkSubjectBySlugSpec Spec = new(SiteId, UrlSlug);
+        ArticleTalkSubjectBySlugSpec Spec = new(UrlSlug);
         TalkSubject = await Context.ArticleTalkSubjects.WithSpecification(Spec).FirstOrDefaultAsync();
 
         if (TalkSubject is null)

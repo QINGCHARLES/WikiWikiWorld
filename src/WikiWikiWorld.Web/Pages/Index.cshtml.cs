@@ -28,7 +28,7 @@ public sealed class IndexModel(
     public async Task OnGetAsync(CancellationToken CancellationToken)
     {
         // Fetch the latest articles with publication issue infoboxes (ordered by DateCreated DESC)
-        var LatestSpec = new LatestArticlesWithPublicationIssueInfoboxSpec(SiteId, Culture, 50);
+        LatestArticlesWithPublicationIssueInfoboxSpec LatestSpec = new(50);
         IReadOnlyList<ArticleRevision> Articles = await Context.ArticleRevisions
             .WithSpecification(LatestSpec)
             .AsNoTracking()
@@ -49,7 +49,7 @@ public sealed class IndexModel(
         // 2. Batch-fetch all cover articles
         IReadOnlyList<ArticleRevision> CoverArticles = await Context.ArticleRevisions
             .AsNoTracking()
-            .Where(x => x.SiteId == SiteId && x.Culture == Culture && CoverSlugs.Contains(x.UrlSlug) && x.IsCurrent)
+            .Where(x => CoverSlugs.Contains(x.UrlSlug) && x.IsCurrent)
             .ToListAsync(CancellationToken);
 
         // 3. Batch-fetch all files

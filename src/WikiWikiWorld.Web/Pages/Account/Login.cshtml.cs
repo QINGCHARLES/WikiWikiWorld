@@ -97,7 +97,7 @@ public sealed class LoginModel(
 	private async Task EnsureUserArticleExistsAsync(User TargetUser)
 	{
 		string UserSlug = $"@{TargetUser.UserName}";
-		ArticleRevisionsBySlugSpec Spec = new(SiteId, Culture, UserSlug, IsCurrent: true);
+		ArticleRevisionsBySlugSpec Spec = new(UserSlug, IsCurrent: true);
 		ArticleRevision? ExistingArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
 		if (ExistingArticle is null)

@@ -49,7 +49,7 @@ public sealed class DeleteModel(WikiWikiWorldDbContext Context, UserManager<User
         }
 
         // ✅ Fetch the article
-        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, UrlSlug, IsCurrent: true);
+        ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: true);
         ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
 
         if (CurrentArticle is null)

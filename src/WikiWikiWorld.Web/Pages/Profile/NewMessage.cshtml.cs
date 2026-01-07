@@ -157,7 +157,7 @@ public class NewMessageModel(
 
 		// Get recipient's user article (to link the talk subject)
 		string RecipientSlug = $"@{RecipientUsername}";
-		ArticleRevisionsBySlugSpec ArticleSpec = new(SiteId, Culture, RecipientSlug, IsCurrent: true);
+		ArticleRevisionsBySlugSpec ArticleSpec = new(RecipientSlug, IsCurrent: true);
 		ArticleRevision? RecipientArticle = await Context.ArticleRevisions.WithSpecification(ArticleSpec).FirstOrDefaultAsync();
 
 		// If recipient doesn't have a user article, create one

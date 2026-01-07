@@ -76,8 +76,8 @@ public class ViewModel(
 
         // Check if user has a home page article
         string HomePageSlug = $"@{Username}";
-        var Spec = new ArticleRevisionsBySlugSpec(SiteId, Culture, HomePageSlug, IsCurrent: true);
-        var Article = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
+        ArticleRevisionsBySlugSpec Spec = new(HomePageSlug, IsCurrent: true);
+        ArticleRevision? Article = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
         
         HasHomePage = Article is not null;
 

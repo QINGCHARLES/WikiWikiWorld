@@ -107,10 +107,10 @@ public sealed class ViewModel(
         // Check if a revision is specified
         if (!string.IsNullOrWhiteSpace(Revision) && TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
         {
-            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(SiteId, Culture, UrlSlug, RevisionDate);
+            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
             SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
 
-            ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+            ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
             CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
 
             // Determine if this revision is the latest one
@@ -118,7 +118,7 @@ public sealed class ViewModel(
         }
         else
         {
-            ArticleRevisionsBySlugSpec CurrentSpec = new(SiteId, Culture, UrlSlug, IsCurrent: true);
+            ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
             CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
         }
 
