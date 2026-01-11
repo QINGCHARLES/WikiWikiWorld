@@ -74,6 +74,10 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/Firehose" />
 		</rule>
 		<rule enabled="true">
+			<match url="^search:" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Search" appendQueryString="true" />
+		</rule>
+		<rule enabled="true">
 			<match url="^create:" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/CreateEdit" />
 		</rule>
@@ -130,7 +134,7 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/NotFound?UrlSlug={R:1}" />
 		</rule>
 		<rule name="Rewrite Rule">
-			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!Profile\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
+			<match url="^(?!api/)(?!Privacy)(?!Terms)(?!NotFound)(?!Search)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!Profile\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
 			<action type="Rewrite" url="Article/View?UrlSlug={R:1}" appendQueryString="true" />
 		</rule>
 	</rules>

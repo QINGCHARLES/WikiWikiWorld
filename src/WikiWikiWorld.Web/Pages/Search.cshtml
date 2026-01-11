@@ -1,0 +1,32 @@
+@page
+@model WikiWikiWorld.Web.Pages.SearchModel
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Q) ? "Search" : $"Search: {Model.Q}";
+}
+
+<h1>Search</h1>
+
+@if (string.IsNullOrWhiteSpace(Model.Q))
+{
+    <p>Enter a search term to find articles.</p>
+}
+else if (Model.SearchResults.Count == 0)
+{
+    <p>No results found for "<strong>@Model.Q</strong>".</p>
+}
+else
+{
+    <p>Found @Model.SearchResults.Count result(s) for "<strong>@Model.Q</strong>":</p>
+    <ul class="search-results">
+        @foreach (var result in Model.SearchResults)
+        {
+            <li class="search-result-item">
+                <a href="/@result.UrlSlug">@Html.Raw(Model.HighlightTerm(result.Title))</a>
+                @if (!result.IsTitleMatch && !string.IsNullOrWhiteSpace(result.Snippet))
+                {
+                    <p class="search-snippet">@Html.Raw(Model.HighlightTerm(result.Snippet))</p>
+                }
+            </li>
+        }
+    </ul>
+}
