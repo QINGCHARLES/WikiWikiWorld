@@ -89,7 +89,7 @@
 						SiteId = 1;
 					}
 					string ProfileUrl = $"/@{UserName}/profile";
-					string? ProfilePicGuid = CurrentUser?.ProfilePicGuid;
+					string? ProfilePicGuid = CurrentUser?.ProfilePicGuid?.ToString();
 					string? AvatarPath = !string.IsNullOrWhiteSpace(ProfilePicGuid)
 						? Url.Content($"~/sitefiles/{SiteId}/profilepics/{ProfilePicGuid}.png")
 						: null;

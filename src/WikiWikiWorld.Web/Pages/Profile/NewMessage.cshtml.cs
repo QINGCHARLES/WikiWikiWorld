@@ -89,7 +89,7 @@ public class NewMessageModel(
 		}
 
 		RecipientDisplayName = RecipientUser.UserName;
-		if (!string.IsNullOrWhiteSpace(RecipientUser.ProfilePicGuid))
+		if (RecipientUser.ProfilePicGuid.HasValue)
 		{
 			RecipientProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{RecipientUser.ProfilePicGuid}.png");
 		}

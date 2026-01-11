@@ -68,7 +68,7 @@ else if(Model.DisplayedRevision is not null)
 			@for (int i = 0; i < Model.RecentAuthors.Count; i++)
 			{
 				<a href="/@Model.RecentAuthors[i].UserName" class="avatar" title="@Model.RecentAuthors[i].UserName" style="z-index: @(Model.RecentAuthors.Count - i);">
-					<img src="@($"/sitefiles/{Model.SiteId}/profilepics/{Model.RecentAuthors[i].ProfilePicGuid}.png")" alt="@Model.RecentAuthors[i].UserName" />
+					<img src="@($"/sitefiles/{Model.SiteId}/profilepics/{Model.RecentAuthors[i].ProfilePicGuid?.ToString()}.png")" alt="@Model.RecentAuthors[i].UserName" />
 				</a>
 			}
 
@@ -82,7 +82,7 @@ else if(Model.DisplayedRevision is not null)
 			<button class="dropbtn">⋮</button>
 			<div class="dropdown-content">
 				<a href="@Model.UrlSlug/edit" rel="nofollow">Edit Article</a>
-				<a href="#">View Edit History</a>
+				<a href="@Model.UrlSlug/history" rel="nofollow">View Edit History</a>
 				<a href="#">Delete Article</a>
 				<a href="#">Watch Article</a>
 				<a href="#">Report Article</a>

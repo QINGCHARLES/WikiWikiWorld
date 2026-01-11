@@ -25,9 +25,19 @@ namespace WikiWikiWorld.Web.Configuration
 		public int SiteId { get; set; }
 
 		/// <summary>
-		/// Gets or sets the default culture code for the site (optional).
+		/// Gets or sets the default culture code for the site.
+		/// Required for single-culture sites where the root domain serves content directly.
+		/// Optional for multi-culture sites with <see cref="RootDomainIsCultureSelectorOnly"/> set to true.
 		/// </summary>
 		public string? DefaultCulture { get; set; } = null;
+
+		/// <summary>
+		/// Gets or sets whether the root domain only displays a culture selector page.
+		/// When true, content is served from culture subdomains (e.g., en.site.com), and
+		/// the root domain (site.com) shows a culture selection page with minimal sitemap/robots.txt.
+		/// When false (default), the root domain serves wiki content directly using <see cref="DefaultCulture"/>.
+		/// </summary>
+		public bool RootDomainIsCultureSelectorOnly { get; set; } = false;
 
 		/// <summary>
 		/// Gets or sets the list of domains associated with the site.

@@ -8,14 +8,15 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.Intrinsics.Arm;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
-
 using WikiWikiWorld.Web;
 using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Infrastructure;
 using WikiWikiWorld.Web.Services;
-using System.Text;
 
 WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
 
@@ -191,6 +192,25 @@ ContentTypeProvider.Mappings[".avif"] = "image/avif";
 
 WebApplication App = Builder.Build();
 
+// Log CPU hardware acceleration capabilities
+ILogger StartupLogger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+if (Avx512F.IsSupported)
+{
+    StartupLogger.LogInformation("🚀 Hardware Acceleration: AVX-512 (x86-64-v4) is ACTIVE");
+}
+else if (Avx2.IsSupported)
+{
+    StartupLogger.LogInformation("✅ Hardware Acceleration: AVX2 (x86-64-v3) is ACTIVE");
+}
+else if (AdvSimd.IsSupported)
+{
+    StartupLogger.LogInformation("✅ Hardware Acceleration: ARM NEON (AdvSimd) is ACTIVE");
+}
+else
+{
+    StartupLogger.LogWarning("⚠️ Hardware Acceleration: Standard instruction set (x86-64-v1/v2)");
+}
+
 App.UseAuthentication(); // Enables Identity Authentication
 
 // Configure the HTTP request pipeline.
@@ -213,6 +233,60 @@ App.MapGet("/sitemap.xml", async (ISitemapService SitemapService) =>
 {
     string Sitemap = await SitemapService.GenerateSitemapAsync();
     return Results.Content(Sitemap, "application/xml");
+});
+
+App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context) =>
+{
+    string BaseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+
+    try
+    {
+        // Get site context with culture-selector root domain check
+        (_, _, bool IsCultureSelectorRootDomain) = SiteResolver.ResolveSiteAndCultureWithRootCheck();
+
+        if (IsCultureSelectorRootDomain)
+        {
+            // Culture-selector root domain (e.g., magazedia.com) - minimal robots.txt
+            // Full content is served from culture subdomains
+            string MinimalContent = $"""
+                User-agent: *
+                Allow: /
+
+                Sitemap: {BaseUrl}/sitemap.xml
+                """;
+
+            return Results.Content(MinimalContent, "text/plain");
+        }
+
+        // Culture subdomain or single-culture site - full robots.txt with disallows
+        string Content = $"""
+            User-agent: *
+            Allow: /
+
+            Disallow: /Account/
+            Disallow: /Settings/
+            Disallow: /Profile/Messages
+            Disallow: /Article/CreateEdit
+            Disallow: /Article/Delete
+            Disallow: /api/
+
+            Sitemap: {BaseUrl}/sitemap.xml
+            """;
+
+        return Results.Content(Content, "text/plain");
+    }
+    catch (InvalidOperationException)
+    {
+        // No valid site/culture could be resolved - return minimal robots.txt
+        string Content = $"""
+            User-agent: *
+            Allow: /
+
+            Sitemap: {BaseUrl}/sitemap.xml
+            """;
+
+        return Results.Content(Content, "text/plain");
+    }
 });
 
 // Load the XML file from the correct path

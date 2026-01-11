@@ -100,7 +100,7 @@ public class MessagesModel(
 
 		DateJoined = TargetUser.DateCreated;
 
-		if (!string.IsNullOrWhiteSpace(TargetUser.ProfilePicGuid))
+		if (TargetUser.ProfilePicGuid.HasValue)
 		{
 			ProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{TargetUser.ProfilePicGuid}.png");
 		}

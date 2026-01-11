@@ -10,7 +10,7 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>
     /// Gets or sets the GUID of the user's profile picture.
     /// </summary>
-    public string? ProfilePicGuid { get; set; }
+    public Guid? ProfilePicGuid { get; set; }
 
     /// <summary>
     /// Gets or sets the date and time when this user was created.

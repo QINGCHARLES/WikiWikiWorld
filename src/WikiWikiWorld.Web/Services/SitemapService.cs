@@ -40,32 +40,64 @@ public sealed class SitemapService(
     /// <inheritdoc/>
     public async Task<string> GenerateSitemapAsync(CancellationToken CancellationToken = default)
     {
-        // Get the current site context using the resolver
-        (int SiteId, string Culture) = SiteResolver.ResolveSiteAndCulture();
-
-        // Create a site-specific cache key
-        string CacheKey = $"{SitemapCacheKeyPrefix}{SiteId}_{Culture}";
-
-        // Try to get the sitemap from the cache
-        if (MemoryCache.TryGetValue(CacheKey, out string? CachedSitemap) && CachedSitemap is not null)
-        {
-            return CachedSitemap;
-        }
-
-        // If not cached, generate the sitemap
         string BaseUrl = GetBaseUrl();
-        string GeneratedSitemap = await GenerateSitemapXmlAsync(SiteId, Culture, BaseUrl, CancellationToken);
 
-        // Cache the result with an absolute expiration
-        MemoryCacheEntryOptions CacheOptions = new()
+        try
         {
-            AbsoluteExpirationRelativeToNow = CacheDuration,
-            Priority = CacheItemPriority.Normal
-        };
+            // Get the current site context using the resolver
+            (int SiteId, string Culture, bool IsCultureSelectorRootDomain) = SiteResolver.ResolveSiteAndCultureWithRootCheck();
 
-        MemoryCache.Set(CacheKey, GeneratedSitemap, CacheOptions);
+            // If this is a culture-selector root domain (e.g., magazedia.com with RootDomainIsCultureSelectorOnly=true),
+            // return minimal sitemap - the full sitemap is served from culture subdomains (e.g., en.magazedia.com)
+            if (IsCultureSelectorRootDomain)
+            {
+                return GenerateRootSitemapXml(BaseUrl);
+            }
 
-        return GeneratedSitemap;
+            // Create a site-specific cache key that includes the host
+            string CacheKey = $"{SitemapCacheKeyPrefix}{SiteId}_{Culture}_{BaseUrl}";
+
+            // Try to get the sitemap from the cache
+            if (MemoryCache.TryGetValue(CacheKey, out string? CachedSitemap) && CachedSitemap is not null)
+            {
+                return CachedSitemap;
+            }
+
+            // If not cached, generate the sitemap
+            string GeneratedSitemap = await GenerateSitemapXmlAsync(SiteId, Culture, BaseUrl, CancellationToken);
+
+            // Cache the result with an absolute expiration
+            MemoryCacheEntryOptions CacheOptions = new()
+            {
+                AbsoluteExpirationRelativeToNow = CacheDuration,
+                Priority = CacheItemPriority.Normal
+            };
+
+            MemoryCache.Set(CacheKey, GeneratedSitemap, CacheOptions);
+
+            return GeneratedSitemap;
+        }
+        catch (InvalidOperationException)
+        {
+            // Root domain (no culture) - return minimal sitemap with just the homepage
+            return GenerateRootSitemapXml(BaseUrl);
+        }
+    }
+
+    private static string GenerateRootSitemapXml(string BaseUrl)
+    {
+        XNamespace Ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+
+        XDocument Doc = new(
+            new XDeclaration("1.0", "utf-8", null),
+            new XElement(Ns + "urlset",
+                new XElement(Ns + "url",
+                    new XElement(Ns + "loc", $"{BaseUrl}/")
+                )
+            )
+        );
+
+        return Doc.ToString();
     }
 
     private async Task<string> GenerateSitemapXmlAsync(int SiteId, string Culture, string BaseUrl, CancellationToken CancellationToken)

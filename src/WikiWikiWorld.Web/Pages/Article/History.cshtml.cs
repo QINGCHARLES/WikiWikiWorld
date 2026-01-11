@@ -28,6 +28,21 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
     public IReadOnlyList<ArticleRevision> ArticleRevisions { get; private set; } = [];
 
     /// <summary>
+    /// Gets a dictionary mapping user IDs to usernames for display.
+    /// </summary>
+    public IReadOnlyDictionary<Guid, string> UserNames { get; private set; } = new Dictionary<Guid, string>();
+
+    /// <summary>
+    /// Gets a dictionary mapping user IDs to profile picture GUIDs.
+    /// </summary>
+    public IReadOnlyDictionary<Guid, Guid?> UserProfilePics { get; private set; } = new Dictionary<Guid, Guid?>();
+
+    /// <summary>
+    /// Gets the article title from the current (first) revision.
+    /// </summary>
+    public string ArticleTitle { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Handles the GET request to load the revision history.
     /// </summary>
     /// <returns>The page or result.</returns>
@@ -48,7 +63,31 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
             return NotFound("No revisions found for this article.");
         }
 
+        // Get the article title from the current revision
+        ArticleTitle = ArticleRevisions.FirstOrDefault(r => r.IsCurrent)?.Title ?? ArticleRevisions[0].Title;
+
+        // Fetch user information for all revision authors
+        List<Guid> UserIds = ArticleRevisions.Select(r => r.CreatedByUserId).Distinct().ToList();
+        UserByIdsSpec UserSpec = new(UserIds);
+        List<User> Users = await Context.Users.WithSpecification(UserSpec).ToListAsync();
+
+        UserNames = Users
+            .Where(u => u.UserName is not null)
+            .ToDictionary(u => u.Id, u => u.UserName!);
+
+        UserProfilePics = Users.ToDictionary(u => u.Id, u => u.ProfilePicGuid);
+
         return Page();
+    }
+
+    /// <summary>
+    /// Gets a user-friendly relative time string for a date.
+    /// </summary>
+    /// <param name="date">The date to format.</param>
+    /// <returns>A human-readable relative time string.</returns>
+    public static string GetRelativeTime(DateTimeOffset date)
+    {
+        return WikiWikiWorld.Web.Helpers.TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, date);
     }
 
     /// <summary>
