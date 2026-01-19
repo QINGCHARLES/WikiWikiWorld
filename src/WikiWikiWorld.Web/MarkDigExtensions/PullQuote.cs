@@ -101,11 +101,7 @@ public class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline>
 	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, PullQuoteInline InlineElement)
 	{
-		// Wrap in a figure to keep all elements together as a unit
-		Renderer.Write("<figure class=\"pullquote-container\">");
-
-		Renderer.Write("<hr class=\"zig-zag\">");
-
+		// The zig-zag borders are now applied via CSS ::before and ::after pseudo-elements
 		Renderer.Write("<blockquote class=\"pullquote\">");
 		Renderer.Write($"<p>{InlineElement.QuoteText}</p>");
 
@@ -115,10 +111,6 @@ public class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline>
 		}
 
 		Renderer.Write("</blockquote>");
-
-		Renderer.Write("<hr class=\"zig-zag\">");
-
-		Renderer.Write("</figure>");
 	}
 }
 
