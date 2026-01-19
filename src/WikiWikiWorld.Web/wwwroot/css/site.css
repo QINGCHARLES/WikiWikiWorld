@@ -1126,148 +1126,82 @@ a.button, button
 	}
 }
 
-/*#region Carousel*/
+/*#region Carousel (CSS Scroll Snap) */
 
 .carousel
 {
 	position: relative;
-	width: 100%; /* Full width of container */
-	margin: auto;
-	overflow: hidden;
+	width: 100%;
 }
 
-	/* Hide radio inputs */
-	.carousel input
-	{
-		display: none;
-	}
-
-.slides
+.carousel .slides
 {
-	width: 100%;
+	display: flex;
+	overflow-x: scroll;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: none; /* Firefox */
+}
+
+.carousel .slides::-webkit-scrollbar
+{
+	display: none; /* Chrome/Safari */
+}
+
+.carousel .slide
+{
 	position: relative;
+	flex: 0 0 100%;
+	scroll-snap-align: start;
 }
 
-/* Set all slides to be hidden by default */
-.slide
-{
-	display: none;
-	width: 100%;
-}
-
-/* Show only the active slide */
-#slide1:checked ~ .slides .slide:nth-of-type(1),
-#slide2:checked ~ .slides .slide:nth-of-type(2),
-#slide3:checked ~ .slides .slide:nth-of-type(3)
-{
-	display: block;
-}
-
-.slide img
+.carousel .slide img
 {
 	width: 100%;
 	height: auto;
 	display: block;
 }
 
-/* Navigation arrows styling */
-.nav
+/* Navigation arrows - always visible */
+.carousel .slide .nav
 {
 	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	text-decoration: none;
+	opacity: 0.7;
+	transition: opacity 0.3s;
 	z-index: 10;
 }
 
-	.nav label
-	{
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		color: #fff;
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		z-index: 100;
-		opacity: 0;
-		transition: opacity 0.3s;
-	}
-
-.carousel:hover .nav label
+.carousel .slide .nav:hover
 {
 	opacity: 1;
 }
 
-.nav label svg
+.carousel .slide .nav svg
 {
-	color: #fff;
 	stroke: currentColor;
 }
 
-/* Position arrows */
-.prev
+.carousel .slide .nav.prev
 {
 	left: 10px;
 }
 
-.next
+.carousel .slide .nav.next
 {
 	right: 10px;
 }
 
-/* Show only relevant navigation controls based on active slide */
-.nav-controls
-{
-	display: none;
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
-}
-
-#slide1:checked ~ .nav .nav-slide1,
-#slide2:checked ~ .nav .nav-slide2,
-#slide3:checked ~ .nav .nav-slide3
-{
-	display: block;
-}
-
-/* Dot indicators */
-.dots
-{
-	text-align: center;
-	width: 100%;
-	padding: 15px 0;
-	z-index: 10;
-}
-
-	.dots label
-	{
-		cursor: pointer;
-		height: 10px;
-		width: 10px;
-		margin: 0 5px;
-		background-color: #bbb;
-		border-radius: 50%;
-		display: inline-block;
-		transition: background-color 0.3s;
-	}
-
-/* Active dot styling */
-#slide1:checked ~ .dots label[for="slide1"],
-#slide2:checked ~ .dots label[for="slide2"],
-#slide3:checked ~ .dots label[for="slide3"]
-{
-	background-color: var(--uchu-green-5);
-}
-
-/*#endregion Carousel*/
+/*#endregion Carousel */
 
 .author-list
 {

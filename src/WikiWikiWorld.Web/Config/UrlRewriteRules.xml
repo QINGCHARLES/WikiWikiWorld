@@ -9,23 +9,29 @@
 			</conditions>
 			<action type="Redirect" url="https://{HTTP_HOST}{REQUEST_URI}" appendQueryString="false" redirectType="308" />
 		</rule>
-		<!-- Redirect www.magazedia.com, magazedia.wiki, www.magazedia.wiki to magazedia.com -->
-		<rule enabled="true" stopProcessing="true">
-			<match url="(.*)" />
-			<conditions logicalGrouping="MatchAny" trackAllCaptures="false">
-				<add input="{HTTP_HOST}" pattern="^www\.magazedia\.com$" />
-				<add input="{HTTP_HOST}" pattern="^magazedia\.wiki$" />
-				<add input="{HTTP_HOST}" pattern="^www\.magazedia\.wiki$" />
-			</conditions>
-			<action type="Redirect" url="https://magazedia.com/{R:1}" redirectType="308" />
-		</rule>
-		<!-- Redirect static.magazedia.wiki to static.magazedia.com -->
+		<!-- Redirect www.magazedia.com to magazedia.com -->
 		<rule enabled="true" stopProcessing="true">
 			<match url="(.*)" />
 			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
-				<add input="{HTTP_HOST}" pattern="^static\.magazedia\.wiki$" />
+				<add input="{HTTP_HOST}" pattern="^www\.magazedia\.com$" />
 			</conditions>
-			<action type="Redirect" url="https://static.magazedia.com/{R:1}" redirectType="308" />
+			<action type="Redirect" url="https://magazedia.com/{R:1}" redirectType="301" />
+		</rule>
+		<!-- Redirect all *.magazedia.wiki to *.magazedia.com (301 permanent) -->
+		<rule enabled="true" stopProcessing="true">
+			<match url="(.*)" />
+			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
+				<add input="{HTTP_HOST}" pattern="^(.+)\.magazedia\.wiki$" />
+			</conditions>
+			<action type="Redirect" url="https://{C:1}.magazedia.com/{R:1}" redirectType="301" />
+		</rule>
+		<!-- Redirect bare magazedia.wiki to magazedia.com (301 permanent) -->
+		<rule enabled="true" stopProcessing="true">
+			<match url="(.*)" />
+			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
+				<add input="{HTTP_HOST}" pattern="^(www\.)?magazedia\.wiki$" />
+			</conditions>
+			<action type="Redirect" url="https://magazedia.com/{R:1}" redirectType="301" />
 		</rule>
 		<rule enabled="true" stopProcessing="true">
 			<match url="^info:sitemap$" />
