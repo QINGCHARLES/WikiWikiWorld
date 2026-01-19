@@ -1,0 +1,32 @@
+/* Tables - Table styling for data presentation */
+
+table {
+    border-collapse: collapse;
+    text-align: left;
+    width: 100%;
+}
+
+th {
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
+    font-weight: bold;
+    padding: 0.625rem 0.9375rem;
+    border-bottom: 0.125rem solid var(--color-border);
+}
+
+tr {
+    border-bottom: 0.0625rem solid var(--color-border);
+}
+
+tr:nth-child(even) {
+    background-color: var(--color-surface-alt);
+}
+
+td {
+    padding: 0.625rem 0.9375rem;
+    vertical-align: top;
+}
+
+tr:hover {
+    background-color: var(--color-surface);
+}

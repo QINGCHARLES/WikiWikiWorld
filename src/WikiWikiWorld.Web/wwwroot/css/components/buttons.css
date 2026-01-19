@@ -1,0 +1,97 @@
+a.button svg
+{
+	block-size: 1cap;
+}
+
+a.button, button
+{
+	/* Configuration */
+	--button-padding: 0.7em 1.2em;
+	--button-gap: 0.1em;
+	--button-bg: #342a21;
+	--button-color: #ddd;
+	--button-hover-bg: var(--uchu-green-5);
+	--button-hover-color: #ffffff;
+	--button-border-width: 3px;
+	--button-border-style: solid;
+	--button-border-color: var(--button-bg);
+	--button-radius: 2em;
+	/* Layout and spacing */
+	display: inline-flex;
+	align-items: center;
+	gap: var(--button-gap);
+	padding: var(--button-padding);
+	/* Colours */
+	background: var(--button-bg);
+	color: var(--button-color);
+	/* Stroke and radius */
+	border: var(--button-border-width) var(--button-border-style) var(--button-border-color);
+	border-radius: var(--button-radius);
+	/* Typography */
+	text-decoration: none;
+	text-box-trim: cap;
+	font-weight: var(--button-font-weight, 700);
+	font-size: var(--button-font-size, 1em);
+	letter-spacing: 0.05ch;
+	font-family: sans-serif;
+	line-height: 1.1;
+	/* Interactive */
+	cursor: pointer;
+	/* Nested Pseudo-classes */
+	&:hover
+	{
+		background: var(--button-hover-bg);
+		border-color: var(--button-hover-bg);
+		color: var(--button-hover-color);
+	}
+
+	&:focus
+	{
+		outline: var(--button-outline-width, var(--button-border-width)) var(--button-outline-style, var(--button-border-style)) var(--button-outline-color, var(--button-border-color));
+		outline-offset: var(--button-outline-offset, calc(var(--button-border-width) * 2));
+	}
+
+	&:active
+	{
+		transform: scale(98%);
+	}
+
+	/* SVG Icon Styling */
+	& svg
+	{
+		height: var(--button-icon-size, 1.5cap);
+		width: auto;
+		flex: none;
+	}
+
+	/* Button Variants */
+	&[data-button-variant="primary"]
+	{
+		--button-bg: #f3de8a;
+		--button-color: #342a21;
+		--button-border-color: currentColor;
+		--button-hover-bg: #f1d979;
+		--button-hover-color: #342a21;
+	}
+
+	&[data-button-variant="positive"]
+	{
+		--button-bg: #2d936c;
+		--button-border-color: #107350;
+		--button-hover-bg: #359d75;
+	}
+
+	&[data-button-variant="negative"]
+	{
+		--button-bg: #b33c48;
+		--button-border-color: #a62f3d;
+		--button-hover-bg: #c24a56;
+	}
+
+	&[data-button-variant="ghost"]
+	{
+		--button-bg: transparent;
+		--button-border-color: #333;
+		--button-color: #333;
+	}
+}

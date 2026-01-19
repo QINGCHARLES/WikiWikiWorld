@@ -1,0 +1,159 @@
+/* Header - Navigation bar, logo, search form, and header layout */
+
+header {
+    position: relative;
+    z-index: 1;
+    height: 9rem;
+}
+
+header li {
+    display: inline-block;
+}
+
+.header-a svg {
+    color: var(--color-primary);
+}
+
+.logo-svg {
+    width: var(--space-xl);
+    height: var(--space-xl);
+    transform: rotate(-15deg);
+}
+
+.header {
+    overflow: hidden;
+    padding: var(--grid-gutter);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-lg, 1.5rem);
+    color: #fff;
+}
+
+.header a {
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.header a.logo {
+    font-size: 25px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 var(--space-lg, 1.5rem);
+    flex: 0 0 auto;
+}
+
+.header a:hover {
+    color: #aeaeae;
+}
+
+.header a.active {
+    color: #aeaeae;
+}
+
+.header-a, .header-b {
+    display: flex;
+    align-items: center;
+    flex: 1 1 0;
+}
+
+.header-a {
+    justify-content: flex-start;
+    gap: var(--space-md, 1rem);
+}
+
+.header-b {
+    justify-content: flex-end;
+    gap: var(--space-sm, .75rem);
+}
+
+.header-a svg, .header-b svg {
+    vertical-align: middle;
+}
+
+/* Modern header navigation */
+nav.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+    padding: var(--space-xs) var(--grid-gutter);
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+nav.header .logo {
+    flex-shrink: 0;
+}
+
+nav.header .logo-svg {
+    height: 2rem;
+    width: auto;
+}
+
+/* Search form in header */
+.search-form {
+    flex: 1;
+    max-width: 40rem;
+    display: flex;
+    gap: var(--space-3xs);
+}
+
+.search-form input[type="text"] {
+    flex: 1;
+    padding: var(--space-3xs) var(--space-2xs);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-size: var(--step--1);
+}
+
+.search-form input[type="text"]:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+}
+
+.search-form button {
+    padding: var(--space-3xs) var(--space-s);
+    background-color: var(--color-primary);
+    color: var(--color-foreground-inverse);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-family-san-serif);
+    font-weight: 500;
+    font-size: var(--step--1);
+    transition: background-color 0.15s ease;
+}
+
+.search-form button:hover {
+    opacity: 0.9;
+}
+
+/* Header buttons */
+#register.button-primary {
+    background: var(--color-primary);
+    color: #000;
+}
+
+#register.button-primary:hover {
+    background-color: #fff;
+}
+
+.button-secondary {
+    color: #0c0;
+}
+
+#login.button-secondary:hover {
+    background-color: var(--color-primary);
+    color: #000;
+}
+
+#login.button-secondary {
+    color: var(--color-primary);
+}

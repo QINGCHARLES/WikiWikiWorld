@@ -1,0 +1,215 @@
+/* Forms - Material Design 3 form components */
+
+/* Text Field / Select Base */
+.md3-field {
+    position: relative;
+    display: block;
+    contain: layout style;
+    container-type: inline-size;
+    font: inherit;
+    min-block-size: var(--field-size);
+    margin-bottom: var(--space-m);
+    
+    &::before, &::after { z-index: 0; pointer-events: none; }
+    & > .md-line { z-index: 1; pointer-events: none; }
+    
+    & > input,
+    & > select {
+        position: relative;
+        z-index: 1;
+        display: block;
+        inline-size: 100%;
+        min-block-size: var(--field-size);
+        padding: .75rem var(--gap);
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--md-on-surface);
+        line-height: 1.5;
+        caret-color: var(--md-primary);
+        font-size: var(--step-0);
+        font-family: inherit;
+        transition: padding-top var(--dur) var(--ease), padding-bottom var(--dur) var(--ease);
+    }
+
+    & > input::placeholder { font-size: var(--step-0); opacity: 0; }
+    & > select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 3rem; }
+
+    /* Trailing Icon (Arrow for Select) */
+    & > .md-icon {
+        position: absolute;
+        right: var(--gap);
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        z-index: 2;
+        color: var(--md-on-surface-variant);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform var(--dur) var(--ease);
+    }
+    
+    & > label {
+        position: absolute;
+        left: var(--gap);
+        top: 50%;
+        transform: translateY(-50%);
+        transform-origin: left center;
+        color: var(--md-on-surface-variant);
+        line-height: 1;
+        cursor: text;
+        pointer-events: none;
+        font-size: var(--step-0);
+        z-index: 1;
+        transition: color var(--dur) var(--ease), top var(--dur) var(--ease), font-size var(--dur) var(--ease), transform var(--dur) var(--ease), left var(--dur) var(--ease);
+    }
+    
+    &:is(:focus-within, :has(input:not(:placeholder-shown)), :has(select:valid)) {
+        & > input, & > select { padding-top: var(--label-space); padding-bottom: .5rem; }
+        & > label { font-size: var(--step--2); top: .5rem; transform: none; color: var(--md-on-surface-variant); }
+    }
+    
+    &:focus-within > label { color: var(--md-primary); }
+    &:focus-within > .md-icon { transform: translateY(-50%) rotate(180deg); color: var(--md-primary); }
+    &:focus-within { z-index: 1; }
+    
+    &:has(:focus-visible)::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: var(--shape-xs);
+        box-shadow: 0 0 0 var(--ring-size) color-mix(in srgb, var(--md-primary) 40%, transparent);
+    }
+}
+
+/* Leading Icon Positioning */
+.md-icon-leading {
+    position: absolute;
+    left: var(--gap);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    color: var(--md-on-surface-variant);
+    display: flex;
+    pointer-events: none;
+}
+
+/* Adjust Input Padding & Label when Leading Icon exists */
+.md3-field.md3-has-icon-start input {
+    padding-inline-start: calc(var(--gap) * 1.5 + 24px);
+}
+.md3-field.md3-has-icon-start label {
+    left: calc(var(--gap) * 1.5 + 24px);
+}
+
+/* Clear Button (Trailing) */
+.md-clear-btn {
+    position: absolute;
+    right: .5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.md-clear-btn:hover {
+    background-color: rgba(0,0,0,0.08);
+}
+
+/* Show Clear Button when input has text */
+.md3-field:has(input:not(:placeholder-shown)) .md-clear-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* Adjust input padding when clear button might appear */
+.md3-field:has(.md-clear-btn) input {
+    padding-inline-end: 3rem;
+}
+
+/* Filled Variant */
+.md3-filled {
+    isolation: isolate;
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--md-surface-container-highest);
+        border-start-start-radius: var(--shape-xs);
+        border-start-end-radius: var(--shape-xs);
+        transition: background var(--dur) var(--ease);
+    }
+    &:hover::before { background: color-mix(in srgb, var(--md-primary) calc(var(--state-hover) * 100%), var(--md-surface-container-highest)); }
+    &:focus-within::before { background: color-mix(in srgb, var(--md-primary) calc(var(--state-focus) * 100%), var(--md-surface-container-highest)); }
+    & .md-line {
+        position: absolute;
+        inset-inline: 0;
+        inset-block-end: 0;
+        block-size: var(--indicator-rest);
+        background: var(--md-outline-variant);
+        transition: background var(--dur) var(--ease), block-size var(--dur) var(--ease);
+    }
+    &:hover .md-line { background: var(--md-on-surface-variant); }
+    &:focus-within .md-line { block-size: var(--indicator-active); background: var(--md-primary); }
+    &:has(:focus-visible)::after { border-end-start-radius: 0; border-end-end-radius: 0; }
+}
+
+/* Radio Group */
+fieldset.RadioGroup { 
+    border: 0; padding: 0; margin: 0; margin-top: var(--space-s);
+}
+fieldset.RadioGroup > legend.Title { 
+    margin-block-end: 12px; font-weight: 500; color: var(--md-on-surface); font-size: var(--step-0);
+}
+.Help { margin: -8px 0 16px 0; color: var(--md-on-surface-variant); font-size: var(--step--2); }
+.Choices { list-style: none; display: grid; gap: 12px; margin: 0; padding: 0; }
+.RadioOption input[type="radio"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.RadioOption {
+    position: relative; display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: var(--radio-gutter);
+    padding: 16px 20px; border: 1px solid var(--md-outline-variant); border-radius: var(--radio-radius);
+    background: transparent; cursor: pointer; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+    user-select: none; color: var(--md-on-surface);
+}
+.RadioOption:hover { background: color-mix(in srgb, var(--md-primary) calc(var(--state-hover) * 100%), transparent); }
+.RadioOption:has(input:checked) {
+    border-color: var(--md-primary);
+    background: color-mix(in srgb, var(--md-primary) calc(var(--state-focus) * 100%), transparent);
+}
+.RadioOption:has(input:focus-visible) { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+
+/* Bullet */
+.Bullet {
+    width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--md-on-surface-variant);
+    position: relative; display: grid; place-items: center;
+    transition: border-color var(--dur) var(--ease), border-width var(--dur) var(--ease);
+}
+.Bullet::after {
+    content: ""; width: 12px; height: 12px; border-radius: 50%; transform: scale(0); background: var(--md-primary);
+    transition: transform var(--dur) cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.RadioOption:hover .Bullet { border-color: var(--md-primary); border-width: 4px; }
+.RadioOption:has(input:checked) .Bullet { border-color: var(--md-primary); border-width: 4px; }
+.RadioOption:has(input:checked) .Bullet::after { transform: scale(1); }
+.RadioOption .Label { font-weight: 500; font-size: var(--step-0); line-height: 1.2; }
+
+/* Textarea */
+textarea {
+    width: 100%;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .md3-field *, .md3-field::before, .md3-field::after, .RadioOption, .Bullet, .Bullet::after {
+        transition: none !important; animation: none !important;
+    }
+}

@@ -1,0 +1,73 @@
+/* Avatar - User avatar and author list styling */
+
+.author-list {
+    display: flex;
+    align-items: center;
+    margin-right: 4rem;
+}
+
+.avatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: .2rem solid white;
+    margin-left: -1.5rem;
+    text-decoration: none;
+    background-color: #777;
+}
+
+.avatar:first-child {
+    margin-left: 0;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+header .header-avatar {
+    margin-left: 0;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+header .header-avatar .avatar-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    background-color: #555;
+    font-weight: 600;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}
+
+.editor-info {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 8px 0;
+    font-family: sans-serif;
+    text-transform: uppercase;
+    color: var(--uchu-gray-8);
+    font-weight: 700;
+    font-size: var(--step--1);
+}
+
+
+.last-updated small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.last-updated svg {
+    display: block;
+}

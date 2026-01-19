@@ -1,0 +1,38 @@
+/* Footer - Site footer styling */
+
+footer {
+    color: var(--color-primary);
+    background-color: var(--color-background-footer);
+    font-family: system-ui, sans-serif;
+    margin-top: 4rem;
+}
+
+footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+footer ul, footer ol {
+    list-style: none;
+}
+
+.footer-columns {
+    display: grid;
+    gap: var(--grid-gutter);
+    grid-template-columns: repeat(auto-fit, minmax(var(--space-3xl), 1fr));
+    padding: var(--grid-gutter);
+    margin: 0;
+}
+
+footer svg, .nav-item svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.footer-columns li.footer-column:first-child {
+    grid-column: span 2;
+    font-size: var(--step-2);
+    line-height: 2.5rem;
+    font-weight: bold;
+    letter-spacing: -.1rem;
+}

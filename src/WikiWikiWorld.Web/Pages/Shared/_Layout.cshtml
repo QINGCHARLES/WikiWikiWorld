@@ -22,10 +22,29 @@
     <title>@ViewData["Title"] - Magazedia</title>
 	<link rel="stylesheet" href="https://use.typekit.net/kwb1ind.css">
 	<environment include="Development,Staging">
-		<link rel="stylesheet" href="~/css/core/reset.css" asp-append-version="true"  />
-		<link rel="stylesheet" href="~/css/core/colors.css" asp-append-version="true"  />
-		<link rel="stylesheet" href="~/css/core/typography.css" asp-append-version="true"  />
-		<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+		<!-- Core -->
+		<link rel="stylesheet" href="~/css/core/reset.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/core/colors.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/core/variables.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/core/typography.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/core/base.css" asp-append-version="true" />
+		<!-- Layout -->
+		<link rel="stylesheet" href="~/css/layout/header.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/layout/footer.css" asp-append-version="true" />
+		<!-- Components -->
+		<link rel="stylesheet" href="~/css/components/buttons.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/tables.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/forms.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/cards.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/carousel.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/navigation.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/avatar.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/pullquote.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/components/media.css" asp-append-version="true" />
+		<!-- Pages -->
+		<link rel="stylesheet" href="~/css/pages/article.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/pages/search.css" asp-append-version="true" />
+		<link rel="stylesheet" href="~/css/pages/static.css" asp-append-version="true" />
 	</environment>
 	<environment exclude="Development">
 		<link rel="stylesheet" href="~/css/bundle.min.css" asp-append-version="true" />

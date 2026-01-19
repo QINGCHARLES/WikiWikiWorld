@@ -1,0 +1,53 @@
+/* Media - Hero images, figures, and video containers */
+
+.hero-figure {
+    margin-inline: calc(-1 * var(--grid-gutter));
+    width: calc(100% + 2 * var(--grid-gutter));
+}
+
+.hero-image, h1 {
+    display: block;
+    width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
+    calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter))
+    );
+    max-width: none;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 1rem;
+    max-height: 60vh;
+    object-fit: cover;
+    object-position: top;
+}
+
+/* Video Container */
+.video-container {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.video-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 68px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.play-button svg {
+    width: 100%;
+    height: auto;
+}

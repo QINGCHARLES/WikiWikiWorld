@@ -1,0 +1,94 @@
+/* Carousel - CSS Scroll Snap based carousel */
+
+.carousel {
+    position: relative;
+    width: 100%;
+}
+
+.carousel .slides {
+    display: flex;
+    overflow-x: scroll;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+}
+
+.carousel .slides::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.carousel .slide {
+    position: relative;
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+}
+
+.carousel .slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Navigation buttons */
+.carousel .slide .nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+    z-index: 10;
+}
+
+.carousel .slide .nav:hover {
+    opacity: 1;
+}
+
+.carousel .slide .nav svg {
+    stroke: currentColor;
+}
+
+.carousel .slide .nav.prev {
+    left: 10px;
+}
+
+.carousel .slide .nav.next {
+    right: 10px;
+}
+
+/* Dot indicators */
+.carousel .dots {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.carousel .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    padding: 0;
+    background-color: #bbb;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.carousel .dot:hover {
+    background-color: #888;
+}
+
+.carousel .dot.active {
+    background-color: var(--uchu-green-5);
+}

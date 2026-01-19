@@ -1,0 +1,46 @@
+/* Pullquote - Styled blockquote with zig-zag borders */
+
+blockquote.pullquote {
+    --zig-angle: 90deg;
+    --zig-size: 3rem;
+    --zig-thickness: .5rem;
+    --zig-color: var(--uchu-green-5);
+
+    position: relative;
+    max-width: 100%;
+    text-align: center;
+    font-style: italic;
+    font-size: var(--step-1);
+    margin: var(--space-l) 0;
+    overflow-wrap: anywhere;
+    /* Add padding to make room for the zig-zag borders */
+    padding-top: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)) + var(--space-s));
+    padding-bottom: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)) + var(--space-s));
+}
+
+/* Zig-zag top border */
+blockquote.pullquote::before,
+blockquote.pullquote::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20%;
+    height: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)));
+    background: var(--zig-color);
+    --_g: var(--zig-size) repeat-x conic-gradient(from calc(var(--zig-angle)/-2) at bottom, #0000,#000 1deg calc(var(--zig-angle) - 1deg),#0000 var(--zig-angle));
+    mask: 50% calc(-1*var(--zig-thickness))/var(--_g) exclude,50%/var(--_g);
+}
+
+blockquote.pullquote::before {
+    top: 0;
+}
+
+blockquote.pullquote::after {
+    bottom: 0;
+}
+
+blockquote.pullquote p {
+    max-width: 100%;
+    overflow-wrap: inherit;
+}

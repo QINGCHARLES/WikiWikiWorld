@@ -1,0 +1,106 @@
+/* Search - Search form and results styling */
+
+/* Search Results */
+.search-results {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-m) 0;
+}
+
+.search-result-item {
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item a {
+    font-weight: 500;
+    font-size: var(--step-0);
+}
+
+.search-snippet {
+    margin: var(--space-3xs) 0 0 0;
+    font-size: var(--step--1);
+    color: var(--color-muted);
+    line-height: 1.4;
+}
+
+.search-result-item mark,
+.search-snippet mark {
+    background-color: var(--color-primary);
+    color: var(--color-foreground-inverse);
+    padding: 0 0.15em;
+    border-radius: 2px;
+}
+
+/* Google Custom Search Box Overrides */
+form.gsc-search-box {
+    margin: 0 !important;
+}
+
+table.gsc-search-box tr:hover {
+    background-color: unset;
+}
+
+table.gsc-search-box td {
+    padding: 0 !important;
+}
+
+.gsc-control-cse {
+    padding: 0 !important;
+}
+
+.gsc-search-button-v2 svg {
+    fill: #000 !important;
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.gsc-search-button-v2:hover {
+    background-color: #fff !important;
+    border: none !important;
+}
+
+.gsc-search-button-v2 {
+    box-shadow: 3px 4px 0px 1px #000;
+    transition: ease 0.1s;
+    background-color: var(--color-primary) !important;
+    color: #000 !important;
+    border: none !important;
+    padding: var(--space-3xs) var(--space-2xs) !important;
+    font-size: 1rem !important;
+}
+
+.gsc-control-cse, .gsc-input-box {
+    background-color: unset !important;
+    border-style: none !important;
+    height: 100% !important;
+}
+
+table.gsc-search-box td.gsc-input {
+    padding-right: 0 !important;
+    color: black;
+    border-radius: 2px !important;
+}
+
+table.gsc-search-box, table.gsc-search-box tr {
+    margin-bottom: 0 !important;
+    border-bottom: none;
+}
+
+.gsib_a {
+    padding: 0 !important;
+}
+
+.gsib_b {
+    display: none;
+}
+
+input.gsc-input {
+    background: #fff !important;
+    padding: 4px 14px !important;
+    border-radius: 2px !important;
+}

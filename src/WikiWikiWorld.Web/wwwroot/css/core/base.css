@@ -1,0 +1,34 @@
+/* Base - Document setup, main container, and fundamental element styling */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+}
+
+main {
+    box-sizing: border-box;
+    max-inline-size: var(--grid-max-width);
+    margin-inline: auto;
+    padding-inline: var(--grid-gutter);
+    overflow: visible;
+    position: relative;
+}
+
+/* Hyperlink base styles */
+a {
+    color: var(--color-hyperlinks);
+    text-decoration: underline;
+    text-decoration-thickness: 0.125rem;
+    text-underline-offset: 0.25rem;
+    text-decoration-color: var(--color-primary);
+}
+
+::selection {
+    background-color: var(--color-primary);
+}
+
+figure {
+    margin: 0;
+}
