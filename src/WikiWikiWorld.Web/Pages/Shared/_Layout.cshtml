@@ -21,7 +21,7 @@
     <meta name="color-scheme" content="light dark" />
     <title>@ViewData["Title"] - Magazedia</title>
 	<link rel="stylesheet" href="https://use.typekit.net/kwb1ind.css">
-	<environment include="Development,Staging">
+	<environment include="Development,Staging,Production">
 		<!-- Core -->
 		<link rel="stylesheet" href="~/css/core/reset.css" asp-append-version="true" />
 		<link rel="stylesheet" href="~/css/core/colors.css" asp-append-version="true" />
@@ -46,10 +46,10 @@
 		<link rel="stylesheet" href="~/css/pages/search.css" asp-append-version="true" />
 		<link rel="stylesheet" href="~/css/pages/static.css" asp-append-version="true" />
 	</environment>
-	<environment exclude="Development">
+	@* <environment exclude="Development">
 		<link rel="stylesheet" href="~/css/bundle.min.css" asp-append-version="true" />
 		<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> <!-- temp until the bundle is done -->
-	</environment>
+	</environment> *@
 	@if (!string.IsNullOrWhiteSpace(Model.MetaDescription))
 	{
 		<meta name="description" content="@Model.MetaDescription" />
