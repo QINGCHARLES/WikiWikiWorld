@@ -182,7 +182,7 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         Renderer.Write("</aside>");
     }
 
-    // Render carousel using CSS Scroll Snap with anchor navigation
+    // Render carousel using CSS Scroll Snap with JS button navigation
     private void RenderCarousel(HtmlRenderer Renderer, List<(string ImageUrl, string AltText)> Images)
     {
         int ImageCount = Images.Count;
@@ -192,35 +192,31 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         // Slides container with scroll snap
         Renderer.Write("<div class=\"slides\">");
 
-        // Render each slide with navigation arrows
+        // Render each slide with navigation buttons
         for (int i = 0; i < ImageCount; i++)
         {
-            int SlideNum = i + 1;
-            int PrevSlide = (i - 1 + ImageCount) % ImageCount + 1;
-            int NextSlide = (i + 1) % ImageCount + 1;
-
             (string ImageUrl, string AltText) = Images[i];
 
-            Renderer.Write($"<div class=\"slide\" id=\"slide-{SlideNum}\">");
+            Renderer.Write("<div class=\"slide\">");
             Renderer.Write($"<img src=\"{ImageUrl}\" alt=\"{AltText}\">");
 
-            // Navigation arrows
+            // Navigation buttons (only show if more than one image)
             if (ImageCount > 1)
             {
-                // Show prev arrow only if not first slide
+                // Show prev button only if not first slide
                 if (i > 0)
                 {
-                    Renderer.Write($"<a href=\"#slide-{i}\" class=\"nav prev\" aria-label=\"Previous image\">");
+                    Renderer.Write("<button type=\"button\" class=\"nav prev\" aria-label=\"Previous image\" data-dir=\"-1\">");
                     Renderer.Write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\" /><path d=\"M13 15l-3 -3l3 -3\" /><path d=\"M21 12a9 9 0 1 0 -18 0a9 9 0 0 0 18 0z\" /></svg>");
-                    Renderer.Write("</a>");
+                    Renderer.Write("</button>");
                 }
 
-                // Show next arrow only if not last slide
+                // Show next button only if not last slide
                 if (i < ImageCount - 1)
                 {
-                    Renderer.Write($"<a href=\"#slide-{i + 2}\" class=\"nav next\" aria-label=\"Next image\">");
+                    Renderer.Write("<button type=\"button\" class=\"nav next\" aria-label=\"Next image\" data-dir=\"1\">");
                     Renderer.Write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\" /><path d=\"M11 9l3 3l-3 3\" /><path d=\"M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0z\" /></svg>");
-                    Renderer.Write("</a>");
+                    Renderer.Write("</button>");
                 }
             }
 
@@ -228,6 +224,18 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         }
 
         Renderer.Write("</div>");
+
+        // Dot indicators (only show if more than one image)
+        if (ImageCount > 1)
+        {
+            Renderer.Write("<div class=\"dots\">");
+            for (int i = 0; i < ImageCount; i++)
+            {
+                string ActiveClass = i == 0 ? " active" : "";
+                Renderer.Write($"<button type=\"button\" class=\"dot{ActiveClass}\" data-index=\"{i}\" aria-label=\"Go to image {i + 1}\"></button>");
+            }
+            Renderer.Write("</div>");
+        }
 
         Renderer.Write("</div>");
     }
