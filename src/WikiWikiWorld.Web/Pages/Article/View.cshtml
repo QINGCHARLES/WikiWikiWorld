@@ -12,8 +12,8 @@
 	{
 		<img src="@Model.HeaderImage" alt="..." class="hero-image" />
 	}
-	<h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.DisplayedRevision?.DisplayTitle) ? Model.DisplayedRevision?.Title : Model.DisplayedRevision?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
 </figure>
+	<h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.DisplayedRevision?.DisplayTitle) ? Model.DisplayedRevision?.Title : Model.DisplayedRevision?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
 
 @* <h1 class="title">@Model.DisplayedRevision?.Title</h1> *@
 
@@ -78,16 +78,16 @@ else if(Model.DisplayedRevision is not null)
 				@WikiWikiWorld.Web.Helpers.TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, Model.DisplayedRevision.DateCreated)
 			</small>
 		</span>
-		<div class="dropdown">
-			<button class="dropbtn">⋮</button>
-			<div class="dropdown-content">
+		<details class="article-menu">
+			<summary class="menu-trigger">⋮</summary>
+			<div class="menu-content">
 				<a href="@Model.UrlSlug/edit" rel="nofollow">Edit Article</a>
 				<a href="@Model.UrlSlug/history" rel="nofollow">View Edit History</a>
 				<a href="#">Delete Article</a>
 				<a href="#">Watch Article</a>
 				<a href="#">Report Article</a>
 			</div>
-		</div>
+		</details>
 	</div>
 }
 

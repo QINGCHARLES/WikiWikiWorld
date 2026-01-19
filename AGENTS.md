@@ -1,6 +1,6 @@
 # What AI agents should know about me -- v3
 
-C# / ASP.NET Core developer (Razor Pages + Windows Forms) targeting .NET 10/C#14.
+C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
 ## IMPORTANT: This file covers generic rules for all agents. For this project's specific mission, background, and operational test credentials, you must read PROJECT.md before taking any action (if it exists).
 

@@ -117,32 +117,37 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         ArgumentNullException.ThrowIfNull(Block);
 
         const string AttributeSeparator = "|#|";
-        string Raw = Block.RawContent.ToString();
-        string[] Tokens = Raw.Split(AttributeSeparator, StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (string Token in Tokens)
+        // Only parse properties if they haven't been populated by EnrichAsync
+        if (Block.Properties.Count == 0)
         {
-            string Trimmed = Token.Trim();
-            if (string.IsNullOrEmpty(Trimmed))
-            {
-                continue;
-            }
+            string Raw = Block.RawContent.ToString();
+            string[] Tokens = Raw.Split(AttributeSeparator, StringSplitOptions.RemoveEmptyEntries);
 
-            int EqPos = Trimmed.IndexOf('=');
-            if (EqPos <= 0)
+            foreach (string Token in Tokens)
             {
-                continue;
-            }
+                string Trimmed = Token.Trim();
+                if (string.IsNullOrEmpty(Trimmed))
+                {
+                    continue;
+                }
 
-            string Key = Trimmed[..EqPos].Trim();
-            string Value = Trimmed[(EqPos + 1)..].Trim();
+                int EqPos = Trimmed.IndexOf('=');
+                if (EqPos <= 0)
+                {
+                    continue;
+                }
 
-            if (!Block.Properties.TryGetValue(Key, out List<string>? List))
-            {
-                List = [];
-                Block.Properties[Key] = List;
+                string Key = Trimmed[..EqPos].Trim();
+                string Value = Trimmed[(EqPos + 1)..].Trim();
+
+                if (!Block.Properties.TryGetValue(Key, out List<string>? List))
+                {
+                    List = [];
+                    Block.Properties[Key] = List;
+                }
+                List.Add(Value);
             }
-            List.Add(Value);
         }
 
         Renderer.Write("<aside class=\"infobox\">");
@@ -169,16 +174,16 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
 
         if (OtherProps.Any())
         {
-            Renderer.Write("<ul>");
+            Renderer.Write("<dl>");
             foreach (KeyValuePair<string, List<string>> KeyValuePair in OtherProps)
             {
                 string Friendly = GetFriendlyName(KeyValuePair.Key);
                 foreach (string Val in KeyValuePair.Value)
                 {
-                    Renderer.Write($"<li><strong>{Friendly}:</strong> {Val}</li>");
+                    Renderer.Write($"<dt>{Friendly}</dt><dd>{Val}</dd>");
                 }
             }
-            Renderer.Write("</ul>");
+            Renderer.Write("</dl>");
         }
 
         Renderer.Write("</aside>");

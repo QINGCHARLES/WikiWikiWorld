@@ -22,14 +22,14 @@
     <title>@ViewData["Title"] - Magazedia</title>
 	<link rel="stylesheet" href="https://use.typekit.net/kwb1ind.css">
 	<environment include="Development,Staging">
+		<link rel="stylesheet" href="~/css/core/reset.css" asp-append-version="true"  />
+		<link rel="stylesheet" href="~/css/core/colors.css" asp-append-version="true"  />
+		<link rel="stylesheet" href="~/css/core/typography.css" asp-append-version="true"  />
 		<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-		<link rel="stylesheet" href="~/css/header.css" />
-		<link rel="stylesheet" href="~/css/sidebar.css" />
-		<link rel="stylesheet" href="~/css/footer.css" />
 	</environment>
 	<environment exclude="Development">
 		<link rel="stylesheet" href="~/css/bundle.min.css" asp-append-version="true" />
-				<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> <!-- temp until the bundle is done -->
+		<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> <!-- temp until the bundle is done -->
 	</environment>
 	@if (!string.IsNullOrWhiteSpace(Model.MetaDescription))
 	{
