@@ -8,10 +8,10 @@ a.button, button
 	/* Configuration */
 	--button-padding: 0.7em 1.2em;
 	--button-gap: 0.1em;
-	--button-bg: #342a21;
-	--button-color: #ddd;
-	--button-hover-bg: var(--uchu-green-5);
-	--button-hover-color: #ffffff;
+	--button-bg: light-dark(var(--uchu-yin-8), var(--uchu-yin-7));
+	--button-color: light-dark(var(--uchu-yang), var(--uchu-yin-1));
+	--button-hover-bg: light-dark(var(--uchu-green-6), var(--uchu-green-5));
+	--button-hover-color: light-dark(#ffffff, #ffffff);
 	--button-border-width: 3px;
 	--button-border-style: solid;
 	--button-border-color: var(--button-bg);
@@ -67,31 +67,43 @@ a.button, button
 	/* Button Variants */
 	&[data-button-variant="primary"]
 	{
-		--button-bg: #f3de8a;
-		--button-color: #342a21;
+		--button-bg: light-dark(var(--uchu-yellow-4), var(--uchu-yellow-5));
+		--button-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
 		--button-border-color: currentColor;
-		--button-hover-bg: #f1d979;
-		--button-hover-color: #342a21;
+		--button-hover-bg: light-dark(var(--uchu-yellow-5), var(--uchu-yellow-4));
+		--button-hover-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
 	}
 
 	&[data-button-variant="positive"]
 	{
-		--button-bg: #2d936c;
-		--button-border-color: #107350;
-		--button-hover-bg: #359d75;
+		--button-bg: light-dark(var(--uchu-green-6), var(--uchu-green-5));
+		--button-border-color: light-dark(var(--uchu-green-8), var(--uchu-green-7));
+		--button-hover-bg: light-dark(var(--uchu-green-5), var(--uchu-green-4));
 	}
 
 	&[data-button-variant="negative"]
 	{
-		--button-bg: #b33c48;
-		--button-border-color: #a62f3d;
-		--button-hover-bg: #c24a56;
+		--button-bg: light-dark(var(--uchu-red-5), var(--uchu-red-4));
+		--button-border-color: light-dark(var(--uchu-red-7), var(--uchu-red-6));
+		--button-hover-bg: light-dark(var(--uchu-red-4), var(--uchu-red-3));
 	}
 
 	&[data-button-variant="ghost"]
 	{
 		--button-bg: transparent;
-		--button-border-color: #333;
-		--button-color: #333;
+		--button-border-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-4));
+		--button-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
 	}
+
+    &[data-button-variant="naked"] 
+    {
+        --button-bg: transparent;
+        /* Border is transparent by default so it takes up space but isn't seen */
+        --button-border-color: transparent; 
+        --button-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
+        
+        /* On hover, the border color becomes visible */
+        --button-hover-bg: transparent; /* Or a very faint tint */
+        --button-hover-border-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-4));
+    }
 }
