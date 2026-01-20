@@ -227,7 +227,7 @@ public sealed class ViewModel(
         Renderer.Render(Document);
         Writer.Flush();
         
-        ArticleRevisionHtml = Writer.ToString();
+        ArticleRevisionHtml = CleanupAndStyleArticle(Writer.ToString());
 
         return Page();
     }
@@ -260,5 +260,52 @@ public sealed class ViewModel(
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Cleans up and styles the article HTML content.
+    /// Removes empty paragraph tags and styles the final period with a distinctive end mark.
+    /// </summary>
+    /// <param name="Html">The rendered HTML content.</param>
+    /// <returns>The cleaned and styled HTML.</returns>
+    private static string CleanupAndStyleArticle(string Html)
+    {
+        // First, strip empty paragraph tags (handles both <p></p> and <p> </p> with whitespace)
+        Html = System.Text.RegularExpressions.Regex.Replace(
+            Html, 
+            @"<p>\s*</p>", 
+            string.Empty, 
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Find the last occurrence of a period followed by closing tags or end of content
+        // We look for a period that ends actual content (before </p> or similar)
+        int LastParagraphClose = Html.LastIndexOf("</p>", StringComparison.OrdinalIgnoreCase);
+        if (LastParagraphClose < 0)
+        {
+            return Html;
+        }
+
+        // Search backwards from the </p> to find the last period
+        int SearchStart = LastParagraphClose - 1;
+        while (SearchStart >= 0)
+        {
+            char c = Html[SearchStart];
+            if (c == '.')
+            {
+                // Found a period - wrap it in a span
+                return string.Concat(
+                    Html.AsSpan(0, SearchStart),
+                    "<span class=\"article-end-mark\">.</span>",
+                    Html.AsSpan(SearchStart + 1));
+            }
+            else if (char.IsLetterOrDigit(c) || c == '"' || c == '\'' || c == ')' || c == ']')
+            {
+                // Hit actual content without finding a period, stop searching
+                break;
+            }
+            SearchStart--;
+        }
+
+        return Html;
     }
 }
