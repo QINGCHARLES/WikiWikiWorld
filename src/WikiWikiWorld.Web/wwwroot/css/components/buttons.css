@@ -103,7 +103,8 @@ a.button, button
         --button-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
         
         /* On hover, the border color becomes visible */
-        --button-hover-bg: transparent; /* Or a very faint tint */
+        --button-hover-bg: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
+        --button-hover-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
         --button-hover-border-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-4));
     }
 }

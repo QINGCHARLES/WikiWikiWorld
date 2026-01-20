@@ -27,11 +27,11 @@ header li {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-lg, 1.5rem);
-    color: #fff;
+    color: var(--color-foreground);
 }
 
 .header a {
-    color: white;
+    color: var(--color-foreground);
     text-align: center;
     text-decoration: none;
     border-radius: 4px;
@@ -39,7 +39,7 @@ header li {
 
 .header a.logo {
     font-size: 25px;
-    color: white;
+    color: var(--color-foreground);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -48,11 +48,11 @@ header li {
 }
 
 .header a:hover {
-    color: #aeaeae;
+    color: var(--color-muted);
 }
 
 .header a.active {
-    color: #aeaeae;
+    color: var(--color-muted);
 }
 
 .header-a, .header-b {
@@ -82,8 +82,7 @@ nav.header {
     justify-content: space-between;
     gap: var(--space-m);
     padding: var(--space-xs) var(--grid-gutter);
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
+    background-color: transparent;
 }
 
 nav.header .logo {
@@ -99,23 +98,31 @@ nav.header .logo-svg {
 .search-form {
     flex: 1;
     max-width: 40rem;
+    margin-inline: auto;
     display: flex;
+    align-items: center;
     gap: var(--space-3xs);
 }
 
-.search-form input[type="text"] {
+/* Override MD3 field sizing for compact header context */
+.search-form .md3-field {
     flex: 1;
-    padding: var(--space-3xs) var(--space-2xs);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    margin-bottom: 0;
+    min-block-size: 2.5rem;
+    --field-size: 2.5rem;
+}
+
+.search-form .md3-field > input {
+    min-block-size: 2.5rem;
     font-size: var(--step--1);
 }
 
-.search-form input[type="text"]:focus {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 1px;
+.search-form .md3-field > label {
+    font-size: var(--step--1);
+}
+
+.search-form .md3-field:is(:focus-within, :has(input:not(:placeholder-shown))) > label {
+    font-size: var(--step--2);
 }
 
 .search-form button {
@@ -129,31 +136,9 @@ nav.header .logo-svg {
     font-weight: 500;
     font-size: var(--step--1);
     transition: background-color 0.15s ease;
+    align-self: stretch;
 }
 
 .search-form button:hover {
     opacity: 0.9;
-}
-
-/* Header buttons */
-#register.button-primary {
-    background: var(--color-primary);
-    color: #000;
-}
-
-#register.button-primary:hover {
-    background-color: #fff;
-}
-
-.button-secondary {
-    color: #0c0;
-}
-
-#login.button-secondary:hover {
-    background-color: var(--color-primary);
-    color: #000;
-}
-
-#login.button-secondary {
-    color: var(--color-primary);
 }
