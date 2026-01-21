@@ -56,6 +56,11 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
         }
     }
 
+    /// <summary>
+    /// Determines whether the HTTP response contains HTML content.
+    /// </summary>
+    /// <param name="Response">The HTTP response to check.</param>
+    /// <returns>True if the content type indicates HTML; otherwise, false.</returns>
     private static bool IsHtmlResponse(HttpResponse Response)
     {
         string? ContentType = Response.ContentType;
@@ -63,6 +68,11 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
             && ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Extracts the character encoding from the content type header.
+    /// </summary>
+    /// <param name="ContentType">The content type header value.</param>
+    /// <returns>The encoding if found; otherwise, null.</returns>
     private static Encoding? GetEncoding(string? ContentType)
     {
         if (string.IsNullOrWhiteSpace(ContentType)) return null;
@@ -72,6 +82,11 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
         try { return Encoding.GetEncoding(Charset); } catch { return null; }
     }
 
+    /// <summary>
+    /// Parses and prettifies the HTML content using AngleSharp.
+    /// </summary>
+    /// <param name="Html">The raw HTML string to prettify.</param>
+    /// <returns>The formatted HTML string.</returns>
     private static async Task<string> PrettifyHtmlAsync(string Html)
     {
         var Parser = new HtmlParser();
@@ -90,6 +105,10 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
         return Document.ToHtml(Formatter);
     }
 
+    /// <summary>
+    /// Normalizes whitespace and removes empty text nodes from the document.
+    /// </summary>
+    /// <param name="Document">The HTML document to compact.</param>
     private static void Compact(IDocument Document)
     {
         // 1. Layout Tags: Safe to remove purely empty whitespace nodes.

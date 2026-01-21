@@ -182,7 +182,11 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         Renderer.Write("</aside>");
     }
 
-    // Render carousel using CSS Scroll Snap with JS button navigation
+    /// <summary>
+    /// Renders an image carousel using CSS Scroll Snap with JavaScript button navigation.
+    /// </summary>
+    /// <param name="Renderer">The HTML renderer.</param>
+    /// <param name="Images">The list of images with URL and alt text.</param>
     private void RenderCarousel(HtmlRenderer Renderer, List<(string ImageUrl, string AltText)> Images)
     {
         int ImageCount = Images.Count;
@@ -240,6 +244,11 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         Renderer.Write("</div>");
     }
 
+    /// <summary>
+    /// Converts a property key to a user-friendly display name.
+    /// </summary>
+    /// <param name="Key">The property key.</param>
+    /// <returns>A friendly display name for the property.</returns>
     private static string GetFriendlyName(string Key) => Key switch
     {
         "CoverPrice" => "Cover Price",

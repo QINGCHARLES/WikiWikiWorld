@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v3
+# What AI agents should know about me -- v4
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -77,7 +77,7 @@ If you identify a significantly better, more robust, or modern approach than the
 
 ## C# XML Documentation Comments
 
-* Always maintain C# XML documentation comments (///) for: public/internal types, constructors, methods, properties, events, indexers.
+* Always maintain C# XML documentation comments (///) for: all types, constructors, methods (including private), properties, events, indexers.
 * Update comments whenever signatures, nullability, units, defaults, or thrown exceptions change.
 * Use:
   * <summary> — one clear sentence.
@@ -109,7 +109,7 @@ If you identify a significantly better, more robust, or modern approach than the
 ## Project & build defaults
 
 * Enable analyzers + latest analysis level; deterministic, CI-friendly builds; implicit usings enabled (still avoid `var` where not obvious).
-* Suggested `Directory.Build.props` keys: `TargetFramework=net9.0`, `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnableNETAnalyzers=true`, `AnalysisLevel=latest`, `Deterministic=true`, `ContinuousIntegrationBuild=true`, `ImplicitUsings=enable`.
+* Suggested `Directory.Build.props` keys: `TargetFramework=net10.0`, `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnableNETAnalyzers=true`, `AnalysisLevel=latest`, `Deterministic=true`, `ContinuousIntegrationBuild=true`, `ImplicitUsings=enable`.
 * **Language version:** .NET 9 ⇒ C# 13 (default); .NET 10 ⇒ C# 14 (default). Only set `<LangVersion>` for preview features.
 
 ## Razor Pages specifics
@@ -139,10 +139,12 @@ If you identify a significantly better, more robust, or modern approach than the
 * Use the Specification Pattern for query reuse. It avoids duplication and keeps complex queries composable.
 * For security-critical writes (account creation, password changes, role updates), wrap `SaveChangesAsync` in `using (WriteDurabilityScope.High())` to use `synchronous=FULL`, if feature available in data layer of project.
 * **Read-Only Optimization:** Explicitly use `.AsNoTracking()` for all read-only queries (e.g., `OnGet` handlers) to reduce memory overhead and GC pressure.
+* **Named Query Filters:** Use named filters for soft-delete and multi-tenancy (`HasQueryFilter("SoftDelete", e => !e.IsDeleted)`); selectively disable with `.IgnoreQueryFilters(["FilterName"])`.
 * **LINQ Optimization:**
   * Use `.Any()` instead of `.Count() > 0`.
   * Use `.Chunk(Size)` for batch processing.
   * Use `.MaxBy(x => x.Prop)` / `.MinBy()` instead of ordering and taking the first.
+  * Use `.LeftJoin()` / `.RightJoin()` instead of `SelectMany`/`GroupJoin`/`DefaultIfEmpty` combinations.
 
 ## Options & configuration
 
@@ -166,11 +168,21 @@ If you identify a significantly better, more robust, or modern approach than the
 
 * **Keyed Services:** Use `[FromKeyedServices("KeyName")]` when you need multiple implementations of the same interface (e.g., different storage providers).
 * **Structured Logging:** Use `Logger.BeginScope` to attach context (like `OrderId`) to a block of logs rather than manually adding it to every log message string.
+* **Minimal API Validation:** Use `builder.Services.AddValidation()` for automatic validation with `System.ComponentModel.DataAnnotations`; disable per-endpoint with `.DisableValidation()`.
+* **Server-Sent Events:** Return `TypedResults.ServerSentEvents(IAsyncEnumerable<T>, eventType)` for real-time streaming instead of polling or WebSockets when unidirectional server-to-client push is sufficient.
 
 ## Idempotency & retries
 
 * For writes that clients may retry, accept an `Idempotency-Key` and dedupe in a short‑lived SQLite table (key hash + expiration UTC).
 
+## UX Strategy: Intentional Friction
+
+*   **Principle:** Optimize for **meaning**, not just motion. Speed is not the goal if it encourages "autopilot" errors.
+*   **Good vs. Bad Friction:** "Good friction" is a deliberate pause to ensure intent; "Bad friction" is accidental lag, confusion, or poor performance.
+*   **When to inject friction:**
+    *   **Irreversible/High-Stakes:** Deletions, financial transfers, publishing, or changing credentials. Use "undo" windows (delayed execution), hold-to-confirm, or explicit verification modals.
+    *   **Attention Limits:** Prefer pagination over infinite scroll to provide closure and respect user focus.
+    *   **Contextual Checks:** Warn on missing attachments or ambiguous inputs to force a "thinking pause."
 ---
 
 # How I want AI agents to respond

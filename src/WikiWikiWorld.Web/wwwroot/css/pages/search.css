@@ -1,6 +1,5 @@
 /* Search - Search form and results styling */
 
-/* Search Results */
 .search-results {
     list-style: none;
     padding: 0;
@@ -36,7 +35,6 @@
     border-radius: 2px;
 }
 
-/* Google Custom Search Box Overrides */
 form.gsc-search-box {
     margin: 0 !important;
 }

@@ -75,7 +75,6 @@ header li {
     vertical-align: middle;
 }
 
-/* Modern header navigation */
 nav.header {
     display: flex;
     align-items: center;
@@ -94,7 +93,6 @@ nav.header .logo-svg {
     width: auto;
 }
 
-/* Search form in header */
 .search-form {
     flex: 1;
     max-width: 40rem;
@@ -104,7 +102,6 @@ nav.header .logo-svg {
     gap: var(--space-3xs);
 }
 
-/* Override MD3 field sizing for compact header context */
 .search-form .md3-field {
     flex: 1;
     margin-bottom: 0;

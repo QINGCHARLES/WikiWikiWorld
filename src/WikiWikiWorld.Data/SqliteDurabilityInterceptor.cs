@@ -30,6 +30,10 @@ public sealed class SqliteDurabilityInterceptor : SaveChangesInterceptor
 		return await base.SavingChangesAsync(EventData, Result, CancellationToken).ConfigureAwait(false);
 	}
 
+	/// <summary>
+	/// Applies the synchronous PRAGMA based on the current durability scope.
+	/// </summary>
+	/// <param name="Context">The database context.</param>
 	private static void ApplyDurabilityPragma(DbContext? Context)
 	{
 		if (Context?.Database.GetDbConnection() is SqliteConnection Connection &&
@@ -42,6 +46,11 @@ public sealed class SqliteDurabilityInterceptor : SaveChangesInterceptor
 		}
 	}
 
+	/// <summary>
+	/// Asynchronously applies the synchronous PRAGMA based on the current durability scope.
+	/// </summary>
+	/// <param name="Context">The database context.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
 	private static async Task ApplyDurabilityPragmaAsync(DbContext? Context, CancellationToken CancellationToken)
 	{
 		if (Context?.Database.GetDbConnection() is SqliteConnection Connection &&

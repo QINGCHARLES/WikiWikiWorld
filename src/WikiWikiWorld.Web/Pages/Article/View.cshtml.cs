@@ -232,6 +232,12 @@ public sealed class ViewModel(
         return Page();
     }
 
+    /// <summary>
+    /// Tries to parse a revision date string into a DateTimeOffset.
+    /// </summary>
+    /// <param name="Revision">The revision string (timestamp).</param>
+    /// <param name="DateTime">The parsed DateTimeOffset.</param>
+    /// <returns>True if parsing was successful; otherwise, false.</returns>
     private static bool TryParseRevisionDate(string Revision, out DateTimeOffset DateTime)
     {
         DateTime = default;

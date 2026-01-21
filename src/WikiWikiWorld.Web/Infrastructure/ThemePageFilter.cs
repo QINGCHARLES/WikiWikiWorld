@@ -9,6 +9,11 @@ namespace WikiWikiWorld.Web.Infrastructure;
 /// </summary>
 public sealed class ThemePageFilter : IAsyncPageFilter
 {
+	/// <summary>
+	/// Validates whether the given value is a valid theme string.
+	/// </summary>
+	/// <param name="Value">The theme value to validate.</param>
+	/// <returns>True if the value is "light", "dark", or "system"; otherwise, false.</returns>
 	private static bool IsValidTheme(string? Value)
 		=> Value is "light" or "dark" or "system";
 
@@ -28,6 +33,11 @@ public sealed class ThemePageFilter : IAsyncPageFilter
 		return Next();
 	}
 
+	/// <summary>
+	/// Resolves the user's preferred theme from cookies or profile.
+	/// </summary>
+	/// <param name="HttpContext">The HTTP context containing request data.</param>
+	/// <returns>The preferred theme ("light", "dark", or "system").</returns>
 	private static string ResolvePreferredTheme(HttpContext HttpContext)
 	{
 		if (HttpContext.Request.Cookies.TryGetValue("theme", out string? CookieTheme) && IsValidTheme(CookieTheme))

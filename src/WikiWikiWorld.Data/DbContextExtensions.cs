@@ -46,11 +46,13 @@ public static class DatabaseFacadeExtensions
 
 		public Guid TransactionId { get; } = Guid.NewGuid();
 
+		/// <inheritdoc/>
 		public void Commit()
 		{
 			CommitAsync(CancellationToken.None).GetAwaiter().GetResult();
 		}
 
+		/// <inheritdoc/>
 		public async Task CommitAsync(CancellationToken CancellationToken = default)
 		{
 			if (IsCommitted || IsDisposed) throw new InvalidOperationException("Transaction already committed or disposed.");
@@ -59,11 +61,13 @@ public static class DatabaseFacadeExtensions
 			IsCommitted = true;
 		}
 
+		/// <inheritdoc/>
 		public void Rollback()
 		{
 			RollbackAsync(CancellationToken.None).GetAwaiter().GetResult();
 		}
 
+		/// <inheritdoc/>
 		public async Task RollbackAsync(CancellationToken CancellationToken = default)
 		{
 			if (IsCommitted || IsDisposed) return; // Already done
@@ -78,6 +82,7 @@ public static class DatabaseFacadeExtensions
 			}
 		}
 
+		/// <inheritdoc/>
 		public void Dispose()
 		{
 			if (!IsDisposed)
@@ -98,6 +103,7 @@ public static class DatabaseFacadeExtensions
 			}
 		}
 
+		/// <inheritdoc/>
 		public async ValueTask DisposeAsync()
 		{
 			if (!IsDisposed)

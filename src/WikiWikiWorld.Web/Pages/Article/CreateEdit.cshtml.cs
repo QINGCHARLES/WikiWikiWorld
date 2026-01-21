@@ -285,6 +285,11 @@ public sealed class CreateEditModel(
         }
     }
 
+    /// <summary>
+    /// Handles the creation of a new article.
+    /// </summary>
+    /// <param name="CurrentUserId">The ID of the current user.</param>
+    /// <returns>A redirect to the new article or a page with errors.</returns>
     private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId)
     {
         // Check if article with this slug already exists
@@ -379,6 +384,11 @@ public sealed class CreateEditModel(
         return Redirect($"/{UrlSlug}");
     }
 
+    /// <summary>
+    /// Handles the editing of an existing article.
+    /// </summary>
+    /// <param name="CurrentUserId">The ID of the current user.</param>
+    /// <returns>A redirect to the updated article or a page with errors.</returns>
     private async Task<IActionResult> HandleEditAsync(Guid CurrentUserId)
     {
         // Fetch existing article using original slug
@@ -443,12 +453,22 @@ public sealed class CreateEditModel(
         return Redirect($"/{UrlSlug}");
     }
 
+    /// <summary>
+    /// Gets the current user's ID from the UserManager.
+    /// </summary>
+    /// <returns>The current user's ID, or null if not found.</returns>
     private Guid? GetCurrentUserId()
     {
         string? UserIdString = UserManager.GetUserId(User);
         return Guid.TryParse(UserIdString, out Guid ParsedId) ? ParsedId : null;
     }
 
+    /// <summary>
+    /// Validates that an uploaded file is a valid image.
+    /// </summary>
+    /// <param name="UploadedFile">The file to validate.</param>
+    /// <param name="ValidationError">The error message if validation fails.</param>
+    /// <returns>True if the file is a valid image; otherwise, false.</returns>
     private static bool IsValidImageFile(IFormFile UploadedFile, out string ValidationError)
     {
         ValidationError = string.Empty;
@@ -494,6 +514,12 @@ public sealed class CreateEditModel(
         }
     }
 
+    /// <summary>
+    /// Checks if the file signature matches the expected image format.
+    /// </summary>
+    /// <param name="Signature">The file signature bytes.</param>
+    /// <param name="FileExtension">The file extension.</param>
+    /// <returns>True if the signature is valid for the extension; otherwise, false.</returns>
     private static bool IsImageFileSignature(byte[] Signature, string FileExtension)
     {
         // JPEG: FF D8 FF

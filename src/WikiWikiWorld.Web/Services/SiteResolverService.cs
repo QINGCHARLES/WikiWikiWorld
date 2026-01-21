@@ -131,6 +131,11 @@ public sealed class SiteResolverService
 		return (MatchingSite.SiteId, Culture, IsCultureSelectorRootDomain);
 	}
 
+	/// <summary>
+	/// Gets the base domain from the given host.
+	/// </summary>
+	/// <param name="Host">The host to extract the base domain from.</param>
+	/// <returns>The base domain, or empty string if not found.</returns>
 	private string GetBaseDomain(string Host)
 	{
 		if (Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
@@ -154,6 +159,12 @@ public sealed class SiteResolverService
 		return string.Empty;
 	}
 
+	/// <summary>
+	/// Extracts the culture code from the subdomain of the host.
+	/// </summary>
+	/// <param name="Host">The full host name.</param>
+	/// <param name="BaseDomain">The base domain to compare against.</param>
+	/// <returns>The culture code, or empty string if on the root domain.</returns>
 	private static string ExtractCultureFromHost(string Host, string BaseDomain)
 	{
 		if (Host.Equals(BaseDomain, StringComparison.OrdinalIgnoreCase))
@@ -170,6 +181,11 @@ public sealed class SiteResolverService
 		return string.Empty;
 	}
 
+	/// <summary>
+	/// Finds the site configuration that matches the given domain.
+	/// </summary>
+	/// <param name="Domain">The domain to search for.</param>
+	/// <returns>The matching SiteInfo, or null if not found.</returns>
 	private SiteInfo? FindMatchingSite(string Domain)
 	{
 		return SiteConfiguration.Sites.FirstOrDefault(Site =>

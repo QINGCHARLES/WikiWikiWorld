@@ -102,9 +102,19 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
         return base.Text(Text);
     }
 
+    /// <summary>
+    /// Determines if the node is an inline HTML element.
+    /// </summary>
+    /// <param name="Node">The node to check.</param>
+    /// <returns>True if the node is an inline element; otherwise, false.</returns>
     private static bool IsInline(INode Node) =>
         Node is IElement Element && InlineElements.Contains(Element.NodeName);
 
+    /// <summary>
+    /// Determines if the node is within a preformatted context (pre, textarea, script, style, or contenteditable).
+    /// </summary>
+    /// <param name="Node">The node to check.</param>
+    /// <returns>True if in a preformatted context; otherwise, false.</returns>
     private static bool IsInPreformattedContext(INode Node)
     {
         var current = Node as IElement ?? Node.ParentElement;
@@ -124,6 +134,11 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
         return false;
     }
 
+    /// <summary>
+    /// Classifies an element as Block, InlineContainer, or InlineElement.
+    /// </summary>
+    /// <param name="Element">The element to classify.</param>
+    /// <returns>The container mode for the element.</returns>
     private ContainerMode Classify(IElement Element)
     {
         if (IsInline(Element)) return ContainerMode.InlineElement;
@@ -139,6 +154,11 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
             : ContainerMode.Block;
     }
 
+    /// <summary>
+    /// Determines if the element contains only inline content (text and inline elements).
+    /// </summary>
+    /// <param name="Element">The element to check.</param>
+    /// <returns>True if all children are inline content; otherwise, false.</returns>
     private static bool HasOnlyInlineContent(IElement Element)
     {
         INode? Current = Element.FirstChild;
@@ -163,6 +183,11 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
         return true;
     }
 
+    /// <summary>
+    /// Removes leading newline and indentation from a string.
+    /// </summary>
+    /// <param name="Value">The string to trim.</param>
+    /// <returns>The trimmed string.</returns>
     private string TrimLeadingNewLineAndIndentation(string Value)
     {
         if (string.IsNullOrEmpty(Value) || string.IsNullOrEmpty(NewLine)) return Value;
@@ -176,6 +201,11 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
         return Start > 0 ? Value[Start..] : Value;
     }
 
+    /// <summary>
+    /// Removes trailing newline and indentation from a string.
+    /// </summary>
+    /// <param name="Value">The string to trim.</param>
+    /// <returns>The trimmed string.</returns>
     private string TrimTrailingNewLineAndIndentation(string Value)
     {
         if (string.IsNullOrEmpty(Value) || string.IsNullOrEmpty(NewLine)) return Value;

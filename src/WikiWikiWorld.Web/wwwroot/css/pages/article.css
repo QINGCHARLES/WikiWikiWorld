@@ -1,6 +1,5 @@
 /* Article - Article page specific styling */
 
-/* Article end mark - large green period at end of article */
 .article-end-mark {
     color: var(--uchu-green-5);
     font-size: 1.5em;
@@ -8,7 +7,6 @@
     vertical-align: baseline;
 }
 
-/* First paragraph styling */
 article p:first-of-type {
     font-size: var(--step-1);
     font-weight: bold;
@@ -18,7 +16,6 @@ article p:first-of-type::first-line {
     text-transform: uppercase;
 }
 
-/* Aside / Infobox */
 article aside {
     float: right;
     clear: right;
@@ -55,7 +52,6 @@ article > aside > h1 {
     padding: 0.5rem 1rem;
 }
 
-/* Downloads Box */
 article > aside.downloads-box {
     background-color: antiquewhite;
     display: flex;
@@ -180,7 +176,6 @@ article > aside.downloads-box a.button {
     font-size: inherit;
 }
 
-/* Article lists */
 article > ul:not([class]) {
     list-style-type: none;
 }
@@ -212,7 +207,6 @@ li > ul > li {
     list-style-type: square;
 }
 
-/* Responsive aside */
 @media screen and (max-width: calc(280px + 22rem) ) {
     article aside {
         float: none;
@@ -227,7 +221,6 @@ li > ul > li {
     }
 }
 
-/* Talk subjects (debug hidden) */
 section.talk-subjects {
     display: none;
     background-color: var(--color-primary);

@@ -39,9 +39,17 @@ public static partial class SlugHelper
         return slug;
     }
 
+    /// <summary>
+    /// Gets a compiled regex that matches invalid characters for slugs.
+    /// </summary>
+    /// <returns>A regex that matches non-alphanumeric, non-space, non-hyphen characters.</returns>
     [GeneratedRegex(@"[^a-z0-9\s-]", RegexOptions.Compiled)]
     private static partial Regex RemoveInvalidCharsRegex();
 
+    /// <summary>
+    /// Gets a compiled regex that matches multiple consecutive hyphens.
+    /// </summary>
+    /// <returns>A regex that matches one or more consecutive hyphens.</returns>
     [GeneratedRegex(@"-+", RegexOptions.Compiled)]
     private static partial Regex CollapseHyphensRegex();
 }

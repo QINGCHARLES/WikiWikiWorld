@@ -84,6 +84,11 @@ public sealed class SitemapService(
         }
     }
 
+    /// <summary>
+    /// Generates minimal sitemap XML for culture-selector root domains.
+    /// </summary>
+    /// <param name="BaseUrl">The base URL for the sitemap.</param>
+    /// <returns>The sitemap XML as a string.</returns>
     private static string GenerateRootSitemapXml(string BaseUrl)
     {
         XNamespace Ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
@@ -100,6 +105,14 @@ public sealed class SitemapService(
         return Doc.ToString();
     }
 
+    /// <summary>
+    /// Generates the full sitemap XML with all current articles.
+    /// </summary>
+    /// <param name="SiteId">The site ID.</param>
+    /// <param name="Culture">The culture code.</param>
+    /// <param name="BaseUrl">The base URL for the sitemap.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    /// <returns>The sitemap XML as a string.</returns>
     private async Task<string> GenerateSitemapXmlAsync(int SiteId, string Culture, string BaseUrl, CancellationToken CancellationToken)
     {
         // Get all current articles for this site and culture
@@ -131,6 +144,11 @@ public sealed class SitemapService(
         return Doc.ToString();
     }
 
+    /// <summary>
+    /// Gets the base URL from the current HTTP context.
+    /// </summary>
+    /// <returns>The base URL (scheme and host).</returns>
+    /// <exception cref="InvalidOperationException">Thrown when HTTP context is not available.</exception>
     private string GetBaseUrl()
     {
         HttpContext? Context = HttpContextAccessor.HttpContext;

@@ -28,6 +28,10 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 		return Pipeline.Value;
 	}
 
+	/// <summary>
+	/// Builds and configures the Markdown pipeline with all custom extensions.
+	/// </summary>
+	/// <returns>A fully configured <see cref="MarkdownPipeline"/>.</returns>
 	private static MarkdownPipeline BuildPipeline()
 	{
 		ShortDescriptionExtension ShortDescExt = new();

@@ -16,7 +16,6 @@ main {
     position: relative;
 }
 
-/* Hyperlink base styles */
 a {
     color: var(--color-hyperlinks);
     text-decoration: underline;

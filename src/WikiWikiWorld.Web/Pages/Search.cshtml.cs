@@ -77,6 +77,9 @@ public sealed class SearchModel(
     /// <summary>
     /// Extracts a snippet from the content around the search term.
     /// </summary>
+    /// <param name="content">The full content to extract from.</param>
+    /// <param name="query">The search query to find.</param>
+    /// <returns>A snippet of text surrounding the search term, or an empty string if not found.</returns>
     private static string ExtractSnippet(string content, string query)
     {
         int index = content.IndexOf(query, StringComparison.OrdinalIgnoreCase);

@@ -73,8 +73,10 @@
 		}
 
 		/// <summary>
-		/// Format "almost" next unit message
+		/// Formats a message indicating time is almost at the next unit.
 		/// </summary>
+		/// <param name="PrimaryUnit">The primary time unit.</param>
+		/// <returns>A formatted string like "Updated almost X units ago".</returns>
 		private static string FormatAlmostNextUnit(TimeUnit PrimaryUnit)
 		{
 			int NextValue = PrimaryUnit.Value + 1;
@@ -83,8 +85,10 @@
 		}
 
 		/// <summary>
-		/// Format "over" current unit message
+		/// Formats a message indicating time is over the current unit.
 		/// </summary>
+		/// <param name="PrimaryUnit">The primary time unit.</param>
+		/// <returns>A formatted string like "Updated over X units ago".</returns>
 		private static string FormatOverCurrentUnit(TimeUnit PrimaryUnit)
 		{
 			string ValueText = PrimaryUnit.Value < 10 ? NumberToWord(PrimaryUnit.Value) : PrimaryUnit.Value.ToString();
@@ -92,8 +96,10 @@
 		}
 
 		/// <summary>
-		/// Format "just over" current unit message
+		/// Formats a message indicating time is just over the current unit.
 		/// </summary>
+		/// <param name="PrimaryUnit">The primary time unit.</param>
+		/// <returns>A formatted string like "Updated just over X units ago".</returns>
 		private static string FormatJustOverCurrentUnit(TimeUnit PrimaryUnit)
 		{
 			string ValueText = PrimaryUnit.Value < 10 ? NumberToWord(PrimaryUnit.Value) : PrimaryUnit.Value.ToString();
@@ -101,8 +107,11 @@
 		}
 
 		/// <summary>
-		/// Format multi-unit precision message
+		/// Formats a message with multi-unit precision.
 		/// </summary>
+		/// <param name="PrimaryUnit">The primary time unit.</param>
+		/// <param name="SecondaryUnit">The secondary time unit.</param>
+		/// <returns>A formatted string like "Updated X units, Y units ago".</returns>
 		private static string FormatMultiUnitPrecision(TimeUnit PrimaryUnit, TimeUnit SecondaryUnit)
 		{
 			string PrimaryValueText = PrimaryUnit.Value < 10 ? NumberToWord(PrimaryUnit.Value) : PrimaryUnit.Value.ToString();
@@ -111,8 +120,10 @@
 		}
 
 		/// <summary>
-		/// Format single unit message
+		/// Formats a message with a single time unit.
 		/// </summary>
+		/// <param name="PrimaryUnit">The primary time unit.</param>
+		/// <returns>A formatted string like "Updated X units ago".</returns>
 		private static string FormatSingleUnit(TimeUnit PrimaryUnit)
 		{
 			string ValueText = PrimaryUnit.Value < 10 ? NumberToWord(PrimaryUnit.Value) : PrimaryUnit.Value.ToString();
@@ -125,8 +136,12 @@
 		private readonly record struct TimeUnit(string Name, int Value, double MaxValue);
 
 		/// <summary>
-		/// Calculates all time units from a time difference
+		/// Calculates all time units from a time difference.
 		/// </summary>
+		/// <param name="CurrentTime">The current time.</param>
+		/// <param name="UpdateTime">The time when the update occurred.</param>
+		/// <param name="Difference">The time span difference.</param>
+		/// <returns>An array of TimeUnit values for years, months, weeks, days, hours, minutes, and seconds.</returns>
 		private static TimeUnit[] CalculateTimeUnits(DateTimeOffset CurrentTime, DateTimeOffset UpdateTime, TimeSpan Difference)
 		{
 			// Calculate accurate month difference
@@ -146,8 +161,11 @@
 		}
 
 		/// <summary>
-		/// Calculates the number of months between two dates, accounting for partial months
+		/// Calculates the number of months between two dates, accounting for partial months.
 		/// </summary>
+		/// <param name="CurrentDateTime">The current date.</param>
+		/// <param name="UpdateDateTime">The update date.</param>
+		/// <returns>The number of complete months between the dates.</returns>
 		private static int CalculateMonthsDifference(DateTime CurrentDateTime, DateTime UpdateDateTime)
 		{
 			int MonthsDifference = ((CurrentDateTime.Year - UpdateDateTime.Year) * 12) +
@@ -163,8 +181,10 @@
 		}
 
 		/// <summary>
-		/// Converts a number to its word representation for values less than 10
+		/// Converts a number to its word representation for values less than 10.
 		/// </summary>
+		/// <param name="Number">The number to convert.</param>
+		/// <returns>The word representation, or the number as a string for values 10 or greater.</returns>
 		private static string NumberToWord(int Number) => Number switch
 		{
 			0 => "zero",

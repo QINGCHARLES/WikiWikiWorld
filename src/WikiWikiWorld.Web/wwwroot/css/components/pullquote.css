@@ -13,12 +13,10 @@ blockquote.pullquote {
     font-size: var(--step-1);
     margin: var(--space-l) 0;
     overflow-wrap: anywhere;
-    /* Add padding to make room for the zig-zag borders */
     padding-top: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)) + var(--space-s));
     padding-bottom: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)) + var(--space-s));
 }
 
-/* Zig-zag top border */
 blockquote.pullquote::before,
 blockquote.pullquote::after {
     content: "";

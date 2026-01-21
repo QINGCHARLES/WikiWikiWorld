@@ -179,6 +179,11 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 		Renderer.WriteLine("</ul>");
 	}
 
+	/// <summary>
+	/// Converts a string into a URL-friendly slug.
+	/// </summary>
+	/// <param name="Input">The input string to slugify.</param>
+	/// <returns>A lowercase URL-friendly slug.</returns>
 	private static string Slugify(string Input)
 	{
 		return Input.Trim().Replace(" ", "-").ToLowerInvariant();

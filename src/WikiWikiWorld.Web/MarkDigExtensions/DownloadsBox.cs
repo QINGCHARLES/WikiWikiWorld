@@ -120,6 +120,11 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         Renderer.Write("</aside>");
     }
 
+    /// <summary>
+    /// Renders a single download entry with file info and download button.
+    /// </summary>
+    /// <param name="Renderer">The HTML renderer.</param>
+    /// <param name="Download">The download URL information.</param>
     private void RenderDownload(HtmlRenderer Renderer, DownloadUrl Download)
     {
         String QualityText = Download.Quality.HasValue ? $"Quality: {Download.Quality}" : "";
@@ -150,6 +155,11 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         Renderer.Write("</svg>Download</a>");
     }
 
+    /// <summary>
+    /// Formats a file size in bytes to a human-readable string.
+    /// </summary>
+    /// <param name="Bytes">The file size in bytes.</param>
+    /// <returns>A formatted string like "1.5 MB".</returns>
     private static String FormatFileSize(Int64 Bytes)
     {
         String[] Suffixes = { "B", "KB", "MB", "GB", "TB" };
@@ -169,6 +179,11 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         return $"{FormattedSize} {Suffixes[Order]}";
     }
 
+    /// <summary>
+    /// HTML-escapes a string for safe rendering.
+    /// </summary>
+    /// <param name="Text">The text to escape.</param>
+    /// <returns>The HTML-escaped text.</returns>
     private static String HtmlEscape(String Text) => Text
         .Replace("&", "&amp;")
         .Replace("<", "&lt;")

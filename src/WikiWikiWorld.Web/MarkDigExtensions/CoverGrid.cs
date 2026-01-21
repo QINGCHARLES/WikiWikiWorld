@@ -125,6 +125,12 @@ public class CoverGridRenderer : HtmlObjectRenderer<CoverGridBlock>
         RenderCoverGrid(Renderer, Block.CachedCoverImages, Block.Culture);
     }
 
+    /// <summary>
+    /// Renders the cover grid HTML with provided cover image data.
+    /// </summary>
+    /// <param name="Renderer">The HTML renderer.</param>
+    /// <param name="CoverImages">The list of cover images with URL, title, and slug.</param>
+    /// <param name="Culture">The culture code for linking.</param>
     private void RenderCoverGrid(HtmlRenderer Renderer, List<(string ImageUrl, string Title, string UrlSlug)> CoverImages, string Culture)
     {
         // Start the grid container
@@ -325,6 +331,11 @@ public class CoverGridExtension : IMarkdownExtension
         }
     }
 
+    /// <summary>
+    /// Extracts the cover image slug from a PublicationIssueInfobox in the article text.
+    /// </summary>
+    /// <param name="Text">The article text containing the infobox.</param>
+    /// <returns>The cover image slug, or null if not found.</returns>
     private static string? ExtractCoverImageFromInfobox(string Text)
     {
         // Find the start of the infobox

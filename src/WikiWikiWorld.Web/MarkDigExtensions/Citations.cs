@@ -123,6 +123,11 @@ public sealed class CitationParser : InlineParser
 		return true;
 	}
 
+	/// <summary>
+	/// Generates a unique ID for a citation based on its content hash.
+	/// </summary>
+	/// <param name="Content">The citation content to hash.</param>
+	/// <returns>A unique citation ID string.</returns>
 	private static string GenerateCitationId(string Content)
 	{
 		int Hash = 0;
@@ -227,6 +232,11 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		Renderer.Write("</div>");
 	}
 
+	/// <summary>
+	/// Writes a formatted citation entry to the HTML output.
+	/// </summary>
+	/// <param name="Renderer">The HTML renderer.</param>
+	/// <param name="Citation">The citation to format.</param>
 	private static void WriteFormattedCitation(HtmlRenderer Renderer, Citation Citation)
 	{
 		// Author(s)
@@ -290,6 +300,11 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		}
 	}
 
+	/// <summary>
+	/// Writes a list of authors to the HTML output with proper formatting.
+	/// </summary>
+	/// <param name="Renderer">The HTML renderer.</param>
+	/// <param name="Authors">The list of author names.</param>
 	private static void WriteAuthors(HtmlRenderer Renderer, List<string> Authors)
 	{
 		for (int i = 0; i < Authors.Count; i++)
@@ -375,6 +390,12 @@ public sealed class CitationExtension : IMarkdownExtension
 		}
 	}
 
+	/// <summary>
+	/// Parses citation content into a structured Citation object.
+	/// </summary>
+	/// <param name="Content">The raw citation content string.</param>
+	/// <param name="CitationId">The unique ID for this citation.</param>
+	/// <returns>A parsed Citation object with properties extracted from the content.</returns>
 	private static Citation ParseCitation(string Content, string CitationId)
 	{
 		Dictionary<string, List<string>> Properties = new(StringComparer.OrdinalIgnoreCase);

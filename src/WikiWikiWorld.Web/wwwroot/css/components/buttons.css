@@ -1,3 +1,5 @@
+/* Buttons - Button and link-button styling with variants */
+
 a.button svg
 {
 	block-size: 1cap;
@@ -5,7 +7,6 @@ a.button svg
 
 a.button, button
 {
-	/* Configuration */
 	--button-padding: 0.7em 1.2em;
 	--button-gap: 0.1em;
 	--button-bg: light-dark(var(--uchu-yin-8), var(--uchu-yin-7));
@@ -16,18 +17,14 @@ a.button, button
 	--button-border-style: solid;
 	--button-border-color: var(--button-bg);
 	--button-radius: 2em;
-	/* Layout and spacing */
 	display: inline-flex;
 	align-items: center;
 	gap: var(--button-gap);
 	padding: var(--button-padding);
-	/* Colours */
 	background: var(--button-bg);
 	color: var(--button-color);
-	/* Stroke and radius */
 	border: var(--button-border-width) var(--button-border-style) var(--button-border-color);
 	border-radius: var(--button-radius);
-	/* Typography */
 	text-decoration: none;
 	text-box-trim: cap;
 	font-weight: var(--button-font-weight, 700);
@@ -35,9 +32,8 @@ a.button, button
 	letter-spacing: 0.05ch;
 	font-family: sans-serif;
 	line-height: 1.1;
-	/* Interactive */
 	cursor: pointer;
-	/* Nested Pseudo-classes */
+
 	&:hover
 	{
 		background: var(--button-hover-bg);
@@ -56,7 +52,6 @@ a.button, button
 		transform: scale(98%);
 	}
 
-	/* SVG Icon Styling */
 	& svg
 	{
 		height: var(--button-icon-size, 1.5cap);
@@ -64,7 +59,6 @@ a.button, button
 		flex: none;
 	}
 
-	/* Button Variants */
 	&[data-button-variant="primary"]
 	{
 		--button-bg: light-dark(var(--uchu-yellow-4), var(--uchu-yellow-5));
@@ -98,11 +92,9 @@ a.button, button
     &[data-button-variant="naked"] 
     {
         --button-bg: transparent;
-        /* Border is transparent by default so it takes up space but isn't seen */
         --button-border-color: transparent; 
         --button-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
         
-        /* On hover, the border color becomes visible */
         --button-hover-bg: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
         --button-hover-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
         --button-hover-border-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-4));

@@ -96,6 +96,11 @@ public sealed class IndexModel(
         }
     }
 
+    /// <summary>
+    /// Extracts the cover image slug from a PublicationIssueInfobox in the article text.
+    /// </summary>
+    /// <param name="Text">The article text containing the infobox.</param>
+    /// <returns>The URL slug for the cover image, or null if not found.</returns>
     private static string? ExtractCoverImageFromInfobox(string Text)
     {
         // Find the start of the infobox
