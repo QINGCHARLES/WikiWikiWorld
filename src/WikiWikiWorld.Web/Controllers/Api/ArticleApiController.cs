@@ -1,4 +1,4 @@
-﻿using WikiWikiWorld.Web.Helpers;
+using WikiWikiWorld.Web.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
@@ -7,6 +7,7 @@ using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
@@ -24,9 +25,10 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
     /// </summary>
     /// <param name="UrlSlug">The URL slug of the article.</param>
     /// <param name="Revision">The optional revision date string.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>The article revision.</returns>
     [HttpGet("{UrlSlug}")]
-    public async Task<IActionResult> GetArticleRevision(string UrlSlug, [FromQuery] string? Revision)
+    public async Task<IActionResult> GetArticleRevision(string UrlSlug, [FromQuery] string? Revision, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))
         {
@@ -42,12 +44,12 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
         if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
         {
             ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
-            SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync();
+            SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
         }
 
         // Return the current revision
         ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-        CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync();
+        CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
 
         if (SpecificRevision is not null)
         {
@@ -67,10 +69,11 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
     /// </summary>
     /// <param name="UrlSlug">The URL slug of the article.</param>
     /// <param name="Model">The update model.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>The result of the update operation.</returns>
     [HttpPut("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model)
+    public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug) || Model == null)
         {
@@ -80,25 +83,27 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
         (int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
 
         string? UserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-        if (UserId == null)
+        if (!Guid.TryParse(UserId, out Guid ParsedUserId))
         {
             return Unauthorized("User ID not found in token.");
         }
 
-        // Find current revision and set IsCurrent = false
+        await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CancellationToken);
+
         ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-        ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync();
+        ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
 
         if (CurrentRevision is not null)
         {
             CurrentRevision.IsCurrent = false;
             Context.ArticleRevisions.Update(CurrentRevision);
-            await Context.SaveChangesAsync();
         }
+
+        Guid CanonicalArticleId = CurrentRevision?.CanonicalArticleId ?? Model.CanonicalArticleId ?? Guid.NewGuid();
 
         ArticleRevision ArticleRevision = new()
         {
-            CanonicalArticleId = Model.CanonicalArticleId ?? Guid.NewGuid(),
+            CanonicalArticleId = CanonicalArticleId,
             SiteId = SiteId,
             Culture = Culture,
             Title = Model.Title,
@@ -108,17 +113,124 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
             CanonicalFileId = Model.CanonicalFileId,
             Text = Model.Text,
             RevisionReason = Model.RevisionReason,
-            CreatedByUserId = Guid.Parse(UserId),
+            CreatedByUserId = ParsedUserId,
             DateCreated = DateTimeOffset.UtcNow,
             IsCurrent = true
         };
 
         Context.ArticleRevisions.Add(ArticleRevision);
-        await Context.SaveChangesAsync();
+        await Context.SaveChangesAsync(CancellationToken);
+        await Transaction.CommitAsync(CancellationToken);
 
         return Ok("Article revision updated successfully.");
     }
+
+    /// <summary>
+    /// Gets the revision history for an article.
+    /// </summary>
+    /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    /// <returns>A list of article revisions ordered by date descending.</returns>
+    [HttpGet("{UrlSlug}/history")]
+    public async Task<IActionResult> GetArticleHistory(string UrlSlug, CancellationToken CancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            return BadRequest("URL slug is required.");
+        }
+
+        // First find the current revision to get the CanonicalArticleId
+        ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentRevision = await Context.ArticleRevisions
+            .AsNoTracking()
+            .WithSpecification(CurrentSpec)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        if (CurrentRevision is null)
+        {
+            return NotFound("Article not found.");
+        }
+
+        // Get all revisions for this article
+        List<ArticleRevisionHistoryDto> History = await Context.ArticleRevisions
+            .Where(R => R.CanonicalArticleId == CurrentRevision.CanonicalArticleId)
+            .OrderByDescending(R => R.DateCreated)
+            .AsNoTracking()
+            .Select(R => new ArticleRevisionHistoryDto(
+                R.Id,
+                R.Title,
+                R.UrlSlug,
+                R.IsCurrent,
+                R.RevisionReason,
+                R.CreatedByUserId,
+                R.DateCreated))
+            .ToListAsync(CancellationToken);
+
+        return Ok(History);
+    }
+
+    /// <summary>
+    /// Soft-deletes the current revision of an article.
+    /// </summary>
+    /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    /// <returns>A success message or error.</returns>
+    [HttpDelete("{UrlSlug}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> DeleteArticle(string UrlSlug, CancellationToken CancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            return BadRequest("URL slug is required.");
+        }
+
+        string? UserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(UserId, out Guid ParsedUserId))
+        {
+            return Unauthorized("User ID not found in token.");
+        }
+
+        ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentRevision = await Context.ArticleRevisions
+            .WithSpecification(CurrentSpec)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        if (CurrentRevision is null)
+        {
+            return NotFound("Article not found.");
+        }
+
+        CurrentRevision.IsCurrent = false;
+        CurrentRevision.DateDeleted = DateTimeOffset.UtcNow;
+        Context.ArticleRevisions.Update(CurrentRevision);
+
+        using (WriteDurabilityScope.High())
+        {
+            await Context.SaveChangesAsync(CancellationToken);
+        }
+
+        return Ok("Article deleted successfully.");
+    }
 }
+
+/// <summary>
+/// DTO for article revision history entries.
+/// </summary>
+/// <param name="Id">The revision ID.</param>
+/// <param name="Title">The article title.</param>
+/// <param name="UrlSlug">The URL slug.</param>
+/// <param name="IsCurrent">Whether this is the current revision.</param>
+/// <param name="RevisionReason">The reason for this revision.</param>
+/// <param name="CreatedByUserId">The user who created this revision.</param>
+/// <param name="DateCreated">When this revision was created.</param>
+public sealed record ArticleRevisionHistoryDto(
+    int Id,
+    string Title,
+    string UrlSlug,
+    bool IsCurrent,
+    string RevisionReason,
+    Guid CreatedByUserId,
+    DateTimeOffset DateCreated);
 
 /// <summary>
 /// Model for updating an article revision.
@@ -160,3 +272,4 @@ public class UpdateArticleRevisionModel
     /// </summary>
     public required string RevisionReason { get; set; }
 }
+

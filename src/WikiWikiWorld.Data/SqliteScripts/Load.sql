@@ -1,3 +1,17 @@
+-- Default CopyrightStatus values
+INSERT INTO CopyrightStatus (Status) VALUES ('COPYRIGHTHOLDER');
+INSERT INTO CopyrightStatus (Status) VALUES ('SHAREPERMITTED');
+INSERT INTO CopyrightStatus (Status) VALUES ('PUBLICDOMAIN');
+INSERT INTO CopyrightStatus (Status) VALUES ('UNKNOWN');
+
+-- Default DownloadUrlStatus values
+INSERT INTO DownloadUrlStatus (Status) VALUES ('RECEIVED');
+INSERT INTO DownloadUrlStatus (Status) VALUES ('VERIFIED');
+INSERT INTO DownloadUrlStatus (Status) VALUES ('REJECTED');
+INSERT INTO DownloadUrlStatus (Status) VALUES ('DEPLOYED');
+INSERT INTO DownloadUrlStatus (Status) VALUES ('DEPLOYERROR');
+INSERT INTO DownloadUrlStatus (Status) VALUES ('UNKNOWN');
+
 INSERT INTO Users (Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp, TwoFactorEnabled, LockoutEnabled, AccessFailedCount, ProfilePicGuid)
 VALUES (
 	'7240be61-df81-46f9-8152-6a48b96abc40', 

@@ -136,10 +136,6 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         Renderer.Write("<div class=\"text-content\">");
         Renderer.Write($"<p class=\"filename\">{HtmlEscape(Download.Filename)}</p>");
         Renderer.Write($"<p class=\"filesize\">{FileSizeText}</p>");
-        if (!String.IsNullOrEmpty(QualityText))
-        {
-            Renderer.Write($"<p class=\"quality\">{QualityText}/5</p>");
-        }
         // Note: Provider text logic removed for simplicity as it requires another DB lookup or join. 
         // If needed, it should be fetched in EnrichAsync.
         Renderer.Write("</div>");

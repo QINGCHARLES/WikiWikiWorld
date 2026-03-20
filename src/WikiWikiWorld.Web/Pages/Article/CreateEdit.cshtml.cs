@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,9 +7,10 @@ using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using WikiWikiWorld.Web.Configuration;
+using WikiWikiWorld.Web.Helpers;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
@@ -29,16 +29,9 @@ public sealed class CreateEditModel(
     SiteResolverService SiteResolverService)
     : BasePageModel(SiteResolverService)
 {
-    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic"
-    };
+    private static readonly HashSet<string> AllowedImageExtensions = ImageValidationHelper.AllowedImageExtensions;
 
-    private static readonly HashSet<string> AllowedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "image/jpeg", "image/jpg", "image/png", "image/gif",
-        "image/webp", "image/avif", "image/heic"
-    };
+    private static readonly HashSet<string> AllowedMimeTypes = ImageValidationHelper.AllowedMimeTypes;
 
     // Used to determine edit mode - if UrlSlug is provided via query string, we're editing
     /// <summary>
@@ -117,15 +110,27 @@ public sealed class CreateEditModel(
             return Challenge();
         }
 
+        string? RequestedUrlSlug = UrlSlug;
+
+        if (!string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            UrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
+        }
+
         // Edit mode: Load existing article data
         if (IsEditMode)
         {
             ArticleRevisionsBySlugSpec Spec = new(UrlSlug!, IsCurrent: true);
-            ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
+            ArticleRevision? CurrentArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(Spec).FirstOrDefaultAsync();
 
             if (CurrentArticle is null)
             {
                 return NotFound("Article not found.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(RequestedUrlSlug) && ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, CurrentArticle.Type))
+            {
+                return RedirectPermanent($"{ArticleUrlHelper.BuildArticlePath(CurrentArticle)}/edit");
             }
 
             // Populate form with existing data
@@ -213,37 +218,32 @@ public sealed class CreateEditModel(
              return await OnGetAsync(); // Reload page with error
         }
 
-        // Use explicit transaction with high durability to ensure atomicity of the revision swap.
-        // Revert operations modify audit trail and should survive crashes.
-        // Use explicit transaction with high durability to ensure atomicity of the revision swap.
-        // Revert operations modify audit trail and should survive crashes.
-        await using var Transaction = await Context.Database.BeginImmediateTransactionAsync();
+        // Soft delete the current revision
+        CurrentArticle.IsCurrent = false;
+        CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
+        Context.ArticleRevisions.Update(CurrentArticle);
+
+        // Restore the previous revision
+        PreviousRevision.IsCurrent = true;
+        
+        // Optionally, we could create a NEW revision that helps track who did the revert,
+        // but the user requirement was specific: "updates the flags in the db to soft delete the current revision, unflag it as current revision and reflag the previous one as current revision."
+        Context.ArticleRevisions.Update(PreviousRevision);
+        
         using (WriteDurabilityScope.High())
         {
-            // Soft delete the current revision
-            CurrentArticle.IsCurrent = false;
-            CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
-            Context.ArticleRevisions.Update(CurrentArticle);
-
-            // Restore the previous revision
-            PreviousRevision.IsCurrent = true;
-            
-            // Optionally, we could create a NEW revision that helps track who did the revert,
-            // but the user requirement was specific: "updates the flags in the db to soft delete the current revision, unflag it as current revision and reflag the previous one as current revision."
-            Context.ArticleRevisions.Update(PreviousRevision);
-            
             await Context.SaveChangesAsync();
         }
-        await Transaction.CommitAsync();
 
-        return Redirect($"/{PreviousRevision.UrlSlug}");
+        return Redirect(ArticleUrlHelper.BuildArticlePath(PreviousRevision));
     }
 
     /// <summary>
     /// Handles the POST request to create or update an article.
     /// </summary>
+    /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>A redirect or page result with errors.</returns>
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
     {
         // Validate required fields
         if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(UrlSlug) || string.IsNullOrWhiteSpace(ArticleText))
@@ -281,7 +281,7 @@ public sealed class CreateEditModel(
         }
         else
         {
-            return await HandleCreateAsync(CurrentUserId.Value);
+            return await HandleCreateAsync(CurrentUserId.Value, CancellationToken);
         }
     }
 
@@ -289,12 +289,13 @@ public sealed class CreateEditModel(
     /// Handles the creation of a new article.
     /// </summary>
     /// <param name="CurrentUserId">The ID of the current user.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>A redirect to the new article or a page with errors.</returns>
-    private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId)
+    private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId, CancellationToken CancellationToken)
     {
         // Check if article with this slug already exists
         ArticleRevisionsBySlugSpec Spec = new(UrlSlug!, IsCurrent: true);
-        ArticleRevision? ExistingArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
+        ArticleRevision? ExistingArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(Spec).FirstOrDefaultAsync(CancellationToken);
 
         if (ExistingArticle is not null)
         {
@@ -302,44 +303,70 @@ public sealed class CreateEditModel(
             return Page();
         }
 
-        // Generate canonical article ID
         Guid CanonicalArticleId = Guid.NewGuid();
-
-        // Handle file upload if present
         Guid? CanonicalFileId = null;
+        string? OriginalFileName = null;
+        string? UploadedContentType = null;
+        long UploadedFileSizeBytes = 0;
+        string? TemporaryFilePath = null;
+        string? FinalFilePath = null;
+
         if (UploadedFile is not null && UploadedFile.Length > 0)
         {
             if (!IsValidImageFile(UploadedFile, out string ValidationError))
             {
                 ErrorMessage = ValidationError;
-                // Re-evaluate CanRevert logic if needed, but this is create mode so no revert.
                 return Page();
             }
 
             try
             {
-                CanonicalFileId = Guid.NewGuid();
-                string OriginalFileName = Path.GetFileName(UploadedFile.FileName);
-                string FileExtension = Path.GetExtension(OriginalFileName);
-                string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
+                (Guid StagedCanonicalFileId, string StagedOriginalFileName, string StagedContentType, long StagedFileSizeBytes, string StagedTemporaryFilePath, string StagedFinalFilePath) =
+                    await StageUploadedFileAsync(CancellationToken);
 
-                string SiteFilesDirectory = Path.Combine(
-                    FileStorageOptions.Value.SiteFilesPath,
-                    SiteId.ToString(),
-                    "images");
-                Directory.CreateDirectory(SiteFilesDirectory);
+                CanonicalFileId = StagedCanonicalFileId;
+                OriginalFileName = StagedOriginalFileName;
+                UploadedContentType = StagedContentType;
+                UploadedFileSizeBytes = StagedFileSizeBytes;
+                TemporaryFilePath = StagedTemporaryFilePath;
+                FinalFilePath = StagedFinalFilePath;
+                SelectedType = ArticleType.File;
+            }
+            catch (Exception Ex)
+            {
+                CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+                ErrorMessage = $"Error uploading file: {Ex.Message}";
+                return Page();
+            }
+        }
 
-                string FilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
-                using FileStream FileStream = new(FilePath, FileMode.Create);
-                await UploadedFile.CopyToAsync(FileStream);
+        try
+        {
+            await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CancellationToken);
 
-                var NewFile = new FileRevision
+            ArticleRevision? ExistingArticleInsideTransaction = await Context.ArticleRevisions
+                .AsNoTracking()
+                .WithSpecification(Spec)
+                .FirstOrDefaultAsync(CancellationToken);
+
+            if (ExistingArticleInsideTransaction is not null)
+            {
+                CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+                ErrorMessage = "An article with this URL slug already exists.";
+                return Page();
+            }
+
+            if (CanonicalFileId.HasValue &&
+                OriginalFileName is not null &&
+                UploadedContentType is not null)
+            {
+                FileRevision NewFile = new()
                 {
                     CanonicalFileId = CanonicalFileId.Value,
                     Type = FileType.Image2D,
                     Filename = OriginalFileName,
-                    MimeType = UploadedFile.ContentType,
-                    FileSizeBytes = UploadedFile.Length,
+                    MimeType = UploadedContentType,
+                    FileSizeBytes = UploadedFileSizeBytes,
                     Source = null,
                     RevisionReason = "Initial upload",
                     SourceAndRevisionReasonCulture = Culture,
@@ -349,39 +376,42 @@ public sealed class CreateEditModel(
                 };
 
                 Context.FileRevisions.Add(NewFile);
-                await Context.SaveChangesAsync();
-
-                SelectedType = ArticleType.File;
             }
-            catch (Exception Ex)
+
+            ArticleRevision NewArticle = new()
             {
-                ErrorMessage = $"Error uploading file: {Ex.Message}";
-                return Page();
+                CanonicalArticleId = CanonicalArticleId,
+                SiteId = SiteId,
+                Culture = Culture,
+                Title = Title,
+                DisplayTitle = DisplayTitle,
+                UrlSlug = UrlSlug!,
+                Type = SelectedType,
+                CanonicalFileId = CanonicalFileId,
+                Text = ArticleText,
+                RevisionReason = "New article creation",
+                CreatedByUserId = CurrentUserId,
+                DateCreated = DateTimeOffset.UtcNow,
+                IsCurrent = true
+            };
+
+            Context.ArticleRevisions.Add(NewArticle);
+            await Context.SaveChangesAsync(CancellationToken);
+
+            if (TemporaryFilePath is not null && FinalFilePath is not null)
+            {
+                FinalizeStagedUpload(TemporaryFilePath, FinalFilePath);
             }
+
+            await Transaction.CommitAsync(CancellationToken);
+            return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
         }
-
-        // Insert new article
-        var NewArticle = new ArticleRevision
+        catch (Exception Ex)
         {
-            CanonicalArticleId = CanonicalArticleId,
-            SiteId = SiteId,
-            Culture = Culture,
-            Title = Title,
-            DisplayTitle = DisplayTitle,
-            UrlSlug = UrlSlug!,
-            Type = SelectedType,
-            CanonicalFileId = CanonicalFileId,
-            Text = ArticleText,
-            RevisionReason = "New article creation",
-            CreatedByUserId = CurrentUserId,
-            DateCreated = DateTimeOffset.UtcNow,
-            IsCurrent = true
-        };
-
-        Context.ArticleRevisions.Add(NewArticle);
-        await Context.SaveChangesAsync();
-
-        return Redirect($"/{UrlSlug}");
+            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            ErrorMessage = $"Error creating article: {Ex.Message}";
+            return Page();
+        }
     }
 
     /// <summary>
@@ -404,7 +434,7 @@ public sealed class CreateEditModel(
         if (!OriginalUrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase))
         {
             ArticleRevisionsBySlugSpec ConflictSpec = new(UrlSlug!, IsCurrent: true);
-            ArticleRevision? ExistingArticle = await Context.ArticleRevisions.WithSpecification(ConflictSpec).FirstOrDefaultAsync();
+            ArticleRevision? ExistingArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(ConflictSpec).FirstOrDefaultAsync();
 
             if (ExistingArticle is not null)
             {
@@ -418,18 +448,12 @@ public sealed class CreateEditModel(
             }
         }
 
-        // Use explicit transaction to ensure atomicity of the revision swap.
-        // If creating the new revision fails, we don't want to leave the article with no current revision.
-        // Use explicit transaction to ensure atomicity of the revision swap.
-        // If creating the new revision fails, we don't want to leave the article with no current revision.
-        await using var Transaction = await Context.Database.BeginImmediateTransactionAsync();
-
         // Set current revision to not current
         CurrentArticle.IsCurrent = false;
         Context.ArticleRevisions.Update(CurrentArticle);
 
         // Insert new revision with updates
-        var NewRevision = new ArticleRevision
+        ArticleRevision NewRevision = new()
         {
             CanonicalArticleId = CurrentArticle.CanonicalArticleId,
             SiteId = SiteId,
@@ -448,9 +472,69 @@ public sealed class CreateEditModel(
 
         Context.ArticleRevisions.Add(NewRevision);
         await Context.SaveChangesAsync();
-        await Transaction.CommitAsync();
 
-        return Redirect($"/{UrlSlug}");
+        return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+    }
+
+    /// <summary>
+    /// Stages the uploaded file to a temporary path until the database transaction succeeds.
+    /// </summary>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    /// <returns>The staged file metadata and filesystem paths.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when there is no uploaded file to stage.</exception>
+    private async Task<(Guid CanonicalFileId, string OriginalFileName, string ContentType, long FileSizeBytes, string TemporaryFilePath, string FinalFilePath)> StageUploadedFileAsync(CancellationToken CancellationToken)
+    {
+        if (UploadedFile is null)
+        {
+            throw new InvalidOperationException("No uploaded file was provided.");
+        }
+
+        Guid CanonicalFileId = Guid.NewGuid();
+        string OriginalFileName = Path.GetFileName(UploadedFile.FileName);
+        string FileExtension = Path.GetExtension(OriginalFileName);
+        string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
+
+        string SiteFilesDirectory = Path.Combine(
+            FileStorageOptions.Value.SiteFilesPath,
+            SiteId.ToString(),
+            "images");
+        Directory.CreateDirectory(SiteFilesDirectory);
+
+        string FinalFilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
+        string TemporaryFilePath = Path.Combine(SiteFilesDirectory, $"{UniqueFileName}.{Guid.NewGuid():N}.tmp");
+
+        await using FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        await UploadedFile.CopyToAsync(FileStream, CancellationToken);
+
+        return (CanonicalFileId, OriginalFileName, UploadedFile.ContentType, UploadedFile.Length, TemporaryFilePath, FinalFilePath);
+    }
+
+    /// <summary>
+    /// Moves a staged upload into its final path after the database transaction has succeeded.
+    /// </summary>
+    /// <param name="TemporaryFilePath">The temporary file path.</param>
+    /// <param name="FinalFilePath">The final file path.</param>
+    private static void FinalizeStagedUpload(string TemporaryFilePath, string FinalFilePath)
+    {
+        System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
+    }
+
+    /// <summary>
+    /// Deletes any staged or partially finalized upload artifacts.
+    /// </summary>
+    /// <param name="TemporaryFilePath">The temporary file path, if present.</param>
+    /// <param name="FinalFilePath">The final file path, if present.</param>
+    private static void CleanupStagedUpload(string? TemporaryFilePath, string? FinalFilePath)
+    {
+        if (!string.IsNullOrWhiteSpace(TemporaryFilePath) && System.IO.File.Exists(TemporaryFilePath))
+        {
+            System.IO.File.Delete(TemporaryFilePath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(FinalFilePath) && System.IO.File.Exists(FinalFilePath))
+        {
+            System.IO.File.Delete(FinalFilePath);
+        }
     }
 
     /// <summary>
@@ -470,109 +554,6 @@ public sealed class CreateEditModel(
     /// <param name="ValidationError">The error message if validation fails.</param>
     /// <returns>True if the file is a valid image; otherwise, false.</returns>
     private static bool IsValidImageFile(IFormFile UploadedFile, out string ValidationError)
-    {
-        ValidationError = string.Empty;
-
-        string FileExtension = Path.GetExtension(UploadedFile.FileName);
-        if (!AllowedImageExtensions.Contains(FileExtension))
-        {
-            ValidationError = $"File extension {FileExtension} is not allowed. Allowed extensions: {string.Join(", ", AllowedImageExtensions)}";
-            return false;
-        }
-
-        if (!AllowedMimeTypes.Contains(UploadedFile.ContentType))
-        {
-            ValidationError = $"File type {UploadedFile.ContentType} is not allowed. Only image files are permitted.";
-            return false;
-        }
-
-        const long MaxFileSizeBytes = 10 * 1024 * 1024;
-        if (UploadedFile.Length > MaxFileSizeBytes)
-        {
-            ValidationError = "File size exceeds the maximum allowed size of 10 MB.";
-            return false;
-        }
-
-        try
-        {
-            using Stream Stream = UploadedFile.OpenReadStream();
-            using BinaryReader Reader = new(Stream);
-
-            byte[] Signature = Reader.ReadBytes(8);
-            if (!IsImageFileSignature(Signature, FileExtension))
-            {
-                ValidationError = "The file does not appear to be a valid image.";
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception Ex)
-        {
-            ValidationError = $"Error validating image: {Ex.Message}";
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Checks if the file signature matches the expected image format.
-    /// </summary>
-    /// <param name="Signature">The file signature bytes.</param>
-    /// <param name="FileExtension">The file extension.</param>
-    /// <returns>True if the signature is valid for the extension; otherwise, false.</returns>
-    private static bool IsImageFileSignature(byte[] Signature, string FileExtension)
-    {
-        // JPEG: FF D8 FF
-        if (FileExtension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
-            FileExtension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-        {
-            return Signature.Length >= 3 &&
-                   Signature[0] == 0xFF &&
-                   Signature[1] == 0xD8 &&
-                   Signature[2] == 0xFF;
-        }
-
-        // PNG: 89 50 4E 47 0D 0A 1A 0A
-        if (FileExtension.Equals(".png", StringComparison.OrdinalIgnoreCase))
-        {
-            return Signature.Length >= 8 &&
-                   Signature[0] == 0x89 &&
-                   Signature[1] == 0x50 &&
-                   Signature[2] == 0x4E &&
-                   Signature[3] == 0x47 &&
-                   Signature[4] == 0x0D &&
-                   Signature[5] == 0x0A &&
-                   Signature[6] == 0x1A &&
-                   Signature[7] == 0x0A;
-        }
-
-        // GIF: 47 49 46 38
-        if (FileExtension.Equals(".gif", StringComparison.OrdinalIgnoreCase))
-        {
-            return Signature.Length >= 4 &&
-                   Signature[0] == 0x47 &&
-                   Signature[1] == 0x49 &&
-                   Signature[2] == 0x46 &&
-                   Signature[3] == 0x38;
-        }
-
-        // WebP: 52 49 46 46 (RIFF)
-        if (FileExtension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
-        {
-            return Signature.Length >= 4 &&
-                   Signature[0] == 0x52 &&
-                   Signature[1] == 0x49 &&
-                   Signature[2] == 0x46 &&
-                   Signature[3] == 0x46;
-        }
-
-        // For AVIF and HEIC, trust extension and MIME type
-        if (FileExtension.Equals(".avif", StringComparison.OrdinalIgnoreCase) ||
-            FileExtension.Equals(".heic", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return false;
-    }
+        => ImageValidationHelper.IsValidImageFile(UploadedFile, out ValidationError);
 }
+

@@ -1,5 +1,6 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.ContributionsModel
+@using WikiWikiWorld.Web.Helpers
 @{
     ViewData["Title"] = $"{Model.Username}'s Contributions";
 }
@@ -44,7 +45,7 @@
                             <span class="revision-type">@Revision.Type</span>
                         </div>
                         <div class="revision-content">
-                            <a href="/@Revision.UrlSlug/revision/@Revision.DateCreated.ToString("yyyyMMddHHmmss")" class="revision-title">@Revision.Title</a>
+                            <a href="@ArticleUrlHelper.BuildRevisionPath(Revision, Revision.DateCreated.ToString("yyyyMMddHHmmss"))" class="revision-title">@Revision.Title</a>
                             <p class="revision-reason">@Revision.RevisionReason</p>
                         </div>
                     </li>

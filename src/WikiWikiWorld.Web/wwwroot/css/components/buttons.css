@@ -16,7 +16,8 @@ a.button, button
 	--button-border-width: 3px;
 	--button-border-style: solid;
 	--button-border-color: var(--button-bg);
-	--button-radius: 2em;
+	--button-radius: 9999px;
+	
 	display: inline-flex;
 	align-items: center;
 	gap: var(--button-gap);

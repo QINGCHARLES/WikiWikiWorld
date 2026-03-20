@@ -4,6 +4,7 @@ using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
+using WikiWikiWorld.Web.Helpers;
 
 namespace WikiWikiWorld.Web.Services;
 
@@ -122,14 +123,14 @@ public sealed class SitemapService(
             .ToListAsync(CancellationToken);
 
         // Map to ArticleSitemapEntry
-        var Entries = Articles.Select(a => new ArticleSitemapEntry(a.UrlSlug, a.DateCreated));
+        IEnumerable<ArticleSitemapEntry> Entries = Articles.Select(a => new ArticleSitemapEntry(a.UrlSlug, a.Type, a.DateCreated));
 
         // Generate XML elements for each article using collection expressions
         XNamespace Ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
         XElement[] UrlElements = [
             .. Entries.Select(Article =>
                 new XElement(Ns + "url",
-                    new XElement(Ns + "loc", $"{BaseUrl}/{Article.UrlSlug}"),
+                    new XElement(Ns + "loc", $"{BaseUrl}{ArticleUrlHelper.BuildArticlePath(Article.UrlSlug, Article.Type)}"),
                     new XElement(Ns + "lastmod", Article.LastUpdated.ToString("yyyy-MM-ddTHH:mm:sszzz"))
                 )
             )

@@ -89,10 +89,21 @@ namespace WikiWikiWorld.Web.Pages
 		/// </summary>
 		public string? HeaderImage { get; set; } // Added property
 
+		/// <summary>
+		/// Gets a value indicating whether the page can execute on a culture-selector root domain without a content culture.
+		/// </summary>
+		protected virtual bool AllowsCultureSelectorRootDomain => false;
+
 		/// <inheritdoc/>
 		public override void OnPageHandlerExecuting(PageHandlerExecutingContext Context)
 		{
 			base.OnPageHandlerExecuting(Context);
+
+			if (AllowsCultureSelectorRootDomain)
+			{
+				(this.SiteId, this.Culture, _) = this.SiteResolverService.ResolveSiteAndCultureWithRootCheck();
+				return;
+			}
 
 			(this.SiteId, this.Culture) = this.SiteResolverService.ResolveSiteAndCulture();
 		}

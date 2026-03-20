@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Markdig.Syntax;
 using System.IO;
 using Microsoft.AspNetCore.Identity;
+using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Article;
@@ -33,6 +34,11 @@ public sealed class ViewModel(
     /// </summary>
     [BindProperty(SupportsGet = true)]
     public string UrlSlug { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the raw URL slug that was requested.
+    /// </summary>
+    public string RequestedUrlSlug { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the specific revision timestamp to view (optional).
@@ -76,6 +82,26 @@ public sealed class ViewModel(
     public bool HasUrlSlugChanged { get; set; }
 
     /// <summary>
+    /// Gets the canonical article path for the displayed revision.
+    /// </summary>
+    public string DisplayedArticlePath => DisplayedRevision is null ? string.Empty : ArticleUrlHelper.BuildArticlePath(DisplayedRevision);
+
+    /// <summary>
+    /// Gets the canonical article path for the current revision.
+    /// </summary>
+    public string CurrentArticlePath => CurrentRevision is null ? string.Empty : ArticleUrlHelper.BuildArticlePath(CurrentRevision);
+
+    /// <summary>
+    /// Gets the canonical slug for the displayed revision.
+    /// </summary>
+    public string DisplayedCanonicalUrlSlug => DisplayedRevision is null ? string.Empty : ArticleUrlHelper.BuildCanonicalSlug(DisplayedRevision.UrlSlug, DisplayedRevision.Type);
+
+    /// <summary>
+    /// Gets the canonical slug for the current revision.
+    /// </summary>
+    public string CurrentCanonicalUrlSlug => CurrentRevision is null ? string.Empty : ArticleUrlHelper.BuildCanonicalSlug(CurrentRevision.UrlSlug, CurrentRevision.Type);
+
+    /// <summary>
     /// Gets or sets the list of recent authors.
     /// </summary>
     // New property to hold the recent authors as a list of (username, profilePicGuid) tuples.
@@ -97,10 +123,10 @@ public sealed class ViewModel(
         {
             return BadRequest("Invalid parameters.");
         }
-// ... (skip unchanged lines)
 
-
-        UrlSlug = UrlSlug.Replace("file:", string.Empty);
+        RequestedUrlSlug = UrlSlug;
+        string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
+        UrlSlug = LookupUrlSlug;
 
         ArticleRevision? SpecificRevision = null;
 
@@ -123,6 +149,15 @@ public sealed class ViewModel(
         }
 
         DisplayedRevision = SpecificRevision ?? CurrentRevision;
+
+        if (DisplayedRevision is not null && ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, DisplayedRevision.Type))
+        {
+            string CanonicalPath = !string.IsNullOrWhiteSpace(Revision)
+                ? ArticleUrlHelper.BuildRevisionPath(DisplayedRevision, Revision)
+                : ArticleUrlHelper.BuildArticlePath(DisplayedRevision);
+
+            return RedirectPermanent(CanonicalPath);
+        }
 
         if (DisplayedRevision is null)
         {
@@ -184,7 +219,7 @@ public sealed class ViewModel(
         if (IsPriorRevision)
         {
             HasTitleChanged = DisplayedRevision?.Title != CurrentRevision?.Title;
-            HasUrlSlugChanged = UrlSlug != CurrentRevision?.UrlSlug;
+            HasUrlSlugChanged = DisplayedRevision?.UrlSlug != CurrentRevision?.UrlSlug;
             AllowSearchEngineIndexingOfPage = false;
         }
         else

@@ -49,7 +49,7 @@ ul.categories a {
     background-color: #fff;
     min-width: 160px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1;
+    z-index: 100;
     border: 1px solid #ccc;
 }
 
@@ -67,4 +67,17 @@ ul.categories a {
 
 .article-menu[open] .menu-content {
     display: block;
+}
+
+.article-menu[open] .menu-trigger::before {
+    content: " ";
+    cursor: default;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 99;
+    background: transparent;
 }

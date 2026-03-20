@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v4
+# What AI agents should know about me -- v6
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -18,7 +18,6 @@ If you identify a significantly better, more robust, or modern approach than the
 * Ask if I want to switch to the better approach or proceed with my original request.
 
 ## Coding standards & conventions
-
 * Strong explicit typing; avoid `var` unless the type is truly obvious or required.
 * **PascalCase every identifier** (types, members, variables, parameters, generics, Razor artifacts, generated names like `App`/`Builder`).
 * Exception: simple loop counters (`i`, `j`, `k`, `w`, `h`, `x`, `y`, `z`).
@@ -69,9 +68,10 @@ If you identify a significantly better, more robust, or modern approach than the
 * Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
 * Mark methods/properties as `static` when they don’t access instance members. Prefer static helpers where feasible.
 * Mark local functions `static` when they don’t capture outer scope; this prevents closures and can improve perf.
+* Hot-Path Loops: Prefer `foreach` for general readability, but switch to `for` loops (especially over arrays/spans) on critical hot paths or low-latency scenarios to leverage .NET 10 aggressive bounds-check elimination.
 * Use the new `slnx` format over the deprecated `sln` format for solutions.
 * **Remember to use new language features when it makes sense without hurting code readability and understanding:**
-  * C# 14: extension members; modifiers on simple lambda parameters (`ref`/`in`/`out` on simple lambdas); `nameof` works with unbound generics; implicit `Span<T>`/`ReadOnlySpan<T>` conversions; partial events & partial constructors; user-defined compound assignment operators
+  * C# 14: extension members: Explicitly prefer the new `extension(Type Receiver)` syntax over legacy static classes with `this` parameters. Use modifiers on simple lambda parameters (`ref`/`in`/`out`); `nameof` works with unbound generics; implicit `Span<T>`/`ReadOnlySpan<T>` conversions.
   * C# 13: `params` on collections (e.g., `IEnumerable<T>`, `ReadOnlySpan<T>`); method-group “natural type” improvements; `ref`/`unsafe` allowed in iterators & `async` methods; `ref struct` can implement interfaces; `allows ref struct` generic constraint; partial properties & partial indexers
   * C# 12: default parameters in lambdas; inline arrays; `ref readonly` parameters; alias any type
 
@@ -129,6 +129,7 @@ If you identify a significantly better, more robust, or modern approach than the
 * **Throttling:** Use `SemaphoreSlim` to limit concurrency when using `Parallel.ForEachAsync` or manual parallelism.
 * **Producer/Consumer:** Prefer `System.Threading.Channels.Channel<T>` over `BlockingCollection` or raw locks for decoupling background work.
 * **Timers:** Use `PeriodicTimer` for async loops instead of `Thread.Sleep` or `Task.Delay` inside `while` loops.
+* **Strict HTTP Budgets:** Never rely solely on `HttpClient.Timeout`. For every outgoing request, use, e.g. `using var Cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);` and apply a specific budget: `Cts.CancelAfter(TimeSpan.FromSeconds(2));`. Pass `Cts.Token` to the HTTP method.
 
 ## Data access (EF Core 10 + SQLite)
 
@@ -170,6 +171,11 @@ If you identify a significantly better, more robust, or modern approach than the
 * **Structured Logging:** Use `Logger.BeginScope` to attach context (like `OrderId`) to a block of logs rather than manually adding it to every log message string.
 * **Minimal API Validation:** Use `builder.Services.AddValidation()` for automatic validation with `System.ComponentModel.DataAnnotations`; disable per-endpoint with `.DisableValidation()`.
 * **Server-Sent Events:** Return `TypedResults.ServerSentEvents(IAsyncEnumerable<T>, eventType)` for real-time streaming instead of polling or WebSockets when unidirectional server-to-client push is sufficient.
+* **JSON Patch:** When implementing `PATCH`, use `Microsoft.AspNetCore.JsonPatch.SystemTextJson` with Minimal APIs instead of Newtonsoft.
+* **Robust HTTP Clients:** Prefer **Typed Clients** (`services.AddHttpClient<TClient>`) over named clients for better type safety and segregation.
+  * **Mandatory DNS Rotation:** Always configure `.ConfigurePrimaryHttpMessageHandler` to set `PooledConnectionLifetime` (e.g., `TimeSpan.FromMinutes(5)`) to ensure DNS updates are respected (defaults to infinite).
+  * **Resilience:** Use `.AddStandardResilienceHandler()` (requires `Microsoft.Extensions.Http.Resilience`) to enable standard retries, circuit breakers, and hedging.
+  * **Cookies Warning:** Do **not** use `IHttpClientFactory` (or Typed Clients) if the client requires a `CookieContainer`, as pooled handlers may accidentally share cookies. Use a Singleton/Static `HttpClient` in that specific case.
 
 ## Idempotency & retries
 
@@ -183,6 +189,23 @@ If you identify a significantly better, more robust, or modern approach than the
     *   **Irreversible/High-Stakes:** Deletions, financial transfers, publishing, or changing credentials. Use "undo" windows (delayed execution), hold-to-confirm, or explicit verification modals.
     *   **Attention Limits:** Prefer pagination over infinite scroll to provide closure and respect user focus.
     *   **Contextual Checks:** Warn on missing attachments or ambiguous inputs to force a "thinking pause."
+
+## Front-End: Modern Vanilla CSS (Zero-JS & Zero-Build Strategy)
+**Rule:** Prefer native CSS and HTML features over JavaScript, polyfills, or preprocessors (no Sass/LESS).
+
+* **Architecture & Logic:** Use native nesting (`&`), `@layer` for cascade control, and `@scope` for subtree isolation. Utilize native `@function`, inline `if()`, typed attributes `attr(data-x type(<percentage>))`, and register typed vars with `@property`.
+* **Selectors:** Target parents with `:has()`, group with `:is()`, use 0-specificity resets with `:where()`, and `:focus-visible` for accessibility.
+* **Layout:** Grid/Flex + `gap`. Center via `grid` + `place-items: center` (never absolute + transform hacks). Use `subgrid`, `grid-template-areas`, `aspect-ratio`, `inset`, `width: stretch` (to fill remaining space natively), and logical properties (`margin-inline-start`, etc.).
+* **Responsive & Containers:** Use `@container` for sizes, style queries (`@container style(--x > 50%)`), and scroll-state (`@container scroll-state(stuck:top)`). Fluid typography via `clamp()`. Responsive images: `<img width="100%">` + `object-fit: cover` (no background-image hacks).
+* **Zero-JS Interactivity:**
+  * **Modals:** Native `<dialog>` with `commandfor="id"`, `command="show-modal"`, `closedby="any"` (light dismiss), and `::backdrop`.
+  * **Popovers & Tooltips:** Use `popover`, `popovertarget`, and `interestfor="tip"`, paired with Anchor Positioning (`anchor-name`, `position-anchor`, `top: anchor(bottom)`).
+  * **Carousels & Scroll:** Native `scroll-snap`, `::scroll-marker`, `::scroll-button()`, and scroll-spy via `nav a:target-current` + `scroll-target-group`. Sticky elements via `position: sticky`.
+  * **Forms:** Auto-grow textareas with `field-sizing: content`; customize native selects via `appearance: base-select` + `::picker(select)`; defer validation styling until interaction via `:user-[in]valid`; theme inputs via `accent-color`.
+* **Colors & Theming:** Use perceptually uniform `oklch` or `display-p3`. Native dark mode via `color-scheme: light dark` on `:root` + the `light-dark()` function (avoid duplicate `@media` blocks). Compute palettes dynamically via relative syntax (`oklch(from var(--brand) calc(l + 0.2) c h)`) and `color-mix()`. Store variables in `:root`.
+* **Typography:** `text-wrap: balance` (headings), `text-box: trim-both cap alphabetic` (perfect vertical centering without padding hacks), `line-clamp` (truncation), single variable fonts, `font-display: swap`, and `initial-letter` (drop caps).
+* **Animations:** View Transitions API (`document.startViewTransition()`) for state/page changes; `animation-timeline: view()` for scroll-driven FX (no `IntersectionObserver`). Stagger natively via `sibling-index()`. Use independent `translate`/`rotate`/`scale`. Animate `display` or to/from `auto` heights via `@starting-style`, `transition-behavior: allow-discrete`, and `interpolate-size: allow-keywords`.
+* **Visuals & Perf:** `backdrop-filter: blur()` (glass), `corner-shape` (squircles/notches), and responsive percentage-based `clip-path: shape()`. Stabilize layout with `scrollbar-gutter: stable`; stop scroll chaining via `overscroll-behavior: contain`. Lazy render off-screen elements with `content-visibility: auto` + `contain-intrinsic-size`.
 ---
 
 # How I want AI agents to respond

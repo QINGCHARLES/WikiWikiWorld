@@ -12,7 +12,7 @@
 <article>
 	<div class="history-container">
 		<div class="history-header">
-			<a href="/@Model.UrlSlug" class="back-link">← Back to Article</a>
+			<a href="@Model.CanonicalArticlePath" class="back-link">← Back to Article</a>
 			<h2 class="article-title">@Model.ArticleTitle</h2>
 			<p class="revision-count">@Model.ArticleRevisions.Count @(Model.ArticleRevisions.Count == 1 ? "revision" : "revisions")</p>
 		</div>
@@ -26,7 +26,7 @@
 				@foreach (ArticleRevision Revision in Model.ArticleRevisions)
 				{
 					string RevisionTimestamp = ArticleHistoryModel.FormatRevisionTimestamp(Revision.DateCreated);
-					string RevisionUrl = $"/{Model.UrlSlug}/revision/{RevisionTimestamp}";
+					string RevisionUrl = WikiWikiWorld.Web.Helpers.ArticleUrlHelper.BuildRevisionPath(Revision, RevisionTimestamp);
 					string RevisionDateFormatted = Revision.DateCreated.ToString("dd MMMM yyyy, HH:mm");
 					string RelativeTime = ArticleHistoryModel.GetRelativeTime(Revision.DateCreated);
 					string? Username = Model.UserNames.TryGetValue(Revision.CreatedByUserId, out string? name) ? name : null;

@@ -1,0 +1,38 @@
+@page
+@model WikiWikiWorld.Web.Pages.Article.LinksModel
+@{
+    ViewData["Title"] = $"Pages that link to \"{Model.CurrentArticle?.Title}\"";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.CurrentArticle?.DisplayTitle) ? Model.CurrentArticle?.Title : Model.CurrentArticle?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
+            <p class="lead">
+                The following pages link here:
+            </p>
+
+            @if (Model.Backlinks.Count > 0)
+            {
+                <ul class="list-group">
+                    @foreach (var Link in Model.Backlinks)
+                    {
+                        <li class="list-group-item">
+                            <a href="@WikiWikiWorld.Web.Helpers.ArticleUrlHelper.BuildArticlePath(Link)">@Link.Title</a>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No pages currently link to this article.
+                </div>
+            }
+            
+            <div class="mt-3">
+                 <a href="@Model.CanonicalArticlePath" class="btn btn-secondary">Return to Article</a>
+            </div>
+        </div>
+    </div>
+</div>

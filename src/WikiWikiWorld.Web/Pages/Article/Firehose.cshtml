@@ -1,5 +1,6 @@
 ﻿@page
 @model WikiWikiWorld.Web.Pages.Article.FirehoseModel
+@using WikiWikiWorld.Web.Helpers
 @{
 	ViewData["Title"] = "Recent Article Revisions";
 }
@@ -34,14 +35,7 @@
 
 						<tr>
 							<td>
-								@if (Revision.Type == WikiWikiWorld.Data.Models.ArticleType.File)
-								{
-									<a href="/file:@Revision.UrlSlug">@Revision.Title</a>
-								}
-								else
-								{
-									<a href="/@Revision.UrlSlug">@Revision.Title</a>
-								}
+								<a href="@ArticleUrlHelper.BuildArticlePath(Revision)">@Revision.Title</a>
 							</td>
 
 							<td>
@@ -55,7 +49,7 @@
 								}
 							</td>
 							<td>
-								<a href="/@Revision.UrlSlug/revision/@RevisionTimestamp">
+								<a href="@ArticleUrlHelper.BuildRevisionPath(Revision, RevisionTimestamp)">
 									@Revision.DateCreated.ToString("dd MMM yyyy HH:mm")
 								</a>
 							</td>

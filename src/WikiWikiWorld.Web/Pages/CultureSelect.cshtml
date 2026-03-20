@@ -52,7 +52,10 @@
 <body>
     <h1>Magazedia</h1>
     <nav class="languages">
-        <a href="https://en.magazedia.com">English</a>
+        @foreach (WikiWikiWorld.Web.Pages.CultureLink CultureLink in Model.CultureLinks)
+        {
+            <a href="@CultureLink.Url">@CultureLink.DisplayName</a>
+        }
     </nav>
 </body>
 </html>

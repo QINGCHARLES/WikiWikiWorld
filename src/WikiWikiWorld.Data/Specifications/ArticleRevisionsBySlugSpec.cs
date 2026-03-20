@@ -15,8 +15,7 @@ public sealed class ArticleRevisionsBySlugSpec : Specification<ArticleRevision>
 	/// <param name="IsCurrent">Whether to filter by current revision. Default is true.</param>
 	public ArticleRevisionsBySlugSpec(string UrlSlug, bool? IsCurrent = true)
 	{
-		Query.AsNoTracking()
-			 .Where(x => x.UrlSlug == UrlSlug);
+		Query.Where(x => x.UrlSlug == UrlSlug);
 
 		if (IsCurrent.HasValue)
 		{

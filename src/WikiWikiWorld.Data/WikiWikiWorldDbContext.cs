@@ -68,6 +68,21 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	public DbSet<DownloadUrl> DownloadUrls { get; set; } = null!;
 
 	/// <summary>
+	/// Gets or sets the copyright statuses.
+	/// </summary>
+	public DbSet<CopyrightStatus> CopyrightStatuses { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the download URL statuses.
+	/// </summary>
+	public DbSet<DownloadUrlStatus> DownloadUrlStatuses { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the download URL notes.
+	/// </summary>
+	public DbSet<DownloadUrlNote> DownloadUrlNotes { get; set; } = null!;
+
+	/// <summary>
 	/// Gets or sets the article talk subjects.
 	/// </summary>
 	public DbSet<ArticleTalkSubject> ArticleTalkSubjects { get; set; } = null!;
@@ -150,6 +165,22 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasQueryFilter(SiteFilter, e => e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.HashSha256 });
+		});
+
+		Builder.Entity<CopyrightStatus>(b =>
+		{
+			b.HasKey(e => e.Id);
+		});
+
+		Builder.Entity<DownloadUrlStatus>(b =>
+		{
+			b.HasKey(e => e.Id);
+		});
+
+		Builder.Entity<DownloadUrlNote>(b =>
+		{
+			b.HasKey(e => e.Id);
+			b.HasIndex(e => e.DownloadUrlId);
 		});
 
 		Builder.Entity<ArticleTalkSubject>(b =>

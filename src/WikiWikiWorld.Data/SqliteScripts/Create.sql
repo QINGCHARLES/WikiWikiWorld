@@ -145,24 +145,53 @@ CREATE INDEX IX_ArticleCultureLinks_CreatedByUserId ON ArticleCultureLinks (Crea
 CREATE INDEX IX_ArticleCultureLinks_DeletedByUserId ON ArticleCultureLinks (DeletedByUserId);
 CREATE INDEX IX_ArticleCultureLinks_SiteId_CanonicalArticleId ON ArticleCultureLinks (SiteId, CanonicalArticleId);
 
+CREATE TABLE CopyrightStatus (
+    Id INTEGER NOT NULL CONSTRAINT PK_CopyrightStatus PRIMARY KEY AUTOINCREMENT,
+    Status TEXT NOT NULL
+);
+
+CREATE TABLE DownloadUrlStatus (
+    Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrlStatus PRIMARY KEY AUTOINCREMENT,
+    Status TEXT NOT NULL
+);
+
 CREATE TABLE DownloadUrls (
     Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrls PRIMARY KEY AUTOINCREMENT,
     SiteId INTEGER NOT NULL,
     HashSha256 TEXT NOT NULL,
     Filename TEXT NOT NULL,
+    OriginalFilename TEXT NOT NULL,
     MimeType TEXT NOT NULL,
     FileSizeBytes INTEGER NOT NULL,
     DownloadUrls TEXT NULL,
     Quality INTEGER NULL,
     NeedsOcr INTEGER NULL,
     IsComplete INTEGER NULL,
-    CreatedByUserId TEXT NOT NULL,
+    Description TEXT NULL,
+    FilenameChanged INTEGER NOT NULL,
+    NeedsRedeployment INTEGER NOT NULL,
+    CopyrightStatusId INTEGER NULL,
+    DownloadUrlStatusId INTEGER NULL,
+    UploadedByUserId TEXT NOT NULL,
     DateCreated TEXT NOT NULL,
     DateModified TEXT NULL,
     DateDeleted TEXT NULL
 );
 
 CREATE INDEX IX_DownloadUrls_SiteId_HashSha256 ON DownloadUrls (SiteId, HashSha256);
+
+CREATE TABLE DownloadUrlNotes (
+    Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrlNotes PRIMARY KEY AUTOINCREMENT,
+    DownloadUrlId INTEGER NOT NULL,
+    UserId TEXT NOT NULL,
+    Culture TEXT NOT NULL,
+    Text TEXT NOT NULL,
+    DateCreated TEXT NOT NULL,
+    CONSTRAINT FK_DownloadUrlNotes_DownloadUrls_DownloadUrlId FOREIGN KEY (DownloadUrlId) REFERENCES DownloadUrls (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_DownloadUrlNotes_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
+);
+
+CREATE INDEX IX_DownloadUrlNotes_DownloadUrlId ON DownloadUrlNotes (DownloadUrlId);
 
 CREATE TABLE ArticleTalkSubjects (
     Id INTEGER NOT NULL CONSTRAINT PK_ArticleTalkSubjects PRIMARY KEY AUTOINCREMENT,

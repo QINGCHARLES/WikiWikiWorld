@@ -20,7 +20,7 @@ html[data-theme="dark"] { color-scheme: dark; }
     --color-background-footer: light-dark(#333333, #111111);
     --color-title: light-dark(#222222, #f5f5f5);
 
-    --font-family-san-serif: system-ui, sans-serif;
+    --font-family-san-serif: ui-sans-serif, "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     --font-family-serif: "miller-text", Charter, serif;
 }
 

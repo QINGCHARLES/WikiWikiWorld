@@ -56,9 +56,39 @@ public sealed record DownloadUrl
     public bool? IsComplete { get; init; }
 
     /// <summary>
-    /// Gets the user identifier who created this download URL.
+    /// Gets the original filename before any renaming.
     /// </summary>
-    public Guid CreatedByUserId { get; init; }
+    public required string OriginalFilename { get; init; }
+
+    /// <summary>
+    /// Gets the description of the download, if any.
+    /// </summary>
+    public string? Description { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the filename has been changed from the original.
+    /// </summary>
+    public bool FilenameChanged { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether this download needs to be redeployed.
+    /// </summary>
+    public bool NeedsRedeployment { get; init; }
+
+    /// <summary>
+    /// Gets the copyright status identifier, if known.
+    /// </summary>
+    public long? CopyrightStatusId { get; init; }
+
+    /// <summary>
+    /// Gets the download URL status identifier, if known.
+    /// </summary>
+    public long? DownloadUrlStatusId { get; init; }
+
+    /// <summary>
+    /// Gets the user identifier who uploaded this download URL.
+    /// </summary>
+    public Guid UploadedByUserId { get; init; }
 
     /// <summary>
     /// Gets the date and time when this download URL was created.

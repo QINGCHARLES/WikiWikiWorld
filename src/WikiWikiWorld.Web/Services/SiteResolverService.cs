@@ -25,7 +25,7 @@ public sealed class SiteResolverService
 	/// <summary>
 	/// Resolves the site ID and culture from the current request.
 	/// </summary>
-	/// <returns>A tuple containing the site ID and culture. Culture may be empty for culture-selector root domains.</returns>
+	/// <returns>A tuple containing the site ID and the resolved content culture.</returns>
 	/// <exception cref="InvalidOperationException">Thrown when the HTTP context is missing or no matching domain is found.</exception>
 	public (int SiteId, string Culture) ResolveSiteAndCulture()
 	{
@@ -57,14 +57,6 @@ public sealed class SiteResolverService
 			Culture = MatchingSite.DefaultCulture;
 		}
 
-		// For culture-selector root domains without DefaultCulture, return empty culture
-		// This allows the CultureSelect page to render on the root domain
-		if (string.IsNullOrEmpty(Culture) && MatchingSite.RootDomainIsCultureSelectorOnly)
-		{
-			return (MatchingSite.SiteId, string.Empty);
-		}
-
-		// For non-culture-selector sites, culture is required
 		if (string.IsNullOrEmpty(Culture))
 		{
 			throw new InvalidOperationException($"No culture specified in URL and no default culture configured for site: {MatchingSite.SiteId}");

@@ -28,7 +28,7 @@
 	<div class="alert alert-info">
 		<strong>You are viewing the current revision of this article.</strong><br>
 		To see the canonical URL, visit:
-		<a href="/@Model.CurrentRevision?.UrlSlug" class="btn btn-sm btn-primary">Go to Latest Version</a>
+		<a href="@Model.CurrentArticlePath" class="btn btn-sm btn-primary">Go to Latest Version</a>
 	</div>
 }
 
@@ -38,7 +38,7 @@
 		<strong>You're viewing a prior revision.</strong><br>
 		This revision was published on <strong>@Model.DisplayedRevision.DateCreated.ToString("dd MMMM yyyy HH:mm")</strong>.<br>
 		The current version was published on <strong>@Model.CurrentRevision.DateCreated.ToString("dd MMMM yyyy HH:mm")</strong>.
-		<a href="/@Model.CurrentRevision.UrlSlug" class="btn btn-sm btn-primary">View Current</a>
+		<a href="@Model.CurrentArticlePath" class="btn btn-sm btn-primary">View Current</a>
 
 		@if (Model.HasTitleChanged)
 		{
@@ -53,9 +53,9 @@
 		{
 			<p class="text-danger">
 				<strong>Note:</strong> The URL of this article has changed from
-				"<strong>@Model.UrlSlug</strong>" to
-				"<strong>@Model.CurrentRevision.UrlSlug</strong>".<br>
-				<a href="/@Model.CurrentRevision.UrlSlug" class="btn btn-sm btn-secondary">Go to New URL</a>
+				"<strong>@Model.DisplayedCanonicalUrlSlug</strong>" to
+				"<strong>@Model.CurrentCanonicalUrlSlug</strong>".<br>
+				<a href="@Model.CurrentArticlePath" class="btn btn-sm btn-secondary">Go to New URL</a>
 			</p>
 		}
 	</div>
@@ -81,8 +81,9 @@ else if(Model.DisplayedRevision is not null)
 		<details class="article-menu">
 			<summary class="menu-trigger">⋮</summary>
 			<div class="menu-content">
-				<a href="@Model.UrlSlug/edit" rel="nofollow">Edit Article</a>
-				<a href="@Model.UrlSlug/history" rel="nofollow">View Edit History</a>
+				<a href="@($"{Model.DisplayedArticlePath}/edit")" rel="nofollow">Edit Article</a>
+				<a href="@($"{Model.DisplayedArticlePath}/history")" rel="nofollow">View Edit History</a>
+				<a href="@($"{Model.DisplayedArticlePath}/links")" rel="nofollow">What Links Here</a>
 				<a href="#">Delete Article</a>
 				<a href="#">Watch Article</a>
 				<a href="#">Report Article</a>

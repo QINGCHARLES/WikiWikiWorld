@@ -4,6 +4,7 @@ using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
+using WikiWikiWorld.Web.Helpers;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
@@ -20,6 +21,11 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
     /// </summary>
     [BindProperty(SupportsGet = true)]
     public string UrlSlug { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the canonical article path for the current article revision.
+    /// </summary>
+    public string CanonicalArticlePath { get; private set; } = string.Empty;
 
     // List of all article revisions.
     /// <summary>
@@ -54,8 +60,12 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
             return BadRequest("Invalid parameters.");
         }
 
+        string RequestedUrlSlug = UrlSlug;
+        string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
+        UrlSlug = LookupUrlSlug;
+
         // Retrieve all revisions for the article.
-        ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: null);
+        ArticleRevisionsBySlugSpec Spec = new(LookupUrlSlug, IsCurrent: null);
         ArticleRevisions = await Context.ArticleRevisions.WithSpecification(Spec).ToListAsync();
 
         if (ArticleRevisions.Count == 0)
@@ -63,8 +73,15 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
             return NotFound("No revisions found for this article.");
         }
 
-        // Get the article title from the current revision
-        ArticleTitle = ArticleRevisions.FirstOrDefault(r => r.IsCurrent)?.Title ?? ArticleRevisions[0].Title;
+        ArticleRevision CurrentRevision = ArticleRevisions.FirstOrDefault(r => r.IsCurrent) ?? ArticleRevisions[0];
+
+        if (ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, CurrentRevision.Type))
+        {
+            return RedirectPermanent(ArticleUrlHelper.BuildRelativePath(CurrentRevision, "history"));
+        }
+
+        CanonicalArticlePath = ArticleUrlHelper.BuildArticlePath(CurrentRevision);
+        ArticleTitle = CurrentRevision.Title;
 
         // Fetch user information for all revision authors
         List<Guid> UserIds = ArticleRevisions.Select(r => r.CreatedByUserId).Distinct().ToList();
