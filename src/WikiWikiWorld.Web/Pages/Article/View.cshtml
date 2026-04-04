@@ -1,7 +1,18 @@
-﻿@page
+@page
 @model ViewModel
 @{
 	ViewData["Title"] = Model.DisplayedRevision?.DisplayTitle ?? Model.DisplayedRevision?.Title ?? "Article Not Found";
+}
+@functions {
+	static string FormatFileSize(long SizeBytes)
+	{
+		return SizeBytes switch
+		{
+			>= 1_048_576 => $"{SizeBytes / 1_048_576.0:F1} MB",
+			>= 1_024 => $"{SizeBytes / 1_024.0:F1} KB",
+			_ => $"{SizeBytes} bytes"
+		};
+	}
 }
 @* <div class="image-wrapper">
 	<img class="topp" src="/sitefiles/test-header.png" />
@@ -94,22 +105,48 @@ else if(Model.DisplayedRevision is not null)
 
 <article>
 
-
 	@section Scripts {
 		<script src="~/js/article-view.js" asp-append-version="true"></script>
 	}
 
-
-
-
-
-
-
 	@if (Model.DisplayedRevision is not null)
 	{
+		@if (!string.IsNullOrWhiteSpace(Model.FileImageUrl))
+		{
+			<section class="file-info" id="file-info-panel">
+				<figure class="file-info-figure">
+					<a href="@Model.FileImageUrl">
+						<img src="@Model.FileImageUrl"
+							 alt="@(Model.DisplayedRevision.DisplayTitle ?? Model.DisplayedRevision.Title)"
+							 class="file-info-image"
+							 loading="eager" />
+					</a>
+				</figure>
+				<dl class="file-info-metadata">
+					<div class="file-info-row">
+						<dt>Filename</dt>
+						<dd>@Model.FileOriginalFilename</dd>
+					</div>
+					<div class="file-info-row">
+						<dt>Type</dt>
+						<dd>@Model.FileMimeType</dd>
+					</div>
+					@if (Model.FileWidthPx > 0 && Model.FileHeightPx > 0)
+					{
+						<div class="file-info-row">
+							<dt>Dimensions</dt>
+							<dd>@Model.FileWidthPx &times; @Model.FileHeightPx px</dd>
+						</div>
+					}
+					<div class="file-info-row">
+						<dt>Size</dt>
+						<dd>@FormatFileSize(Model.FileSizeBytes)</dd>
+					</div>
+				</dl>
+			</section>
+		}
 
 		@Html.Raw(Model.ArticleRevisionHtml)
-
 
 		@if(Model.IsPriorRevision)
 		{
@@ -119,7 +156,6 @@ else if(Model.DisplayedRevision is not null)
 				</small>
 			</p>
 		}
-
 
 	}
 	else

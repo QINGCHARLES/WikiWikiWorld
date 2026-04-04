@@ -26,12 +26,14 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="UserManager">The user manager.</param>
 /// <param name="MarkdownPipelineFactory">The markdown pipeline factory.</param>
 /// <param name="SiteConfiguration">The site configuration options, used to resolve the current site name for stub banners.</param>
+/// <param name="FileStorageOptions">The file storage configuration options.</param>
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     UserManager<User> UserManager,
     IMarkdownPipelineFactory MarkdownPipelineFactory,
-    IOptions<SiteConfiguration> SiteConfiguration) : BasePageModel(SiteResolverService)
+    IOptions<SiteConfiguration> SiteConfiguration,
+    IOptions<FileStorageOptions> FileStorageOptions) : BasePageModel(SiteResolverService)
 {
     /// <summary>
     /// Gets or sets the URL slug of the article.
@@ -115,6 +117,36 @@ public sealed class ViewModel(
     /// Gets or sets the categories associated with the article.
     /// </summary>
     public IReadOnlyList<Category> Categories { get; set; } = Array.Empty<Category>();
+
+    /// <summary>
+    /// Gets the URL of the file image, if the article is a file with an associated image.
+    /// </summary>
+    public string? FileImageUrl { get; private set; }
+
+    /// <summary>
+    /// Gets the width of the file image in pixels.
+    /// </summary>
+    public int FileWidthPx { get; private set; }
+
+    /// <summary>
+    /// Gets the height of the file image in pixels.
+    /// </summary>
+    public int FileHeightPx { get; private set; }
+
+    /// <summary>
+    /// Gets the MIME type of the file.
+    /// </summary>
+    public string? FileMimeType { get; private set; }
+
+    /// <summary>
+    /// Gets the original filename of the uploaded file.
+    /// </summary>
+    public string? FileOriginalFilename { get; private set; }
+
+    /// <summary>
+    /// Gets the file size in bytes.
+    /// </summary>
+    public long FileSizeBytes { get; private set; }
 
     /// <summary>
     /// Handles the GET request to view the article.
@@ -271,6 +303,33 @@ public sealed class ViewModel(
         Writer.Flush();
         
         ArticleRevisionHtml = CleanupAndStyleArticle(Writer.ToString());
+
+        // Fetch file metadata if this is a file article with an associated file
+        if (DisplayedRevision.Type == ArticleType.File && DisplayedRevision.CanonicalFileId.HasValue)
+        {
+            FileRevision? CurrentFile = await Context.FileRevisions
+                .AsNoTracking()
+                .Where(f => f.CanonicalFileId == DisplayedRevision.CanonicalFileId.Value && f.IsCurrent == true)
+                .FirstOrDefaultAsync(CancellationToken);
+
+            if (CurrentFile is not null)
+            {
+                string FileExtension = Path.GetExtension(CurrentFile.Filename);
+                FileImageUrl = $"/sitefiles/{SiteId}/images/{CurrentFile.CanonicalFileId}{FileExtension}";
+                FileMimeType = CurrentFile.MimeType;
+                FileOriginalFilename = CurrentFile.Filename;
+                FileSizeBytes = CurrentFile.FileSizeBytes;
+
+                // Read image dimensions from the physical file
+                string PhysicalFilePath = Path.Combine(
+                    FileStorageOptions.Value.SiteFilesPath,
+                    SiteId.ToString(),
+                    "images",
+                    $"{CurrentFile.CanonicalFileId}{FileExtension}");
+
+                (FileWidthPx, FileHeightPx) = ImageDimensionReader.ReadDimensions(PhysicalFilePath);
+            }
+        }
 
         return Page();
     }
