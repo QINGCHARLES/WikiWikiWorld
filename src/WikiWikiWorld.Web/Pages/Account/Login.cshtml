@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model WikiWikiWorld.Web.Pages.Account.LoginModel
 @{
 	ViewData["Title"] = "Login";
@@ -11,6 +11,7 @@
 <article>
 	<div>
 		<form method="post">
+			<input type="hidden" asp-for="ReturnUrl" />
 			<div class="md3-field md3-filled">
 				<input asp-for="Input.UserName" placeholder=" " />
 				<label asp-for="Input.UserName"></label>

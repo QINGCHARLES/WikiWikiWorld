@@ -88,39 +88,44 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
             return Unauthorized("User ID not found in token.");
         }
 
-        await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CancellationToken);
+        IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
 
-        ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-        ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
-
-        if (CurrentRevision is not null)
+        await Strategy.ExecuteAsync(async CT =>
         {
-            CurrentRevision.IsCurrent = false;
-            Context.ArticleRevisions.Update(CurrentRevision);
-        }
+            await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
 
-        Guid CanonicalArticleId = CurrentRevision?.CanonicalArticleId ?? Model.CanonicalArticleId ?? Guid.NewGuid();
+            ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
+            ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CT);
 
-        ArticleRevision ArticleRevision = new()
-        {
-            CanonicalArticleId = CanonicalArticleId,
-            SiteId = SiteId,
-            Culture = Culture,
-            Title = Model.Title,
-            DisplayTitle = Model.DisplayTitle,
-            UrlSlug = UrlSlug,
-            Type = Model.Type,
-            CanonicalFileId = Model.CanonicalFileId,
-            Text = Model.Text,
-            RevisionReason = Model.RevisionReason,
-            CreatedByUserId = ParsedUserId,
-            DateCreated = DateTimeOffset.UtcNow,
-            IsCurrent = true
-        };
+            if (CurrentRevision is not null)
+            {
+                CurrentRevision.IsCurrent = false;
+                Context.ArticleRevisions.Update(CurrentRevision);
+            }
 
-        Context.ArticleRevisions.Add(ArticleRevision);
-        await Context.SaveChangesAsync(CancellationToken);
-        await Transaction.CommitAsync(CancellationToken);
+            Guid CanonicalArticleId = CurrentRevision?.CanonicalArticleId ?? Model.CanonicalArticleId ?? Guid.NewGuid();
+
+            ArticleRevision ArticleRevision = new()
+            {
+                CanonicalArticleId = CanonicalArticleId,
+                SiteId = SiteId,
+                Culture = Culture,
+                Title = Model.Title,
+                DisplayTitle = Model.DisplayTitle,
+                UrlSlug = UrlSlug,
+                Type = Model.Type,
+                CanonicalFileId = Model.CanonicalFileId,
+                Text = Model.Text,
+                RevisionReason = Model.RevisionReason,
+                CreatedByUserId = ParsedUserId,
+                DateCreated = DateTimeOffset.UtcNow,
+                IsCurrent = true
+            };
+
+            Context.ArticleRevisions.Add(ArticleRevision);
+            await Context.SaveChangesAsync(CT);
+            await Transaction.CommitAsync(CT);
+        }, CancellationToken);
 
         return Ok("Article revision updated successfully.");
     }

@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v6
+# What AI agents should know about me -- v7
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -20,7 +20,7 @@ If you identify a significantly better, more robust, or modern approach than the
 ## Coding standards & conventions
 * Strong explicit typing; avoid `var` unless the type is truly obvious or required.
 * **PascalCase every identifier** (types, members, variables, parameters, generics, Razor artifacts, generated names like `App`/`Builder`).
-* Exception: simple loop counters (`i`, `j`, `k`, `w`, `h`, `x`, `y`, `z`).
+* Exception: simple loop counters (`i`, `j`, `w`, `h`, `x`, `y`, `z`) and other single character variables such as lambda parameters.
 * **Units in variable names:** Always include units in variable/parameter/property names when the type doesn't inherently express them:
   * Time: `DelaySeconds`, `TimeoutMs`, `DurationMinutes` (not just `Delay`, `Timeout`, `Duration`)
   * Size/Memory: `BufferSizeKb`, `MaxMemoryMb`, `FileSizeBytes` (not just `BufferSize`, `MaxMemory`, `FileSize`)
@@ -211,7 +211,7 @@ If you identify a significantly better, more robust, or modern approach than the
 # How I want AI agents to respond
 
 * Provide the **smallest complete** snippet/method/delegate; full program **only on request**.
-* Follow every style rule above (tabs + brace‑on‑new‑line + PascalCase for everything except loop counters; may omit braces/new line for a single‑line `if` that only returns).
+* Follow every style rule above (tabs + brace‑on‑new‑line + PascalCase for everything except loop counters and single‑character variables; may omit braces/new line for a single‑line `if` that only returns).
 * Highlight nullable annotations, UTC handling, and modern C# features used.
 * Razor Pages: show paired `.cshtml` + `.cshtml.cs` fragments together.
 * Front‑end examples: plain CSS & JS—no frameworks.
@@ -222,6 +222,6 @@ If you identify a significantly better, more robust, or modern approach than the
 
 ## Self‑check (for agents)
 
-* Validate compliance with every bullet before sending. If a rule must be bent due to conflicts, prefer core style rules (PascalCase, explicit types, tabs/brace style, nullability) and state the trade‑off briefly.
-* Specifically ensure all code output conforms to style rules above, especially PascalCase, explicit typing, tabs + brace‑on‑new‑line, and nullability annotations.
+* Validate compliance with every bullet before sending. If a rule must be bent due to conflicts, prefer core style rules (PascalCase rules, explicit types, tabs/brace style, nullability) and state the trade‑off briefly.
+* Specifically ensure all code output conforms to style rules above, especially PascalCase rules, explicit typing, tabs + brace‑on‑new‑line, and nullability annotations.
 * After changes, ensure the project compiles and builds cleanly with no warnings/errors.

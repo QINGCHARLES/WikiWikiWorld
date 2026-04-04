@@ -1,4 +1,4 @@
-﻿using AngleSharp.Dom;
+using AngleSharp.Dom;
 using Markdig;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Markdig.Syntax;
 using System.IO;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Web.Services;
 
@@ -23,11 +25,13 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="UserManager">The user manager.</param>
 /// <param name="MarkdownPipelineFactory">The markdown pipeline factory.</param>
+/// <param name="SiteConfiguration">The site configuration options, used to resolve the current site name for stub banners.</param>
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     UserManager<User> UserManager,
-    IMarkdownPipelineFactory MarkdownPipelineFactory) : BasePageModel(SiteResolverService)
+    IMarkdownPipelineFactory MarkdownPipelineFactory,
+    IOptions<SiteConfiguration> SiteConfiguration) : BasePageModel(SiteResolverService)
 {
     /// <summary>
     /// Gets or sets the URL slug of the article.
@@ -238,6 +242,10 @@ public sealed class ViewModel(
         await PublicationIssueInfoboxExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
         await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
         await DownloadsBoxExtension.EnrichAsync(Document, Context, SiteId, CancellationToken);
+
+        SiteInfo? CurrentSite = SiteConfiguration.Value.Sites.FirstOrDefault(S => S.SiteId == SiteId);
+        string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(DisplayedRevision!)}/edit";
+        StubExtension.Enrich(Document, CurrentSite?.SiteName ?? string.Empty, EditUrl);
 
         // Extract metadata and reprocess content
         Categories = CategoryExtension.GetCategories(Document);

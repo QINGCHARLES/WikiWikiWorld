@@ -39,13 +39,14 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 		HeaderImageExtension HeaderImageExt = new();
 		DownloadsBoxExtension DownloadsBoxExt = new();
 		PullQuoteExtension PullQuoteExt = new();
-		
+
 		CategoryExtension CategoryExt = new();
 		FootnoteExtension FootnoteExt = new();
 		CitationExtension CitationExt = new();
 
 		PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
 		CoverGridExtension CoverGridExt = new();
+		StubExtension StubExt = new();
 
 		MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
 			.Use(ShortDescExt)
@@ -58,6 +59,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(CoverGridExt)
 			.Use(DownloadsBoxExt)
 			.Use(PullQuoteExt)
+			.Use(StubExt)
 			.UseAdvancedExtensions();
 
 		return Builder.Build();

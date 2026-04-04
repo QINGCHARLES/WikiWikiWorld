@@ -33,10 +33,18 @@ public sealed class LoginModel(
 	public required LoginInputModel Input { get; set; }
 
 	/// <summary>
+	/// Gets or sets the URL to redirect to after a successful login.
+	/// </summary>
+	[BindProperty(SupportsGet = true)]
+	public string? ReturnUrl { get; set; }
+
+	/// <summary>
 	/// Handles the GET request to display the login page.
 	/// </summary>
-	public void OnGet()
+	/// <param name="ReturnUrl">The URL to redirect to after login.</param>
+	public void OnGet(string? ReturnUrl = null)
 	{
+		this.ReturnUrl = ReturnUrl;
 		ViewData["SiteId"] = SiteId;
 		ViewData["Culture"] = Culture;
 	}
@@ -44,7 +52,7 @@ public sealed class LoginModel(
 	/// <summary>
 	/// Handles the POST request to authenticate the user.
 	/// </summary>
-	/// <returns>A redirect to the home page on success, or the page with errors on failure.</returns>
+	/// <returns>A redirect to <see cref="ReturnUrl"/> (or the home page) on success, or the page with errors on failure.</returns>
 	public async Task<IActionResult> OnPostAsync()
 	{
 		if (!ModelState.IsValid)
@@ -75,6 +83,8 @@ public sealed class LoginModel(
 		{
 			// Ensure user article exists for DM inbox
 			await EnsureUserArticleExistsAsync(TargetUser);
+			if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+				return LocalRedirect(ReturnUrl);
 			return RedirectToPage("/Index");
 		}
 		else if (Result.IsLockedOut)

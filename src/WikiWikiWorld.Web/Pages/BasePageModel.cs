@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace WikiWikiWorld.Web.Configuration
@@ -23,6 +23,12 @@ namespace WikiWikiWorld.Web.Configuration
 		/// Gets or sets the unique identifier for the site.
 		/// </summary>
 		public int SiteId { get; set; }
+
+		/// <summary>
+		/// Gets or sets the display name of the site.
+		/// Used in stub banners and other user-facing messages.
+		/// </summary>
+		public string SiteName { get; set; } = string.Empty;
 
 		/// <summary>
 		/// Gets or sets the default culture code for the site.
@@ -87,7 +93,7 @@ namespace WikiWikiWorld.Web.Pages
 		/// <summary>
 		/// Gets or sets the URL of the header image for the page.
 		/// </summary>
-		public string? HeaderImage { get; set; } // Added property
+		public string? HeaderImage { get; set; }
 
 		/// <summary>
 		/// Gets a value indicating whether the page can execute on a culture-selector root domain without a content culture.

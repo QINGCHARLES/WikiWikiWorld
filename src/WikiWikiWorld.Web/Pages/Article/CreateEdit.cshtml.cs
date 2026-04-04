@@ -342,69 +342,80 @@ public sealed class CreateEditModel(
 
         try
         {
-            await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CancellationToken);
+            IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
 
-            ArticleRevision? ExistingArticleInsideTransaction = await Context.ArticleRevisions
-                .AsNoTracking()
-                .WithSpecification(Spec)
-                .FirstOrDefaultAsync(CancellationToken);
-
-            if (ExistingArticleInsideTransaction is not null)
+            await Strategy.ExecuteAsync(async CT =>
             {
-                CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
-                ErrorMessage = "An article with this URL slug already exists.";
-                return Page();
-            }
+                await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
 
-            if (CanonicalFileId.HasValue &&
-                OriginalFileName is not null &&
-                UploadedContentType is not null)
-            {
-                FileRevision NewFile = new()
+                ArticleRevision? ExistingArticleInsideTransaction = await Context.ArticleRevisions
+                    .AsNoTracking()
+                    .WithSpecification(Spec)
+                    .FirstOrDefaultAsync(CT);
+
+                if (ExistingArticleInsideTransaction is not null)
                 {
-                    CanonicalFileId = CanonicalFileId.Value,
-                    Type = FileType.Image2D,
-                    Filename = OriginalFileName,
-                    MimeType = UploadedContentType,
-                    FileSizeBytes = UploadedFileSizeBytes,
-                    Source = null,
-                    RevisionReason = "Initial upload",
-                    SourceAndRevisionReasonCulture = Culture,
+                    CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+                    throw new InvalidOperationException("An article with this URL slug already exists.");
+                }
+
+                if (CanonicalFileId.HasValue &&
+                    OriginalFileName is not null &&
+                    UploadedContentType is not null)
+                {
+                    FileRevision NewFile = new()
+                    {
+                        CanonicalFileId = CanonicalFileId.Value,
+                        Type = FileType.Image2D,
+                        Filename = OriginalFileName,
+                        MimeType = UploadedContentType,
+                        FileSizeBytes = UploadedFileSizeBytes,
+                        Source = null,
+                        RevisionReason = "Initial upload",
+                        SourceAndRevisionReasonCulture = Culture,
+                        CreatedByUserId = CurrentUserId,
+                        DateCreated = DateTimeOffset.UtcNow,
+                        IsCurrent = true
+                    };
+
+                    Context.FileRevisions.Add(NewFile);
+                }
+
+                ArticleRevision NewArticle = new()
+                {
+                    CanonicalArticleId = CanonicalArticleId,
+                    SiteId = SiteId,
+                    Culture = Culture,
+                    Title = Title,
+                    DisplayTitle = DisplayTitle,
+                    UrlSlug = UrlSlug!,
+                    Type = SelectedType,
+                    CanonicalFileId = CanonicalFileId,
+                    Text = ArticleText,
+                    RevisionReason = "New article creation",
                     CreatedByUserId = CurrentUserId,
                     DateCreated = DateTimeOffset.UtcNow,
                     IsCurrent = true
                 };
 
-                Context.FileRevisions.Add(NewFile);
-            }
+                Context.ArticleRevisions.Add(NewArticle);
+                await Context.SaveChangesAsync(CT);
 
-            ArticleRevision NewArticle = new()
-            {
-                CanonicalArticleId = CanonicalArticleId,
-                SiteId = SiteId,
-                Culture = Culture,
-                Title = Title,
-                DisplayTitle = DisplayTitle,
-                UrlSlug = UrlSlug!,
-                Type = SelectedType,
-                CanonicalFileId = CanonicalFileId,
-                Text = ArticleText,
-                RevisionReason = "New article creation",
-                CreatedByUserId = CurrentUserId,
-                DateCreated = DateTimeOffset.UtcNow,
-                IsCurrent = true
-            };
+                if (TemporaryFilePath is not null && FinalFilePath is not null)
+                {
+                    FinalizeStagedUpload(TemporaryFilePath, FinalFilePath);
+                }
 
-            Context.ArticleRevisions.Add(NewArticle);
-            await Context.SaveChangesAsync(CancellationToken);
+                await Transaction.CommitAsync(CT);
+            }, CancellationToken);
 
-            if (TemporaryFilePath is not null && FinalFilePath is not null)
-            {
-                FinalizeStagedUpload(TemporaryFilePath, FinalFilePath);
-            }
-
-            await Transaction.CommitAsync(CancellationToken);
             return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+        }
+        catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
+        {
+            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            ErrorMessage = Ex.Message;
+            return Page();
         }
         catch (Exception Ex)
         {

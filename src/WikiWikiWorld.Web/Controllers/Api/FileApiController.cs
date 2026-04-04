@@ -75,32 +75,39 @@ public sealed class FileApiController(
 				await File.CopyToAsync(FileStream, CancellationToken);
 			}
 
-			await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CancellationToken);
+			IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
 
-			FileRevision NewFile = new()
+			FileUploadResponse Response = await Strategy.ExecuteAsync(async CT =>
 			{
-				CanonicalFileId = CanonicalFileId,
-				Type = FileType.Image2D,
-				Filename = OriginalFileName,
-				MimeType = File.ContentType,
-				FileSizeBytes = File.Length,
-				Source = null,
-				RevisionReason = "API upload",
-				SourceAndRevisionReasonCulture = Culture,
-				CreatedByUserId = ParsedUserId,
-				DateCreated = DateTimeOffset.UtcNow,
-				IsCurrent = true
-			};
+				await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
 
-			Context.FileRevisions.Add(NewFile);
-			await Context.SaveChangesAsync(CancellationToken);
+				FileRevision NewFile = new()
+				{
+					CanonicalFileId = CanonicalFileId,
+					Type = FileType.Image2D,
+					Filename = OriginalFileName,
+					MimeType = File.ContentType,
+					FileSizeBytes = File.Length,
+					Source = null,
+					RevisionReason = "API upload",
+					SourceAndRevisionReasonCulture = Culture,
+					CreatedByUserId = ParsedUserId,
+					DateCreated = DateTimeOffset.UtcNow,
+					IsCurrent = true
+				};
 
-			// Move from temp to final path
-			System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
+				Context.FileRevisions.Add(NewFile);
+				await Context.SaveChangesAsync(CT);
 
-			await Transaction.CommitAsync(CancellationToken);
+				// Move from temp to final path
+				System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
 
-			return Ok(new FileUploadResponse(CanonicalFileId, OriginalFileName, File.ContentType, File.Length));
+				await Transaction.CommitAsync(CT);
+
+				return new FileUploadResponse(CanonicalFileId, OriginalFileName, File.ContentType, File.Length);
+			}, CancellationToken);
+
+			return Ok(Response);
 		}
 		catch (Exception)
 		{

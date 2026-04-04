@@ -1,0 +1,65 @@
+/* stub.css
+ * Renders a Wikipedia-style "stub" notice banner on articles
+ * that authors have marked with {{Stub}}.
+ */
+
+.stub-banner {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	margin-block: 2rem 1rem;
+	padding: 0.75rem 1rem;
+	border-inline-start: 4px solid oklch(70% 0.15 250);
+	background-color: oklch(97% 0.015 250);
+	border-radius: 0 4px 4px 0;
+	font-size: 0.9rem;
+	color: oklch(35% 0.05 250);
+}
+
+@media (prefers-color-scheme: dark) {
+	.stub-banner {
+		background-color: oklch(22% 0.02 250);
+		border-inline-start-color: oklch(60% 0.15 250);
+		color: oklch(80% 0.04 250);
+	}
+}
+
+.stub-banner__icon {
+	flex-shrink: 0;
+	display: inline-block;
+	width: 1.25rem;
+	height: 1.25rem;
+	margin-block-start: 0.1em;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a6fa5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+
+.stub-banner p {
+	margin: 0;
+	line-height: 1.5;
+}
+
+.stub-banner a {
+	color: oklch(45% 0.18 250);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.stub-banner a:hover {
+	color: oklch(35% 0.2 250);
+}
+
+@media (prefers-color-scheme: dark) {
+	.stub-banner a {
+		color: oklch(70% 0.18 250);
+	}
+
+	.stub-banner a:hover {
+		color: oklch(80% 0.18 250);
+	}
+
+	.stub-banner__icon {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2390aed4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E");
+	}
+}

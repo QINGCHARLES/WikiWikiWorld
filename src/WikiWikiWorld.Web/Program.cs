@@ -79,7 +79,7 @@ string? ConnectionString = Builder.Configuration.GetConnectionString("DefaultCon
 // FALLBACK: If no config found, calculate the default path (Local Dev or Default Prod)
 if (string.IsNullOrWhiteSpace(ConnectionString))
 {
-    ConnectionString = $"Data Source={Path.Combine(DataPath, "WikiWikiWorld.db")}";
+    ConnectionString = $"Data Source={Path.Combine(DataPath, "app.db")}";
 }
 
 // Initialize SQLite database-level settings (WAL mode, page size)
