@@ -68,12 +68,14 @@ string DataPath = Builder.Environment.IsDevelopment()
     : Path.Combine(Builder.Environment.ContentRootPath, "data");
 
 string SiteFilesPath = Path.Combine(DataPath, "sitefiles");
+string WellKnownPath = Path.Combine(DataPath, ".well-known");
 
 // Register Options
-Builder.Services.Configure<FileStorageOptions>(options =>
+Builder.Services.Configure<FileStorageOptions>(Options =>
 {
-    options.SiteFilesPath = SiteFilesPath;
+    Options.SiteFilesPath = SiteFilesPath;
 });
+
 string? ConnectionString = Builder.Configuration.GetConnectionString("DefaultConnection");
 
 // FALLBACK: If no config found, calculate the default path (Local Dev or Default Prod)
@@ -302,6 +304,19 @@ else
     throw new FileNotFoundException("Rewrite rules file not found", RewriteFile);
 }
 
+// Serve .well-known BEFORE HTTPS redirect so certbot HTTP-01 challenges on port 80 are not redirected
+if (!Directory.Exists(WellKnownPath))
+{
+	Directory.CreateDirectory(WellKnownPath);
+}
+
+App.UseStaticFiles(new StaticFileOptions
+{
+	FileProvider = new PhysicalFileProvider(WellKnownPath),
+	RequestPath = "/.well-known",
+	ServeUnknownFileTypes = true
+});
+
 App.UseHttpsRedirection();
 
 App.UseRouting();
@@ -337,6 +352,8 @@ App.UseStaticFiles(new StaticFileOptions
     RequestPath = "/sitefiles",
     ContentTypeProvider = ContentTypeProvider
 });
+
+
 
 App.UseMiddleware<HtmlPrettifyMiddleware>();
 
