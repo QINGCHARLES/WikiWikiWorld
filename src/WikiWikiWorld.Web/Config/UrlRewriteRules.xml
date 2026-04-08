@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <rewrite>
 	<rules>
 		<clear />
@@ -33,6 +33,22 @@
 			</conditions>
 			<action type="Redirect" url="https://magazedia.com/{R:1}" redirectType="301" />
 		</rule>
+		<!-- Redirect www.fanfare.wiki to fanfare.wiki -->
+		<rule enabled="true" stopProcessing="true">
+			<match url="(.*)" />
+			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
+				<add input="{HTTP_HOST}" pattern="^www\.fanfare\.wiki$" />
+			</conditions>
+			<action type="Redirect" url="https://fanfare.wiki/{R:1}" redirectType="301" />
+		</rule>
+		<!-- Redirect www.crtr.world to crtr.world -->
+		<rule enabled="true" stopProcessing="true">
+			<match url="(.*)" />
+			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
+				<add input="{HTTP_HOST}" pattern="^www\.crtr\.world$" />
+			</conditions>
+			<action type="Redirect" url="https://crtr.world/{R:1}" redirectType="301" />
+		</rule>
 		<rule enabled="true" stopProcessing="true">
 			<match url="^info:sitemap$" />
 			<action type="Rewrite" url="Sitemap" />
@@ -47,7 +63,7 @@
 		<rule enabled="true">
 			<match url="(.*)" />
 			<conditions logicalGrouping="MatchAll" trackAllCaptures="false">
-				<add input="{HTTP_HOST}" pattern="^magazedia\.com$|^en\.magazedia\.com$|^xx-test\.magazedia\.com$|^ja\.magazedia\.com$|^ar\.magazedia\.com$|^localhost|^en\.localhost|^xx-test\.localhost|^ja\.localhost|^ar\.localhost|^crtr.world|^fanfare.wiki" negate="true" />
+				<add input="{HTTP_HOST}" pattern="^magazedia\.com$|^en\.magazedia\.com$|^xx-test\.magazedia\.com$|^ja\.magazedia\.com$|^ar\.magazedia\.com$|^localhost|^en\.localhost|^xx-test\.localhost|^ja\.localhost|^ar\.localhost|^crtr\.world$|^fanfare\.wiki$" negate="true" />
 			</conditions>
 			<action type="Redirect" url="https://en.magazedia.com/{R:1}" redirectType="308" />
 		</rule>
