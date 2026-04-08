@@ -291,6 +291,20 @@ App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context
     }
 });
 
+// Serve .well-known BEFORE rewrite rules so certbot HTTP-01 challenges on port 80
+// are served directly without being caught by the HTTP→HTTPS 308 redirect in the XML rules
+if (!Directory.Exists(WellKnownPath))
+{
+	Directory.CreateDirectory(WellKnownPath);
+}
+
+App.UseStaticFiles(new StaticFileOptions
+{
+	FileProvider = new PhysicalFileProvider(WellKnownPath),
+	RequestPath = "/.well-known",
+	ServeUnknownFileTypes = true
+});
+
 // Load the XML file from the correct path
 string RewriteFile = Path.Combine(Environment.ContentRootPath, "Config", "UrlRewriteRules.xml");
 if (File.Exists(RewriteFile))
@@ -303,19 +317,6 @@ else
 {
     throw new FileNotFoundException("Rewrite rules file not found", RewriteFile);
 }
-
-// Serve .well-known BEFORE HTTPS redirect so certbot HTTP-01 challenges on port 80 are not redirected
-if (!Directory.Exists(WellKnownPath))
-{
-	Directory.CreateDirectory(WellKnownPath);
-}
-
-App.UseStaticFiles(new StaticFileOptions
-{
-	FileProvider = new PhysicalFileProvider(WellKnownPath),
-	RequestPath = "/.well-known",
-	ServeUnknownFileTypes = true
-});
 
 App.UseHttpsRedirection();
 
