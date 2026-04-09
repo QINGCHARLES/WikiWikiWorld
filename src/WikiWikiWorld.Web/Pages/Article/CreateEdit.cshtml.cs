@@ -135,6 +135,10 @@ public sealed class CreateEditModel(
 
             // Populate form with existing data
             OriginalUrlSlug = CurrentArticle.UrlSlug;
+            // Clear ModelState so asp-for renders the property value, not the query string
+            // (which may include the "file:" namespace prefix).
+            ModelState.Remove(nameof(UrlSlug));
+            UrlSlug = CurrentArticle.UrlSlug;
             Title = CurrentArticle.Title;
             DisplayTitle = CurrentArticle.DisplayTitle ?? string.Empty;
             ArticleText = CurrentArticle.Text;

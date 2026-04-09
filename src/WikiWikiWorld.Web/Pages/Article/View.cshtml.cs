@@ -149,6 +149,21 @@ public sealed class ViewModel(
     public long FileSizeBytes { get; private set; }
 
     /// <summary>
+    /// Gets the display text of the source citation for this file, if provided.
+    /// </summary>
+    public string? FileSourceText { get; private set; }
+
+    /// <summary>
+    /// Gets the optional URL of the source citation for this file.
+    /// </summary>
+    public string? FileSourceUrl { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the FileSourceUrl is an approved domain.
+    /// </summary>
+    public bool IsFileSourceApprovedDomain { get; private set; }
+
+    /// <summary>
     /// Handles the GET request to view the article.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
@@ -269,6 +284,7 @@ public sealed class ViewModel(
 
         // Enrich the document with async data
         ShortDescriptionExtension.Enrich(Document);
+        SourceExtension.Enrich(Document);
         await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture);
         await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
         await PublicationIssueInfoboxExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
@@ -293,6 +309,16 @@ public sealed class ViewModel(
         if (Document.GetData(ShortDescriptionExtension.DocumentKey) is string ResolvedDescription)
         {
             MetaDescription = ResolvedDescription;
+        }
+
+        if (Document.GetData(SourceExtension.TextKey) is string ResolvedSourceText)
+        {
+            FileSourceText = ResolvedSourceText;
+        }
+        if (Document.GetData(SourceExtension.UrlKey) is string ResolvedSourceUrl)
+        {
+            FileSourceUrl = ResolvedSourceUrl;
+            IsFileSourceApprovedDomain = LinkDomainHelper.IsApprovedDomain(FileSourceUrl, SiteConfiguration.Value.ApprovedLinkDomains);
         }
 
         // Render to HTML

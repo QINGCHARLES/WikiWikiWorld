@@ -138,11 +138,35 @@ else if(Model.DisplayedRevision is not null)
 							<dd>@Model.FileWidthPx &times; @Model.FileHeightPx px</dd>
 						</div>
 					}
-					<div class="file-info-row">
-						<dt>Size</dt>
-						<dd>@FormatFileSize(Model.FileSizeBytes)</dd>
+				<div class="file-info-row">
+					<dt>Size</dt>
+					<dd>@FormatFileSize(Model.FileSizeBytes)</dd>
+				</div>
+				@if (!string.IsNullOrWhiteSpace(Model.FileSourceText))
+				{
+					<div class="file-info-row file-info-row--wide">
+						<dt>Source</dt>
+						<dd>
+							@if (!string.IsNullOrWhiteSpace(Model.FileSourceUrl) && Model.FileSourceText == Model.FileSourceUrl)
+							{
+								<a href="@Model.FileSourceUrl"
+								   rel="@(Model.IsFileSourceApprovedDomain ? "noopener" : "nofollow noopener")"
+								   target="_blank">@Model.FileSourceUrl</a>
+							}
+							else
+							{
+								@Model.FileSourceText
+								@if (!string.IsNullOrWhiteSpace(Model.FileSourceUrl))
+								{
+									<text>&ensp;</text><a href="@Model.FileSourceUrl"
+									   rel="@(Model.IsFileSourceApprovedDomain ? "noopener" : "nofollow noopener")"
+									   target="_blank">@Model.FileSourceUrl</a>
+								}
+							}
+						</dd>
 					</div>
-				</dl>
+				}
+			</dl>
 			</section>
 		}
 

@@ -128,10 +128,6 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/NewMessage?Recipient={R:1}" />
 		</rule>
 		<rule enabled="true">
-			<match url="^file:(.+)" />
-			<action type="Rewrite" url="https://{HTTP_HOST}/Article/View?UrlSlug=file:{R:1}" />
-		</rule>
-		<rule enabled="true">
 			<match url="(.+)/edit" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/CreateEdit?UrlSlug={R:1}" />
 		</rule>
@@ -154,6 +150,10 @@
 		<rule enabled="true">
 			<match url="(.+)/links$" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/Links?UrlSlug={R:1}" />
+		</rule>
+		<rule enabled="true">
+			<match url="^file:(.+)" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Article/View?UrlSlug=file:{R:1}" />
 		</rule>
 		<rule enabled="true">
 			<match url="^404:(.+)" />

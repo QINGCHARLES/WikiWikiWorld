@@ -1,4 +1,6 @@
 using Markdig;
+using Microsoft.Extensions.Options;
+using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.MarkdigExtensions;
 
 namespace WikiWikiWorld.Web.Services;
@@ -20,7 +22,16 @@ public interface IMarkdownPipelineFactory
 /// </summary>
 public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 {
-	private readonly Lazy<MarkdownPipeline> Pipeline = new(BuildPipeline);
+	private readonly Lazy<MarkdownPipeline> Pipeline;
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="MarkdownPipelineFactory"/> class.
+	/// </summary>
+	/// <param name="SiteConfiguration">The site configuration options.</param>
+	public MarkdownPipelineFactory(IOptions<SiteConfiguration> SiteConfiguration)
+	{
+		this.Pipeline = new Lazy<MarkdownPipeline>(() => BuildPipeline(SiteConfiguration.Value.ApprovedLinkDomains));
+	}
 
 	/// <inheritdoc/>
 	public MarkdownPipeline GetPipeline()
@@ -31,8 +42,9 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	/// <summary>
 	/// Builds and configures the Markdown pipeline with all custom extensions.
 	/// </summary>
+	/// <param name="ApprovedLinkDomains">The list of domains that do not require nofollow on external links.</param>
 	/// <returns>A fully configured <see cref="MarkdownPipeline"/>.</returns>
-	private static MarkdownPipeline BuildPipeline()
+	private static MarkdownPipeline BuildPipeline(IReadOnlyList<string> ApprovedLinkDomains)
 	{
 		ShortDescriptionExtension ShortDescExt = new();
 		ImageExtension ImageExt = new();
@@ -42,11 +54,14 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 
 		CategoryExtension CategoryExt = new();
 		FootnoteExtension FootnoteExt = new();
-		CitationExtension CitationExt = new();
+		CitationExtension CitationExt = new(ApprovedLinkDomains);
 
 		PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
 		CoverGridExtension CoverGridExt = new();
 		StubExtension StubExt = new();
+		SourceExtension SourceExt = new();
+		
+		ApprovedNoFollowLinksExtension LinksExt = new(ApprovedLinkDomains);
 
 		MarkdownPipelineBuilder Builder = new MarkdownPipelineBuilder()
 			.Use(ShortDescExt)
@@ -60,6 +75,8 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(DownloadsBoxExt)
 			.Use(PullQuoteExt)
 			.Use(StubExt)
+			.Use(SourceExt)
+			.Use(LinksExt)
 			.UseAdvancedExtensions();
 
 		return Builder.Build();

@@ -69,6 +69,10 @@
 	word-break: break-all;
 }
 
+.file-info-row--wide {
+	grid-column: 1 / -1;
+}
+
 @media (max-width: 600px) {
 	.file-info-metadata {
 		grid-template-columns: 1fr 1fr;

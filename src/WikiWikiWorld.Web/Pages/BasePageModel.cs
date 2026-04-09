@@ -12,6 +12,11 @@ namespace WikiWikiWorld.Web.Configuration
 		/// Gets or sets the list of configured sites.
 		/// </summary>
 		public List<SiteInfo> Sites { get; set; } = [];
+
+		/// <summary>
+		/// Gets or sets the list of approved external domains that do not require nofollow on links.
+		/// </summary>
+		public List<string> ApprovedLinkDomains { get; set; } = [];
 	}
 
 	/// <summary>

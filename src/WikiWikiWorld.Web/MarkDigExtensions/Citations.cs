@@ -186,6 +186,17 @@ public sealed class CitationRenderer : HtmlObjectRenderer<CitationInline>
 /// </summary>
 public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 {
+	private readonly IReadOnlyList<string> ApprovedDomains;
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CitationsRenderer"/> class.
+	/// </summary>
+	/// <param name="ApprovedDomains">The approved domains list.</param>
+	public CitationsRenderer(IReadOnlyList<string> ApprovedDomains)
+	{
+		this.ApprovedDomains = ApprovedDomains ?? [];
+	}
+
 	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, CitationsBlock Block)
 	{
@@ -201,7 +212,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		{
 			Renderer.Write($"<li id=\"cit:{Citation.Number}\" class=\"citation-item\">");
 
-			WriteFormattedCitation(Renderer, Citation);
+			WriteFormattedCitation(Renderer, Citation, this.ApprovedDomains);
 
 			if (Citation.ReferencedBy.Count > 0)
 			{
@@ -237,7 +248,8 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 	/// </summary>
 	/// <param name="Renderer">The HTML renderer.</param>
 	/// <param name="Citation">The citation to format.</param>
-	private static void WriteFormattedCitation(HtmlRenderer Renderer, Citation Citation)
+	/// <param name="ApprovedDomains">The list of approved domains.</param>
+	private static void WriteFormattedCitation(HtmlRenderer Renderer, Citation Citation, IReadOnlyList<string> ApprovedDomains)
 	{
 		// Author(s)
 		if (Citation.Properties.TryGetValue("author", out List<string>? Authors))
@@ -290,13 +302,18 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		// DOI
 		if (Citation.Properties.TryGetValue("doi", out List<string>? Dois) && Dois.Count > 0)
 		{
-			Renderer.Write($"DOI: <a href=\"https://doi.org/{Dois[0]}\" target=\"_blank\">{Dois[0]}</a>");
+			string DoiUrl = $"https://doi.org/{Dois[0]}";
+			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(DoiUrl, ApprovedDomains);
+			string RelAttr = IsApproved ? "noopener" : "nofollow noopener";
+			Renderer.Write($"DOI: <a href=\"{DoiUrl}\" rel=\"{RelAttr}\" target=\"_blank\">{Dois[0]}</a>");
 		}
 
 		// URL
 		if (Citation.Properties.TryGetValue("url", out List<string>? Urls) && Urls.Count > 0)
 		{
-			Renderer.Write($"URL: <a href=\"{Urls[0]}\" target=\"_blank\">{Urls[0]}</a>");
+			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(Urls[0], ApprovedDomains);
+			string RelAttr = IsApproved ? "noopener" : "nofollow noopener";
+			Renderer.Write($"URL: <a href=\"{Urls[0]}\" rel=\"{RelAttr}\" target=\"_blank\">{Urls[0]}</a>");
 		}
 	}
 
@@ -325,6 +342,17 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 /// </summary>
 public sealed class CitationExtension : IMarkdownExtension
 {
+	private readonly IReadOnlyList<string> ApprovedDomains;
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CitationExtension"/> class.
+	/// </summary>
+	/// <param name="ApprovedDomains">The approved domains list.</param>
+	public CitationExtension(IReadOnlyList<string> ApprovedDomains)
+	{
+		this.ApprovedDomains = ApprovedDomains ?? [];
+	}
+
 	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
@@ -344,7 +372,7 @@ public sealed class CitationExtension : IMarkdownExtension
 				HtmlRenderer.ObjectRenderers.Add(new CitationRenderer());
 			
 			if (!HtmlRenderer.ObjectRenderers.Contains<CitationsRenderer>())
-				HtmlRenderer.ObjectRenderers.Add(new CitationsRenderer());
+				HtmlRenderer.ObjectRenderers.Add(new CitationsRenderer(this.ApprovedDomains));
 		}
 	}
 
