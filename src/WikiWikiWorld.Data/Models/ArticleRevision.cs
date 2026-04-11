@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace WikiWikiWorld.Data.Models;
 
 /// <summary>
@@ -84,6 +86,7 @@ public sealed record ArticleRevision
 /// <summary>
 /// Defines the types of articles.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ArticleType
 {
     /// <summary>

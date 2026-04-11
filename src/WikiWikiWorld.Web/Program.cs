@@ -186,32 +186,17 @@ Builder.Services.AddRazorPages(options =>
 {
     options.Conventions.ConfigureFilter(new ThemePageFilter());
 });
-Builder.Services.AddControllers();
+Builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 
 FileExtensionContentTypeProvider ContentTypeProvider = new();
 ContentTypeProvider.Mappings[".heic"] = "image/heic";
 ContentTypeProvider.Mappings[".avif"] = "image/avif";
 
 WebApplication App = Builder.Build();
-
-// Log CPU hardware acceleration capabilities
-ILogger StartupLogger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
-if (Avx512F.IsSupported)
-{
-    StartupLogger.LogInformation("🚀 Hardware Acceleration: AVX-512 (x86-64-v4) is ACTIVE");
-}
-else if (Avx2.IsSupported)
-{
-    StartupLogger.LogInformation("✅ Hardware Acceleration: AVX2 (x86-64-v3) is ACTIVE");
-}
-else if (AdvSimd.IsSupported)
-{
-    StartupLogger.LogInformation("✅ Hardware Acceleration: ARM NEON (AdvSimd) is ACTIVE");
-}
-else
-{
-    StartupLogger.LogWarning("⚠️ Hardware Acceleration: Standard instruction set (x86-64-v1/v2)");
-}
 
 App.UseAuthentication(); // Enables Identity Authentication
 
@@ -223,8 +208,6 @@ if (!App.Environment.IsDevelopment())
 }
 
 App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
-
-
 
 // Inject IWebHostEnvironment to access the content root
 IWebHostEnvironment Environment = App.Services.GetRequiredService<IWebHostEnvironment>();

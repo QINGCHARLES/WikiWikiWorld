@@ -8,6 +8,8 @@ using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Options;
+using WikiWikiWorld.Web.Configuration;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
@@ -16,9 +18,13 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="FileStorageOptions">The file storage options.</param>
 [Route("api/article")]
 [ApiController]
-public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverService SiteResolverService) : ControllerBase
+public class ArticleApiController(
+    WikiWikiWorldDbContext Context,
+    SiteResolverService SiteResolverService,
+    IOptions<FileStorageOptions> FileStorageOptions) : ControllerBase
 {
     /// <summary>
     /// Gets an article revision.
@@ -90,44 +96,232 @@ public class ArticleApiController(WikiWikiWorldDbContext Context, SiteResolverSe
 
         IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
 
-        await Strategy.ExecuteAsync(async CT =>
+        try
         {
-            await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
-
-            ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-            ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CT);
-
-            if (CurrentRevision is not null)
+            await Strategy.ExecuteAsync(async CT =>
             {
+                await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+
+                ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
+                ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CT);
+
+                if (CurrentRevision is null)
+                {
+                    throw new InvalidOperationException("Article not found.");
+                }
+
                 CurrentRevision.IsCurrent = false;
                 Context.ArticleRevisions.Update(CurrentRevision);
-            }
 
-            Guid CanonicalArticleId = CurrentRevision?.CanonicalArticleId ?? Model.CanonicalArticleId ?? Guid.NewGuid();
+                Guid CanonicalArticleId = CurrentRevision.CanonicalArticleId;
 
-            ArticleRevision ArticleRevision = new()
-            {
-                CanonicalArticleId = CanonicalArticleId,
-                SiteId = SiteId,
-                Culture = Culture,
-                Title = Model.Title,
-                DisplayTitle = Model.DisplayTitle,
-                UrlSlug = UrlSlug,
-                Type = Model.Type,
-                CanonicalFileId = Model.CanonicalFileId,
-                Text = Model.Text,
-                RevisionReason = Model.RevisionReason,
-                CreatedByUserId = ParsedUserId,
-                DateCreated = DateTimeOffset.UtcNow,
-                IsCurrent = true
-            };
+                ArticleRevision ArticleRevision = new()
+                {
+                    CanonicalArticleId = CanonicalArticleId,
+                    SiteId = SiteId,
+                    Culture = Culture,
+                    Title = Model.Title,
+                    DisplayTitle = Model.DisplayTitle,
+                    UrlSlug = UrlSlug,
+                    Type = Model.Type,
+                    CanonicalFileId = Model.CanonicalFileId,
+                    Text = Model.Text,
+                    RevisionReason = Model.RevisionReason,
+                    CreatedByUserId = ParsedUserId,
+                    DateCreated = DateTimeOffset.UtcNow,
+                    IsCurrent = true
+                };
 
-            Context.ArticleRevisions.Add(ArticleRevision);
-            await Context.SaveChangesAsync(CT);
-            await Transaction.CommitAsync(CT);
-        }, CancellationToken);
+                Context.ArticleRevisions.Add(ArticleRevision);
+                await Context.SaveChangesAsync(CT);
+                await Transaction.CommitAsync(CT);
+            }, CancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "Article not found.")
+        {
+            return NotFound("Article not found. To create a new article, use the POST endpoint.");
+        }
 
         return Ok("Article revision updated successfully.");
+    }
+
+    /// <summary>
+    /// Creates a new article revision. If creating a file article, accepts an optional uploaded file.
+    /// </summary>
+    /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="Title">The title of the article.</param>
+    /// <param name="DisplayTitle">The optional display title.</param>
+    /// <param name="Type">The type of the article.</param>
+    /// <param name="Text">The article text.</param>
+    /// <param name="RevisionReason">The revision reason.</param>
+    /// <param name="Source">The optional image source.</param>
+    /// <param name="File">The optional image file.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    /// <returns>The result of the operation.</returns>
+    [HttpPost("{UrlSlug}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> CreateArticleRevision(
+        string UrlSlug,
+        [FromForm] string Title,
+        [FromForm] string? DisplayTitle,
+        [FromForm] ArticleType Type,
+        [FromForm] string Text,
+        [FromForm] string RevisionReason,
+        [FromForm] string? Source,
+        [FromForm] IFormFile? File,
+        CancellationToken CancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(UrlSlug) || string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(Text) || string.IsNullOrWhiteSpace(RevisionReason))
+        {
+            return BadRequest("UrlSlug, Title, Text, and RevisionReason are required.");
+        }
+
+        if (Type == ArticleType.File && (File is null || File.Length == 0))
+        {
+            return BadRequest("A file is required when creating a File-type article.");
+        }
+        
+        if (Type != ArticleType.File && File is not null && File.Length > 0)
+        {
+            return BadRequest("Files can only be uploaded for File-type articles.");
+        }
+
+        string? UserId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(UserId, out Guid ParsedUserId))
+        {
+            return Unauthorized("User ID not found in token.");
+        }
+
+        (int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
+
+        Guid CanonicalArticleId = Guid.NewGuid();
+        Guid? CanonicalFileId = null;
+        string? OriginalFileName = null;
+        string? UploadedContentType = null;
+        long UploadedFileSizeBytes = 0;
+        string? TemporaryFilePath = null;
+        string? FinalFilePath = null;
+
+        if (Type == ArticleType.File && File is not null)
+        {
+            if (!ImageValidationHelper.IsValidImageFile(File, out string ValidationError))
+            {
+                return BadRequest(ValidationError);
+            }
+
+            CanonicalFileId = Guid.NewGuid();
+            OriginalFileName = Path.GetFileName(File.FileName);
+            string FileExtension = Path.GetExtension(OriginalFileName);
+            string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
+
+            string SiteFilesDirectory = Path.Combine(
+                FileStorageOptions.Value.SiteFilesPath,
+                SiteId.ToString(),
+                "images");
+            Directory.CreateDirectory(SiteFilesDirectory);
+
+            FinalFilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
+            TemporaryFilePath = Path.Combine(SiteFilesDirectory, $"{UniqueFileName}.{Guid.NewGuid():N}.tmp");
+
+            // Stage the file
+            await using FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            await File.CopyToAsync(FileStream, CancellationToken);
+            UploadedContentType = File.ContentType;
+            UploadedFileSizeBytes = File.Length;
+        }
+
+        IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
+
+        try
+        {
+            await Strategy.ExecuteAsync(async CT =>
+            {
+                await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+
+                ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: true);
+                ArticleRevision? ExistingArticle = await Context.ArticleRevisions
+                    .AsNoTracking()
+                    .WithSpecification(Spec)
+                    .FirstOrDefaultAsync(CT);
+
+                if (ExistingArticle is not null)
+                {
+                    throw new InvalidOperationException("An article with this URL slug already exists.");
+                }
+
+                if (Type == ArticleType.File && CanonicalFileId.HasValue && OriginalFileName is not null && UploadedContentType is not null)
+                {
+                    FileRevision NewFile = new()
+                    {
+                        CanonicalFileId = CanonicalFileId.Value,
+                        Type = FileType.Image2D,
+                        Filename = OriginalFileName,
+                        MimeType = UploadedContentType,
+                        FileSizeBytes = UploadedFileSizeBytes,
+                        Source = Source,
+                        RevisionReason = "Initial upload",
+                        SourceAndRevisionReasonCulture = Culture,
+                        CreatedByUserId = ParsedUserId,
+                        DateCreated = DateTimeOffset.UtcNow,
+                        IsCurrent = true
+                    };
+
+                    Context.FileRevisions.Add(NewFile);
+                }
+
+                ArticleRevision NewArticle = new()
+                {
+                    CanonicalArticleId = CanonicalArticleId,
+                    SiteId = SiteId,
+                    Culture = Culture,
+                    Title = Title,
+                    DisplayTitle = DisplayTitle,
+                    UrlSlug = UrlSlug,
+                    Type = Type,
+                    CanonicalFileId = CanonicalFileId,
+                    Text = Text,
+                    RevisionReason = RevisionReason,
+                    CreatedByUserId = ParsedUserId,
+                    DateCreated = DateTimeOffset.UtcNow,
+                    IsCurrent = true
+                };
+
+                Context.ArticleRevisions.Add(NewArticle);
+                await Context.SaveChangesAsync(CT);
+
+                if (TemporaryFilePath is not null && FinalFilePath is not null)
+                {
+                    System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
+                }
+
+                await Transaction.CommitAsync(CT);
+            }, CancellationToken);
+        }
+        catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
+        {
+            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            return Conflict(Ex.Message);
+        }
+        catch (Exception)
+        {
+            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            throw;
+        }
+
+        return Ok("Article created successfully.");
+    }
+
+    private static void CleanupStagedUpload(string? TemporaryFilePath, string? FinalFilePath)
+    {
+        if (!string.IsNullOrWhiteSpace(TemporaryFilePath) && System.IO.File.Exists(TemporaryFilePath))
+        {
+            System.IO.File.Delete(TemporaryFilePath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(FinalFilePath) && System.IO.File.Exists(FinalFilePath))
+        {
+            System.IO.File.Delete(FinalFilePath);
+        }
     }
 
     /// <summary>

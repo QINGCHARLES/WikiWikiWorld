@@ -9,6 +9,8 @@ using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Helpers;
+using WikiWikiWorld.Data.Specifications;
+using WikiWikiWorld.Data.Extensions;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
 
@@ -26,18 +28,38 @@ public sealed class FileApiController(
 	IOptions<FileStorageOptions> FileStorageOptions) : ControllerBase
 {
 	/// <summary>
-	/// Uploads an image file, validates it, and creates a FileRevision record.
+	/// Uploads an image file as a new revision for the file article identified by the given slug.
 	/// </summary>
+	/// <param name="UrlSlug">The URL slug of the article.</param>
 	/// <param name="File">The image file to upload.</param>
+	/// <param name="Source">The optional source of the file.</param>
+	/// <param name="RevisionReason">The optional reason for the revision.</param>
+	/// <param name="Culture">The culture of the source/revision reason (required if either is provided).</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>The CanonicalFileId of the newly created file revision.</returns>
-	[HttpPost]
+	[HttpPost("{UrlSlug}")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	public async Task<IActionResult> UploadFile(IFormFile File, CancellationToken CancellationToken)
+	public async Task<IActionResult> UploadFile(
+		string UrlSlug,
+		[FromForm] IFormFile File,
+		[FromForm] string? Source,
+		[FromForm] string? RevisionReason,
+		[FromForm] string? Culture,
+		CancellationToken CancellationToken)
 	{
+		if (string.IsNullOrWhiteSpace(UrlSlug))
+		{
+			return BadRequest("URL slug is required.");
+		}
+
 		if (File is null || File.Length == 0)
 		{
 			return BadRequest("No file was uploaded.");
+		}
+
+		if ((!string.IsNullOrWhiteSpace(Source) || !string.IsNullOrWhiteSpace(RevisionReason)) && string.IsNullOrWhiteSpace(Culture))
+		{
+			return BadRequest("Culture is required when providing a Source or RevisionReason.");
 		}
 
 		if (!ImageValidationHelper.IsValidImageFile(File, out string ValidationError))
@@ -51,9 +73,25 @@ public sealed class FileApiController(
 			return Unauthorized("User ID not found in token.");
 		}
 
-		(int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
+		(int SiteId, string ResolvedCulture) = SiteResolverService.ResolveSiteAndCulture();
 
-		Guid CanonicalFileId = Guid.NewGuid();
+		ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: true);
+		ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync(CancellationToken);
+
+		if (CurrentArticle is null)
+		{
+			return NotFound("Article not found.");
+		}
+
+		if (CurrentArticle.Type != ArticleType.File || CurrentArticle.CanonicalFileId is null)
+		{
+			return BadRequest("Article is not a file article or is missing a canonical file ID.");
+		}
+
+		Guid CanonicalFileId = CurrentArticle.CanonicalFileId.Value;
+		string FinalCulture = string.IsNullOrWhiteSpace(Culture) ? ResolvedCulture : Culture;
+		string FinalRevisionReason = string.IsNullOrWhiteSpace(RevisionReason) ? "API upload" : RevisionReason;
+
 		string OriginalFileName = Path.GetFileName(File.FileName);
 		string FileExtension = Path.GetExtension(OriginalFileName);
 		string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
@@ -81,6 +119,16 @@ public sealed class FileApiController(
 			{
 				await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
 
+				FileRevision? CurrentFile = await Context.FileRevisions
+					.Where(f => f.CanonicalFileId == CanonicalFileId && f.IsCurrent == true)
+					.FirstOrDefaultAsync(CT);
+
+				if (CurrentFile is not null)
+				{
+					CurrentFile.IsCurrent = false;
+					Context.FileRevisions.Update(CurrentFile);
+				}
+
 				FileRevision NewFile = new()
 				{
 					CanonicalFileId = CanonicalFileId,
@@ -88,9 +136,9 @@ public sealed class FileApiController(
 					Filename = OriginalFileName,
 					MimeType = File.ContentType,
 					FileSizeBytes = File.Length,
-					Source = null,
-					RevisionReason = "API upload",
-					SourceAndRevisionReasonCulture = Culture,
+					Source = Source,
+					RevisionReason = FinalRevisionReason,
+					SourceAndRevisionReasonCulture = FinalCulture,
 					CreatedByUserId = ParsedUserId,
 					DateCreated = DateTimeOffset.UtcNow,
 					IsCurrent = true

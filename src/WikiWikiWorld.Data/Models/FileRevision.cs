@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace WikiWikiWorld.Data.Models;
 
 /// <summary>
@@ -62,6 +64,7 @@ public sealed record FileRevision
 /// <summary>
 /// Defines the types of files.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum FileType
 {
     /// <summary>
