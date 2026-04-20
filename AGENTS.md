@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v7
+# What AI agents should know about me -- v8
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -206,6 +206,20 @@ If you identify a significantly better, more robust, or modern approach than the
 * **Typography:** `text-wrap: balance` (headings), `text-box: trim-both cap alphabetic` (perfect vertical centering without padding hacks), `line-clamp` (truncation), single variable fonts, `font-display: swap`, and `initial-letter` (drop caps).
 * **Animations:** View Transitions API (`document.startViewTransition()`) for state/page changes; `animation-timeline: view()` for scroll-driven FX (no `IntersectionObserver`). Stagger natively via `sibling-index()`. Use independent `translate`/`rotate`/`scale`. Animate `display` or to/from `auto` heights via `@starting-style`, `transition-behavior: allow-discrete`, and `interpolate-size: allow-keywords`.
 * **Visuals & Perf:** `backdrop-filter: blur()` (glass), `corner-shape` (squircles/notches), and responsive percentage-based `clip-path: shape()`. Stabilize layout with `scrollbar-gutter: stable`; stop scroll chaining via `overscroll-behavior: contain`. Lazy render off-screen elements with `content-visibility: auto` + `contain-intrinsic-size`.
+
+## Browser DevTools & Console Debugging
+
+When writing web code, JS debugging snippets, or apps with embedded browsers (WebView2, etc.), prefer advanced console APIs over plain `console.log`:
+
+* **Inspect variables:** `console.log({ User, Product })` (shorthand object) — shows names + values, not `console.log("user", User)`.
+* **Tabular data:** `console.table(Rows)` for arrays of objects.
+* **Call stacks:** `console.trace(Label)` when origin is unclear.
+* **Assertions:** `console.assert(Condition, Message, Context)` instead of `if`-wrapped logs.
+* **Timing:** `console.time(Label)` / `console.timeEnd(Label)` — never guess perf.
+* **Grouping:** `console.group` / `console.groupCollapsed` / `console.groupEnd` for related output.
+* **Log levels:** Use `info` / `warn` / `error` / `debug` — not `log` for everything — so DevTools filters work.
+* **DOM inspection:** `console.dir(Element)` for properties vs. `console.log` for markup.
+* **Styled output:** `%c` + CSS for critical/hard-to-miss messages.
 ---
 
 # How I want AI agents to respond

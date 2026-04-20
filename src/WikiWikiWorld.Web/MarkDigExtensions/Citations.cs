@@ -104,7 +104,7 @@ public sealed class CitationParser : InlineParser
 			return false;
 		}
 
-		string CitationContent = Slice.Text.Substring(Slice.Start, EndPos - Slice.Start).Trim();
+		string CitationContent = Slice.Text[Slice.Start..EndPos].Trim();
 		string CitationId = GenerateCitationId(CitationContent);
 
 		int InlineStart = Processor.GetSourcePosition(Slice.Start, out int Line, out int Column);
@@ -205,7 +205,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 
 		Renderer.Write("<div class=\"citations\">");
 		Renderer.Write("<hr />");
-		Renderer.Write("<h3>Citations</h3>");
+		Renderer.Write("<h2>Citations</h2>");
 		Renderer.Write("<ol class=\"citation-list\">");
 
 		foreach (Citation Citation in Block.Citations.Values.OrderBy(c => c.Number))
@@ -251,6 +251,16 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 	/// <param name="ApprovedDomains">The list of approved domains.</param>
 	private static void WriteFormattedCitation(HtmlRenderer Renderer, Citation Citation, IReadOnlyList<string> ApprovedDomains)
 	{
+		// Resolve URL and its link attributes once, since the title may consume it
+		string? Url = null;
+		string? UrlRelAttr = null;
+		if (Citation.Properties.TryGetValue("url", out List<string>? Urls) && Urls.Count > 0)
+		{
+			Url = Urls[0];
+			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(Url, ApprovedDomains);
+			UrlRelAttr = IsApproved ? "noopener" : "nofollow noopener";
+		}
+
 		// Author(s)
 		if (Citation.Properties.TryGetValue("author", out List<string>? Authors))
 		{
@@ -258,10 +268,21 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			Renderer.Write(". ");
 		}
 
-		// Title
+		// Title — if a URL exists, make the title the hyperlink (Wikipedia style)
+		bool TitleConsumedUrl = false;
 		if (Citation.Properties.TryGetValue("title", out List<string>? Titles) && Titles.Count > 0)
 		{
-			Renderer.Write($"<em>{Titles[0]}</em>");
+			if (Url is not null)
+			{
+				Renderer.Write($"<a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">");
+				Renderer.Write($"<em>{Titles[0]}</em>");
+				Renderer.Write("</a>");
+				TitleConsumedUrl = true;
+			}
+			else
+			{
+				Renderer.Write($"<em>{Titles[0]}</em>");
+			}
 			if (!Titles[0].EndsWith('.')) Renderer.Write(".");
 			Renderer.Write(" ");
 		}
@@ -308,13 +329,32 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			Renderer.Write($"DOI: <a href=\"{DoiUrl}\" rel=\"{RelAttr}\" target=\"_blank\">{Dois[0]}</a>");
 		}
 
-		// URL
-		if (Citation.Properties.TryGetValue("url", out List<string>? Urls) && Urls.Count > 0)
+		// URL — only render separately if the title didn't already consume it
+		if (Url is not null && !TitleConsumedUrl)
 		{
-			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(Urls[0], ApprovedDomains);
-			string RelAttr = IsApproved ? "noopener" : "nofollow noopener";
-			Renderer.Write($"URL: <a href=\"{Urls[0]}\" rel=\"{RelAttr}\" target=\"_blank\">{Urls[0]}</a>");
+			// Show just the domain name instead of the full raw URL
+			string LinkText = GetDomainDisplayName(Url);
+			Renderer.Write($"<a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">{LinkText}</a>");
 		}
+	}
+
+	/// <summary>
+	/// Extracts a clean domain name for display from a URL (e.g., "www.example.co.uk" → "example.co.uk").
+	/// </summary>
+	/// <param name="Url">The URL to extract the domain from.</param>
+	/// <returns>A human-readable domain name, or the original URL if parsing fails.</returns>
+	private static string GetDomainDisplayName(string Url)
+	{
+		if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri? ParsedUri))
+			return Url;
+
+		string Host = ParsedUri.Host;
+
+		// Strip leading "www."
+		if (Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+			Host = Host[4..];
+
+		return Host;
 	}
 
 	/// <summary>
