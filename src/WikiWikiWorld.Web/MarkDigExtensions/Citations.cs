@@ -262,16 +262,19 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		}
 
 		// Author(s)
+		bool HasAuthor = false;
 		if (Citation.Properties.TryGetValue("author", out List<string>? Authors))
 		{
 			WriteAuthors(Renderer, Authors);
-			Renderer.Write(". ");
+			HasAuthor = true;
 		}
 
 		// Title — if a URL exists, make the title the hyperlink (Wikipedia style)
 		bool TitleConsumedUrl = false;
 		if (Citation.Properties.TryGetValue("title", out List<string>? Titles) && Titles.Count > 0)
 		{
+			if (HasAuthor) Renderer.Write(". ");
+
 			if (Url is not null)
 			{
 				Renderer.Write($"<a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">");
@@ -283,41 +286,45 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			{
 				Renderer.Write($"<em>{Titles[0]}</em>");
 			}
+
 			if (!Titles[0].EndsWith('.')) Renderer.Write(".");
-			Renderer.Write(" ");
+		}
+		else if (HasAuthor)
+		{
+			Renderer.Write(".");
 		}
 
 		// Journal/Publication
 		if (Citation.Properties.TryGetValue("journal", out List<string>? Journals) && Journals.Count > 0)
 		{
-			Renderer.Write($"<em>{Journals[0]}</em>, ");
+			Renderer.Write($" <em>{Journals[0]}</em>,");
 		}
 		else if (Citation.Properties.TryGetValue("publisher", out List<string>? Publishers) && Publishers.Count > 0)
 		{
-			Renderer.Write($"{Publishers[0]}, ");
+			Renderer.Write($" {Publishers[0]},");
 		}
 
 		// Volume
 		if (Citation.Properties.TryGetValue("volume", out List<string>? Volumes) && Volumes.Count > 0)
 		{
-			Renderer.Write($"vol. {Volumes[0]}");
+			Renderer.Write($" vol. {Volumes[0]}");
 			if (Citation.Properties.TryGetValue("issue", out List<string>? Issues) && Issues.Count > 0)
 			{
 				Renderer.Write($", no. {Issues[0]}");
 			}
-			Renderer.Write(", ");
+			Renderer.Write(",");
 		}
 
 		// Pages
 		if (Citation.Properties.TryGetValue("pages", out List<string>? Pages) && Pages.Count > 0)
 		{
-			Renderer.Write($"pp. {Pages[0]}, ");
+			Renderer.Write($" pp. {Pages[0]},");
 		}
 
 		// Year
 		if (Citation.Properties.TryGetValue("year", out List<string>? Years) && Years.Count > 0)
 		{
-			Renderer.Write($"{Years[0]}. ");
+			Renderer.Write($" {Years[0]}.");
 		}
 
 		// DOI
@@ -326,7 +333,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			string DoiUrl = $"https://doi.org/{Dois[0]}";
 			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(DoiUrl, ApprovedDomains);
 			string RelAttr = IsApproved ? "noopener" : "nofollow noopener";
-			Renderer.Write($"DOI: <a href=\"{DoiUrl}\" rel=\"{RelAttr}\" target=\"_blank\">{Dois[0]}</a>");
+			Renderer.Write($" DOI: <a href=\"{DoiUrl}\" rel=\"{RelAttr}\" target=\"_blank\">{Dois[0]}</a>");
 		}
 
 		// URL — only render separately if the title didn't already consume it
@@ -334,7 +341,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		{
 			// Show just the domain name instead of the full raw URL
 			string LinkText = GetDomainDisplayName(Url);
-			Renderer.Write($"<a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">{LinkText}</a>");
+			Renderer.Write($" <a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">{LinkText}</a>");
 		}
 	}
 
