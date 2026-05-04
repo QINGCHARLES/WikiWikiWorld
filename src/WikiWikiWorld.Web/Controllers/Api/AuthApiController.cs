@@ -16,6 +16,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="Configuration">The application configuration.</param>
 [Route("api/auth")]
 [ApiController]
+[Produces("application/json")]
 public sealed class AuthApiController(
 	UserManager<User> UserManager,
 	SignInManager<User> SignInManager,
@@ -28,6 +29,10 @@ public sealed class AuthApiController(
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>A JWT token on success; 401 on failure.</returns>
 	[HttpPost("token")]
+	[Consumes("application/json")]
+	[ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
 	public async Task<IActionResult> GetToken([FromBody] LoginModel Model, CancellationToken CancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(Model.Username) || string.IsNullOrWhiteSpace(Model.Password))

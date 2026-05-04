@@ -11,6 +11,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="Context">The database context.</param>
 [Route("api/search")]
 [ApiController]
+[Produces("application/json")]
 public sealed class SearchApiController(WikiWikiWorldDbContext Context) : ControllerBase
 {
 	private const int SnippetPadding = 80;
@@ -22,6 +23,8 @@ public sealed class SearchApiController(WikiWikiWorldDbContext Context) : Contro
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>A list of search results.</returns>
 	[HttpGet]
+	[ProducesResponseType<List<SearchResultDto>>(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
 	public async Task<IActionResult> Search([FromQuery] string? Q, CancellationToken CancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(Q))

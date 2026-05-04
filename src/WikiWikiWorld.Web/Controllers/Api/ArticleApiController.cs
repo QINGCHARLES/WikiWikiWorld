@@ -21,6 +21,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="FileStorageOptions">The file storage options.</param>
 [Route("api/article")]
 [ApiController]
+[Produces("application/json")]
 public class ArticleApiController(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
@@ -34,6 +35,9 @@ public class ArticleApiController(
     /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>The article revision.</returns>
     [HttpGet("{UrlSlug}")]
+    [ProducesResponseType<ArticleRevision>(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetArticleRevision(string UrlSlug, [FromQuery] string? Revision, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))
@@ -79,6 +83,11 @@ public class ArticleApiController(
     /// <returns>The result of the update operation.</returns>
     [HttpPut("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug) || Model == null)
@@ -160,6 +169,11 @@ public class ArticleApiController(
     /// <returns>The result of the operation.</returns>
     [HttpPost("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateArticleRevision(
         string UrlSlug,
         [FromForm] string Title,
@@ -331,6 +345,9 @@ public class ArticleApiController(
     /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>A list of article revisions ordered by date descending.</returns>
     [HttpGet("{UrlSlug}/history")]
+    [ProducesResponseType<List<ArticleRevisionHistoryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetArticleHistory(string UrlSlug, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))
@@ -376,6 +393,10 @@ public class ArticleApiController(
     /// <returns>A success message or error.</returns>
     [HttpDelete("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteArticle(string UrlSlug, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))

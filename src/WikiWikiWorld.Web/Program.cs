@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.StaticFiles;
@@ -192,6 +194,8 @@ Builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
+Builder.Services.AddOpenApi();
+
 FileExtensionContentTypeProvider ContentTypeProvider = new();
 ContentTypeProvider.Mappings[".heic"] = "image/heic";
 ContentTypeProvider.Mappings[".avif"] = "image/avif";
@@ -213,12 +217,14 @@ App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
 IWebHostEnvironment Environment = App.Services.GetRequiredService<IWebHostEnvironment>();
 
 App.MapControllers();
+App.MapOpenApi();
+App.MapScalarApiReference("/wiki:api-docs");
 
 App.MapGet("/sitemap.xml", async (ISitemapService SitemapService) =>
 {
     string Sitemap = await SitemapService.GenerateSitemapAsync();
     return Results.Content(Sitemap, "application/xml");
-});
+}).ExcludeFromDescription();
 
 App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context) =>
 {
@@ -254,6 +260,8 @@ App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context
             Disallow: /Article/CreateEdit
             Disallow: /Article/Delete
             Disallow: /api/
+            Disallow: /openapi/
+            Disallow: /wiki:api-docs/
 
             Sitemap: {BaseUrl}/sitemap.xml
             """;
@@ -272,7 +280,7 @@ App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context
 
         return Results.Content(Content, "text/plain");
     }
-});
+}).ExcludeFromDescription();
 
 // Serve .well-known BEFORE rewrite rules so certbot HTTP-01 challenges on port 80
 // are served directly without being caught by the HTTP→HTTPS 308 redirect in the XML rules

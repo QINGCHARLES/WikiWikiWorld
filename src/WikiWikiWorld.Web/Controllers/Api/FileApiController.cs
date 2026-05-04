@@ -22,6 +22,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="FileStorageOptions">The file storage options.</param>
 [Route("api/file")]
 [ApiController]
+[Produces("application/json")]
 public sealed class FileApiController(
 	WikiWikiWorldDbContext Context,
 	SiteResolverService SiteResolverService,
@@ -39,6 +40,11 @@ public sealed class FileApiController(
 	/// <returns>The CanonicalFileId of the newly created file revision.</returns>
 	[HttpPost("{UrlSlug}")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+	[Consumes("multipart/form-data")]
+	[ProducesResponseType<FileUploadResponse>(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
 	public async Task<IActionResult> UploadFile(
 		string UrlSlug,
 		[FromForm] IFormFile File,
@@ -181,6 +187,8 @@ public sealed class FileApiController(
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>The file revision metadata.</returns>
 	[HttpGet("{CanonicalFileId}")]
+	[ProducesResponseType<FileMetadataResponse>(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
 	public async Task<IActionResult> GetFileMetadata(Guid CanonicalFileId, CancellationToken CancellationToken)
 	{
 		FileRevision? FileRevision = await Context.FileRevisions
