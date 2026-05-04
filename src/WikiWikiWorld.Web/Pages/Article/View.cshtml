@@ -24,6 +24,10 @@
 		<img src="@Model.HeaderImage" alt="..." class="hero-image" />
 	}
 </figure>
+	@if (!string.IsNullOrWhiteSpace(Model.EyebrowLabel))
+	{
+		<p class="eyebrow">@Model.EyebrowLabel</p>
+	}
 	<h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.DisplayedRevision?.DisplayTitle) ? Model.DisplayedRevision?.Title : Model.DisplayedRevision?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
 
 @* <h1 class="title">@Model.DisplayedRevision?.Title</h1> *@

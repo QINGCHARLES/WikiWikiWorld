@@ -164,6 +164,11 @@ public sealed class ViewModel(
     public bool IsFileSourceApprovedDomain { get; private set; }
 
     /// <summary>
+    /// Gets the eyebrow display label extracted from the markdown, if present.
+    /// </summary>
+    public string? EyebrowLabel { get; private set; }
+
+    /// <summary>
     /// Handles the GET request to view the article.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
@@ -284,6 +289,7 @@ public sealed class ViewModel(
 
         // Enrich the document with async data
         ShortDescriptionExtension.Enrich(Document);
+        EyebrowExtension.Enrich(Document);
         SourceExtension.Enrich(Document);
         await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture);
         await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
@@ -311,10 +317,16 @@ public sealed class ViewModel(
             MetaDescription = ResolvedDescription;
         }
 
+        if (Document.GetData(EyebrowExtension.DocumentKey) is string ResolvedEyebrow)
+        {
+            EyebrowLabel = ResolvedEyebrow;
+        }
+
         if (Document.GetData(SourceExtension.TextKey) is string ResolvedSourceText)
         {
             FileSourceText = ResolvedSourceText;
         }
+        
         if (Document.GetData(SourceExtension.UrlKey) is string ResolvedSourceUrl)
         {
             FileSourceUrl = ResolvedSourceUrl;

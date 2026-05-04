@@ -20,6 +20,24 @@
     object-position: top;
 }
 
+.eyebrow {
+    display: block;
+    width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
+        calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter))
+    );
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-block: 0;
+    padding-block: 0.35rem;
+    padding-inline: 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #888);
+}
+
 .video-container {
     position: relative;
     width: 100%;

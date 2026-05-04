@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v8
+# What AI agents should know about me -- v9
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -41,6 +41,7 @@ If you identify a significantly better, more robust, or modern approach than the
     * `Items.ToHashSet()` → `HashSet<Item> Result = [.. Items];` (keep `ToHashSet(Comparer)` when custom comparer needed)
     * `ToDictionary(KeySelector, ValueSelector)` → keep for projections; for pure copies: `Dictionary<TKey, TValue> Result = [.. ExistingDictionary];`
     * `Enumerable.Empty<T>()` → keep when you need `IEnumerable<T>` with no allocation; otherwise `[]` when targeting concrete types
+  * **String slicing:** Prefer range indexing (`Text[Start..End]`, `Text[Start..]`, `Text[..End]`, `Text[^N..]`) over equivalent `Substring` calls when start/end indices are known; keep `Substring` only when it reads more clearly.    
   * **Async/target-typing:** Collection expressions need explicit target when compiler can't infer (async lambdas, ternaries, overloaded methods). Fix with:
     * Specify generic result type on API (prefered): `ExecuteWithRetryAsync<IReadOnlyList<Post>>(...)`
     * Cast expression: `return (IReadOnlyList<Post>)[.. Posts];`
