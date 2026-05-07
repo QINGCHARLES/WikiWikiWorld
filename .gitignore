@@ -67,3 +67,7 @@ node_modules/
 # User secrets
 appsettings.Development.json
 secrets.json
+
+# Site files
+data/sitefiles/1/images/
+data/sitefiles/1/profilepics/
