@@ -256,6 +256,12 @@ public sealed class CreateEditModel(
             return Page();
         }
 
+        if (ArticleUrlHelper.IsRestrictedSlug(UrlSlug))
+        {
+            ErrorMessage = "The chosen URL slug conflicts with a reserved system path and cannot be used.";
+            return Page();
+        }
+
         // Ensure user is authenticated
         Guid? CurrentUserId = GetCurrentUserId();
         if (CurrentUserId is null)

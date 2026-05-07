@@ -8,9 +8,68 @@ namespace WikiWikiWorld.Web.Helpers;
 public static class ArticleUrlHelper
 {
 	/// <summary>
+	/// The set of restricted root paths and exact slugs that cannot be used for articles.
+	/// </summary>
+	private static readonly HashSet<string> RestrictedSlugs = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"api",
+		"openapi",
+		"wiki:api-docs",
+		"account",
+		"article",
+		"profile",
+		"settings",
+		"search",
+		"cultureselect",
+		"error",
+		"index",
+		"notfound",
+		"privacy",
+		"sitemap.xml",
+		"robots.txt",
+		".well-known",
+		"sitefiles",
+		"shared"
+	};
+
+	/// <summary>
 	/// Gets the namespace prefix used for file article URLs.
 	/// </summary>
 	public const string FileNamespacePrefix = "file:";
+
+	/// <summary>
+	/// Determines whether the specified URL slug is restricted because it conflicts with internal paths.
+	/// </summary>
+	/// <param name="UrlSlug">The URL slug to check.</param>
+	/// <returns><see langword="true"/> if the slug is restricted; otherwise, <see langword="false"/>.</returns>
+	public static bool IsRestrictedSlug(string UrlSlug)
+	{
+		if (string.IsNullOrWhiteSpace(UrlSlug))
+		{
+			return false;
+		}
+
+		string NormalizedSlug = NormalizeLookupSlug(UrlSlug);
+
+		// Check exact match
+		if (RestrictedSlugs.Contains(NormalizedSlug))
+		{
+			return true;
+		}
+
+		// Check if the slug starts with a restricted root directory
+		int FirstSlash = NormalizedSlug.IndexOf('/');
+		if (FirstSlash > 0)
+		{
+			string Prefix = NormalizedSlug[..FirstSlash];
+			if (RestrictedSlugs.Contains(Prefix))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	/// <summary>
 	/// Gets a value indicating whether the supplied slug uses the file namespace prefix.
