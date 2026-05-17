@@ -2,7 +2,7 @@ namespace WikiWikiWorld.Web.Helpers;
 
 /// <summary>
 /// Reads image dimensions from file headers without loading the full image into memory.
-/// Supports JPEG, PNG, GIF, and WebP formats.
+/// Supports JPEG, PNG, GIF, WebP, and AVIF formats.
 /// </summary>
 public static class ImageDimensionReader
 {
@@ -55,6 +55,12 @@ public static class ImageDimensionReader
 			if (Header[0] == 0x52 && Header[1] == 0x49 && Header[2] == 0x46 && Header[3] == 0x46)
 			{
 				return ReadWebPDimensions(Reader, Stream);
+			}
+
+			// AVIF/ISOBMFF: 4 bytes size, then "ftyp"
+			if (Header[4] == 0x66 && Header[5] == 0x74 && Header[6] == 0x79 && Header[7] == 0x70)
+			{
+				return ReadAvifDimensions(Reader, Stream);
 			}
 
 			return (0, 0);
@@ -236,6 +242,43 @@ public static class ImageDimensionReader
 			default:
 				return (0, 0);
 		}
+	}
+
+	/// <summary>
+	/// Reads dimensions from an AVIF/ISOBMFF file by scanning for the 'ispe' box.
+	/// </summary>
+	/// <param name="Reader">The binary reader.</param>
+	/// <param name="Stream">The underlying stream.</param>
+	/// <returns>The width and height in pixels.</returns>
+	private static (int WidthPx, int HeightPx) ReadAvifDimensions(BinaryReader Reader, FileStream Stream)
+	{
+		// A simple heuristic: search the first 4096 bytes for the "ispe" (Image Spatial Extents) box.
+		Stream.Position = 0;
+		int BytesToRead = (int)Math.Min(4096, Stream.Length);
+		byte[] Buffer = Reader.ReadBytes(BytesToRead);
+
+		// "ispe" box structure:
+		// 4 bytes: size
+		// 4 bytes: "ispe" (0x69, 0x73, 0x70, 0x65)
+		// 1 byte: version
+		// 3 bytes: flags
+		// 4 bytes: width (big-endian)
+		// 4 bytes: height (big-endian)
+		for (int i = 0; i < Buffer.Length - 16; i++)
+		{
+			if (Buffer[i] == 0x69 && Buffer[i + 1] == 0x73 && Buffer[i + 2] == 0x70 && Buffer[i + 3] == 0x65)
+			{
+				int WidthStart = i + 8;
+				int WidthPx = (Buffer[WidthStart] << 24) | (Buffer[WidthStart + 1] << 16) | (Buffer[WidthStart + 2] << 8) | Buffer[WidthStart + 3];
+
+				int HeightStart = i + 12;
+				int HeightPx = (Buffer[HeightStart] << 24) | (Buffer[HeightStart + 1] << 16) | (Buffer[HeightStart + 2] << 8) | Buffer[HeightStart + 3];
+
+				return (WidthPx, HeightPx);
+			}
+		}
+
+		return (0, 0);
 	}
 
 	/// <summary>

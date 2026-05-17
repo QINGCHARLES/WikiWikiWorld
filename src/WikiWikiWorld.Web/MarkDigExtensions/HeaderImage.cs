@@ -177,11 +177,11 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 			.Select(a => a.CanonicalFileId!.Value)
 			.Distinct()];
 
-		// 5. Batch Query Files (Projection: Fetch ONLY Filenames)
+		// 5. Batch Query Files (Projection)
 		var Files = await Context.FileRevisions
 			.AsNoTracking()
 			.Where(f => FileIds.Contains(f.CanonicalFileId) && f.IsCurrent == true)
-			.Select(f => new { f.CanonicalFileId, f.Filename })
+			.Select(f => new { f.Id, f.CanonicalFileId, f.Filename, f.ImageWidthPixels, f.ImageHeightPixels })
 			.ToListAsync(CancellationToken);
 
 		Dictionary<Guid, string> FileLookup = Files.ToDictionary(f => f.CanonicalFileId, f => f.Filename);

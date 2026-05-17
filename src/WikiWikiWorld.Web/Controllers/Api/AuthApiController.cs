@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
@@ -46,8 +47,13 @@ public sealed class AuthApiController(
 			return Unauthorized("Invalid credentials.");
 		}
 
-		Microsoft.AspNetCore.Identity.SignInResult Result = await SignInManager.CheckPasswordSignInAsync(
-			TargetUser, Model.Password, lockoutOnFailure: true);
+		Microsoft.AspNetCore.Identity.SignInResult Result;
+
+		using (WriteDurabilityScope.High())
+		{
+			Result = await SignInManager.CheckPasswordSignInAsync(
+				TargetUser, Model.Password, lockoutOnFailure: true);
+		}
 
 		if (!Result.Succeeded)
 		{

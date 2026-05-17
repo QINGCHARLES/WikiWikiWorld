@@ -50,6 +50,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 		ImageExtension ImageExt = new();
 		HeaderImageExtension HeaderImageExt = new();
 		EyebrowExtension EyebrowExt = new();
+		SubtitleExtension SubtitleExt = new();
 		DownloadsBoxExtension DownloadsBoxExt = new();
 		PullQuoteExtension PullQuoteExt = new();
 
@@ -69,6 +70,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(ImageExt)
 			.Use(HeaderImageExt)
 			.Use(EyebrowExt)
+			.Use(SubtitleExt)
 			.Use(CategoryExt)
 			.Use(FootnoteExt)
 			.Use(CitationExt)

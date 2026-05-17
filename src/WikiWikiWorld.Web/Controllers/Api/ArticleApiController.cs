@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using WikiWikiWorld.Web.Configuration;
+using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
@@ -18,6 +19,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="ArticleRevisionService">The article revision workflow service.</param>
 /// <param name="FileStorageOptions">The file storage options.</param>
 [Route("api/article")]
 [ApiController]
@@ -25,6 +27,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 public class ArticleApiController(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
+    ArticleRevisionService ArticleRevisionService,
     IOptions<FileStorageOptions> FileStorageOptions) : ControllerBase
 {
     /// <summary>
@@ -103,52 +106,30 @@ public class ArticleApiController(
             return Unauthorized("User ID not found in token.");
         }
 
-        IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
-
         try
         {
-            await Strategy.ExecuteAsync(async CT =>
-            {
-                await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+            ArticleRevisionUpdateCommand Command = new(
+                OriginalUrlSlug: UrlSlug,
+                NewUrlSlug: UrlSlug,
+                SiteId: SiteId,
+                Culture: Culture,
+                Title: Model.Title,
+                DisplayTitle: Model.DisplayTitle,
+                Type: Model.Type,
+                CanonicalFileId: Model.CanonicalFileId,
+                Text: Model.Text,
+                RevisionReason: Model.RevisionReason,
+                CreatedByUserId: ParsedUserId);
 
-                ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-                ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CT);
-
-                if (CurrentRevision is null)
-                {
-                    throw new InvalidOperationException("Article not found.");
-                }
-
-                CurrentRevision.IsCurrent = false;
-                Context.ArticleRevisions.Update(CurrentRevision);
-
-                Guid CanonicalArticleId = CurrentRevision.CanonicalArticleId;
-
-                ArticleRevision ArticleRevision = new()
-                {
-                    CanonicalArticleId = CanonicalArticleId,
-                    SiteId = SiteId,
-                    Culture = Culture,
-                    Title = Model.Title,
-                    DisplayTitle = Model.DisplayTitle,
-                    UrlSlug = UrlSlug,
-                    Type = Model.Type,
-                    CanonicalFileId = Model.CanonicalFileId,
-                    Text = Model.Text,
-                    RevisionReason = Model.RevisionReason,
-                    CreatedByUserId = ParsedUserId,
-                    DateCreated = DateTimeOffset.UtcNow,
-                    IsCurrent = true
-                };
-
-                Context.ArticleRevisions.Add(ArticleRevision);
-                await Context.SaveChangesAsync(CT);
-                await Transaction.CommitAsync(CT);
-            }, CancellationToken);
+            await ArticleRevisionService.UpdateArticleAsync(Command, CancellationToken);
         }
-        catch (InvalidOperationException ex) when (ex.Message == "Article not found.")
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {
             return NotFound("Article not found. To create a new article, use the POST endpoint.");
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Conflict)
+        {
+            return Conflict(Ex.Message);
         }
 
         return Ok("Article revision updated successfully.");
@@ -215,6 +196,8 @@ public class ArticleApiController(
         long UploadedFileSizeBytes = 0;
         string? TemporaryFilePath = null;
         string? FinalFilePath = null;
+        int UploadedImageWidthPixels = 0;
+        int UploadedImageHeightPixels = 0;
 
         if (Type == ArticleType.File && File is not null)
         {
@@ -242,6 +225,7 @@ public class ArticleApiController(
             await File.CopyToAsync(FileStream, CancellationToken);
             UploadedContentType = File.ContentType;
             UploadedFileSizeBytes = File.Length;
+            (UploadedImageWidthPixels, UploadedImageHeightPixels) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
         }
 
         IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
@@ -272,6 +256,8 @@ public class ArticleApiController(
                         Filename = OriginalFileName,
                         MimeType = UploadedContentType,
                         FileSizeBytes = UploadedFileSizeBytes,
+                        ImageWidthPixels = UploadedImageWidthPixels > 0 ? UploadedImageWidthPixels : null,
+                        ImageHeightPixels = UploadedImageHeightPixels > 0 ? UploadedImageHeightPixels : null,
                         Source = Source,
                         RevisionReason = "Initial upload",
                         SourceAndRevisionReasonCulture = Culture,
@@ -301,7 +287,11 @@ public class ArticleApiController(
                 };
 
                 Context.ArticleRevisions.Add(NewArticle);
-                await Context.SaveChangesAsync(CT);
+
+                using (WriteDurabilityScope.High())
+                {
+                    await Context.SaveChangesAsync(CT);
+                }
 
                 if (TemporaryFilePath is not null && FinalFilePath is not null)
                 {
@@ -410,23 +400,13 @@ public class ArticleApiController(
             return Unauthorized("User ID not found in token.");
         }
 
-        ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-        ArticleRevision? CurrentRevision = await Context.ArticleRevisions
-            .WithSpecification(CurrentSpec)
-            .FirstOrDefaultAsync(CancellationToken);
-
-        if (CurrentRevision is null)
+        try
+        {
+            await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CancellationToken);
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {
             return NotFound("Article not found.");
-        }
-
-        CurrentRevision.IsCurrent = false;
-        CurrentRevision.DateDeleted = DateTimeOffset.UtcNow;
-        Context.ArticleRevisions.Update(CurrentRevision);
-
-        using (WriteDurabilityScope.High())
-        {
-            await Context.SaveChangesAsync(CancellationToken);
         }
 
         return Ok("Article deleted successfully.");

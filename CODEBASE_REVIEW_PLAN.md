@@ -1,48 +1,43 @@
-# Codebase Review Plan
+# Codebase Review Status
 
-## Purpose
+Last reviewed: 2026-05-14.
 
-This document captures the current architectural review of the `WikiWikiWorld` codebase, including the main correctness risks, overengineering concerns, and the highest-value improvements to make next. It is intended to serve as a stable reference for future cleanup work.
+This document tracks cleanup and architecture findings for the WikiWikiWorld codebase. Magazedia is the current configured implementation, not the identity of the reusable platform. This replaces the older review snapshot with current status based on source inspection after the recent repository hygiene pass.
 
-## Overall Assessment
+Per project decision, `HtmlPrettifyMiddleware` is intentionally retained for now and is not treated as an active cleanup target in this document.
 
-The codebase is not fundamentally unsound. The core application shape is reasonable:
+## Current Assessment
 
-- ASP.NET Core Razor Pages for the web UI
-- EF Core with SQLite for persistence
-- A content/revision model that maps well to the wiki domain
+The core shape remains reasonable:
 
-However, parts of the infrastructure are more complex than the app currently needs. The main overengineering is concentrated in:
+- ASP.NET Core Razor Pages for the web UI.
+- EF Core with SQLite for persistence.
+- A revision-based wiki content model.
+- Markdig extensions for domain-specific article markup.
 
-- global EF query-filter infrastructure for tenancy and culture
-- a specification layer used for relatively simple queries
-- a response-wide HTML prettification middleware
-- routing and site-resolution behavior distributed across rewrite rules, request services, and base page model behavior
+The main remaining cleanup themes are:
 
-This complexity creates hidden behavior and raises the cost of debugging and maintenance.
+- Make site/culture scoping explicit and predictable.
+- Tighten file upload finalization and cleanup behavior.
+- Simplify startup configuration in `Program.cs`.
+- Keep build, runtime data, and documentation hygiene tight.
 
-## Confirmed Findings
+## Current Findings
 
-### 1. Global tenant and culture filters do not honor "null means unscoped"
+### 1. Global tenant and culture filtering has explicit scoped and unscoped modes
 
-Severity: High
+Status: Resolved for current behavior.
 
-The data layer contract says that `null` site or culture context should allow cross-site or cross-culture operations. The implemented global query filters do not behave that way.
+Severity: Closed unless future admin tooling needs a different factory pattern.
+
+`WikiWikiWorldDbContext` now distinguishes between normal site/culture-scoped contexts and intentional cross-site/cross-culture contexts.
 
 Current behavior:
 
-- `ArticleRevision` uses `e.SiteId == _currentSiteId`
-- `ArticleRevision` uses `e.Culture == _currentCulture`
-- similar site filters exist on other entities
-
-If `_currentSiteId` or `_currentCulture` is `null`, the filters do not become disabled. They instead exclude all rows. That means non-request code paths can silently see zero data rather than unscoped data.
-
-Likely impact:
-
-- background jobs
-- migrations or tooling
-- ad hoc admin code
-- any future non-HTTP workflow
+- Web request contexts use `SiteContextService`, which requires `SiteResolverService.ResolveSiteAndCulture()` to succeed.
+- If a web request cannot resolve site or culture, context creation fails loudly.
+- Query filters apply site and culture constraints unless `AllowCrossSiteAndCultureQueries` is explicitly true.
+- Design-time/options-only contexts are intentionally unscoped for migrations and tooling.
 
 Relevant files:
 
@@ -50,334 +45,190 @@ Relevant files:
 - `src/WikiWikiWorld.Data/ISiteContextService.cs`
 - `src/WikiWikiWorld.Web/Services/SiteContextService.cs`
 
-### 2. Culture-selector root-domain flow is likely broken
+Remaining follow-up:
 
-Severity: High
+- Future admin/tooling contexts that need cross-site/cross-culture behavior should provide an explicit `ISiteContextService` implementation with `AllowCrossSiteAndCultureQueries` set to true.
 
-The site resolver explicitly supports root domains that do not resolve to a culture and are supposed to render a culture selector page. But the shared page-model base class always calls `ResolveSiteAndCulture()`, which throws when there is no culture.
+### 2. Culture-selector root-domain flow appears repaired
 
-Current behavior:
+Status: Previously true, now likely resolved.
 
-- `SiteResolverService` supports root-domain culture selector handling
-- `BasePageModel.OnPageHandlerExecuting` always calls `ResolveSiteAndCulture()`
-- `CultureSelectModel` inherits from `BasePageModel`
+Severity: Closed unless runtime testing proves otherwise.
 
-This creates an architectural contradiction. The service supports the scenario, but the page inheritance path likely fails before the page can execute.
+`BasePageModel` now has `AllowsCultureSelectorRootDomain`, and `CultureSelectModel` overrides it to true. That means the culture selector can use `ResolveSiteAndCultureWithRootCheck()` instead of the stricter `ResolveSiteAndCulture()` path.
 
-Likely impact:
+Remaining validation:
 
-- root-domain culture-selector page may fail at runtime
-- future pages that intentionally run without a culture will be fragile
+- Run the app locally and verify the root-domain culture selector URL renders correctly.
 
 Relevant files:
 
 - `src/WikiWikiWorld.Web/Pages/BasePageModel.cs`
 - `src/WikiWikiWorld.Web/Pages/CultureSelect.cshtml.cs`
 - `src/WikiWikiWorld.Web/Services/SiteResolverService.cs`
-- `src/WikiWikiWorld.Web/appsettings.Production.json`
 
-### 3. API article updates are not atomic
+### 3. Article revision write workflows now share one service
 
-Severity: High
+Status: Previously true, now resolved for edit, revert, and delete paths.
 
-The article update API performs two separate saves:
+Severity: Closed for API and Razor Page edit/revert/delete workflows.
 
-1. mark current revision as not current
-2. insert the new current revision
+`ArticleRevisionService` now owns the shared transactional workflow for article revision state changes. The API controller and Razor Page models call the same service for:
 
-If the second save fails, the article is left without a current revision. Under concurrent requests, two callers can also race through this path.
+- replacing the current revision during edits
+- reverting to the previous revision
+- soft-deleting an article revision set
 
-Likely impact:
+The shared workflow uses:
 
-- missing current revision
-- inconsistent history state
-- concurrency bugs during simultaneous edits
+- `Context.Database.CreateExecutionStrategy()`
+- `BeginImmediateTransactionAsync()`
+- one `SaveChangesAsync()`
+- explicit transaction commit
 
-Relevant file:
+Relevant files:
 
+- `src/WikiWikiWorld.Web/Services/ArticleRevisionService.cs`
 - `src/WikiWikiWorld.Web/Controllers/Api/ArticleApiController.cs`
+- `src/WikiWikiWorld.Web/Pages/Article/CreateEdit.cshtml.cs`
+- `src/WikiWikiWorld.Web/Pages/Article/Delete.cshtml.cs`
 
-### 4. Article creation with file upload is not atomic
+### 4. Article creation with file upload is partially improved, but still has filesystem/database edge cases
 
-Severity: High
+Status: Partially resolved.
 
-The create/edit page persists file-related state in multiple steps:
+Severity: Medium.
 
-1. write file to disk
-2. insert `FileRevision`
-3. insert `ArticleRevision`
+The create path now stages uploads to a temporary file, writes `FileRevision` and `ArticleRevision` in one database transaction, finalizes the staged upload, and cleans up staged/final files on caught exceptions.
 
-If the operation fails after step 2, the system can retain an uploaded file and file revision without any article pointing to it.
+Residual risk:
 
-Likely impact:
-
-- orphaned files on disk
-- orphaned file-revision rows
-- harder cleanup and auditing
+- The file is moved to its final path before the transaction commit call. The catch path attempts cleanup, but a process crash between file move and rollback could still leave a file without committed database state.
+- The XML docs currently say the final move happens after the database transaction succeeds, but the code moves before commit.
 
 Relevant file:
 
 - `src/WikiWikiWorld.Web/Pages/Article/CreateEdit.cshtml.cs`
 
-### 5. HTML prettification middleware is costly and risky for production use
+Recommended action:
 
-Severity: Medium
+- Prefer a clear finalize-after-commit pattern, with compensating cleanup if post-commit file finalization fails.
+- Consider a small background cleanup task for stale `.tmp` files and orphaned final files.
 
-Every HTML response is buffered into memory, parsed into a DOM, rewritten, and then serialized again. That is a large amount of work for whitespace cleanup and formatting.
+### 5. Response compression is still registered but not enabled
 
-Current behavior:
+Status: Still true.
 
-- captures the full response body
-- reparses it with AngleSharp
-- normalizes text nodes
-- re-emits the final HTML
+Severity: Medium.
 
-This increases:
-
-- memory pressure
-- response latency
-- the chance of subtle output changes in edge cases
-
-It also looks mismatched with the application's needs. This kind of behavior is better suited to development tooling or static-output generation than the live request pipeline.
-
-Relevant files:
-
-- `src/WikiWikiWorld.Web/HtmlPrettifyMiddleware.cs`
-- `src/WikiWikiWorld.Web/InlineAwarePrettyFormatter.cs`
-- `src/WikiWikiWorld.Web/Program.cs`
-
-### 6. Response compression is configured but not enabled
-
-Severity: Medium
-
-`AddResponseCompression()` is registered, but the middleware pipeline never calls `UseResponseCompression()`.
+`Program.cs` calls `AddResponseCompression()`, but no `UseResponseCompression()` call exists in the request pipeline.
 
 Likely impact:
 
-- expected production optimization is missing
-- the app pays infrastructure complexity cost without receiving the intended behavior
+- The app carries configuration that does not affect responses.
+- The intended production optimization is absent.
 
 Relevant file:
 
 - `src/WikiWikiWorld.Web/Program.cs`
 
-### 7. Build hygiene is weak and release publish appears brittle
+Recommended action:
 
-Severity: Medium
+- Add `App.UseResponseCompression()` in the correct middleware order, or remove the service registration if compression is intentionally not used.
 
-The repository currently tolerates warnings and has checked-in evidence of unresolved build issues.
+### 6. Build hygiene is now improved
 
-Current behavior:
+Status: Previously true, now resolved for normal build.
 
-- `TreatWarningsAsErrors` is set to `false`
-- the checked-in warnings file shows XML documentation warnings
-- the checked-in publish output shows ReadyToRun / `avx512f` publish failure
+Severity: Closed for `dotnet build`.
 
-Likely impact:
+Current state:
 
-- regressions are easier to introduce
-- release/publish behavior may be unreliable or environment-specific
-- documentation quality drifts over time
+- `TreatWarningsAsErrors` is enabled.
+- .NET analyzers and latest analysis level are enabled.
+- stale checked-in build logs were removed.
+- `dotnet build WikiWikiWorld.slnx` succeeds with zero warnings and zero errors.
+
+Remaining validation:
+
+- Release publish should still be tested and documented. The old ReadyToRun/`avx512f` evidence was in a stale log and no matching publish setting was found in current project files.
 
 Relevant files:
 
 - `Directory.Build.props`
-- `src/WikiWikiWorld.Web/build_warnings.txt`
-- `src/WikiWikiWorld.Web/build_output.txt`
+- `README.md`
 
-## Is The Codebase Overengineered?
+### 7. Startup composition still needs cleanup
 
-Short answer: partially, yes.
+Status: Still true.
 
-The app is not overengineered everywhere. The domain model and overall solution layout are still reasonable. The overengineering is concentrated in infrastructure and cross-cutting concerns rather than in every feature.
+Severity: Medium.
 
-The clearest examples are:
+`Program.cs` still mixes many concerns:
 
-- global query filters combined with request-derived site/culture context
-- a specification abstraction for many simple one-query use cases
-- response-wide HTML prettification middleware
-- domain resolution split across configuration, rewrite rules, request services, and base page execution
+- hosting and Kestrel setup
+- data path setup
+- EF Core/SQLite setup
+- identity and JWT authentication
+- OpenAPI/Scalar
+- sitemap and robots endpoints
+- rewrite rules
+- static file serving
+- security headers
+- ImageSharp
+- response prettification
 
-These layers are not wrong by themselves, but for the current size and maturity of the app they add enough indirection that ordinary behavior is harder to reason about.
+It also still contains duplicate `AddMemoryCache()` calls.
+
+Recommended action:
+
+- Remove the duplicate cache registration.
+- Move related startup groups into focused extension methods once behavior is stable.
+
+### 8. Specification layer remains a maintainability question
+
+Status: Still true as an architectural observation.
+
+Severity: Low to Medium.
+
+The specification pattern is widely used and consistent, but it adds ceremony for many simple queries. This is not a correctness bug. It is a maintainability tradeoff.
+
+Recommended action:
+
+- Keep for reused or complex queries.
+- Avoid adding new one-off specifications for simple local queries unless they clearly improve reuse or readability.
 
 ## Recommended Improvement Order
 
 ### Phase 1: Correctness and Operational Safety
 
-1. Fix tenant and culture filtering behavior
-2. Fix root-domain culture-selector execution path
-3. Make revision writes atomic
-4. Make file upload plus article creation atomic where possible
+1. Tighten file upload finalization and cleanup behavior.
+2. Add explicit admin/tooling context creation patterns when those workflows exist.
 
-Reason:
+### Phase 2: Runtime Pipeline Cleanup
 
-These items can create incorrect or inconsistent application state. They should be addressed before style or abstraction cleanup.
+1. Enable or remove response compression.
+2. Remove duplicate service registrations.
+3. Split `Program.cs` into focused startup extension methods where it reduces noise.
 
-### Phase 2: Simplify Runtime Infrastructure
+### Phase 3: Architecture Simplification
 
-1. Remove or severely limit `HtmlPrettifyMiddleware`
-2. Enable response compression properly or remove the registration
-3. Reduce startup and hosting complexity in `Program.cs`
+1. Reassess global query filters after the null-context fix.
+2. Reassess the specification layer for simple read paths.
 
-Reason:
+### Phase 4: Release Verification
 
-These changes simplify production behavior, reduce hidden runtime cost, and make the request pipeline easier to reason about.
-
-### Phase 3: Reduce Architectural Indirection
-
-1. Reassess whether global query filters are the right tenancy mechanism
-2. Reassess the specification layer for simple CRUD-style queries
-3. Centralize article revision workflows into application services
-
-Reason:
-
-These changes improve maintainability and reduce scattered domain logic.
-
-### Phase 4: Tighten Build and Engineering Discipline
-
-1. Fix existing warnings
-2. Re-enable warnings as errors
-3. Fix or simplify the ReadyToRun / publish configuration
-4. Add build verification steps for release publishing
-
-Reason:
-
-Once the system is behaviorally stable, stricter build hygiene will keep it stable.
-
-## Suggested Concrete Next Tasks
-
-### Task 1: Repair site and culture resolution model
-
-Goals:
-
-- allow root-domain culture selector pages to execute intentionally
-- eliminate the contradiction between `SiteResolverService` and `BasePageModel`
-- define one explicit pattern for pages that require culture versus pages that do not
-
-Possible approach:
-
-- split base page models into two variants:
-  - a site-aware base type
-  - a site-and-culture-required base type
-- or make the current base model resolve using the root-check API and let each page opt into stricter behavior
-
-### Task 2: Repair global query filter semantics
-
-Goals:
-
-- make `null` context truly mean unscoped access
-- ensure background and non-request code paths do not silently return zero rows
-
-Possible approach:
-
-- change filters to short-circuit when current context is `null`
-- or remove site/culture from global filters and make these constraints explicit in query entry points
-
-### Task 3: Create a transactional article revision service
-
-Goals:
-
-- centralize create, edit, revert, and API update logic
-- ensure exactly one current revision exists after successful writes
-- reduce duplication between Razor Pages and API controller logic
-
-Possible approach:
-
-- introduce an application service for revision workflows
-- execute each workflow inside a single transaction
-- add uniqueness constraints if appropriate for current revisions
-
-### Task 4: Rework file upload consistency
-
-Goals:
-
-- prevent orphaned file rows and filesystem artifacts
-- make failure behavior predictable
-
-Possible approach:
-
-- write to a temporary location first
-- persist database state transactionally
-- move or finalize the file only after successful database commit
-- add a cleanup path for failed operations
-
-### Task 5: Remove production HTML prettification
-
-Goals:
-
-- reduce request overhead
-- eliminate the risk of unintended HTML mutation
-
-Possible approach:
-
-- development-only middleware, if still useful
-- or remove it entirely and rely on normal Razor output
-
-### Task 6: Clean up host startup
-
-Goals:
-
-- make `Program.cs` easier to read and reason about
-- reduce accidental environment coupling
-
-Candidate cleanup:
-
-- remove duplicate memory-cache registration
-- remove unused service registrations
-- move related startup concerns into focused extension methods
-- make response compression either active or absent
-
-### Task 7: Restore build rigor
-
-Goals:
-
-- keep the repo warning-free
-- prevent release-only failures from lingering unnoticed
-
-Candidate cleanup:
-
-- fix XML documentation warnings
-- set `TreatWarningsAsErrors=true`
-- identify the source of the `avx512f` publish configuration
-- simplify publish settings if aggressive optimization is not required
-
-## Secondary Observations
-
-These are not the highest-priority issues, but they are worth tracking:
-
-- `Program.cs` contains duplicated `AddMemoryCache()` registration
-- `Program.cs` contains a mix of hosting, security headers, rewrite configuration, sitemap endpoints, and data initialization in one file
-- article revision workflows are split between page models and the API controller
-- the specification pattern currently adds ceremony even for simple read paths
-- README documentation is minimal and does not describe production/publish constraints
-
-## Review Scope Notes
-
-This review was based on static inspection of the codebase and existing build logs.
-
-What was confirmed directly:
-
-- architecture and startup composition
-- EF Core context and global filters
-- article create, edit, revert, and API update flows
-- middleware behavior
-- checked-in build warnings and publish failure logs
-
-What remains to validate during implementation work:
-
-- the root-domain culture-selector failure in a live running environment
-- concurrency behavior under simultaneous article edits
-- the exact source of the ReadyToRun `avx512f` publish configuration
+1. Add a documented release publish command.
+2. Verify release publish in the target Linux deployment shape.
+3. Add tests or smoke checks for culture-selector routing and revision writes.
 
 ## Definition Of Done For Cleanup Work
 
-This review should be considered resolved only when all of the following are true:
-
-- root-domain culture-selector behavior works intentionally
+- root-domain culture-selector behavior works intentionally in a running app
 - tenant and culture scoping behavior is explicit and correct
-- article revision writes are transactional
-- file upload flows do not leave orphaned records or files
-- HTML prettification is removed from production or justified and safely scoped
+- article revision writes are transactional across API and Razor Page workflows
+- file upload flows do not leave orphaned records or files under normal failure paths
 - response compression is either enabled correctly or removed
-- the solution builds cleanly with no warnings
+- the solution builds cleanly with warnings as errors
 - release publish succeeds with documented settings
+- local runtime data and build outputs stay out of Git

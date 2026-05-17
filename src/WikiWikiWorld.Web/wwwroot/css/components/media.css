@@ -5,7 +5,7 @@
     width: calc(100% + 2 * var(--grid-gutter));
 }
 
-.hero-image, h1 {
+.hero-image, hgroup {
     display: block;
     width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
     calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter))
@@ -14,10 +14,19 @@
     position: relative;
     left: 50%;
     transform: translateX(-50%);
+}
+
+.hero-image {
     border-radius: 1rem;
     max-height: 60vh;
     object-fit: cover;
     object-position: top;
+}
+
+hgroup > p {
+    margin-block: 0.25rem 0;
+    font-size: 1.15rem;
+    color: var(--color-text-muted, #888);
 }
 
 .eyebrow {

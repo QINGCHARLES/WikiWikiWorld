@@ -26,6 +26,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 
 	private readonly int? _currentSiteId;
 	private readonly string? _currentCulture;
+	private readonly bool _allowCrossSiteAndCultureQueries;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="WikiWikiWorldDbContext"/> class.
@@ -34,6 +35,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	/// <remarks>Used for migrations and design-time scenarios.</remarks>
 	public WikiWikiWorldDbContext(DbContextOptions<WikiWikiWorldDbContext> Options) : base(Options)
 	{
+		_allowCrossSiteAndCultureQueries = true;
 	}
 
 	/// <summary>
@@ -43,8 +45,22 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	/// <param name="SiteContext">The site context service for multi-tenant filtering.</param>
 	public WikiWikiWorldDbContext(DbContextOptions<WikiWikiWorldDbContext> Options, ISiteContextService SiteContext) : base(Options)
 	{
+		_allowCrossSiteAndCultureQueries = SiteContext.AllowCrossSiteAndCultureQueries;
 		_currentSiteId = SiteContext.GetCurrentSiteId();
 		_currentCulture = SiteContext.GetCurrentCulture();
+
+		if (!_allowCrossSiteAndCultureQueries)
+		{
+			if (_currentSiteId is null)
+			{
+				throw new InvalidOperationException("Site ID is required unless cross-site and cross-culture queries are explicitly allowed.");
+			}
+
+			if (string.IsNullOrWhiteSpace(_currentCulture))
+			{
+				throw new InvalidOperationException("Culture is required unless cross-site and cross-culture queries are explicitly allowed.");
+			}
+		}
 	}
 
 	/// <summary>
@@ -138,8 +154,8 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		{
 			b.HasKey(e => e.Id);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
-			b.HasQueryFilter(SiteFilter, e => e.SiteId == _currentSiteId);
-			b.HasQueryFilter(CultureFilter, e => e.Culture == _currentCulture);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
+			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.DateCreated });
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.IsCurrent }).HasFilter("IsCurrent = 1 AND DateDeleted IS NULL");
 		});
@@ -155,7 +171,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		{
 			b.HasKey(e => e.Id);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
-			b.HasQueryFilter(SiteFilter, e => e.SiteId == _currentSiteId);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
 		});
 
@@ -163,7 +179,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		{
 			b.HasKey(e => e.Id);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
-			b.HasQueryFilter(SiteFilter, e => e.SiteId == _currentSiteId);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.HashSha256 });
 		});
 
@@ -187,7 +203,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		{
 			b.HasKey(e => e.Id);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
-			b.HasQueryFilter(SiteFilter, e => e.SiteId == _currentSiteId);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
 		});
 

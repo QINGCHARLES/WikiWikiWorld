@@ -36,6 +36,14 @@ public sealed record FileRevision
     /// </summary>
     public long FileSizeBytes { get; init; }
     /// <summary>
+    /// Gets or sets the width of the image in pixels, if applicable.
+    /// </summary>
+    public int? ImageWidthPixels { get; set; }
+    /// <summary>
+    /// Gets or sets the height of the image in pixels, if applicable.
+    /// </summary>
+    public int? ImageHeightPixels { get; set; }
+    /// <summary>
     /// Gets the source of the file.
     /// </summary>
     public string? Source { get; init; }

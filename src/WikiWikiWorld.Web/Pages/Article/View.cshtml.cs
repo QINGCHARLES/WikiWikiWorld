@@ -26,14 +26,12 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="UserManager">The user manager.</param>
 /// <param name="MarkdownPipelineFactory">The markdown pipeline factory.</param>
 /// <param name="SiteConfiguration">The site configuration options, used to resolve the current site name for stub banners.</param>
-/// <param name="FileStorageOptions">The file storage configuration options.</param>
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     UserManager<User> UserManager,
     IMarkdownPipelineFactory MarkdownPipelineFactory,
-    IOptions<SiteConfiguration> SiteConfiguration,
-    IOptions<FileStorageOptions> FileStorageOptions) : BasePageModel(SiteResolverService)
+    IOptions<SiteConfiguration> SiteConfiguration) : BasePageModel(SiteResolverService)
 {
     /// <summary>
     /// Gets or sets the URL slug of the article.
@@ -169,6 +167,11 @@ public sealed class ViewModel(
     public string? EyebrowLabel { get; private set; }
 
     /// <summary>
+    /// Gets the subtitle text extracted from the markdown, if present.
+    /// </summary>
+    public string? SubtitleText { get; private set; }
+
+    /// <summary>
     /// Handles the GET request to view the article.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
@@ -290,6 +293,7 @@ public sealed class ViewModel(
         // Enrich the document with async data
         ShortDescriptionExtension.Enrich(Document);
         EyebrowExtension.Enrich(Document);
+        SubtitleExtension.Enrich(Document);
         SourceExtension.Enrich(Document);
         await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture);
         await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
@@ -320,6 +324,11 @@ public sealed class ViewModel(
         if (Document.GetData(EyebrowExtension.DocumentKey) is string ResolvedEyebrow)
         {
             EyebrowLabel = ResolvedEyebrow;
+        }
+
+        if (Document.GetData(SubtitleExtension.DocumentKey) is string ResolvedSubtitle)
+        {
+            SubtitleText = ResolvedSubtitle;
         }
 
         if (Document.GetData(SourceExtension.TextKey) is string ResolvedSourceText)
@@ -358,14 +367,8 @@ public sealed class ViewModel(
                 FileOriginalFilename = CurrentFile.Filename;
                 FileSizeBytes = CurrentFile.FileSizeBytes;
 
-                // Read image dimensions from the physical file
-                string PhysicalFilePath = Path.Combine(
-                    FileStorageOptions.Value.SiteFilesPath,
-                    SiteId.ToString(),
-                    "images",
-                    $"{CurrentFile.CanonicalFileId}{FileExtension}");
-
-                (FileWidthPx, FileHeightPx) = ImageDimensionReader.ReadDimensions(PhysicalFilePath);
+                FileWidthPx = CurrentFile.ImageWidthPixels.GetValueOrDefault();
+                FileHeightPx = CurrentFile.ImageHeightPixels.GetValueOrDefault();
             }
         }
 

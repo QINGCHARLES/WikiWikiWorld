@@ -1,17 +1,22 @@
-# .NET Core
+# OS/editor noise
+.DS_Store
 *.swp
 *.*~
-project.lock.json
-.DS_Store
 *.pyc
 
-# User-specific files
+# User-specific IDE state
+.vs/
+.vscode/
+!.vscode/tasks.json
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
+.idea/
 
-# Build results
+# Build output
+[Bb]in/
+[Oo]bj/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -20,33 +25,32 @@ x64/
 x86/
 build/
 bld/
-[Bb]in/
-[Oo]bj/
+artifacts/
+publish/
+*.binlog
 msbuild.log
 msbuild.err
 msbuild.wrn
 
-# Visual Studio 2015/2017/2019/2022
-.vs/
-*.vscode/
-!.vscode/tasks.json
+# Test output
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
 
-
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# NuGet Packages
+# Packages
 *.nupkg
 *.snupkg
 **/packages/*
-
-# Node modules
 node_modules/
+project.lock.json
+project.fragment.lock.json
 
-# Database files (optional - remove if you want to commit the database)
+# Local .NET/tool state
+.dotnet/
+
+# Local runtime data
+data/
 *.db
 *.db-shm
 *.db-wal
@@ -54,20 +58,14 @@ node_modules/
 # Logs
 *.log
 
-# Certificate files
+# Certificates and secrets
 *.pfx
 *.p12
 *.pem
 *.key
 *.crt
-
-# Rider
-.idea/
-
-# User secrets
 appsettings.Development.json
 secrets.json
 
-# Site files
-data/sitefiles/1/images/
-data/sitefiles/1/profilepics/
+# Retired agent/tool state
+.claude/

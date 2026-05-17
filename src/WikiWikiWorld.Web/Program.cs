@@ -19,6 +19,7 @@ using WikiWikiWorld.Web;
 using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Infrastructure;
 using WikiWikiWorld.Web.Services;
+using SixLabors.ImageSharp.Web.DependencyInjection;
 
 WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,7 @@ Builder.Services.AddDbContext<WikiWikiWorldDbContext>(Options =>
 
 Builder.Services.AddScoped<SiteResolverService>();
 Builder.Services.AddScoped<ISiteContextService, SiteContextService>();
+Builder.Services.AddScoped<ArticleRevisionService>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddTransient<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
@@ -195,6 +197,8 @@ Builder.Services.AddControllers()
     });
 
 Builder.Services.AddOpenApi();
+
+Builder.Services.AddImageSharp();
 
 FileExtensionContentTypeProvider ContentTypeProvider = new();
 ContentTypeProvider.Mappings[".heic"] = "image/heic";
@@ -328,9 +332,15 @@ App.Use(async (Context, Next) =>
 
 App.UseAuthorization();
 
+App.UseImageSharp();
+
 App.UseStaticFiles(new StaticFileOptions
 {
-    ContentTypeProvider = ContentTypeProvider
+    ContentTypeProvider = ContentTypeProvider,
+    OnPrepareResponse = FileContext =>
+    {
+        FileContext.Context.Response.Headers.Append(HeaderNames.CacheControl, "public, max-age=2592000");
+    }
 });
 
 if (!Directory.Exists(SiteFilesPath))
@@ -342,7 +352,11 @@ App.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(SiteFilesPath),
     RequestPath = "/sitefiles",
-    ContentTypeProvider = ContentTypeProvider
+    ContentTypeProvider = ContentTypeProvider,
+    OnPrepareResponse = FileContext =>
+    {
+        FileContext.Context.Response.Headers.Append(HeaderNames.CacheControl, "public, max-age=2592000");
+    }
 });
 
 

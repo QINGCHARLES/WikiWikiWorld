@@ -16,18 +16,9 @@ public sealed class SiteContextService : ISiteContextService
 	/// <param name="SiteResolver">The site resolver service.</param>
 	public SiteContextService(SiteResolverService SiteResolver)
 	{
-		try
-		{
-			(int SiteId, string Culture) = SiteResolver.ResolveSiteAndCulture();
-			_currentSiteId = SiteId;
-			_currentCulture = Culture;
-		}
-		catch (InvalidOperationException)
-		{
-			// Outside HTTP context (migrations, background jobs)
-			_currentSiteId = null;
-			_currentCulture = null;
-		}
+		(int SiteId, string Culture) = SiteResolver.ResolveSiteAndCulture();
+		_currentSiteId = SiteId;
+		_currentCulture = Culture;
 	}
 
 	/// <inheritdoc/>

@@ -6,14 +6,19 @@ namespace WikiWikiWorld.Data;
 public interface ISiteContextService
 {
 	/// <summary>
-	/// Gets the current site identifier, or null if not in a site context.
+	/// Gets a value indicating whether queries may intentionally cross site and culture boundaries.
 	/// </summary>
-	/// <returns>The site ID, or null for cross-site operations.</returns>
+	bool AllowCrossSiteAndCultureQueries => false;
+
+	/// <summary>
+	/// Gets the current site identifier.
+	/// </summary>
+	/// <returns>The site ID, or null only when <see cref="AllowCrossSiteAndCultureQueries"/> is true.</returns>
 	int? GetCurrentSiteId();
 
 	/// <summary>
-	/// Gets the current culture, or null if not in a culture context.
+	/// Gets the current culture.
 	/// </summary>
-	/// <returns>The culture code, or null for cross-culture operations.</returns>
+	/// <returns>The culture code, or null only when <see cref="AllowCrossSiteAndCultureQueries"/> is true.</returns>
 	string? GetCurrentCulture();
 }

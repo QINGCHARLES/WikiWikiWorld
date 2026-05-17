@@ -119,6 +119,8 @@ public sealed class FileApiController(
 				await File.CopyToAsync(FileStream, CancellationToken);
 			}
 
+			(int WidthPx, int HeightPx) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
+
 			IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
 
 			FileUploadResponse Response = await Strategy.ExecuteAsync(async CT =>
@@ -142,6 +144,8 @@ public sealed class FileApiController(
 					Filename = OriginalFileName,
 					MimeType = File.ContentType,
 					FileSizeBytes = File.Length,
+					ImageWidthPixels = WidthPx > 0 ? WidthPx : null,
+					ImageHeightPixels = HeightPx > 0 ? HeightPx : null,
 					Source = Source,
 					RevisionReason = FinalRevisionReason,
 					SourceAndRevisionReasonCulture = FinalCulture,
@@ -151,14 +155,18 @@ public sealed class FileApiController(
 				};
 
 				Context.FileRevisions.Add(NewFile);
-				await Context.SaveChangesAsync(CT);
+
+				using (WriteDurabilityScope.High())
+				{
+					await Context.SaveChangesAsync(CT);
+				}
 
 				// Move from temp to final path
 				System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
 
 				await Transaction.CommitAsync(CT);
 
-				return new FileUploadResponse(CanonicalFileId, OriginalFileName, File.ContentType, File.Length);
+				return new FileUploadResponse(CanonicalFileId, OriginalFileName, File.ContentType, File.Length, WidthPx > 0 ? WidthPx : null, HeightPx > 0 ? HeightPx : null);
 			}, CancellationToken);
 
 			return Ok(Response);
@@ -192,8 +200,8 @@ public sealed class FileApiController(
 	public async Task<IActionResult> GetFileMetadata(Guid CanonicalFileId, CancellationToken CancellationToken)
 	{
 		FileRevision? FileRevision = await Context.FileRevisions
-			.Where(F => F.CanonicalFileId == CanonicalFileId && F.IsCurrent == true)
 			.AsNoTracking()
+			.Where(F => F.CanonicalFileId == CanonicalFileId && F.IsCurrent == true)
 			.FirstOrDefaultAsync(CancellationToken);
 
 		if (FileRevision is null)
@@ -208,6 +216,8 @@ public sealed class FileApiController(
 			FileRevision.FileSizeBytes,
 			FileRevision.Type,
 			FileRevision.Source,
+			FileRevision.ImageWidthPixels,
+			FileRevision.ImageHeightPixels,
 			FileRevision.DateCreated));
 	}
 }
@@ -219,7 +229,9 @@ public sealed class FileApiController(
 /// <param name="Filename">The original filename.</param>
 /// <param name="MimeType">The MIME type.</param>
 /// <param name="FileSizeBytes">The file size in bytes.</param>
-public sealed record FileUploadResponse(Guid CanonicalFileId, string Filename, string MimeType, long FileSizeBytes);
+/// <param name="ImageWidthPixels">The width of the image in pixels, if applicable.</param>
+/// <param name="ImageHeightPixels">The height of the image in pixels, if applicable.</param>
+public sealed record FileUploadResponse(Guid CanonicalFileId, string Filename, string MimeType, long FileSizeBytes, int? ImageWidthPixels, int? ImageHeightPixels);
 
 /// <summary>
 /// Response for file metadata retrieval.
@@ -230,6 +242,8 @@ public sealed record FileUploadResponse(Guid CanonicalFileId, string Filename, s
 /// <param name="FileSizeBytes">The file size in bytes.</param>
 /// <param name="Type">The file type.</param>
 /// <param name="Source">The file source, if any.</param>
+/// <param name="ImageWidthPixels">The width of the image in pixels, if applicable.</param>
+/// <param name="ImageHeightPixels">The height of the image in pixels, if applicable.</param>
 /// <param name="DateCreated">The creation date.</param>
 public sealed record FileMetadataResponse(
 	Guid CanonicalFileId,
@@ -238,4 +252,6 @@ public sealed record FileMetadataResponse(
 	long FileSizeBytes,
 	FileType Type,
 	string? Source,
+	int? ImageWidthPixels,
+	int? ImageHeightPixels,
 	DateTimeOffset DateCreated);

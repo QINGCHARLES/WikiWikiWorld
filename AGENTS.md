@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v9
+# What AI agents should know about me -- v11
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -16,6 +16,11 @@ If you identify a significantly better, more robust, or modern approach than the
 * You **must** start your response with a **"💡 Recommended Alternative"** block.
 * Briefly explain *why* the alternative is superior (e.g., "Facebook Graph API is stable; WebView2 is liable to break on UI updates").
 * Ask if I want to switch to the better approach or proceed with my original request.
+
+* Don’t assume. Don’t hide confusion. Surface tradeoffs.
+* Minimum code that solves the problem. Nothing speculative.
+* Touch only what you must. Clean up only your own mess.
+* Define success criteria. Loop until verified.
 
 ## Coding standards & conventions
 * Strong explicit typing; avoid `var` unless the type is truly obvious or required.
@@ -139,7 +144,7 @@ If you identify a significantly better, more robust, or modern approach than the
 * SQL is idempotent; create minimal indexes.
 * Map to immutable DTOs (`record class` + `required`).
 * Use the Specification Pattern for query reuse. It avoids duplication and keeps complex queries composable.
-* For security-critical writes (account creation, password changes, role updates), wrap `SaveChangesAsync` in `using (WriteDurabilityScope.High())` to use `synchronous=FULL`, if feature available in data layer of project.
+* For critical durability writes, wrap actual persistence call in `using (WriteDurabilityScope.High())` to use SQLite `synchronous=FULL`, if feature available in data layer. Include identity/security changes (account creation, password changes, lockout/access-failure updates, role or permission changes), durable user/content state (article revisions, file revisions, deletes/reverts), and user communication records (messages, talk threads/posts). Do not apply blanket-style to routine analytics, cache refreshes, ephemeral state, read-only workflows, or retryable/low-impact interactions such as likes, reactions, view counts, click tracking, presence indicators, drafts/autosaves, or other convenience state where the user can reasonably retry without data loss.
 * **Read-Only Optimization:** Explicitly use `.AsNoTracking()` for all read-only queries (e.g., `OnGet` handlers) to reduce memory overhead and GC pressure.
 * **Named Query Filters:** Use named filters for soft-delete and multi-tenancy (`HasQueryFilter("SoftDelete", e => !e.IsDeleted)`); selectively disable with `.IgnoreQueryFilters(["FilterName"])`.
 * **LINQ Optimization:**

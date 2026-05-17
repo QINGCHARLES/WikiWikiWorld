@@ -48,7 +48,12 @@ public sealed class RegisterModel(
 		}
 
 		User NewUser = new() { UserName = Input.UserName, Email = Input.Email };
-		IdentityResult Result = await UserManager.CreateAsync(NewUser, Input.Password);
+		IdentityResult Result;
+
+		using (WriteDurabilityScope.High())
+		{
+			Result = await UserManager.CreateAsync(NewUser, Input.Password);
+		}
 
 		if (Result.Succeeded)
 		{

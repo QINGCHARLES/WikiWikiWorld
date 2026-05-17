@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Helpers;
+using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
@@ -21,12 +22,14 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="UserManager">The user manager.</param>
 /// <param name="FileStorageOptions">The file storage options.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="ArticleRevisionService">The article revision workflow service.</param>
 [Authorize]
 public sealed class CreateEditModel(
     WikiWikiWorldDbContext Context,
     UserManager<User> UserManager,
     IOptions<FileStorageOptions> FileStorageOptions,
-    SiteResolverService SiteResolverService)
+    SiteResolverService SiteResolverService,
+    ArticleRevisionService ArticleRevisionService)
     : BasePageModel(SiteResolverService)
 {
     private static readonly HashSet<string> AllowedImageExtensions = ImageValidationHelper.AllowedImageExtensions;
@@ -180,8 +183,9 @@ public sealed class CreateEditModel(
     /// <summary>
     /// Handles the POST request to revert an article to a previous revision.
     /// </summary>
+    /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>A redirect or page result.</returns>
-    public async Task<IActionResult> OnPostRevertAsync()
+    public async Task<IActionResult> OnPostRevertAsync(CancellationToken CancellationToken)
     {
         // Ensure user is authenticated
         if (!User.Identity?.IsAuthenticated ?? true)
@@ -200,46 +204,20 @@ public sealed class CreateEditModel(
              return NotFound("Article not found.");
         }
 
-        // Fetch the current revision
-        ArticleRevisionsBySlugSpec Spec = new(OriginalUrlSlug, IsCurrent: true);
-        ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
-
-        if (CurrentArticle is null)
+        try
+        {
+            ArticleRevision PreviousRevision = await ArticleRevisionService.RevertToPreviousRevisionAsync(OriginalUrlSlug, CancellationToken);
+            return Redirect(ArticleUrlHelper.BuildArticlePath(PreviousRevision));
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound && Ex.Message == "Article not found.")
         {
              return NotFound("Article not found.");
         }
-
-        // Fetch the most recent previous revision
-        ArticleRevision? PreviousRevision = await Context.ArticleRevisions
-            .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
-                        !x.IsCurrent)
-            .OrderByDescending(x => x.DateCreated)
-            .FirstOrDefaultAsync();
-
-        if (PreviousRevision is null)
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {
-             ErrorMessage = "No previous revision found to revert to.";
-             return await OnGetAsync(); // Reload page with error
+             ErrorMessage = Ex.Message;
+             return await OnGetAsync();
         }
-
-        // Soft delete the current revision
-        CurrentArticle.IsCurrent = false;
-        CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
-        Context.ArticleRevisions.Update(CurrentArticle);
-
-        // Restore the previous revision
-        PreviousRevision.IsCurrent = true;
-        
-        // Optionally, we could create a NEW revision that helps track who did the revert,
-        // but the user requirement was specific: "updates the flags in the db to soft delete the current revision, unflag it as current revision and reflag the previous one as current revision."
-        Context.ArticleRevisions.Update(PreviousRevision);
-        
-        using (WriteDurabilityScope.High())
-        {
-            await Context.SaveChangesAsync();
-        }
-
-        return Redirect(ArticleUrlHelper.BuildArticlePath(PreviousRevision));
     }
 
     /// <summary>
@@ -287,7 +265,7 @@ public sealed class CreateEditModel(
 
         if (IsEditModePost)
         {
-            return await HandleEditAsync(CurrentUserId.Value);
+            return await HandleEditAsync(CurrentUserId.Value, CancellationToken);
         }
         else
         {
@@ -312,7 +290,6 @@ public sealed class CreateEditModel(
             ErrorMessage = "An article with this URL slug already exists.";
             return Page();
         }
-
         Guid CanonicalArticleId = Guid.NewGuid();
         Guid? CanonicalFileId = null;
         string? OriginalFileName = null;
@@ -320,6 +297,8 @@ public sealed class CreateEditModel(
         long UploadedFileSizeBytes = 0;
         string? TemporaryFilePath = null;
         string? FinalFilePath = null;
+        int UploadedImageWidthPixels = 0;
+        int UploadedImageHeightPixels = 0;
 
         if (UploadedFile is not null && UploadedFile.Length > 0)
         {
@@ -331,7 +310,7 @@ public sealed class CreateEditModel(
 
             try
             {
-                (Guid StagedCanonicalFileId, string StagedOriginalFileName, string StagedContentType, long StagedFileSizeBytes, string StagedTemporaryFilePath, string StagedFinalFilePath) =
+                (Guid StagedCanonicalFileId, string StagedOriginalFileName, string StagedContentType, long StagedFileSizeBytes, string StagedTemporaryFilePath, string StagedFinalFilePath, int StagedImageWidthPixels, int StagedImageHeightPixels) =
                     await StageUploadedFileAsync(CancellationToken);
 
                 CanonicalFileId = StagedCanonicalFileId;
@@ -340,6 +319,8 @@ public sealed class CreateEditModel(
                 UploadedFileSizeBytes = StagedFileSizeBytes;
                 TemporaryFilePath = StagedTemporaryFilePath;
                 FinalFilePath = StagedFinalFilePath;
+                UploadedImageWidthPixels = StagedImageWidthPixels;
+                UploadedImageHeightPixels = StagedImageHeightPixels;
                 SelectedType = ArticleType.File;
             }
             catch (Exception Ex)
@@ -380,6 +361,8 @@ public sealed class CreateEditModel(
                         Filename = OriginalFileName,
                         MimeType = UploadedContentType,
                         FileSizeBytes = UploadedFileSizeBytes,
+                        ImageWidthPixels = UploadedImageWidthPixels > 0 ? UploadedImageWidthPixels : null,
+                        ImageHeightPixels = UploadedImageHeightPixels > 0 ? UploadedImageHeightPixels : null,
                         Source = null,
                         RevisionReason = "Initial upload",
                         SourceAndRevisionReasonCulture = Culture,
@@ -409,7 +392,11 @@ public sealed class CreateEditModel(
                 };
 
                 Context.ArticleRevisions.Add(NewArticle);
-                await Context.SaveChangesAsync(CT);
+
+                using (WriteDurabilityScope.High())
+                {
+                    await Context.SaveChangesAsync(CT);
+                }
 
                 if (TemporaryFilePath is not null && FinalFilePath is not null)
                 {
@@ -439,62 +426,62 @@ public sealed class CreateEditModel(
     /// Handles the editing of an existing article.
     /// </summary>
     /// <param name="CurrentUserId">The ID of the current user.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>A redirect to the updated article or a page with errors.</returns>
-    private async Task<IActionResult> HandleEditAsync(Guid CurrentUserId)
+    private async Task<IActionResult> HandleEditAsync(Guid CurrentUserId, CancellationToken CancellationToken)
     {
-        // Fetch existing article using original slug
-        ArticleRevisionsBySlugSpec Spec = new(OriginalUrlSlug, IsCurrent: true);
-        ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
+        try
+        {
+            ArticleRevisionUpdateCommand Command = new(
+                OriginalUrlSlug: OriginalUrlSlug,
+                NewUrlSlug: UrlSlug!,
+                SiteId: SiteId,
+                Culture: Culture,
+                Title: Title,
+                DisplayTitle: DisplayTitle,
+                Type: SelectedType,
+                CanonicalFileId: null,
+                Text: ArticleText,
+                RevisionReason: "User edit",
+                CreatedByUserId: CurrentUserId);
 
-        if (CurrentArticle is null)
+            await ArticleRevisionService.UpdateArticleAsync(Command, CancellationToken);
+            return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {
             return NotFound("Article not found.");
         }
-
-        // Check if new URL slug conflicts with another article
-        if (!OriginalUrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase))
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Conflict)
         {
-            ArticleRevisionsBySlugSpec ConflictSpec = new(UrlSlug!, IsCurrent: true);
-            ArticleRevision? ExistingArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(ConflictSpec).FirstOrDefaultAsync();
+            ErrorMessage = Ex.Message;
+            await PopulateCanRevertAsync(OriginalUrlSlug, CancellationToken);
+            return Page();
+        }
+    }
 
-            if (ExistingArticle is not null)
-            {
-                ErrorMessage = "An article with this URL Slug already exists.";
-                // Need to re-populate CanRevert before returning Page()
-                CanRevert = await Context.ArticleRevisions
-                    .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
-                                !x.IsCurrent)
-                    .AnyAsync();
-                return Page();
-            }
+    /// <summary>
+    /// Populates whether the current article can be reverted.
+    /// </summary>
+    /// <param name="LookupUrlSlug">The URL slug used to find the current article.</param>
+    /// <param name="CancellationToken">The cancellation token.</param>
+    private async Task PopulateCanRevertAsync(string LookupUrlSlug, CancellationToken CancellationToken)
+    {
+        ArticleRevisionsBySlugSpec Spec = new(LookupUrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentArticle = await Context.ArticleRevisions
+            .AsNoTracking()
+            .WithSpecification(Spec)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        if (CurrentArticle is null)
+        {
+            CanRevert = false;
+            return;
         }
 
-        // Set current revision to not current
-        CurrentArticle.IsCurrent = false;
-        Context.ArticleRevisions.Update(CurrentArticle);
-
-        // Insert new revision with updates
-        ArticleRevision NewRevision = new()
-        {
-            CanonicalArticleId = CurrentArticle.CanonicalArticleId,
-            SiteId = SiteId,
-            Culture = Culture,
-            Title = Title,
-            DisplayTitle = DisplayTitle,
-            UrlSlug = UrlSlug!,
-            Type = SelectedType,
-            CanonicalFileId = CurrentArticle.CanonicalFileId,
-            Text = ArticleText,
-            RevisionReason = "User edit",
-            CreatedByUserId = CurrentUserId,
-            DateCreated = DateTimeOffset.UtcNow,
-            IsCurrent = true
-        };
-
-        Context.ArticleRevisions.Add(NewRevision);
-        await Context.SaveChangesAsync();
-
-        return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+        CanRevert = await Context.ArticleRevisions
+            .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && !x.IsCurrent)
+            .AnyAsync(CancellationToken);
     }
 
     /// <summary>
@@ -503,7 +490,7 @@ public sealed class CreateEditModel(
     /// <param name="CancellationToken">The cancellation token.</param>
     /// <returns>The staged file metadata and filesystem paths.</returns>
     /// <exception cref="InvalidOperationException">Thrown when there is no uploaded file to stage.</exception>
-    private async Task<(Guid CanonicalFileId, string OriginalFileName, string ContentType, long FileSizeBytes, string TemporaryFilePath, string FinalFilePath)> StageUploadedFileAsync(CancellationToken CancellationToken)
+    private async Task<(Guid CanonicalFileId, string OriginalFileName, string ContentType, long FileSizeBytes, string TemporaryFilePath, string FinalFilePath, int ImageWidthPixels, int ImageHeightPixels)> StageUploadedFileAsync(CancellationToken CancellationToken)
     {
         if (UploadedFile is null)
         {
@@ -527,7 +514,9 @@ public sealed class CreateEditModel(
         await using FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
         await UploadedFile.CopyToAsync(FileStream, CancellationToken);
 
-        return (CanonicalFileId, OriginalFileName, UploadedFile.ContentType, UploadedFile.Length, TemporaryFilePath, FinalFilePath);
+        (int WidthPx, int HeightPx) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
+
+        return (CanonicalFileId, OriginalFileName, UploadedFile.ContentType, UploadedFile.Length, TemporaryFilePath, FinalFilePath, WidthPx, HeightPx);
     }
 
     /// <summary>

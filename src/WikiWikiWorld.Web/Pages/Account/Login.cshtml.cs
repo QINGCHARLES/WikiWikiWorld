@@ -78,7 +78,13 @@ public sealed class LoginModel(
 		}
 
 		// Authenticate user by username & password
-		Microsoft.AspNetCore.Identity.SignInResult Result = await SignInManager.PasswordSignInAsync(TargetUser, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+		Microsoft.AspNetCore.Identity.SignInResult Result;
+
+		using (WriteDurabilityScope.High())
+		{
+			Result = await SignInManager.PasswordSignInAsync(TargetUser, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+		}
+
 		if (Result.Succeeded)
 		{
 			// Ensure user article exists for DM inbox
@@ -129,7 +135,11 @@ public sealed class LoginModel(
 			};
 
 			Context.ArticleRevisions.Add(NewUserArticle);
-			await Context.SaveChangesAsync();
+
+			using (WriteDurabilityScope.High())
+			{
+				await Context.SaveChangesAsync();
+			}
 		}
 	}
 

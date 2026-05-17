@@ -28,7 +28,13 @@
 	{
 		<p class="eyebrow">@Model.EyebrowLabel</p>
 	}
-	<h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.DisplayedRevision?.DisplayTitle) ? Model.DisplayedRevision?.Title : Model.DisplayedRevision?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
+	<hgroup>
+		<h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.DisplayedRevision?.DisplayTitle) ? Model.DisplayedRevision?.Title : Model.DisplayedRevision?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
+		@if (!string.IsNullOrWhiteSpace(Model.SubtitleText))
+		{
+			<p>@Model.SubtitleText</p>
+		}
+	</hgroup>
 
 @* <h1 class="title">@Model.DisplayedRevision?.Title</h1> *@
 

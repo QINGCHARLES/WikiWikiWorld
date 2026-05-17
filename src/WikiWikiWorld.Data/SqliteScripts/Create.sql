@@ -116,6 +116,8 @@ CREATE TABLE FileRevisions (
     Filename TEXT NOT NULL,
     MimeType TEXT NOT NULL,
     FileSizeBytes INTEGER NOT NULL,
+    ImageWidthPixels INTEGER NULL,
+    ImageHeightPixels INTEGER NULL,
     Source TEXT NULL,
     RevisionReason TEXT NOT NULL,
     SourceAndRevisionReasonCulture TEXT NOT NULL,
