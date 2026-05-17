@@ -135,17 +135,17 @@
 			<match url="(.+)/history$" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/History?UrlSlug={R:1}" />
 		</rule>
-		<rule enabled="true">
-			<match url="(.+)/talk$" />
-			<action type="Rewrite" url="https://{HTTP_HOST}/Article/Talk?UrlSlug={R:1}" />
+		<rule enabled="true" stopProcessing="true">
+			<match url="^(.+)/talk/(.+)$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Article/TalkSubject?ArticleSlug={R:1}&amp;SubjectSlug={R:2}" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^(.+)/talk$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Article/TalkSubjects?ArticleSlug={R:1}" />
 		</rule>
 		<rule enabled="true">
 			<match url="(.+)/revision/(.+)" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/View?UrlSlug={R:1}&amp;Revision={R:2}" appendQueryString="true" />
-		</rule>
-		<rule enabled="true">
-			<match url="^@(.+)/talk/(.+)$" />
-			<action type="Rewrite" url="https://{HTTP_HOST}/Article/TalkSubject?UrlSlug={R:2}" />
 		</rule>
 		<rule enabled="true">
 			<match url="(.+)/links$" />

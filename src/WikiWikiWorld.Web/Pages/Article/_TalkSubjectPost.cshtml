@@ -1,0 +1,81 @@
+@using Microsoft.AspNetCore.Identity
+@using WikiWikiWorld.Data.Models
+@using WikiWikiWorld.Web.Helpers
+@inject SignInManager<User> SignInManager
+@model WikiWikiWorld.Web.Pages.Article._TalkSubjectPostContext
+@{
+	WikiWikiWorld.Web.Pages.Article.TalkSubjectModel.PostNode Node = Model.Node;
+	int Depth = Model.Depth;
+	bool IsSignedIn = SignInManager.IsSignedIn(User);
+	bool CollapseChildren = Node.Children.Count > 0 && Depth >= WikiWikiWorld.Web.Pages.Article.TalkSubjectModel.CollapseDepth;
+	string AuthorName = Model.Authors.TryGetValue(Node.CreatedByUserId, out User? AuthorUser)
+		? AuthorUser.UserName ?? "Unknown"
+		: "Unknown";
+}
+
+<article class="talk-post" id="post-@Node.Id" style="--depth: @Depth;">
+	<header class="talk-post-header">
+		<a class="talk-post-author" href="/@@@AuthorName/profile">@@@AuthorName</a>
+		<span class="talk-post-sep">•</span>
+		<time class="talk-post-date"
+		      datetime="@Node.DateCreated.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">
+			@TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, Node.DateCreated)
+		</time>
+		@if (Node.HasBeenEdited && Node.DateModified is DateTimeOffset Modified)
+		{
+			<span class="talk-post-sep">•</span>
+			<span class="talk-post-edited" title="@Modified.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">edited</span>
+		}
+	</header>
+
+	<div class="talk-post-body">
+		@Html.Raw(Node.Html)
+	</div>
+
+	<footer class="talk-post-footer">
+		@if (IsSignedIn)
+		{
+			<details class="talk-reply">
+				<summary>Reply</summary>
+				<form method="post" asp-page-handler="Reply" asp-route-ArticleSlug="@Model.ArticleSlug" asp-route-SubjectSlug="@Model.SubjectSlug">
+					<input type="hidden" name="Input.ParentTalkSubjectPostId" value="@Node.Id" />
+					<div class="md3-field md3-filled">
+						<textarea name="Input.Text"
+						          placeholder=" "
+						          rows="3"
+						          maxlength="10000"
+						          required></textarea>
+						<label>Reply (Markdown supported)</label>
+						<span class="md-line"></span>
+					</div>
+					<button type="submit" class="button">Post reply</button>
+				</form>
+			</details>
+		}
+	</footer>
+
+	@if (Node.Children.Count > 0)
+	{
+		if (CollapseChildren)
+		{
+			<details class="talk-thread-collapse">
+				<summary>Show @Node.Children.Count nested @(Node.Children.Count == 1 ? "reply" : "replies")</summary>
+				<div class="talk-children">
+					@foreach (WikiWikiWorld.Web.Pages.Article.TalkSubjectModel.PostNode Child in Node.Children)
+					{
+						<partial name="_TalkSubjectPost" model="@Model.ForChild(Child)" />
+					}
+				</div>
+			</details>
+		}
+		else
+		{
+			<div class="talk-children">
+				@foreach (WikiWikiWorld.Web.Pages.Article.TalkSubjectModel.PostNode Child in Node.Children)
+				{
+					<partial name="_TalkSubjectPost" model="@Model.ForChild(Child)" />
+				}
+			</div>
+		}
+	}
+</article>

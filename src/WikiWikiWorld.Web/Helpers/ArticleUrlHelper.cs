@@ -29,7 +29,8 @@ public static class ArticleUrlHelper
 		"robots.txt",
 		".well-known",
 		"sitefiles",
-		"shared"
+		"shared",
+		"talk"
 	};
 
 	/// <summary>

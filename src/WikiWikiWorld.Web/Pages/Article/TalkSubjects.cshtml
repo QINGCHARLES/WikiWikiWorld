@@ -1,0 +1,97 @@
+@page
+@using Microsoft.AspNetCore.Identity
+@using WikiWikiWorld.Data.Models
+@using WikiWikiWorld.Web.Helpers
+@inject SignInManager<User> SignInManager
+@model WikiWikiWorld.Web.Pages.Article.TalkSubjectsModel
+@{
+	ViewData["Title"] = (Model.Article?.Title ?? "Talk") + " — Talk";
+	bool IsSignedIn = SignInManager.IsSignedIn(User);
+}
+
+<div class="talk-page">
+	<div class="talk-layout">
+		<div class="talk-main">
+			<header class="talk-page-header">
+				<nav class="talk-breadcrumb" aria-label="Breadcrumb">
+					<a href="@Model.ArticlePath">@Model.Article?.Title</a>
+					<span aria-hidden="true">›</span>
+					<span>Talk</span>
+				</nav>
+				<h1>Discussion: @Model.Article?.Title</h1>
+				<p class="talk-page-tag">@Model.Subjects.Count @(Model.Subjects.Count == 1 ? "subject" : "subjects")</p>
+			</header>
+
+			@if (Model.Subjects.Count == 0)
+			{
+				<p class="talk-empty">No discussion subjects yet. Be the first to start one.</p>
+			}
+			else
+			{
+				<ul class="talk-subject-list">
+					@foreach (WikiWikiWorld.Web.Pages.Article.TalkSubjectsModel.SubjectRow Row in Model.Subjects)
+					{
+						string AuthorName = Model.Authors.TryGetValue(Row.CreatedByUserId, out User? AuthorUser)
+							? AuthorUser.UserName ?? "Unknown"
+							: "Unknown";
+						string SubjectUrl = $"{Model.TalkPath}/{Row.UrlSlug}";
+						<li class="talk-subject-row">
+							<a class="talk-subject-title" href="@SubjectUrl">@Row.Subject</a>
+							<div class="talk-subject-meta">
+								<span>@Row.PostCount @(Row.PostCount == 1 ? "post" : "posts")</span>
+								<span>•</span>
+								<span>by <a class="talk-subject-author" href="/@@@AuthorName/profile">@@@AuthorName</a></span>
+								<span>•</span>
+								<time datetime="@Row.DateCreated.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">
+									@TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, Row.DateCreated)
+								</time>
+							</div>
+						</li>
+					}
+				</ul>
+			}
+
+			<section class="talk-new-subject">
+				<h2>Start a new subject</h2>
+				@if (!IsSignedIn)
+				{
+					<p>
+						<a class="button" href="/Account/Login">Sign in</a> to start a discussion.
+					</p>
+				}
+				else
+				{
+					<form method="post" asp-page-handler="NewSubject">
+						<div asp-validation-summary="ModelOnly" class="talk-validation"></div>
+
+						<div class="md3-field md3-filled">
+							<input type="text"
+							       asp-for="Input.Subject"
+							       placeholder=" "
+							       maxlength="150"
+							       required />
+							<label asp-for="Input.Subject">Subject</label>
+							<span class="md-line"></span>
+						</div>
+						<span asp-validation-for="Input.Subject" class="talk-validation"></span>
+
+						<div class="md3-field md3-filled">
+							<textarea asp-for="Input.Text"
+							          placeholder=" "
+							          rows="4"
+							          maxlength="10000"
+							          required></textarea>
+							<label asp-for="Input.Text">Your first post (Markdown supported)</label>
+							<span class="md-line"></span>
+						</div>
+						<span asp-validation-for="Input.Text" class="talk-validation"></span>
+
+						<button type="submit" class="button">Post subject</button>
+					</form>
+				}
+			</section>
+		</div>
+
+		<partial name="_TalkSidebar" />
+	</div>
+</div>
