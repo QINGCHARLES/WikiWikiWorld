@@ -13,7 +13,7 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
-public class LinksModel(
+public sealed class LinksModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {

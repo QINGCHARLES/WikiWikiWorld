@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
@@ -25,36 +26,49 @@ WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
 
 Builder.Host.UseSystemd();
 
+Builder.Services.AddOptions<ApplicationStartupOptions>()
+	.Bind(Builder.Configuration.GetSection(ApplicationStartupOptions.SectionName))
+	.ValidateDataAnnotations()
+	.Validate(Options => Options.DevelopmentHttpsPort != Options.DevelopmentHttpPort, "Development HTTP and HTTPS ports must be different.")
+	.ValidateOnStart();
+
+ApplicationStartupOptions StartupOptions = Builder.Configuration
+	.GetSection(ApplicationStartupOptions.SectionName)
+	.Get<ApplicationStartupOptions>() ?? new();
+
 // Only configure Kestrel manually for development
 // In production, use appsettings.Production.json configuration
 if (Builder.Environment.IsDevelopment())
 {
-    Builder.WebHost.ConfigureKestrel(Options =>
-    {
-        Options.ListenAnyIP(7126, ListenOptions =>
-        {
-            // Use the development certificate for subdomain support
-            using System.Security.Cryptography.X509Certificates.X509Store CertStore = new(
-                System.Security.Cryptography.X509Certificates.StoreName.My,
-                System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser);
-            CertStore.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly);
+	Builder.WebHost.ConfigureKestrel(Options =>
+	{
+		Options.ListenAnyIP(StartupOptions.DevelopmentHttpsPort, ListenOptions =>
+		{
+			// Use the development certificate for subdomain support
+			X509Certificate2Collection Certs = [];
 
-            System.Security.Cryptography.X509Certificates.X509Certificate2Collection Certs = CertStore.Certificates.Find(
-                System.Security.Cryptography.X509Certificates.X509FindType.FindBySubjectName,
-                "en.localhost",
-                validOnly: false);
+			if (!string.IsNullOrWhiteSpace(StartupOptions.DevelopmentHttpsCertificateSubjectName))
+			{
+				using X509Store CertStore = new(StoreName.My, StoreLocation.CurrentUser);
+				CertStore.Open(OpenFlags.ReadOnly);
 
-            if (Certs.Count > 0)
-            {
-                ListenOptions.UseHttps(Certs[0]);
-            }
-            else
-            {
-                ListenOptions.UseHttps(); // Fall back to default cert
-            }
-        });
-        Options.ListenAnyIP(5097); // ✅ HTTP
-    });
+				Certs = CertStore.Certificates.Find(
+					X509FindType.FindBySubjectName,
+					StartupOptions.DevelopmentHttpsCertificateSubjectName,
+					validOnly: false);
+			}
+
+			if (Certs.Count > 0)
+			{
+				ListenOptions.UseHttps(Certs[0]);
+			}
+			else
+			{
+				ListenOptions.UseHttps(); // Fall back to default cert
+			}
+		});
+		Options.ListenAnyIP(StartupOptions.DevelopmentHttpPort);
+	});
 }
 
 Builder.Services.Configure<SiteConfiguration>(Builder.Configuration.GetSection("SiteConfiguration"));
@@ -62,22 +76,26 @@ Builder.Services.Configure<SiteConfiguration>(Builder.Configuration.GetSection("
 // Add memory cache service
 Builder.Services.AddMemoryCache();
 
-// Add memory cache service
-Builder.Services.AddMemoryCache();
-
 // Configured Static File Path
-string DataPath = Builder.Environment.IsDevelopment()
-    ? Path.Combine(Builder.Environment.ContentRootPath, "..", "..", "data")
-    : Path.Combine(Builder.Environment.ContentRootPath, "data");
+string DataPath = string.IsNullOrWhiteSpace(StartupOptions.DataPath)
+	? Path.Combine(Builder.Environment.ContentRootPath, "data")
+	: Path.IsPathRooted(StartupOptions.DataPath)
+		? StartupOptions.DataPath
+		: Path.GetFullPath(Path.Combine(Builder.Environment.ContentRootPath, StartupOptions.DataPath));
 
 string SiteFilesPath = Path.Combine(DataPath, "sitefiles");
 string WellKnownPath = Path.Combine(DataPath, ".well-known");
 
 // Register Options
-Builder.Services.Configure<FileStorageOptions>(Options =>
-{
-    Options.SiteFilesPath = SiteFilesPath;
-});
+Builder.Services.AddOptions<FileStorageOptions>()
+	.Bind(Builder.Configuration.GetSection("FileStorage"))
+	.Configure(Options =>
+	{
+		Options.SiteFilesPath = SiteFilesPath;
+	})
+	.ValidateDataAnnotations()
+	.Validate(Options => !string.IsNullOrWhiteSpace(Options.SiteFilesPath), "Site files path is required.")
+	.ValidateOnStart();
 
 string? ConnectionString = Builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -111,6 +129,9 @@ Builder.Services.AddDbContext<WikiWikiWorldDbContext>(Options =>
 Builder.Services.AddScoped<SiteResolverService>();
 Builder.Services.AddScoped<ISiteContextService, SiteContextService>();
 Builder.Services.AddScoped<ArticleRevisionService>();
+Builder.Services.AddScoped<BookmarkService>();
+Builder.Services.AddScoped<IArticleRenderer, ArticleRenderer>();
+Builder.Services.AddScoped<FileUploadStorageService>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddTransient<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
@@ -220,6 +241,12 @@ App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
 // Inject IWebHostEnvironment to access the content root
 IWebHostEnvironment Environment = App.Services.GetRequiredService<IWebHostEnvironment>();
 
+using (IServiceScope StartupScope = App.Services.CreateScope())
+{
+	FileUploadStorageService FileUploadStorageService = StartupScope.ServiceProvider.GetRequiredService<FileUploadStorageService>();
+	await FileUploadStorageService.FinalizeCommittedUploadsAndDeleteStaleTempFilesAsync(CancellationToken.None);
+}
+
 App.MapControllers();
 App.MapOpenApi();
 App.MapScalarApiReference("/wiki:api-docs");
@@ -301,16 +328,22 @@ App.UseStaticFiles(new StaticFileOptions
 });
 
 // Load the XML file from the correct path
-string RewriteFile = Path.Combine(Environment.ContentRootPath, "Config", "UrlRewriteRules.xml");
+string RewriteFile = Path.IsPathRooted(StartupOptions.RewriteRulesPath)
+	? StartupOptions.RewriteRulesPath
+	: Path.Combine(Environment.ContentRootPath, StartupOptions.RewriteRulesPath);
+
 if (File.Exists(RewriteFile))
 {
-    using StreamReader StreamReader = File.OpenText(RewriteFile);
-    RewriteOptions Options = new RewriteOptions().AddIISUrlRewrite(StreamReader);
-    App.UseRewriter(Options);
+	using StreamReader StreamReader = File.OpenText(RewriteFile);
+	RewriteOptions Options = new RewriteOptions().AddIISUrlRewrite(StreamReader);
+	App.UseRewriter(Options);
 }
 else
 {
-    throw new FileNotFoundException("Rewrite rules file not found", RewriteFile);
+	if (StartupOptions.RequireRewriteRules)
+	{
+		throw new FileNotFoundException("Rewrite rules file not found", RewriteFile);
+	}
 }
 
 App.UseHttpsRedirection();

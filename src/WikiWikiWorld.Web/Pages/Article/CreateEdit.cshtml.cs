@@ -8,8 +8,6 @@ using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Options;
-using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Web.Services;
 
@@ -20,16 +18,16 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="UserManager">The user manager.</param>
-/// <param name="FileStorageOptions">The file storage options.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="ArticleRevisionService">The article revision workflow service.</param>
+/// <param name="FileUploadStorageService">The file upload storage service.</param>
 [Authorize]
 public sealed class CreateEditModel(
     WikiWikiWorldDbContext Context,
     UserManager<User> UserManager,
-    IOptions<FileStorageOptions> FileStorageOptions,
     SiteResolverService SiteResolverService,
-    ArticleRevisionService ArticleRevisionService)
+    ArticleRevisionService ArticleRevisionService,
+    FileUploadStorageService FileUploadStorageService)
     : BasePageModel(SiteResolverService)
 {
     private static readonly HashSet<string> AllowedImageExtensions = ImageValidationHelper.AllowedImageExtensions;
@@ -292,13 +290,7 @@ public sealed class CreateEditModel(
         }
         Guid CanonicalArticleId = Guid.NewGuid();
         Guid? CanonicalFileId = null;
-        string? OriginalFileName = null;
-        string? UploadedContentType = null;
-        long UploadedFileSizeBytes = 0;
-        string? TemporaryFilePath = null;
-        string? FinalFilePath = null;
-        int UploadedImageWidthPixels = 0;
-        int UploadedImageHeightPixels = 0;
+        StagedFileUpload? StagedUpload = null;
 
         if (UploadedFile is not null && UploadedFile.Length > 0)
         {
@@ -310,22 +302,13 @@ public sealed class CreateEditModel(
 
             try
             {
-                (Guid StagedCanonicalFileId, string StagedOriginalFileName, string StagedContentType, long StagedFileSizeBytes, string StagedTemporaryFilePath, string StagedFinalFilePath, int StagedImageWidthPixels, int StagedImageHeightPixels) =
-                    await StageUploadedFileAsync(CancellationToken);
-
-                CanonicalFileId = StagedCanonicalFileId;
-                OriginalFileName = StagedOriginalFileName;
-                UploadedContentType = StagedContentType;
-                UploadedFileSizeBytes = StagedFileSizeBytes;
-                TemporaryFilePath = StagedTemporaryFilePath;
-                FinalFilePath = StagedFinalFilePath;
-                UploadedImageWidthPixels = StagedImageWidthPixels;
-                UploadedImageHeightPixels = StagedImageHeightPixels;
+                StagedUpload = await FileUploadStorageService.StageUploadedFileAsync(UploadedFile, SiteId, Guid.NewGuid(), CancellationToken);
+                CanonicalFileId = StagedUpload.CanonicalFileId;
                 SelectedType = ArticleType.File;
             }
             catch (Exception Ex)
             {
-                CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+                FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
                 ErrorMessage = $"Error uploading file: {Ex.Message}";
                 return Page();
             }
@@ -346,23 +329,22 @@ public sealed class CreateEditModel(
 
                 if (ExistingArticleInsideTransaction is not null)
                 {
-                    CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+                    FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
                     throw new InvalidOperationException("An article with this URL slug already exists.");
                 }
 
                 if (CanonicalFileId.HasValue &&
-                    OriginalFileName is not null &&
-                    UploadedContentType is not null)
+                    StagedUpload is not null)
                 {
                     FileRevision NewFile = new()
                     {
                         CanonicalFileId = CanonicalFileId.Value,
                         Type = FileType.Image2D,
-                        Filename = OriginalFileName,
-                        MimeType = UploadedContentType,
-                        FileSizeBytes = UploadedFileSizeBytes,
-                        ImageWidthPixels = UploadedImageWidthPixels > 0 ? UploadedImageWidthPixels : null,
-                        ImageHeightPixels = UploadedImageHeightPixels > 0 ? UploadedImageHeightPixels : null,
+                        Filename = StagedUpload.OriginalFileName,
+                        MimeType = StagedUpload.ContentType,
+                        FileSizeBytes = StagedUpload.FileSizeBytes,
+                        ImageWidthPixels = StagedUpload.ImageWidthPixels > 0 ? StagedUpload.ImageWidthPixels : null,
+                        ImageHeightPixels = StagedUpload.ImageHeightPixels > 0 ? StagedUpload.ImageHeightPixels : null,
                         Source = null,
                         RevisionReason = "Initial upload",
                         SourceAndRevisionReasonCulture = Culture,
@@ -398,25 +380,33 @@ public sealed class CreateEditModel(
                     await Context.SaveChangesAsync(CT);
                 }
 
-                if (TemporaryFilePath is not null && FinalFilePath is not null)
-                {
-                    FinalizeStagedUpload(TemporaryFilePath, FinalFilePath);
-                }
-
                 await Transaction.CommitAsync(CT);
             }, CancellationToken);
+
+            if (StagedUpload is not null)
+            {
+                try
+                {
+                    FileUploadStorageService.FinalizeStagedUpload(StagedUpload);
+                }
+                catch (Exception Ex)
+                {
+                    ErrorMessage = $"Article was created, but the uploaded file is still waiting for filesystem recovery: {Ex.Message}";
+                    return Page();
+                }
+            }
 
             return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {
-            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
             ErrorMessage = Ex.Message;
             return Page();
         }
         catch (Exception Ex)
         {
-            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
             ErrorMessage = $"Error creating article: {Ex.Message}";
             return Page();
         }
@@ -482,69 +472,6 @@ public sealed class CreateEditModel(
         CanRevert = await Context.ArticleRevisions
             .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && !x.IsCurrent)
             .AnyAsync(CancellationToken);
-    }
-
-    /// <summary>
-    /// Stages the uploaded file to a temporary path until the database transaction succeeds.
-    /// </summary>
-    /// <param name="CancellationToken">The cancellation token.</param>
-    /// <returns>The staged file metadata and filesystem paths.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when there is no uploaded file to stage.</exception>
-    private async Task<(Guid CanonicalFileId, string OriginalFileName, string ContentType, long FileSizeBytes, string TemporaryFilePath, string FinalFilePath, int ImageWidthPixels, int ImageHeightPixels)> StageUploadedFileAsync(CancellationToken CancellationToken)
-    {
-        if (UploadedFile is null)
-        {
-            throw new InvalidOperationException("No uploaded file was provided.");
-        }
-
-        Guid CanonicalFileId = Guid.NewGuid();
-        string OriginalFileName = Path.GetFileName(UploadedFile.FileName);
-        string FileExtension = Path.GetExtension(OriginalFileName);
-        string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
-
-        string SiteFilesDirectory = Path.Combine(
-            FileStorageOptions.Value.SiteFilesPath,
-            SiteId.ToString(),
-            "images");
-        Directory.CreateDirectory(SiteFilesDirectory);
-
-        string FinalFilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
-        string TemporaryFilePath = Path.Combine(SiteFilesDirectory, $"{UniqueFileName}.{Guid.NewGuid():N}.tmp");
-
-        await using FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        await UploadedFile.CopyToAsync(FileStream, CancellationToken);
-
-        (int WidthPx, int HeightPx) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
-
-        return (CanonicalFileId, OriginalFileName, UploadedFile.ContentType, UploadedFile.Length, TemporaryFilePath, FinalFilePath, WidthPx, HeightPx);
-    }
-
-    /// <summary>
-    /// Moves a staged upload into its final path after the database transaction has succeeded.
-    /// </summary>
-    /// <param name="TemporaryFilePath">The temporary file path.</param>
-    /// <param name="FinalFilePath">The final file path.</param>
-    private static void FinalizeStagedUpload(string TemporaryFilePath, string FinalFilePath)
-    {
-        System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
-    }
-
-    /// <summary>
-    /// Deletes any staged or partially finalized upload artifacts.
-    /// </summary>
-    /// <param name="TemporaryFilePath">The temporary file path, if present.</param>
-    /// <param name="FinalFilePath">The final file path, if present.</param>
-    private static void CleanupStagedUpload(string? TemporaryFilePath, string? FinalFilePath)
-    {
-        if (!string.IsNullOrWhiteSpace(TemporaryFilePath) && System.IO.File.Exists(TemporaryFilePath))
-        {
-            System.IO.File.Delete(TemporaryFilePath);
-        }
-
-        if (!string.IsNullOrWhiteSpace(FinalFilePath) && System.IO.File.Exists(FinalFilePath))
-        {
-            System.IO.File.Delete(FinalFilePath);
-        }
     }
 
     /// <summary>

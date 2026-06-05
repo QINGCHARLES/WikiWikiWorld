@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
+using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
 
@@ -19,14 +18,14 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
-/// <param name="FileStorageOptions">The file storage options.</param>
+/// <param name="FileUploadStorageService">The file upload storage service.</param>
 [Route("api/file")]
 [ApiController]
 [Produces("application/json")]
 public sealed class FileApiController(
 	WikiWikiWorldDbContext Context,
 	SiteResolverService SiteResolverService,
-	IOptions<FileStorageOptions> FileStorageOptions) : ControllerBase
+	FileUploadStorageService FileUploadStorageService) : ControllerBase
 {
 	/// <summary>
 	/// Uploads an image file as a new revision for the file article identified by the given slug.
@@ -97,29 +96,11 @@ public sealed class FileApiController(
 		Guid CanonicalFileId = CurrentArticle.CanonicalFileId.Value;
 		string FinalCulture = string.IsNullOrWhiteSpace(Culture) ? ResolvedCulture : Culture;
 		string FinalRevisionReason = string.IsNullOrWhiteSpace(RevisionReason) ? "API upload" : RevisionReason;
-
-		string OriginalFileName = Path.GetFileName(File.FileName);
-		string FileExtension = Path.GetExtension(OriginalFileName);
-		string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
-
-		string SiteFilesDirectory = Path.Combine(
-			FileStorageOptions.Value.SiteFilesPath,
-			SiteId.ToString(),
-			"images");
-		Directory.CreateDirectory(SiteFilesDirectory);
-
-		string FinalFilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
-		string TemporaryFilePath = Path.Combine(SiteFilesDirectory, $"{UniqueFileName}.{Guid.NewGuid():N}.tmp");
+		StagedFileUpload? StagedUpload = null;
 
 		try
 		{
-			// Stage the file to a temporary path
-			await using (FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-			{
-				await File.CopyToAsync(FileStream, CancellationToken);
-			}
-
-			(int WidthPx, int HeightPx) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
+			StagedUpload = await FileUploadStorageService.StageUploadedFileAsync(File, SiteId, CanonicalFileId, CancellationToken);
 
 			IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
 
@@ -141,11 +122,11 @@ public sealed class FileApiController(
 				{
 					CanonicalFileId = CanonicalFileId,
 					Type = FileType.Image2D,
-					Filename = OriginalFileName,
-					MimeType = File.ContentType,
-					FileSizeBytes = File.Length,
-					ImageWidthPixels = WidthPx > 0 ? WidthPx : null,
-					ImageHeightPixels = HeightPx > 0 ? HeightPx : null,
+					Filename = StagedUpload.OriginalFileName,
+					MimeType = StagedUpload.ContentType,
+					FileSizeBytes = StagedUpload.FileSizeBytes,
+					ImageWidthPixels = StagedUpload.ImageWidthPixels > 0 ? StagedUpload.ImageWidthPixels : null,
+					ImageHeightPixels = StagedUpload.ImageHeightPixels > 0 ? StagedUpload.ImageHeightPixels : null,
 					Source = Source,
 					RevisionReason = FinalRevisionReason,
 					SourceAndRevisionReasonCulture = FinalCulture,
@@ -161,29 +142,31 @@ public sealed class FileApiController(
 					await Context.SaveChangesAsync(CT);
 				}
 
-				// Move from temp to final path
-				System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
-
 				await Transaction.CommitAsync(CT);
 
-				return new FileUploadResponse(CanonicalFileId, OriginalFileName, File.ContentType, File.Length, WidthPx > 0 ? WidthPx : null, HeightPx > 0 ? HeightPx : null);
+				return new FileUploadResponse(
+					CanonicalFileId,
+					StagedUpload.OriginalFileName,
+					StagedUpload.ContentType,
+					StagedUpload.FileSizeBytes,
+					StagedUpload.ImageWidthPixels > 0 ? StagedUpload.ImageWidthPixels : null,
+					StagedUpload.ImageHeightPixels > 0 ? StagedUpload.ImageHeightPixels : null);
 			}, CancellationToken);
+
+			try
+			{
+				FileUploadStorageService.FinalizeStagedUpload(StagedUpload);
+			}
+			catch (Exception Ex)
+			{
+				return StatusCode(StatusCodes.Status202Accepted, $"Upload metadata was saved, but file finalization is pending recovery: {Ex.Message}");
+			}
 
 			return Ok(Response);
 		}
 		catch (Exception)
 		{
-			// Clean up staged files on failure
-			if (System.IO.File.Exists(TemporaryFilePath))
-			{
-				System.IO.File.Delete(TemporaryFilePath);
-			}
-
-			if (System.IO.File.Exists(FinalFilePath))
-			{
-				System.IO.File.Delete(FinalFilePath);
-			}
-
+			FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
 			throw;
 		}
 	}

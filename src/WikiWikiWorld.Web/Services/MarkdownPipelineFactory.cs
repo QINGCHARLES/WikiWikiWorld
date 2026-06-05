@@ -99,6 +99,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 
 		PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
 		CoverGridExtension CoverGridExt = new();
+		CoverCarouselExtension CoverCarouselExt = new();
 		StubExtension StubExt = new();
 		SourceExtension SourceExt = new();
 
@@ -115,6 +116,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(CitationExt)
 			.Use(PublicationIssueInfoboxExt)
 			.Use(CoverGridExt)
+			.Use(CoverCarouselExt)
 			.Use(DownloadsBoxExt)
 			.Use(PullQuoteExt)
 			.Use(StubExt)

@@ -108,6 +108,31 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	/// </summary>
 	public DbSet<ArticleTalkSubjectPost> ArticleTalkSubjectPosts { get; set; } = null!;
 
+	/// <summary>
+	/// Gets or sets the bookmark lists.
+	/// </summary>
+	public DbSet<BookmarkList> BookmarkLists { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the bookmarks.
+	/// </summary>
+	public DbSet<Bookmark> Bookmarks { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the publication upload copyright exemptions.
+	/// </summary>
+	public DbSet<PublicationUploadCopyrightExemption> PublicationUploadCopyrightExemptions { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the publication upload queue statuses.
+	/// </summary>
+	public DbSet<PublicationUploadQueueStatus> PublicationUploadQueueStatuses { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the publication upload queue.
+	/// </summary>
+	public DbSet<PublicationUploadQueue> PublicationUploadQueue { get; set; } = null!;
+
 	/// <inheritdoc/>
 	protected override void OnModelCreating(ModelBuilder Builder)
 	{
@@ -212,6 +237,43 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasKey(e => e.Id);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasIndex(e => new { e.ArticleTalkSubjectId, e.ParentTalkSubjectPostId });
+		});
+
+		Builder.Entity<BookmarkList>(b =>
+		{
+			b.HasKey(e => e.Id);
+			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
+			b.HasIndex(e => new { e.SiteId, e.CreatedByUserId });
+		});
+
+		Builder.Entity<Bookmark>(b =>
+		{
+			b.HasKey(e => e.Id);
+			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
+			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId, e.CreatedByUserId });
+		});
+
+		Builder.Entity<PublicationUploadCopyrightExemption>(b =>
+		{
+			b.HasKey(e => e.Id);
+		});
+
+		Builder.Entity<PublicationUploadQueueStatus>(b =>
+		{
+			b.HasKey(e => e.Id);
+		});
+
+		Builder.Entity<PublicationUploadQueue>(b =>
+		{
+			b.HasKey(e => e.Id);
+			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
+			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
+			b.HasIndex(e => e.SubmittedByUserId);
+			b.HasIndex(e => new { e.StatusId, e.DateCreated });
+			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
 		});
 
 		// SQLite does not support DateTimeOffset natively in ORDER BY, so we convert to string

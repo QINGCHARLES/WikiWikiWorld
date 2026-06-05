@@ -1,18 +1,9 @@
-using AngleSharp.Dom;
-using Markdig;
-using Markdig.Renderers;
-using Markdig.Renderers.Html;
-using WikiWikiWorld.Web.MarkdigExtensions;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Markdig.Syntax;
-using System.IO;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Web.Services;
 
@@ -24,14 +15,16 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="UserManager">The user manager.</param>
-/// <param name="MarkdownPipelineFactory">The markdown pipeline factory.</param>
-/// <param name="SiteConfiguration">The site configuration options, used to resolve the current site name for stub banners.</param>
+/// <param name="ArticleRenderer">The article renderer.</param>
+/// <param name="ArticleRevisionService">The article revision service.</param>
+/// <param name="BookmarkService">The bookmark service.</param>
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     UserManager<User> UserManager,
-    IMarkdownPipelineFactory MarkdownPipelineFactory,
-    IOptions<SiteConfiguration> SiteConfiguration) : BasePageModel(SiteResolverService)
+    IArticleRenderer ArticleRenderer,
+    ArticleRevisionService ArticleRevisionService,
+    BookmarkService BookmarkService) : BasePageModel(SiteResolverService)
 {
     /// <summary>
     /// Gets or sets the URL slug of the article.
@@ -108,13 +101,12 @@ public sealed class ViewModel(
     /// <summary>
     /// Gets or sets the list of recent authors.
     /// </summary>
-    // New property to hold the recent authors as a list of (username, profilePicGuid) tuples.
-    public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = Array.Empty<ArticleAuthor>();
+    public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the categories associated with the article.
     /// </summary>
-    public IReadOnlyList<Category> Categories { get; set; } = Array.Empty<Category>();
+    public IReadOnlyList<Category> Categories { get; set; } = [];
 
     /// <summary>
     /// Gets the URL of the file image, if the article is a file with an associated image.
@@ -170,6 +162,19 @@ public sealed class ViewModel(
     /// Gets the subtitle text extracted from the markdown, if present.
     /// </summary>
     public string? SubtitleText { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the current user has bookmarked the displayed article.
+    /// </summary>
+    public bool IsBookmarked { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether to render the publication-upload call-to-action aside.
+    /// True when the displayed revision is a standard Article that does not already embed a {{DownloadsBox ...}} extension.
+    /// </summary>
+    public bool ShowPublicationUploadAside =>
+        DisplayedRevision is { Type: ArticleType.Article } R
+        && !R.Text.Contains("{{DownloadsBox ", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Handles the GET request to view the article.
@@ -243,33 +248,7 @@ public sealed class ViewModel(
 
         // Fetch recent authors (username and profile pic GUID) for this article.
         DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
-        ArticleRevisionsByCanonicalIdSpec AuthorsSpec = new(DisplayedRevision.CanonicalArticleId, MaxRevisionDate);
-        
-        // OPTIMIZATION: Fetch distinct User IDs directly from the database, ordered by most recent contribution.
-        // We use GroupBy and OrderByDescending(Max(DateCreated)) to ensure the list is sorted by recency.
-        List<Guid> DistinctUserIds = await Context.ArticleRevisions
-            .WithSpecification(AuthorsSpec)
-            .GroupBy(r => r.CreatedByUserId)
-            .Select(g => new { UserId = g.Key, MaxDate = g.Max(r => r.DateCreated) })
-            .OrderByDescending(x => x.MaxDate)
-            .Select(x => x.UserId)
-            .ToListAsync(CancellationToken);
-
-        // Fetch all users in one query
-        UserByIdsSpec UserSpec = new(DistinctUserIds);
-        List<User> Users = await Context.Users.WithSpecification(UserSpec).ToListAsync(CancellationToken);
-        
-        List<ArticleAuthor> Authors = [];
-        // Iterate through DistinctUserIds to preserve the order returned by the query
-        foreach (Guid UserId in DistinctUserIds)
-        {
-            User? User = Users.FirstOrDefault(u => u.Id == UserId);
-            if (User is not null && User.UserName is not null)
-            {
-                Authors.Add(new ArticleAuthor(User.UserName, User.ProfilePicGuid));
-            }
-        }
-        RecentAuthors = Authors;
+        RecentAuthors = await ArticleRevisionService.GetRecentAuthorsAsync(DisplayedRevision.CanonicalArticleId, MaxRevisionDate, CancellationToken);
 
         // Calculate View Properties
         // Note: Logic moved from View.cshtml
@@ -286,77 +265,35 @@ public sealed class ViewModel(
              AllowSearchEngineIndexingOfPage = true;
         }
 
-        // Markdown processing
-        MarkdownPipeline Pipeline = MarkdownPipelineFactory.GetPipeline();
-        MarkdownDocument Document = Markdown.Parse(DisplayedRevision!.Text, Pipeline);
+        ArticleRevision RevisionToRender = DisplayedRevision ?? throw new InvalidOperationException("Displayed revision was not loaded.");
+        string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(RevisionToRender)}/edit";
+        RenderedArticle RenderedArticle = await ArticleRenderer.RenderAsync(RevisionToRender, SiteId, Culture, EditUrl, CancellationToken);
+        ArticleRevisionHtml = RenderedArticle.Html;
+        Categories = RenderedArticle.Categories;
+        HeaderImage = RenderedArticle.HeaderImage;
+        MetaDescription = RenderedArticle.MetaDescription ?? string.Empty;
+        EyebrowLabel = RenderedArticle.EyebrowLabel;
+        SubtitleText = RenderedArticle.SubtitleText;
+        FileSourceText = RenderedArticle.FileSourceText;
+        FileSourceUrl = RenderedArticle.FileSourceUrl;
+        IsFileSourceApprovedDomain = RenderedArticle.IsFileSourceApprovedDomain;
 
-        // Enrich the document with async data
-        ShortDescriptionExtension.Enrich(Document);
-        EyebrowExtension.Enrich(Document);
-        SubtitleExtension.Enrich(Document);
-        SourceExtension.Enrich(Document);
-        await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture);
-        await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
-        await PublicationIssueInfoboxExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
-        await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
-        await DownloadsBoxExtension.EnrichAsync(Document, Context, SiteId, CancellationToken);
-
-        SiteInfo? CurrentSite = SiteConfiguration.Value.Sites.FirstOrDefault(S => S.SiteId == SiteId);
-        string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(DisplayedRevision!)}/edit";
-        StubExtension.Enrich(Document, CurrentSite?.SiteName ?? string.Empty, EditUrl);
-
-        // Extract metadata and reprocess content
-        Categories = CategoryExtension.GetCategories(Document);
-
-        FootnoteExtension.ReprocessFootnotes(Document, Pipeline);
-        CitationExtension.ReprocessCitations(Document);
-
-        if (Document.GetData(HeaderImageExtension.DocumentKey) is string ResolvedHeaderImage)
+        // Resolve bookmark state for the displayed (canonical) article when the visitor is signed in.
+        if (User.Identity?.IsAuthenticated == true)
         {
-            HeaderImage = ResolvedHeaderImage;
+            User? CurrentUserForBookmark = await UserManager.GetUserAsync(User);
+            if (CurrentUserForBookmark is not null)
+            {
+                IsBookmarked = await BookmarkService.IsBookmarkedAsync(RevisionToRender.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
+            }
         }
-
-        if (Document.GetData(ShortDescriptionExtension.DocumentKey) is string ResolvedDescription)
-        {
-            MetaDescription = ResolvedDescription;
-        }
-
-        if (Document.GetData(EyebrowExtension.DocumentKey) is string ResolvedEyebrow)
-        {
-            EyebrowLabel = ResolvedEyebrow;
-        }
-
-        if (Document.GetData(SubtitleExtension.DocumentKey) is string ResolvedSubtitle)
-        {
-            SubtitleText = ResolvedSubtitle;
-        }
-
-        if (Document.GetData(SourceExtension.TextKey) is string ResolvedSourceText)
-        {
-            FileSourceText = ResolvedSourceText;
-        }
-        
-        if (Document.GetData(SourceExtension.UrlKey) is string ResolvedSourceUrl)
-        {
-            FileSourceUrl = ResolvedSourceUrl;
-            IsFileSourceApprovedDomain = LinkDomainHelper.IsApprovedDomain(FileSourceUrl, SiteConfiguration.Value.ApprovedLinkDomains);
-        }
-
-        // Render to HTML
-        StringWriter Writer = new();
-        HtmlRenderer Renderer = new(Writer);
-        Pipeline.Setup(Renderer);
-        Renderer.Render(Document);
-        Writer.Flush();
-        
-        ArticleRevisionHtml = CleanupAndStyleArticle(Writer.ToString());
 
         // Fetch file metadata if this is a file article with an associated file
-        if (DisplayedRevision.Type == ArticleType.File && DisplayedRevision.CanonicalFileId.HasValue)
+        if (RevisionToRender.Type == ArticleType.File && RevisionToRender.CanonicalFileId.HasValue)
         {
             FileRevision? CurrentFile = await Context.FileRevisions
                 .AsNoTracking()
-                .Where(f => f.CanonicalFileId == DisplayedRevision.CanonicalFileId.Value && f.IsCurrent == true)
+                .Where(f => f.CanonicalFileId == RevisionToRender.CanonicalFileId.Value && f.IsCurrent == true)
                 .FirstOrDefaultAsync(CancellationToken);
 
             if (CurrentFile is not null)
@@ -373,6 +310,46 @@ public sealed class ViewModel(
         }
 
         return Page();
+    }
+
+    /// <summary>
+    /// Toggles a bookmark on the displayed article for the current user.
+    /// </summary>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>A redirect back to the article, a challenge if unauthenticated, or NotFound if the article cannot be resolved.</returns>
+    public async Task<IActionResult> OnPostToggleBookmarkAsync(CancellationToken CancellationToken)
+    {
+        if (!(User.Identity?.IsAuthenticated ?? false))
+        {
+            return Challenge();
+        }
+
+        if (SiteId < 1 || string.IsNullOrWhiteSpace(UrlSlug))
+        {
+            return BadRequest("Invalid parameters.");
+        }
+
+        User? CurrentUser = await UserManager.GetUserAsync(User);
+        if (CurrentUser is null)
+        {
+            return Challenge();
+        }
+
+        string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
+        ArticleRevisionsBySlugSpec CurrentSpec = new(LookupUrlSlug, IsCurrent: true);
+        ArticleRevision? Current = await Context.ArticleRevisions
+            .AsNoTracking()
+            .WithSpecification(CurrentSpec)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        if (Current is null)
+        {
+            return NotFound();
+        }
+
+        await BookmarkService.ToggleBookmarkAsync(Current.CanonicalArticleId, CurrentUser.Id, SiteId, CancellationToken);
+
+        return Redirect(ArticleUrlHelper.BuildArticlePath(Current));
     }
 
     /// <summary>
@@ -411,50 +388,4 @@ public sealed class ViewModel(
         return false;
     }
 
-    /// <summary>
-    /// Cleans up and styles the article HTML content.
-    /// Removes empty paragraph tags and styles the final period with a distinctive end mark.
-    /// </summary>
-    /// <param name="Html">The rendered HTML content.</param>
-    /// <returns>The cleaned and styled HTML.</returns>
-    private static string CleanupAndStyleArticle(string Html)
-    {
-        // First, strip empty paragraph tags (handles both <p></p> and <p> </p> with whitespace)
-        Html = System.Text.RegularExpressions.Regex.Replace(
-            Html, 
-            @"<p>\s*</p>", 
-            string.Empty, 
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        // Find the last occurrence of a period followed by closing tags or end of content
-        // We look for a period that ends actual content (before </p> or similar)
-        int LastParagraphClose = Html.LastIndexOf("</p>", StringComparison.OrdinalIgnoreCase);
-        if (LastParagraphClose < 0)
-        {
-            return Html;
-        }
-
-        // Search backwards from the </p> to find the last period
-        int SearchStart = LastParagraphClose - 1;
-        while (SearchStart >= 0)
-        {
-            char c = Html[SearchStart];
-            if (c == '.')
-            {
-                // Found a period - wrap it in a span
-                return string.Concat(
-                    Html.AsSpan(0, SearchStart),
-                    "<span class=\"article-end-mark\">.</span>",
-                    Html.AsSpan(SearchStart + 1));
-            }
-            else if (char.IsLetterOrDigit(c) || c == '"' || c == '\'' || c == ')' || c == ']')
-            {
-                // Hit actual content without finding a period, stop searching
-                break;
-            }
-            SearchStart--;
-        }
-
-        return Html;
-    }
 }

@@ -105,12 +105,27 @@ else if(Model.DisplayedRevision is not null)
 				<a href="@($"{Model.DisplayedArticlePath}/edit")" rel="nofollow">Edit Article</a>
 				<a href="@($"{Model.DisplayedArticlePath}/history")" rel="nofollow">View Edit History</a>
 				<a href="@($"{Model.DisplayedArticlePath}/links")" rel="nofollow">What Links Here</a>
+				<form method="post" asp-page-handler="ToggleBookmark" asp-route-UrlSlug="@Model.UrlSlug" class="menu-form">
+					<button type="submit" class="menu-button">@(Model.IsBookmarked ? "Remove Bookmark" : "Bookmark")</button>
+				</form>
 				<a href="#">Delete Article</a>
 				<a href="#">Watch Article</a>
 				<a href="#">Report Article</a>
 			</div>
 		</details>
 	</div>
+}
+
+@if (Model.ShowPublicationUploadAside && Model.DisplayedRevision is not null)
+{
+	<aside class="publication-upload-cta">
+		<p>
+			Have a copy of this publication you can share?
+			<a href="/wiki:upload?ArticleSlug=@(Model.DisplayedRevision.UrlSlug)" rel="nofollow">
+				Submit a download link
+			</a>
+		</p>
+	</aside>
 }
 
 <article>

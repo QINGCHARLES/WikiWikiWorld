@@ -39,14 +39,13 @@
 				<summary>Reply</summary>
 				<form method="post" asp-page-handler="Reply" asp-route-ArticleSlug="@Model.ArticleSlug" asp-route-SubjectSlug="@Model.SubjectSlug">
 					<input type="hidden" name="Input.ParentTalkSubjectPostId" value="@Node.Id" />
-					<div class="md3-field md3-filled">
-						<textarea name="Input.Text"
-						          placeholder=" "
-						          rows="3"
+					<div class="talk-form-field">
+						<label for="reply-@Node.Id">Reply (Markdown supported)</label>
+						<textarea id="reply-@Node.Id"
+						          name="Input.Text"
+						          rows="4"
 						          maxlength="10000"
 						          required></textarea>
-						<label>Reply (Markdown supported)</label>
-						<span class="md-line"></span>
 					</div>
 					<button type="submit" class="button">Post reply</button>
 				</form>

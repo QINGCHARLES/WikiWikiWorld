@@ -359,6 +359,49 @@
 	margin-block: 0.25rem 0.5rem;
 }
 
+/* ---- Plain form controls for talk (md3-field doesn't support textareas) ---- */
+
+.talk-form-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	margin-block-end: 0.85rem;
+}
+
+.talk-form-field > label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--color-muted);
+}
+
+.talk-form-field > input,
+.talk-form-field > textarea {
+	font: inherit;
+	color: var(--color-foreground);
+	background: light-dark(rgb(255 255 255 / 0.9), rgb(0 0 0 / 0.25));
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	padding: 0.6rem 0.75rem;
+	width: 100%;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.talk-form-field > textarea {
+	resize: vertical;
+	min-height: 6rem;
+	line-height: 1.45;
+	field-sizing: content;
+}
+
+.talk-form-field > input:focus,
+.talk-form-field > textarea:focus {
+	outline: none;
+	border-color: var(--color-hyperlinks);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-hyperlinks) 25%, transparent);
+}
+
 /* Small screens: tighten indent so deep threads don't blow out horizontally. */
 @media (max-width: 480px) {
 	.talk-post {

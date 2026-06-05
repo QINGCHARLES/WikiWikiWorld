@@ -61,30 +61,26 @@
 				}
 				else
 				{
-					<form method="post" asp-page-handler="NewSubject">
+					<form method="post" asp-page-handler="NewSubject" asp-route-ArticleSlug="@Model.ArticleSlug">
 						<div asp-validation-summary="ModelOnly" class="talk-validation"></div>
 
-						<div class="md3-field md3-filled">
+						<div class="talk-form-field">
+							<label asp-for="Input.Subject">Subject</label>
 							<input type="text"
 							       asp-for="Input.Subject"
-							       placeholder=" "
 							       maxlength="150"
 							       required />
-							<label asp-for="Input.Subject">Subject</label>
-							<span class="md-line"></span>
+							<span asp-validation-for="Input.Subject" class="talk-validation"></span>
 						</div>
-						<span asp-validation-for="Input.Subject" class="talk-validation"></span>
 
-						<div class="md3-field md3-filled">
+						<div class="talk-form-field">
+							<label asp-for="Input.Text">Your first post (Markdown supported)</label>
 							<textarea asp-for="Input.Text"
-							          placeholder=" "
-							          rows="4"
+							          rows="5"
 							          maxlength="10000"
 							          required></textarea>
-							<label asp-for="Input.Text">Your first post (Markdown supported)</label>
-							<span class="md-line"></span>
+							<span asp-validation-for="Input.Text" class="talk-validation"></span>
 						</div>
-						<span asp-validation-for="Input.Text" class="talk-validation"></span>
 
 						<button type="submit" class="button">Post subject</button>
 					</form>

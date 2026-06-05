@@ -58,14 +58,6 @@ a:not([class])
 {
 	text-decoration-skip-ink: auto;
 	color: currentColor;
-	display: inline-block; /* ensures consistent rendering */
-	transition: box-shadow 0.1s;
-
-    &:hover
-    {
-        box-shadow: 0 0 0 5px var(--color-primary);
-        background-color: var(--color-primary);
-    }
 }
 
 img,

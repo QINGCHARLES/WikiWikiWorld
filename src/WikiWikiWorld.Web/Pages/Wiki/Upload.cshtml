@@ -1,0 +1,277 @@
+@page
+@model WikiWikiWorld.Web.Pages.Wiki.UploadModel
+@{
+	ViewData["Title"] = "Submit a Publication";
+	Model.AllowSearchEngineIndexingOfPage = false;
+
+	// Display strings for the copyright-exemption radios. Keyed by the DB Code.
+	// When site-wide localization is wired up, move these to resource files.
+	var ExemptionDisplay = new Dictionary<string, (string Label, string Description)>
+	{
+		["PUBLICDOMAIN"] = (
+			"Public Domain (Copyright Expired or Waived)",
+			"The publication was issued so long ago that its copyright protection has legally expired, or the creator explicitly dedicated it to the public domain."),
+		["CREATIVECOMMONS"] = (
+			"Creative Commons / Open License",
+			"The publisher or creator released this specific issue under a license that allows for free redistribution and sharing (e.g., CC BY, CC BY-NC)."),
+		["EXPLICITPERMISSION"] = (
+			"Permission from the Rightsholder",
+			"I have obtained direct, explicit written permission from the publisher, author, or current copyright owner to upload and distribute this digital copy."),
+		["FAIRUSE"] = (
+			"Fair Use / Fair Dealing Exemption",
+			"This upload qualifies under copyright exemptions for non-profit purposes such as criticism, comment, news reporting, teaching, scholarship, or historical preservation/archiving."),
+		["OWNCONTENT"] = (
+			"I am the Rightsholder / Creator",
+			"I am the sole creator, author, or publisher of this publication and hold 100% of the distribution rights."),
+	};
+}
+
+<figure></figure>
+<hgroup>
+	<h1>Submit a Publication</h1>
+	<p>
+		Help grow the archive by pointing us at a copy of a publication (magazine, fanzine, bookazine, mook, etc.)
+		you have hosted on a file-transfer service. Another contributor will download, verify, and post it.
+	</p>
+</hgroup>
+
+<article class="publication-upload">
+	@if (Model.SubmissionSucceeded)
+	{
+		<div class="alert alert-success" role="status">
+			<strong>Thanks!</strong> Your submission has been added to the ingestion queue.
+		</div>
+	}
+
+	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+	{
+		<div class="alert alert-error" role="alert">
+			<span>@Model.ErrorMessage</span>
+		</div>
+	}
+
+	@if (Model.AssociatedArticle is not null)
+	{
+		<p class="associated-article">
+			You are submitting a copy for
+			<strong>@(Model.AssociatedArticle.DisplayTitle ?? Model.AssociatedArticle.Title)</strong>.
+		</p>
+	}
+
+	<form method="post" class="publication-upload-form">
+		<input type="hidden" asp-for="ArticleSlug" />
+
+		<fieldset class="form-section">
+			<legend>Where to download from</legend>
+			<p class="form-help">
+				We recommend
+				<a href="https://transfer.it/" target="_blank" rel="noopener">transfer.it</a>
+				as a free, no-account-required transfer service. Other services (WeTransfer, MEGA, Google Drive
+				share links, etc.) also work as long as the link is downloadable.
+			</p>
+
+			<div class="form-group">
+				<label asp-for="DownloadUrl" class="form-label">
+					<span class="label-text">Download URL</span>
+					<span class="label-required" aria-label="required">*</span>
+				</label>
+				<input asp-for="DownloadUrl" type="url" class="form-input"
+					placeholder="https://transfer.it/t/your-upload-id"
+					required />
+				<span class="form-help">
+					You can only submit one URL at a time. To send us multiple publications in one go, bundle them
+					into a single archive (zip, rar, 7z, etc.) and submit the URL to that archive.
+				</span>
+			</div>
+
+			<div class="form-group">
+				<label asp-for="SitePassword" class="form-label">
+					<span class="label-text">Site password (if the transfer service requires one)</span>
+				</label>
+				<input asp-for="SitePassword" type="text" class="form-input" autocomplete="off" />
+			</div>
+
+			<div class="form-group">
+				<label asp-for="ArchivePassword" class="form-label">
+					<span class="label-text">Archive password (if the zip / rar / 7z file itself is password-protected)</span>
+				</label>
+				<input asp-for="ArchivePassword" type="text" class="form-input" autocomplete="off" />
+			</div>
+		</fieldset>
+
+		<fieldset class="form-section">
+			<legend>Copyright exemption <span class="label-required" aria-label="required">*</span></legend>
+			<p class="form-help">
+				Pick the option that best describes why you can legally share this publication.
+			</p>
+
+			@foreach (var Exemption in Model.Exemptions)
+			{
+				var Display = ExemptionDisplay.TryGetValue(Exemption.Code, out var Found)
+					? Found
+					: (Label: Exemption.Code, Description: string.Empty);
+				var RadioId = $"CopyrightExemption_{Exemption.Id}";
+				<div class="form-radio">
+					<input type="radio" id="@RadioId" name="CopyrightExemptionId" value="@Exemption.Id"
+						checked="@(Model.CopyrightExemptionId == Exemption.Id)" required />
+					<label for="@RadioId">
+						<span class="form-radio-label">@Display.Label</span>
+						@if (!string.IsNullOrEmpty(Display.Description))
+						{
+							<span class="form-radio-description">@Display.Description</span>
+						}
+					</label>
+				</div>
+			}
+		</fieldset>
+
+		<fieldset class="form-section">
+			<legend>Notes (optional)</legend>
+			<div class="form-group">
+				<label asp-for="SubmitterNotes" class="form-label">
+					<span class="label-text">Anything else the moderator should know?</span>
+				</label>
+				<textarea asp-for="SubmitterNotes" class="form-textarea" rows="4"
+					placeholder="Source, scan quality, issue number, language, etc."></textarea>
+			</div>
+		</fieldset>
+
+		<div class="form-actions">
+			<button type="submit" class="button button-primary">Submit</button>
+		</div>
+
+		<p class="disclaimer">
+			By submitting this URL, I certify that I hold the legal rights or a valid copyright exemption to share
+			the content. I understand that copyright-infringing content will be removed immediately.
+		</p>
+	</form>
+</article>
+
+<style>
+	.publication-upload .associated-article {
+		background: var(--color-surface-alt, #f3f4f6);
+		border-left: 4px solid var(--color-primary, #f3de8a);
+		padding: 0.75rem 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.publication-upload .form-section {
+		border: 2px solid var(--color-border, #e5e5e5);
+		border-radius: 0.75rem;
+		padding: 1.25rem 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.publication-upload legend {
+		font-weight: 600;
+		padding: 0 0.5rem;
+	}
+
+	.publication-upload .form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		margin-bottom: 1rem;
+	}
+
+	.publication-upload .form-label {
+		font-weight: 600;
+	}
+
+	.publication-upload .label-required {
+		color: #dc2626;
+		margin-left: 0.25rem;
+	}
+
+	.publication-upload .form-input,
+	.publication-upload .form-textarea {
+		width: 100%;
+		padding: 0.6rem 0.8rem;
+		border: 2px solid var(--color-border, #d1d5db);
+		border-radius: 0.4rem;
+		font-size: var(--step-0);
+	}
+
+	.publication-upload .form-textarea {
+		resize: vertical;
+		min-height: 90px;
+		font-family: inherit;
+	}
+
+	.publication-upload .form-help {
+		font-size: var(--step--1);
+		color: var(--color-muted, #6b7280);
+		line-height: 1.4;
+	}
+
+	.publication-upload .form-radio {
+		display: flex;
+		gap: 0.75rem;
+		padding: 0.6rem 0;
+		border-top: 1px solid var(--color-border, #e5e5e5);
+	}
+
+	.publication-upload .form-radio:first-of-type {
+		border-top: 0;
+	}
+
+	.publication-upload .form-radio input[type="radio"] {
+		margin-top: 0.35rem;
+		flex-shrink: 0;
+	}
+
+	.publication-upload .form-radio label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		cursor: pointer;
+	}
+
+	.publication-upload .form-radio-label {
+		font-weight: 600;
+	}
+
+	.publication-upload .form-radio-description {
+		font-size: var(--step--1);
+		color: var(--color-muted, #6b7280);
+	}
+
+	.publication-upload .form-actions {
+		margin-top: 1rem;
+	}
+
+	.publication-upload .button-primary {
+		background: var(--color-primary, #f3de8a);
+		border: 2px solid var(--color-primary, #f3de8a);
+		color: #342a21;
+		font-weight: 600;
+		padding: 0.7rem 1.5rem;
+		border-radius: 0.4rem;
+		cursor: pointer;
+	}
+
+	.publication-upload .disclaimer {
+		margin-top: 1rem;
+		font-size: var(--step--1);
+		color: var(--color-muted, #6b7280);
+	}
+
+	.publication-upload .alert {
+		padding: 0.75rem 1rem;
+		border-radius: 0.4rem;
+		border: 2px solid;
+		margin-bottom: 1.25rem;
+	}
+
+	.publication-upload .alert-success {
+		background: #ecfdf5;
+		border-color: #10b981;
+		color: #065f46;
+	}
+
+	.publication-upload .alert-error {
+		background: #fee;
+		border-color: #dc2626;
+		color: #991b1b;
+	}
+</style>

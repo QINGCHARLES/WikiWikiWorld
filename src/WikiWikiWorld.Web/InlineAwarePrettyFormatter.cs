@@ -38,8 +38,10 @@ public sealed class InlineAwarePrettyFormatter : PrettyMarkupFormatter
     /// <inheritdoc/>
     public override string Doctype(IDocumentType Doctype)
     {
-        // Fix merged doctype/html tag
-        return base.Doctype(Doctype) + NewLine;
+        // PrettyMarkupFormatter.OpenTag already prepends a NewLine before the <html> tag,
+        // so we don't append one here — doing so produces a blank line between the doctype
+        // and <html>.
+        return base.Doctype(Doctype);
     }
 
     /// <inheritdoc/>

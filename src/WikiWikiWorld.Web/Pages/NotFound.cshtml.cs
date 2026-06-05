@@ -9,7 +9,7 @@ namespace WikiWikiWorld.Web.Pages;
 /// Page model for handling 404 Not Found errors.
 /// </summary>
 /// <param name="SiteResolverService">The site resolver service.</param>
-public class NotFoundModel(SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+public sealed class NotFoundModel(SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
     /// <summary>
     /// Gets or sets the URL slug that was not found (optional).

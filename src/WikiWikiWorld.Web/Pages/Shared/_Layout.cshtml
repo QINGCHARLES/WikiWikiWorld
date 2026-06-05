@@ -1,20 +1,26 @@
-@model BasePageModel
+﻿@model BasePageModel
 @using Microsoft.AspNetCore.Identity
 @using WikiWikiWorld.Data.Models
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
 @{
 	string? PreferredThemeValue = (ViewData["PreferredTheme"] as string)?.ToLowerInvariant();
-	string ThemeAttribute = PreferredThemeValue switch
+	string? DataTheme = PreferredThemeValue switch
 	{
 		"light" => "light",
 		"dark" => "dark",
-		_ => "system"
+		_ => null
 	};
 }
 <!doctype html>
-<html lang="en" data-theme="@(ThemeAttribute == "system" ? string.Empty : ThemeAttribute)">
+<html lang="en" data-theme="@DataTheme">
 <head>
+
+<link rel="preload" href="/fonts/LyonTextWeb-RegularNoTwo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/LyonDisplayWeb-Black.woff2" as="font" type="font/woff2" crossorigin>
+
+
+
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com" rel="stylesheet">

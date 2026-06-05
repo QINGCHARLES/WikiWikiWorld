@@ -1,6 +1,6 @@
 # Codebase Review Status
 
-Last reviewed: 2026-05-14.
+Last reviewed: 2026-05-15 (careful rescan focused on markdown rendering paths in Web layer).
 
 This document tracks cleanup and architecture findings for the WikiWikiWorld codebase. Magazedia is the current configured implementation, not the identity of the reusable platform. This replaces the older review snapshot with current status based on source inspection after the recent repository hygiene pass.
 
@@ -198,6 +198,41 @@ Recommended action:
 - Keep for reused or complex queries.
 - Avoid adding new one-off specifications for simple local queries unless they clearly improve reuse or readability.
 
+### 9. Article markdown rendering paths are centralized with deliberate separation (careful verification 2026-05-15)
+
+Status: Good. Architecture is sound and currently free of duplication risk for production article and talk content.
+
+Severity: Closed / Informational. No immediate action required.
+
+After exhaustive search of all `GetPipeline()`, `Markdown.Parse()`, `RenderTalkMarkdown()`, `IArticleRenderer`, and `HtmlRenderer` call sites across the Web layer:
+
+- **Full wiki article body rendering** (all custom directives + enrichment + metadata extraction): Exclusively through `IArticleRenderer` / `ArticleRenderer`.
+  - Single implementation of the full pipeline + enrichment in `Services/ArticleRenderer.cs:103-104` (`GetPipeline()` + `Markdown.Parse` + all `Enrich*` + `Reprocess*`).
+  - Currently consumed only by `Pages/Article/View.cshtml.cs:262`.
+  - Returns clean `RenderedArticle` record.
+
+- **Talk posts and short user-generated content**: Exclusively through the restricted talk pipeline via `MarkdownPipelineFactory.RenderTalkMarkdown()`.
+  - Used by talk pages (e.g. `TalkSubject.cshtml.cs:214`).
+  - Deliberately omits all wiki directives and disables raw HTML (see `BuildTalkPipeline()`).
+
+- Other pages touching article text do **not** perform full rendering:
+  - `History.cshtml.cs`, `Links.cshtml.cs`, `Firehose.cshtml.cs`, `Index.cshtml.cs`: Metadata, lists, or lightweight string extraction only (e.g. `ExtractCoverImageFromInfobox` does raw text parsing of `{{PublicationIssueInfobox}}` syntax — no pipeline).
+  - `CreateEdit.cshtml.cs`: No rendering or preview logic today.
+  - No rendering paths in any API controllers.
+
+- The only other `Markdown.Parse` is internal to footnote reprocessing inside the extensions (expected part of the pipeline).
+
+Relevant files:
+- `src/WikiWikiWorld.Web/Services/ArticleRenderer.cs`
+- `src/WikiWikiWorld.Web/Services/MarkdownPipelineFactory.cs`
+- `src/WikiWikiWorld.Web/Pages/Article/View.cshtml.cs`
+- `src/WikiWikiWorld.Web/Pages/Article/TalkSubject.cshtml.cs` (and related talk pages)
+- `src/WikiWikiWorld.Web/Pages/Article/History.cshtml.cs`, `Links.cshtml.cs`, `CreateEdit.cshtml.cs`, `Index.cshtml.cs`
+
+Recommended action:
+- Maintain the boundary: Any future editor preview, API preview, or article preview features **must** go through `IArticleRenderer` (for full articles) or `RenderTalkMarkdown` (for talk content). Do not reintroduce manual enrichment blocks.
+- This is the correct guardrail to prevent the duplication the architecture was designed to eliminate.
+
 ## Recommended Improvement Order
 
 ### Phase 1: Correctness and Operational Safety
@@ -232,3 +267,4 @@ Recommended action:
 - the solution builds cleanly with warnings as errors
 - release publish succeeds with documented settings
 - local runtime data and build outputs stay out of Git
+- article and talk markdown rendering remains centralized (no re-introduction of manual enrichment blocks outside IArticleRenderer / RenderTalkMarkdown)

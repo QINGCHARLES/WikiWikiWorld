@@ -14,6 +14,58 @@ namespace WikiWikiWorld.Web.Services;
 public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 {
 	/// <summary>
+	/// Gets the recent authors for an article revision in most-recent contribution order.
+	/// </summary>
+	/// <param name="CanonicalArticleId">The canonical article identifier.</param>
+	/// <param name="MaxRevisionDate">The maximum revision date to include, or <see langword="null"/> to include every revision.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>The recent article authors.</returns>
+	public async Task<IReadOnlyList<ArticleAuthor>> GetRecentAuthorsAsync(Guid CanonicalArticleId, DateTimeOffset? MaxRevisionDate, CancellationToken CancellationToken)
+	{
+		ArticleRevisionsByCanonicalIdSpec AuthorsSpec = new(CanonicalArticleId, MaxRevisionDate);
+
+		// Let SQLite find each contributor's newest included revision so the final author list is ordered by recent activity.
+		List<Guid> DistinctUserIds = await Context.ArticleRevisions
+			.AsNoTracking()
+			.WithSpecification(AuthorsSpec)
+			.GroupBy(Revision => Revision.CreatedByUserId)
+			.Select(Group => new
+			{
+				UserId = Group.Key,
+				MaxDate = Group.Max(Revision => Revision.DateCreated)
+			})
+			.OrderByDescending(Row => Row.MaxDate)
+			.Select(Row => Row.UserId)
+			.ToListAsync(CancellationToken);
+
+		if (DistinctUserIds.Count == 0)
+		{
+			return [];
+		}
+
+		UserByIdsSpec UserSpec = new(DistinctUserIds);
+
+		// Fetch user display data in one round trip, then reapply the revision-derived order below.
+		Dictionary<Guid, User> UsersById = await Context.Users
+			.AsNoTracking()
+			.WithSpecification(UserSpec)
+			.Where(User => User.UserName != null)
+			.ToDictionaryAsync(User => User.Id, CancellationToken);
+
+		List<ArticleAuthor> Authors = new(DistinctUserIds.Count);
+		foreach (Guid UserId in DistinctUserIds)
+		{
+			// Missing users are skipped so deleted or otherwise unavailable accounts do not break article rendering.
+			if (UsersById.TryGetValue(UserId, out User? User) && User.UserName is not null)
+			{
+				Authors.Add(new ArticleAuthor(User.UserName, User.ProfilePicGuid));
+			}
+		}
+
+		return Authors;
+	}
+
+	/// <summary>
 	/// Updates an article by replacing its current revision with a new current revision.
 	/// </summary>
 	/// <param name="Command">The update command.</param>

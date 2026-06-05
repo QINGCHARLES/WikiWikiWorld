@@ -186,11 +186,59 @@ public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
                 {
                     node.Data = node.Data.TrimEnd();
                 }
-                
+
                 if (string.IsNullOrEmpty(node.Data))
                 {
                     node.Remove();
                 }
+            }
+        }
+
+        // FINAL PASS: Remove empty content elements (e.g. <p></p>) that contribute
+        // nothing to rendering. We deliberately exclude elements that may be empty
+        // by design (void elements like <br>/<img>, form controls, layout containers,
+        // and elements with semantic meaning even when empty like <td>).
+        HashSet<string> RemovableIfEmpty = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "P", "H1", "H2", "H3", "H4", "H5", "H6",
+            "LI", "DT", "DD", "BLOCKQUOTE", "FIGCAPTION"
+        };
+
+        // Loop because removing an empty element may leave its parent empty.
+        bool RemovedAny;
+        do
+        {
+            RemovedAny = false;
+            var EmptyElements = Document.Descendants<IElement>()
+                .Where(El => RemovableIfEmpty.Contains(El.LocalName) && !El.HasChildNodes)
+                .ToList();
+
+            foreach (var El in EmptyElements)
+            {
+                El.Remove();
+                RemovedAny = true;
+            }
+        } while (RemovedAny);
+
+        // Strip empty data-* attributes. A `data-foo=""` carries no information
+        // that `data-foo` selectors or `dataset` access can distinguish from
+        // the attribute being absent, and Razor's null-attribute suppression
+        // doesn't always fire as expected for switch-expression values.
+        var ElementsWithAttrs = Document.Descendants<IElement>()
+            .Where(El => El.Attributes.Length > 0)
+            .ToList();
+
+        foreach (var El in ElementsWithAttrs)
+        {
+            var EmptyDataAttrs = El.Attributes
+                .Where(A => A.Name.StartsWith("data-", StringComparison.OrdinalIgnoreCase)
+                            && string.IsNullOrEmpty(A.Value))
+                .Select(A => A.Name)
+                .ToList();
+
+            foreach (var Name in EmptyDataAttrs)
+            {
+                El.RemoveAttribute(Name);
             }
         }
     }

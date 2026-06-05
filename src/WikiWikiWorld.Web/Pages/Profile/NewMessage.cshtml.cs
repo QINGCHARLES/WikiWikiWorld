@@ -19,7 +19,7 @@ namespace WikiWikiWorld.Web.Pages.Profile;
 /// <param name="UserManager">The user manager.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 [Authorize]
-public class NewMessageModel(
+public sealed class NewMessageModel(
 	WikiWikiWorldDbContext Context,
 	UserManager<User> UserManager,
 	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)

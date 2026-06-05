@@ -104,6 +104,10 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/Article/CreateEdit" />
 		</rule>
 		<rule enabled="true" stopProcessing="true">
+			<match url="^wiki:upload$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Wiki/Upload" appendQueryString="true" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
 			<match url="^@(.+)/profile$" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/View?Username={R:1}" />
 		</rule>
@@ -114,6 +118,10 @@
 		<rule enabled="true" stopProcessing="true">
 			<match url="^@(.+)/messages$" />
 			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/Messages?Username={R:1}" />
+		</rule>
+		<rule enabled="true" stopProcessing="true">
+			<match url="^@(.+)/bookmarks$" />
+			<action type="Rewrite" url="https://{HTTP_HOST}/Profile/Bookmarks?Username={R:1}" />
 		</rule>
 		<rule enabled="true" stopProcessing="true">
 			<match url="^@(.+)/messages/sent$" />
@@ -160,7 +168,7 @@
 			<action type="Rewrite" url="https://{HTTP_HOST}/NotFound?UrlSlug={R:1}" />
 		</rule>
 		<rule name="Rewrite Rule">
-			<match url="^(?!api/)(?!openapi/)(?!wiki:api-docs)(?!Privacy)(?!Terms)(?!NotFound)(?!Search)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!Article/Links)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!Profile\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest)$)(.*)" />
+			<match url="^(?!api/)(?!openapi/)(?!wiki:api-docs)(?!Privacy)(?!Terms)(?!NotFound)(?!Search)(?!Article/CreateEdit)(?!Article/Delete)(?!Dmca)(?!Sitemap)(?!sitemap.xml)(?!dev/CoverList)(?!Article/History)(?!Article/Firehose)(?!Article/Talk)(?!Article/View)(?!Article/Links)(?!DbHelper)(?!Article/TalkSubject)(?!Account\/)(?!Settings\/)(?!Profile\/)(?!Wiki\/)(?!$)(?!.*\.(?:jpg|jpeg|gif|png|webp|avif|css|js|ico|txt|webmanifest|woff|woff2|ttf|otf|eot)$)(.*)" />
 			<action type="Rewrite" url="Article/View?UrlSlug={R:1}" appendQueryString="true" />
 		</rule>
 	</rules>

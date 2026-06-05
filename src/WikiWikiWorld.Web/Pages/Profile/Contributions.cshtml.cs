@@ -14,7 +14,7 @@ namespace WikiWikiWorld.Web.Pages.Profile;
 /// <param name="Context">The database context.</param>
 /// <param name="UserManager">The user manager.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
-public class ContributionsModel(
+public sealed class ContributionsModel(
     WikiWikiWorldDbContext Context,
     UserManager<User> UserManager,
     SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)

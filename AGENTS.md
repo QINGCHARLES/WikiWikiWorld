@@ -1,4 +1,4 @@
-# What AI agents should know about me -- v11
+# What AI agents should know about me -- v12
 
 C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
 
@@ -25,6 +25,7 @@ If you identify a significantly better, more robust, or modern approach than the
 ## Coding standards & conventions
 * Strong explicit typing; avoid `var` unless the type is truly obvious or required.
 * **PascalCase every identifier** (types, members, variables, parameters, generics, Razor artifacts, generated names like `App`/`Builder`).
+* Method and variable names should clearly reflect their purpose, especially when used outside of their immediate context. Don't be afraid to go long on naming to prioritize clarity of function.
 * Exception: simple loop counters (`i`, `j`, `w`, `h`, `x`, `y`, `z`) and other single character variables such as lambda parameters.
 * **Units in variable names:** Always include units in variable/parameter/property names when the type doesn't inherently express them:
   * Time: `DelaySeconds`, `TimeoutMs`, `DurationMinutes` (not just `Delay`, `Timeout`, `Duration`)

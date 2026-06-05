@@ -231,3 +231,99 @@ CREATE INDEX IX_ArticleTalkSubjectPosts_ArticleTalkSubjectId ON ArticleTalkSubje
 CREATE INDEX IX_ArticleTalkSubjectPosts_CreatedByUserId ON ArticleTalkSubjectPosts (CreatedByUserId);
 CREATE INDEX IX_ArticleTalkSubjectPosts_ParentTalkSubjectPostId ON ArticleTalkSubjectPosts (ParentTalkSubjectPostId);
 CREATE INDEX IX_ArticleTalkSubjectPosts_SubjectId_ParentId_Active ON ArticleTalkSubjectPosts (ArticleTalkSubjectId, ParentTalkSubjectPostId);
+
+CREATE TABLE BookmarkLists (
+    Id INTEGER NOT NULL CONSTRAINT PK_BookmarkLists PRIMARY KEY AUTOINCREMENT,
+    SiteId INTEGER NOT NULL,
+    Name TEXT NOT NULL,
+    IsDefault INTEGER NOT NULL DEFAULT 0,
+    CreatedByUserId TEXT NOT NULL,
+    DateCreated TEXT NOT NULL,
+    DateModified TEXT NULL,
+    DateDeleted TEXT NULL,
+    CONSTRAINT FK_BookmarkLists_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
+);
+
+CREATE INDEX IX_BookmarkLists_CreatedByUserId ON BookmarkLists (CreatedByUserId);
+CREATE INDEX IX_BookmarkLists_SiteId_CreatedByUserId ON BookmarkLists (SiteId, CreatedByUserId);
+
+CREATE TABLE Bookmarks (
+    Id INTEGER NOT NULL CONSTRAINT PK_Bookmarks PRIMARY KEY AUTOINCREMENT,
+    BookmarkListId INTEGER NOT NULL,
+    SiteId INTEGER NOT NULL,
+    CanonicalArticleId TEXT NOT NULL,
+    CreatedByUserId TEXT NOT NULL,
+    DateCreated TEXT NOT NULL,
+    DateDeleted TEXT NULL,
+    CONSTRAINT FK_Bookmarks_BookmarkLists_BookmarkListId FOREIGN KEY (BookmarkListId) REFERENCES BookmarkLists (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Bookmarks_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
+);
+
+CREATE INDEX IX_Bookmarks_BookmarkListId ON Bookmarks (BookmarkListId);
+CREATE INDEX IX_Bookmarks_CreatedByUserId ON Bookmarks (CreatedByUserId);
+CREATE INDEX IX_Bookmarks_SiteId_CanonicalArticleId_CreatedByUserId ON Bookmarks (SiteId, CanonicalArticleId, CreatedByUserId);
+CREATE UNIQUE INDEX UX_Bookmarks_BookmarkListId_CanonicalArticleId_Active
+    ON Bookmarks (BookmarkListId, CanonicalArticleId) WHERE DateDeleted IS NULL;
+
+CREATE TABLE PublicationUploadCopyrightExemptions (
+    Id INTEGER NOT NULL CONSTRAINT PK_PublicationUploadCopyrightExemptions PRIMARY KEY AUTOINCREMENT,
+    Code TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX UX_PublicationUploadCopyrightExemptions_Code
+    ON PublicationUploadCopyrightExemptions (Code);
+
+INSERT INTO PublicationUploadCopyrightExemptions (Code) VALUES
+    ('PUBLICDOMAIN'),
+    ('CREATIVECOMMONS'),
+    ('EXPLICITPERMISSION'),
+    ('FAIRUSE'),
+    ('OWNCONTENT');
+
+CREATE TABLE PublicationUploadQueueStatuses (
+    Id INTEGER NOT NULL CONSTRAINT PK_PublicationUploadQueueStatuses PRIMARY KEY AUTOINCREMENT,
+    Code TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX UX_PublicationUploadQueueStatuses_Code
+    ON PublicationUploadQueueStatuses (Code);
+
+INSERT INTO PublicationUploadQueueStatuses (Code) VALUES
+    ('SUBMITTED'),
+    ('DOWNLOADED'),
+    ('BEINGCHECKED'),
+    ('REJECTED'),
+    ('ACCEPTED'),
+    ('POSTED');
+
+CREATE TABLE PublicationUploadQueue (
+    Id INTEGER NOT NULL CONSTRAINT PK_PublicationUploadQueue PRIMARY KEY AUTOINCREMENT,
+    SiteId INTEGER NOT NULL,
+    Culture TEXT NOT NULL,
+    CanonicalArticleId TEXT NULL,
+    DownloadUrl TEXT NOT NULL,
+    SitePassword TEXT NULL,
+    ArchivePassword TEXT NULL,
+    CopyrightExemptionId INTEGER NOT NULL,
+    StatusId INTEGER NOT NULL,
+    SubmitterNotes TEXT NULL,
+    ReviewerNotes TEXT NULL,
+    RejectionReason TEXT NULL,
+    SubmittedByUserId TEXT NOT NULL,
+    LastUpdatedByUserId TEXT NULL,
+    DateCreated TEXT NOT NULL,
+    DateStatusChanged TEXT NULL,
+    DateDeleted TEXT NULL,
+    CONSTRAINT FK_PublicationUploadQueue_Users_SubmittedByUserId
+        FOREIGN KEY (SubmittedByUserId) REFERENCES Users (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_PublicationUploadQueue_Users_LastUpdatedByUserId
+        FOREIGN KEY (LastUpdatedByUserId) REFERENCES Users (Id),
+    CONSTRAINT FK_PublicationUploadQueue_CopyrightExemption
+        FOREIGN KEY (CopyrightExemptionId) REFERENCES PublicationUploadCopyrightExemptions (Id),
+    CONSTRAINT FK_PublicationUploadQueue_Status
+        FOREIGN KEY (StatusId) REFERENCES PublicationUploadQueueStatuses (Id)
+);
+
+CREATE INDEX IX_PublicationUploadQueue_SubmittedByUserId ON PublicationUploadQueue (SubmittedByUserId);
+CREATE INDEX IX_PublicationUploadQueue_StatusId_DateCreated ON PublicationUploadQueue (StatusId, DateCreated);
+CREATE INDEX IX_PublicationUploadQueue_SiteId_CanonicalArticleId ON PublicationUploadQueue (SiteId, CanonicalArticleId);

@@ -71,18 +71,16 @@
 				}
 				else
 				{
-					<form method="post" asp-page-handler="Reply">
+					<form method="post" asp-page-handler="Reply" asp-route-ArticleSlug="@Model.ArticleSlug" asp-route-SubjectSlug="@Model.SubjectSlug">
 						<div asp-validation-summary="ModelOnly" class="talk-validation"></div>
-						<div class="md3-field md3-filled">
+						<div class="talk-form-field">
+							<label asp-for="Input.Text">Reply (Markdown supported)</label>
 							<textarea asp-for="Input.Text"
-							          placeholder=" "
-							          rows="4"
+							          rows="5"
 							          maxlength="10000"
 							          required></textarea>
-							<label asp-for="Input.Text">Reply (Markdown supported)</label>
-							<span class="md-line"></span>
+							<span asp-validation-for="Input.Text" class="talk-validation"></span>
 						</div>
-						<span asp-validation-for="Input.Text" class="talk-validation"></span>
 						<button type="submit" class="button">Post reply</button>
 					</form>
 				}
