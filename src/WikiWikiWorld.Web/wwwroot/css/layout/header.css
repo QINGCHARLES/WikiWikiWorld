@@ -29,7 +29,7 @@ header li {
     color: var(--color-foreground);
 }
 
-.header a {
+.header a:not(.button) {
     color: var(--color-foreground);
     text-align: center;
     text-decoration: none;
@@ -57,11 +57,11 @@ header li {
     transform: scale(0.94);
 }
 
-.header a:hover {
+.header a:not(.button):hover {
     color: var(--color-muted);
 }
 
-.header a.active {
+.header a:not(.button).active {
     color: var(--color-muted);
 }
 
@@ -87,6 +87,7 @@ header li {
 nav.header {
     --hero-max-width: calc(2 * var(--grid-max-width));
     --feather-size: clamp(0px, (100vw - var(--hero-max-width)) * 0.5, 6rem);
+    --header-control-height: clamp(2.4rem, 2.15rem + 0.65vw, 2.75rem);
 
     box-sizing: border-box;
     inline-size: min(100%, var(--hero-max-width));
@@ -110,15 +111,29 @@ nav.header .logo-svg {
 }
 
 nav.header .header-avatar {
-    width: 3rem;
-    height: 3rem;
+    width: var(--header-control-height);
+    height: var(--header-control-height);
     box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 0.22);
 }
 
+nav.header .header-b a.button {
+    box-sizing: border-box;
+    block-size: var(--header-control-height);
+    min-block-size: var(--header-control-height);
+    padding-block: 0;
+    padding-inline: clamp(0.75rem, 1.8vw, 1.15rem);
+    border-radius: 9999px;
+    font-family: var(--font-family-san-serif);
+    font-size: clamp(0.82rem, 0.76rem + 0.25vw, 0.95rem);
+    white-space: nowrap;
+}
+
 .search-form {
+    box-sizing: border-box;
     inline-size: min(100%, 24rem);
     justify-self: center;
-    min-block-size: 3rem;
+    block-size: var(--header-control-height);
+    min-block-size: var(--header-control-height);
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
@@ -139,8 +154,8 @@ nav.header .header-avatar {
 }
 
 .search-form .search-submit {
-    min-inline-size: 2.75rem;
-    min-block-size: 2.75rem;
+    inline-size: var(--header-control-height);
+    block-size: 100%;
     display: grid;
     place-items: center;
     padding: 0;
@@ -160,8 +175,8 @@ nav.header .header-avatar {
     }
 
     & svg {
-        inline-size: 1.2rem;
-        block-size: 1.2rem;
+        inline-size: 1.15rem;
+        block-size: 1.15rem;
         fill: none;
         stroke: currentColor;
         stroke-linecap: round;
@@ -173,7 +188,7 @@ nav.header .header-avatar {
     box-sizing: border-box;
     min-inline-size: 0;
     inline-size: 100%;
-    min-block-size: 2.85rem;
+    block-size: 100%;
     padding: 0 1rem 0 0;
     border: 0;
     outline: 0;
@@ -183,6 +198,28 @@ nav.header .header-avatar {
     font-size: 0.95rem;
 }
 
-.search-form input[type="search"]::placeholder {
-    color: rgb(28 29 35 / 0.58);
+@media (max-width: 48rem) {
+    nav.header .header-b a.button:not([data-button-variant="naked"]) {
+        display: none;
+    }
+
+    nav.header .header-b a.button[data-button-variant="naked"] {
+        --button-bg: var(--uchu-yin-8);
+        --button-color: var(--uchu-yang);
+        --button-border-color: var(--uchu-yin-8);
+        --button-hover-bg: var(--uchu-green-6);
+        --button-hover-color: #ffffff;
+    }
+}
+
+@media (max-width: 40rem) {
+    nav.header:has(.search-form:focus-within) .header-b {
+        display: none;
+    }
+
+    nav.header:has(.search-form:focus-within) .search-form {
+        grid-column: 2 / -1;
+        inline-size: 100%;
+        max-inline-size: none;
+    }
 }
