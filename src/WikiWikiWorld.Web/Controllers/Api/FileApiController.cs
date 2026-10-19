@@ -97,6 +97,7 @@ public sealed class FileApiController(
 		string FinalCulture = string.IsNullOrWhiteSpace(Culture) ? ResolvedCulture : Culture;
 		string FinalRevisionReason = string.IsNullOrWhiteSpace(RevisionReason) ? "API upload" : RevisionReason;
 		StagedFileUpload? StagedUpload = null;
+		int NewRevisionId = 0;
 
 		try
 		{
@@ -106,7 +107,7 @@ public sealed class FileApiController(
 
 			FileUploadResponse Response = await Strategy.ExecuteAsync(async CT =>
 			{
-				await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+				await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
 				FileRevision? CurrentFile = await Context.FileRevisions
 					.Where(f => f.CanonicalFileId == CanonicalFileId && f.IsCurrent == true)
@@ -137,12 +138,13 @@ public sealed class FileApiController(
 
 				Context.FileRevisions.Add(NewFile);
 
-				using (WriteDurabilityScope.High())
-				{
-					await Context.SaveChangesAsync(CT);
-				}
+				await Context.SaveChangesAsync(CT);
 
 				await Transaction.CommitAsync(CT);
+
+				// The revision id is assigned by SaveChanges; finalization (below) needs it
+				// to place the file at its per-revision path.
+				NewRevisionId = NewFile.Id;
 
 				return new FileUploadResponse(
 					CanonicalFileId,
@@ -155,7 +157,7 @@ public sealed class FileApiController(
 
 			try
 			{
-				FileUploadStorageService.FinalizeStagedUpload(StagedUpload);
+				FileUploadStorageService.FinalizeStagedUpload(StagedUpload, SiteId, NewRevisionId);
 			}
 			catch (Exception Ex)
 			{
@@ -172,19 +174,39 @@ public sealed class FileApiController(
 	}
 
 	/// <summary>
-	/// Gets metadata for a file revision by its canonical file ID.
+	/// Gets metadata for the file article identified by the given slug.
 	/// </summary>
-	/// <param name="CanonicalFileId">The canonical file identifier.</param>
+	/// <remarks>
+	/// Only the most recent (current) revision is returned; retrieving older
+	/// revisions is not supported yet. The <see cref="FileMetadataResponse.Url"/>
+	/// is populated only for image file types (<see cref="FileType.Image2D"/>);
+	/// it is <c>null</c> for video and audio files, which currently have no
+	/// servable URL.
+	/// </remarks>
+	/// <param name="UrlSlug">The URL slug of the file article.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <returns>The file revision metadata.</returns>
-	[HttpGet("{CanonicalFileId}")]
+	/// <returns>The current file revision metadata.</returns>
+	[HttpGet("{UrlSlug}")]
 	[ProducesResponseType<FileMetadataResponse>(StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-	public async Task<IActionResult> GetFileMetadata(Guid CanonicalFileId, CancellationToken CancellationToken)
+	public async Task<IActionResult> GetFileMetadata(string UrlSlug, CancellationToken CancellationToken)
 	{
+		if (string.IsNullOrWhiteSpace(UrlSlug))
+		{
+			return BadRequest("URL slug is required.");
+		}
+
+		ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: true);
+		ArticleRevision? CurrentArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync(CancellationToken);
+
+		if (CurrentArticle is null || CurrentArticle.Type != ArticleType.File || CurrentArticle.CanonicalFileId is null)
+		{
+			return NotFound("File not found.");
+		}
+
 		FileRevision? FileRevision = await Context.FileRevisions
 			.AsNoTracking()
-			.Where(F => F.CanonicalFileId == CanonicalFileId && F.IsCurrent == true)
+			.Where(F => F.CanonicalFileId == CurrentArticle.CanonicalFileId.Value && F.IsCurrent == true)
 			.FirstOrDefaultAsync(CancellationToken);
 
 		if (FileRevision is null)
@@ -192,8 +214,12 @@ public sealed class FileApiController(
 			return NotFound("File not found.");
 		}
 
+		// Only image files have a servable URL today; videos/audio resolve to null.
+		string? Url = FileRevision.Type == FileType.Image2D
+			? ImageUrlHelper.BuildImageUrl(CurrentArticle.SiteId, FileRevision.CanonicalFileId, FileRevision.Id, FileRevision.Filename)
+			: null;
+
 		return Ok(new FileMetadataResponse(
-			FileRevision.CanonicalFileId,
 			FileRevision.Filename,
 			FileRevision.MimeType,
 			FileRevision.FileSizeBytes,
@@ -201,7 +227,8 @@ public sealed class FileApiController(
 			FileRevision.Source,
 			FileRevision.ImageWidthPixels,
 			FileRevision.ImageHeightPixels,
-			FileRevision.DateCreated));
+			FileRevision.DateCreated,
+			Url));
 	}
 }
 
@@ -217,9 +244,11 @@ public sealed class FileApiController(
 public sealed record FileUploadResponse(Guid CanonicalFileId, string Filename, string MimeType, long FileSizeBytes, int? ImageWidthPixels, int? ImageHeightPixels);
 
 /// <summary>
-/// Response for file metadata retrieval.
+/// Response for file metadata retrieval. Describes only the most recent
+/// (current) revision; older revisions are not exposed. Internal identifiers
+/// (the database row id and the canonical file id) are deliberately omitted —
+/// the slug is the public key for a file article.
 /// </summary>
-/// <param name="CanonicalFileId">The canonical file identifier.</param>
 /// <param name="Filename">The filename.</param>
 /// <param name="MimeType">The MIME type.</param>
 /// <param name="FileSizeBytes">The file size in bytes.</param>
@@ -228,8 +257,12 @@ public sealed record FileUploadResponse(Guid CanonicalFileId, string Filename, s
 /// <param name="ImageWidthPixels">The width of the image in pixels, if applicable.</param>
 /// <param name="ImageHeightPixels">The height of the image in pixels, if applicable.</param>
 /// <param name="DateCreated">The creation date.</param>
+/// <param name="Url">
+/// The site-relative URL to the file. Populated only for image file types
+/// (<see cref="FileType.Image2D"/>); <c>null</c> for video and audio, which
+/// currently have no servable URL.
+/// </param>
 public sealed record FileMetadataResponse(
-	Guid CanonicalFileId,
 	string Filename,
 	string MimeType,
 	long FileSizeBytes,
@@ -237,4 +270,5 @@ public sealed record FileMetadataResponse(
 	string? Source,
 	int? ImageWidthPixels,
 	int? ImageHeightPixels,
-	DateTimeOffset DateCreated);
+	DateTimeOffset DateCreated,
+	string? Url);

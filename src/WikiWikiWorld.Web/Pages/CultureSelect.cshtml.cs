@@ -83,16 +83,33 @@ namespace WikiWikiWorld.Web.Pages
 		}
 
 		/// <summary>
-		/// Gets a display name for the specified culture code.
+		/// Gets a display name for the specified culture code, in that culture's own language.
 		/// </summary>
 		/// <param name="CultureCode">The culture code.</param>
-		/// <returns>The user-facing display name.</returns>
+		/// <returns>
+		/// The endonym for the culture (for example "English", "日本語", "العربية"), or the
+		/// culture code itself when no real culture matches it.
+		/// </returns>
+		/// <remarks>
+		/// Requires ICU. On an image built without it (any <c>*-chiseled</c> family that is not
+		/// <c>-extra</c>, which sets <c>DOTNET_SYSTEM_GLOBALIZATION_INVARIANT</c>) the lookup
+		/// throws and every language falls back to its bare code.
+		/// </remarks>
 		private static string GetCultureDisplayName(string CultureCode)
 		{
 			try
 			{
-				CultureInfo CultureInfo = CultureInfo.GetCultureInfo(CultureCode);
-				return CultureInfo.EnglishName;
+				CultureInfo Culture = CultureInfo.GetCultureInfo(CultureCode);
+
+				// Well-formed but unrecognised tags such as "xx-test" resolve to a synthesised
+				// culture rather than throwing, whose name reads worse than the raw code.
+				if (Culture.CultureTypes.HasFlag(CultureTypes.UserCustomCulture)
+					|| string.IsNullOrWhiteSpace(Culture.NativeName))
+				{
+					return CultureCode;
+				}
+
+				return Culture.NativeName;
 			}
 			catch (CultureNotFoundException)
 			{

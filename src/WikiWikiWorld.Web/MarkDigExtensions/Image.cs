@@ -181,7 +181,7 @@ public class ImageInlineRenderer : HtmlObjectRenderer<ImageInline>
             return;
         }
 
-        string ImageUrl = $"/sitefiles/{InlineElement.SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
+        string ImageUrl = ImageUrlHelper.BuildImageUrl(InlineElement.SiteId, File.CanonicalFileId, File.Id, File.Filename);
 
         // Header images are handled by HeaderImage block; inline images always render <img> with optional layout classes
         string? CssClass = InlineElement.Layout?.ToLowerInvariant() switch

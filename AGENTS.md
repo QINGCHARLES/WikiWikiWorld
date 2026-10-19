@@ -1,248 +1,225 @@
-# What AI agents should know about me -- v12
+# AGENTS.md - v15
 
-C# / ASP.NET Core / Maui developer (Razor Pages, Windows Forms, Console apps, Android/iOS/iPadOS apps) targeting .NET 10/C#14.
+## Defaults and existing projects
 
-## IMPORTANT: This file covers generic rules for all agents. For this project's specific mission, background, and operational test credentials, you must read PROJECT.md before taking any action (if it exists).
+* **Runtime:** .NET 10 / C# 14 is the default for all new projects and standalone examples. In an existing project, respect its current target until an upgrade is agreed.
+* **Older .NET projects:** ask whether to upgrade to .NET 10 unless I have already answered for this scope. First inspect the project and propose the smallest compatible change: usually update `TargetFramework`/`TargetFrameworks`, preserving platform qualifiers, then adjust only required SDK, packages, workloads, or incompatible code. Avoid migration tools and broad refactoring when ordinary changes suffice. Continue compatible work on the current target while awaiting a decision. Build and verify an approved upgrade; changing the TFM alone does not prove compatibility.
+* **Windows desktop:** use WinUI 3 with the Windows App SDK for new Windows desktop apps; develop and run them on Windows. Maintain existing WinForms/WPF apps unless a UI migration is agreed. Do not default new apps to WinForms.
+* **Web:** ASP.NET Core Razor Pages, developed on Windows and deployed as chiseled Docker containers on bare-metal Ubuntu. Use the brief deployment conventions below.
+* **Mobile:** .NET MAUI for Android/iOS/iPadOS; follow the platform SDK, workload, and build-host requirements recorded by the project.
+* **Data:** EF Core 10 + SQLite for new projects. Existing Dapper projects remain supported under the data-access transition policy below.
+* A runtime upgrade does not authorize a UI-framework migration, an ORM migration, or a deployment redesign. Treat their scopes separately.
 
-## Technical Strategy & Sanity Check
-Before executing any coding request—especially those where I suggest a specific implementation, library, or workaround—you must act as a **Lead Engineer** and evaluate the path:
+## Instruction priority and project context
 
-1.  **The "XY Problem" Audit:** Is the method I am suggesting (Y) actually the best way to achieve the underlying goal (X)? Or am I unknowingly asking for a workaround?
-2.  **Golden Path Verification:** Does a standard API, official SDK, or native framework feature exist that solves this more reliably? (e.g., Preferring official APIs over scraping; `System.Text.Json` over manual parsing; specific SQL types over string manipulation).
-3.  **Fragility Assessment:** Is the requested approach "brittle" (prone to breaking with minor updates), insecure, or significantly harder to maintain than the industry standard?
+Resolve conflicts among my instructions and preferences in this order:
 
-**Protocol:**
-If you identify a significantly better, more robust, or modern approach than the one I suggested:
-* You **must** start your response with a **"💡 Recommended Alternative"** block.
-* Briefly explain *why* the alternative is superior (e.g., "Facebook Graph API is stable; WebView2 is liable to break on UI updates").
-* Ask if I want to switch to the better approach or proceed with my original request.
+1. Correctness, data preservation, and required framework, platform, integration, and compatibility contracts constrain implementation. Never break a required contract or risk data loss merely to satisfy a convention.
+2. My explicit task instructions override my standing preferences and defaults within those constraints. Apply an override already given without asking me to confirm it again.
+3. Applicable local instructions and project-specific rules refine these generic defaults. Use the project's architecture, established patterns, and agreed migration scope.
+4. Apply the remaining global rules and style preferences within those constraints. Style does not outrank correctness or compatibility.
 
-* Don’t assume. Don’t hide confusion. Surface tradeoffs.
-* Minimum code that solves the problem. Nothing speculative.
-* Touch only what you must. Clean up only your own mess.
-* Define success criteria. Loop until verified.
+Before planning or editing, read `PROJECT.md` if present, applicable local instructions, and relevant build/configuration files. Read existing references governing the affected area. If context is inaccessible, identify the missing fact; ask only when it materially affects the task, and continue independent work.
 
-## Coding standards & conventions
-* Strong explicit typing; avoid `var` unless the type is truly obvious or required.
-* **PascalCase every identifier** (types, members, variables, parameters, generics, Razor artifacts, generated names like `App`/`Builder`).
-* Method and variable names should clearly reflect their purpose, especially when used outside of their immediate context. Don't be afraid to go long on naming to prioritize clarity of function.
-* Exception: simple loop counters (`i`, `j`, `w`, `h`, `x`, `y`, `z`) and other single character variables such as lambda parameters.
-* **Units in variable names:** Always include units in variable/parameter/property names when the type doesn't inherently express them:
-  * Time: `DelaySeconds`, `TimeoutMs`, `DurationMinutes` (not just `Delay`, `Timeout`, `Duration`)
-  * Size/Memory: `BufferSizeKb`, `MaxMemoryMb`, `FileSizeBytes` (not just `BufferSize`, `MaxMemory`, `FileSize`)
-  * Distance: `DistanceMeters`, `RangeKm` (not just `Distance`, `Range`)
-  * Weight: `WeightKg`, `MassGrams` (not just `Weight`, `Mass`)
-  * Temperature: `TempCelsius`, `TempFahrenheit` (not just `Temperature`)
-  * Exceptions: When using types that inherently express units (`TimeSpan`, `DateTimeOffset`, `DateOnly`, `TimeOnly`) or when the context is unambiguous (loop counters, array indices)
-  * This applies to **all contexts**: C# code, config files (JSON/XML), database columns, API contracts, etc.
-* Tabs for indentation; opening brace on its own line.
-* Nullability **enabled**; treat warnings as errors.
-* Use **file-scoped namespaces**; block-scoped only when multiple namespaces share a file.
-* Embrace modern C# (12–14): primary constructors, collection expressions `[]`, pattern matching, `new(y, m, d)`, expression-bodied members when clearer, `field` keyword in property setters for validation.
-  * **Collection expressions:** Use `[]` / `[..]` when target type is known
-    * `new[] { '{' }` → `['{']` (with target like `char[]`)
-    * `new()` → `[]` for empty collections (`List<Article> Articles = [];`)
-    * `Articles.ToList()` → `List<Article> Result = [.. Articles];`
-    * `Articles.ToArray()` → `Article[] Result = [.. Articles];`
-    * `Items.ToHashSet()` → `HashSet<Item> Result = [.. Items];` (keep `ToHashSet(Comparer)` when custom comparer needed)
-    * `ToDictionary(KeySelector, ValueSelector)` → keep for projections; for pure copies: `Dictionary<TKey, TValue> Result = [.. ExistingDictionary];`
-    * `Enumerable.Empty<T>()` → keep when you need `IEnumerable<T>` with no allocation; otherwise `[]` when targeting concrete types
-  * **String slicing:** Prefer range indexing (`Text[Start..End]`, `Text[Start..]`, `Text[..End]`, `Text[^N..]`) over equivalent `Substring` calls when start/end indices are known; keep `Substring` only when it reads more clearly.    
-  * **Async/target-typing:** Collection expressions need explicit target when compiler can't infer (async lambdas, ternaries, overloaded methods). Fix with:
-    * Specify generic result type on API (prefered): `ExecuteWithRetryAsync<IReadOnlyList<Post>>(...)`
-    * Cast expression: `return (IReadOnlyList<Post>)[.. Posts];`
-    * Use typed local: `IReadOnlyList<Post> Result = [.. Posts]; return Result;`
-  * **When NOT to use `[..]`: Keep LINQ when explicit typing harms readability, or for special behavior (`ToHashSet(CustomComparer)`, `ToDictionary` with projections)
-  * **Immutability:** Prefer `IReadOnlyList<T>` for return types; consider `ImmutableArray<T>`/`FrozenSet<T>`/`FrozenDictionary<TKey, TValue>` for hot paths
-* Collections & nullability: For any collection return type (IEnumerable<T>, IReadOnlyList<T>, arrays, dictionaries, etc.), never return null.
-  * Use Enumerable.Empty<T>() for IEnumerable<T> or IAsyncEnumerable<T>.
-  * Use [] / [..] for concrete types (List<T>, T[], Dictionary<TKey, TValue>, etc.).
-  * “No results” ⇒ empty collection; reserve null for “no value / not applicable” on non-collection types.
-* Prefer **UTC** everywhere (`DateTimeOffset.UtcNow` or `DateTime.UtcNow` with `Kind.Utc`). Consider `DateOnly`/`TimeOnly` when appropriate.
-* Use `ReadOnlySpan<T>`/`Span<T>` **only in synchronous methods** (ref struct ⇒ cannot be used in async methods, as fields, or in closures). Good for: string parsing/validation, binary signature checks, hot-path substring-free manipulation. Keep `string` for: repositories (async + Dapper), Razor/controller model binding, any async signature. Make span methods **span-only** (no dual overloads); callers use `.AsSpan()` with zero cost. Prefer `params ReadOnlySpan<T>` for hot-path varargs.
-* **Threading:** Use `System.Threading.Lock` instead of `object` for mutual exclusion; `lock` for sync code, `using Lock.EnterScope()` for async.
-* **Overloads:** Use `[OverloadResolutionPriority(1)]` to steer callers toward more efficient overloads without breaking existing code.
-* **Null-conditional assignment:** Permit `Target?.Member = Value;` when clearer than explicit `if`.
-* **From-end index in initializers:** Allow `[^n]` in object initializers when populating arrays/collections from the end (e.g., reverse-order rankings, tail-biased buffers). Use sparingly; comment intent.
-* **`\e` escape:** Prefer `"\e"` over `"\x1b"` for ANSI escape sequences.
-* **Switch expressions:** Prefer `switch` expressions over `if/else if` chains or legacy `switch` statements for returning values.
-* **Pattern matching:** Prefer `is not null` over `!= null`; use `is null` over `== null`.
-* **Immutable updates:** Use the `with` keyword for non-destructive mutation of records (`var UpdatedUser = User with { Age = NewAge };`).
-* **Scoped `using`:** Prefer `using var` declarations to reduce nesting depth over `using { }` blocks.
-* **Value Objects:** Use `readonly record struct` for small, immutable data carriers (money, coordinates, IDs) to reduce heap allocations.
-* Front end: vanilla CSS & JS; must be responsive. JS may use `!!` for concise booleans.
-* Prefer object-initializers with **target-typed `new()`** for options/config instead of fluent `.SetXxx()` chains.
-* Prefer `sealed` classes unless inheritance is intended; use `record class` for DTOs with `required` members.
-* Mark methods/properties as `static` when they don’t access instance members. Prefer static helpers where feasible.
-* Mark local functions `static` when they don’t capture outer scope; this prevents closures and can improve perf.
-* Hot-Path Loops: Prefer `foreach` for general readability, but switch to `for` loops (especially over arrays/spans) on critical hot paths or low-latency scenarios to leverage .NET 10 aggressive bounds-check elimination.
-* Use the new `slnx` format over the deprecated `sln` format for solutions.
-* **Remember to use new language features when it makes sense without hurting code readability and understanding:**
-  * C# 14: extension members: Explicitly prefer the new `extension(Type Receiver)` syntax over legacy static classes with `this` parameters. Use modifiers on simple lambda parameters (`ref`/`in`/`out`); `nameof` works with unbound generics; implicit `Span<T>`/`ReadOnlySpan<T>` conversions.
-  * C# 13: `params` on collections (e.g., `IEnumerable<T>`, `ReadOnlySpan<T>`); method-group “natural type” improvements; `ref`/`unsafe` allowed in iterators & `async` methods; `ref struct` can implement interfaces; `allows ref struct` generic constraint; partial properties & partial indexers
-  * C# 12: default parameters in lambdas; inline arrays; `ref readonly` parameters; alias any type
+`PROJECT.md` should record the mission, layout, current stack, partially migrated areas, agreed migration scope, verification commands, browser/platform support, and deployment/schema procedures. Describe how to obtain approved test credentials rather than storing reusable secrets. Keep temporary pins, custom durability mechanisms, and server-specific values in project references; do not invent components described by an inaccessible reference.
 
-## C# XML Documentation Comments
+If a material conflict remains unresolved by this order, explain it and ask for the specific decision needed to proceed. Briefly disclose material exceptions in the result.
 
-* Always maintain C# XML documentation comments (///) for: all types, constructors, methods (including private), properties, events, indexers.
-* Update comments whenever signatures, nullability, units, defaults, or thrown exceptions change.
-* Use:
-  * <summary> — one clear sentence.
-  * <param> / <typeparam> — match names exactly.
-  * <returns> — when not void.
-  * <exception> — list only what is actually thrown.
-  * <remarks> — only when needed for nuance.
-  * <inheritdoc/> for overrides/interface implementations unless behavior differs.
-  * Reference members with <see cref="Type.Member"/>.
+## Engineering judgment and scope
 
-## Using directives management
+* Act as a lead engineer: check the underlying goal, whether the suggested method solves it, whether a standard API or official SDK fits better, and any concrete fragility or maintenance cost.
+* Present a **💡 Recommended Alternative** before implementation when a better approach materially changes my requested method, scope, dependencies, behavior, cost, or architecture. Explain the trade-off and ask which approach to take unless I have already chosen. Decide routine implementation details yourself.
+* Use the minimum complete solution. Touch only what the task requires, preserve unrelated user changes, and clean up artifacts introduced by your work. Do not perform speculative cleanup or migrations.
+* Introduce interfaces/layers only for demonstrated value: another implementation, an exercised test seam, or known volatility. Start with direct queries; extract proven reuse into expressions/methods. Use specifications only when their composition or reuse justifies them.
+* Accept intentional coupling to the established stack. Do not abstract for a hypothetical database swap.
+* Proceed with reasonable, reversible assumptions for minor ambiguity. Ask when correctness, scope, required contracts, or irreversible decisions depend on the answer; do not repeat answered questions.
+* Build, inspect, and prepare a concrete result before seeking any final approval that is actually needed. Obtain approval for destructive or production actions when the task has not already authorized them.
+* Avoid generic logging, security, privacy, and ethics commentary. Flag concrete issues relevant to the requested change, including data-loss risks; keep necessary diagnostics useful and avoid exposing secrets.
 
-* Check `GlobalUsings.cs` at project root first—never duplicate what's already global.
-* Add to global when used in 70%+ of project files; keep specialized/rare usings local.
-* Remove unused (greyed-out) usings when editing files.
+## Runtime and API verification
 
-## Environment & platform
+Do not reject modern APIs based on model memory. Check the actual target, SDK/language and package versions, namespaces, overloads, and diagnostics. Check database-provider translation separately from API availability. Consult official documentation for unresolved version-sensitive questions. Diagnose failures before proposing dependency changes; never silently upgrade or downgrade to make an example work.
 
-* **Web apps**: develop on **Windows**, deploy to **Ubuntu**. **Windows Forms**: Windows‑only (develop + deploy).
-* Default to cross‑platform `dotnet` CLI.
-* When OS-specific paths/commands matter, show **both** Windows (PowerShell/cmd) and Ubuntu (Bash).
-* Use forward‑slash paths in web/config files; for Windows Forms use `Path` APIs (no hardcoded separators).
+These released capabilities are valid on the .NET 10 baseline, subject to their required packages and context:
 
-## General preferences
+|Capability|Context|
+|-|-|
+|`extension(Type Receiver)` blocks and `field`-backed properties|C# 14|
+|`TypedResults.ServerSentEvents(...)`|ASP.NET Core 10 server-to-client streaming|
+|`Builder.Services.AddValidation()`|ASP.NET Core 10 Minimal API validation|
+|`Microsoft.AspNetCore.JsonPatch.SystemTextJson`|Stable .NET 10-compatible JSON Patch package|
+|`LeftJoin(...)` / `RightJoin(...)`|.NET 10 LINQ operators with EF Core 10 translation support|
+|Named `HasQueryFilter(...)` and `IgnoreQueryFilters(\["FilterName"])`|EF Core 10|
 
-* Omit logging, tracing, security, privacy, or ethics chatter unless asked.
-* Prefer platform-agnostic APIs wherever practical.
+Use the compiler's default language version for the target (.NET 10 defaults to C# 14). Do not enable preview language features or prerelease packages without an agreed need. Older projects awaiting an upgrade must use capabilities supported by their actual target.
 
-## Project & build defaults
+References when needed: [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14), [EF Core 10](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/whatsnew).
 
-* Enable analyzers + latest analysis level; deterministic, CI-friendly builds; implicit usings enabled (still avoid `var` where not obvious).
-* Suggested `Directory.Build.props` keys: `TargetFramework=net10.0`, `Nullable=enable`, `TreatWarningsAsErrors=true`, `EnableNETAnalyzers=true`, `AnalysisLevel=latest`, `Deterministic=true`, `ContinuousIntegrationBuild=true`, `ImplicitUsings=enable`.
-* **Language version:** .NET 9 ⇒ C# 13 (default); .NET 10 ⇒ C# 14 (default). Only set `<LangVersion>` for preview features.
+## Naming, formatting, and build conventions
 
-## Razor Pages specifics
+* Prefer explicit types. Use `var` only when the type is truly obvious or the language requires it, such as an anonymous type.
+* Use **PascalCase** for new, owned identifiers: types, members, variables, parameters, generic parameters, and Razor/XAML names. Exceptions are simple loop counters and other useful single-character variables, including lambda parameters.
+* Use descriptive names, including longer names when helpful. Preserve public/named-argument contracts, external JSON/config schemas, database mappings, framework/browser-required names, and generated code. Avoid unrelated renames.
+* Include units in owned numeric names: `DelaySeconds`, `TimeoutMs`, `FileSizeBytes`, `BufferSizeKiB`, `DistanceMeters`, `WeightKg`, `TempCelsius`. Prefer bytes; define `KB`/`MB` as decimal bytes and `KiB`/`MiB` as binary bytes. Avoid ambiguous `Kb`/`Mb`. Apply this to owned config/database/API fields without breaking existing contracts. Omit redundant units for types such as `TimeSpan`, date/time types, indices, and counters.
+* Use tabs and opening braces on their own line in C#. A single-line `if` that only returns may omit braces. Use file-scoped namespaces; use block scope only when a file genuinely needs multiple namespaces.
+* Enable nullability, warnings as errors, .NET analyzers, implicit usings, and deterministic builds. Use `AnalysisLevel=latest` with the repository-selected SDK; set `ContinuousIntegrationBuild=true` only in CI. Preserve platform-qualified TFMs such as `net10.0-windows` and project-specific `TargetFrameworks`; do not force plain `net10.0` through shared props.
+* Record the chosen SDK and roll-forward policy in `global.json` where appropriate, and keep CI aligned. Keep compatible package/tool versions consistent without unrelated upgrades or warning suppression.
+* Express mechanical rules through the repository's `.editorconfig`, analyzers, and build configuration where supported. Follow file-format requirements for JSON, YAML, shell, and other non-C# files; do not force C# indentation rules onto them.
+* Check explicit, implicit, and generated global usings, including `GlobalUsings.cs` and project `Using` items. Avoid duplicates. Keep genuinely common namespaces global and specialized ones local; no percentage census. Remove confirmed unused usings in edited files.
+* Prefer `.slnx` for new solutions with compatible tooling. `.sln` remains supported; migrate existing solutions only for a task-related reason, updating dependent tooling together.
+* Prefer `dotnet` CLI where supported; use required Windows/mobile build hosts. Show PowerShell and Bash variants only when differences matter. Use forward slashes in web/config paths and `Path` APIs for filesystem paths, preserving rooted-path semantics.
 
-* Use **primary-constructor** `PageModel`s, `sealed` by default; inject readonly deps.
-* Prefer `Task`-returning handlers; pair sync/async consistently.
-* Bind explicitly/minimally (`[BindProperty(SupportsGet = true)]` only where needed).
-* Favor feature folders and reuse via partials.
-* Include `<meta name="viewport" content="width=device-width, initial-scale=1">`; forms/layouts responsive via CSS Grid/Flex and `clamp()` for fluid type/spacing.
+## Modern C# and collections
 
-## Async, cancellation, and time
+* Prefer readable modern syntax: primary constructors, target-typed `new()`, pattern matching, switch expressions for values, expression-bodied members, and suitable `field`-backed properties. Prefer `is null` / `is not null` for null tests.
+* Prefer C# 14 extension blocks for new extensions inside a non-nested, nongeneric static class. Preserve public signatures and verify callers when changing overload resolution. Use `OverloadResolutionPriority` only for a demonstrated selection problem.
+* Use `sealed` unless inheritance is intended or required. Make helpers and local functions `static` when they need no instance state/capture and no framework or interface contract requires an instance member.
+* Prefer matching guard helpers, such as `ArgumentNullException.ThrowIfNull(Value)` and `ArgumentException.ThrowIfNullOrWhiteSpace(Text)`. Use explicit argument exceptions when no helper expresses the required contract.
+* Prefer using declarations when method scope is the right lifetime; use an explicit block when resources, locks, or transactions should end earlier. Use `await using` for asynchronous disposal where appropriate.
+* Prefer ranges over equivalent `Substring` calls when clearer. Use spans for suitable parsing/validation and measured hot paths. Async/iterator span locals must obey compiler ref-safety rules and never survive `await`/`yield` suspension. Do not capture spans or store them in ordinary class/struct fields. Use strings or suitable memory types for async signatures/retained buffers; preserve useful string overloads and null behavior.
+* Consider `params ReadOnlySpan<T>`, other supported `params` collections, `readonly record struct` value objects, and immutable/frozen collections when justified. Account for boxing, copying, and construction costs rather than assuming a performance improvement.
+* C# 14 null-conditional assignment, supported lambda modifiers, and `nameof` on unbound generics are available when clearer. Use `"\\e"` for ANSI escape characters. Use less common features such as inline arrays, ref constraints, or partial members only for an actual requirement.
 
-* Public async methods accept `CancellationToken CancellationToken`; in handlers use `HttpContext.RequestAborted`.
-* Use `await using` for `IAsyncDisposable`.
-* Use `CultureInfo.InvariantCulture` for persisted parse/format; persist timestamps as ISO‑8601 **UTC** (`O`).
-* **Parallelism:** Use `Task.WhenAll` when tasks are independent; avoid awaiting tasks sequentially inside a loop.
-* **Throttling:** Use `SemaphoreSlim` to limit concurrency when using `Parallel.ForEachAsync` or manual parallelism.
-* **Producer/Consumer:** Prefer `System.Threading.Channels.Channel<T>` over `BlockingCollection` or raw locks for decoupling background work.
-* **Timers:** Use `PeriodicTimer` for async loops instead of `Thread.Sleep` or `Task.Delay` inside `while` loops.
-* **Strict HTTP Budgets:** Never rely solely on `HttpClient.Timeout`. For every outgoing request, use, e.g. `using var Cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);` and apply a specific budget: `Cts.CancelAfter(TimeSpan.FromSeconds(2));`. Pass `Cts.Token` to the HTTP method.
+Never return null for collection results. Empty means successful absence of results, not failure/cancellation. Use a non-collection result type when unavailable data must be distinguished from an empty result.
 
-## Data access (EF Core 10 + SQLite)
+Use collection expressions when the target type is supported and known. For ordinary in-memory collections:
 
-* Stack: SQLite with EF Core 10
-* Connections via `Microsoft.Data.Sqlite` with shared cache; open with cancellable path; set `PRAGMA foreign_keys=ON; journal_mode=WAL; synchronous=NORMAL;`.
-* SQL is idempotent; create minimal indexes.
-* Map to immutable DTOs (`record class` + `required`).
-* Use the Specification Pattern for query reuse. It avoids duplication and keeps complex queries composable.
-* For critical durability writes, wrap actual persistence call in `using (WriteDurabilityScope.High())` to use SQLite `synchronous=FULL`, if feature available in data layer. Include identity/security changes (account creation, password changes, lockout/access-failure updates, role or permission changes), durable user/content state (article revisions, file revisions, deletes/reverts), and user communication records (messages, talk threads/posts). Do not apply blanket-style to routine analytics, cache refreshes, ephemeral state, read-only workflows, or retryable/low-impact interactions such as likes, reactions, view counts, click tracking, presence indicators, drafts/autosaves, or other convenience state where the user can reasonably retry without data loss.
-* **Read-Only Optimization:** Explicitly use `.AsNoTracking()` for all read-only queries (e.g., `OnGet` handlers) to reduce memory overhead and GC pressure.
-* **Named Query Filters:** Use named filters for soft-delete and multi-tenancy (`HasQueryFilter("SoftDelete", e => !e.IsDeleted)`); selectively disable with `.IgnoreQueryFilters(["FilterName"])`.
-* **LINQ Optimization:**
-  * Use `.Any()` instead of `.Count() > 0`.
-  * Use `.Chunk(Size)` for batch processing.
-  * Use `.MaxBy(x => x.Prop)` / `.MinBy()` instead of ordering and taking the first.
-  * Use `.LeftJoin()` / `.RightJoin()` instead of `SelectMany`/`GroupJoin`/`DefaultIfEmpty` combinations.
+|Intent|Preferred form|
+|-|-|
+|Empty list|`List<Article> Articles = \[];`|
+|Materialize list|`List<Article> Result = \[.. Articles];`|
+|Materialize array|`Article\[] Result = \[.. Articles];`|
+|Default-comparer set|`HashSet<Item> Result = \[.. Items];`|
+|Empty concrete dictionary|`Dictionary<string, int> Counts = \[];`|
+|Copy a concrete dictionary and its comparer|`Dictionary<string, int> Copy = new(Counts, Counts.Comparer);`|
+|Empty synchronous sequence|`Enumerable.Empty<T>()` or a target-typed `\[]`|
+|Empty asynchronous sequence on .NET 10|`AsyncEnumerable.Empty<T>()`|
 
-## Options & configuration
+Keep `ToHashSet(Comparer)` and `ToDictionary(...)` for required comparers/projections/duplicate-key behavior. Use a constructor for dictionary copies, not spread-copy syntax. Preserve EF asynchronous materialization. When target inference fails, use an explicit API result type, typed local, or cast; retain LINQ when clearer.
 
-* Use options pattern with object initializers, `.ValidateOnStart()` and data annotations.
-* Keep config paths forward‑slash. Provide Windows/Ubuntu CLI when commands are shown.
+## XML documentation and human readability
 
-## API surface & DTOs
+* AI-authored code must be comprehensible to human maintainers. Require XML documentation for every new or meaningfully changed type, constructor, method **including private methods**, property, event, and indexer.
+* Maintain comments and backfill meaningfully changed members. Touching a file or reformatting it does not trigger unrelated backfilling. Handle that separately; do not hand-edit generated members.
+* Explain purpose and meaningful behavior, side effects, and non-obvious constraints. A comment that merely expands the name, such as "Parses the index" for `ParseIndex`, is insufficient.
+* Keep comments accurate when behavior, signatures, nullability, units, defaults, constraints, or documented exceptions change.
+* Use `<summary>` for purpose/behavior; match `<param>`/`<typeparam>` names exactly. Describe non-void results with `<returns>`, including async completion/results. Document relevant exceptions that actually propagate, use `<remarks>` for nuance, `<inheritdoc/>` for matching inherited contracts, and `<see cref="Type.Member"/>` for references.
 
-* Return `IReadOnlyList<T>`/`IReadOnlyDictionary<TKey, TValue>`; accept `IEnumerable<T>`.
-* Use guard helpers for parameter validation—never throw new for arg checks: ArgumentNullException.ThrowIfNull(X), ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Value, nameof(Value)), ArgumentException.ThrowIfNullOrWhiteSpace(Text)
-* Prefer `Path.Join` and async I/O (`File.ReadAllTextAsync(..., CancellationToken)`).
-* **Exception Filters:** Use `catch (Exception Ex) when (Log(Ex))` patterns to log exceptions without unwinding the stack when you aren't actually handling the error logic.
-* **HTTP Clients:** Use named `IHttpClientFactory` configurations for external services to centralize base URLs and headers, rather than instantiating `HttpClient` directly.
-* **JSON Streaming:** When reading large external API responses, use `ReadAsStreamAsync()` and deserialize directly from the stream to avoid allocating massive strings.
+## Async, synchronization, and performance
 
-## JSON & serialization
+* Use async for asynchronous I/O and coordination. Keep ordinary in-memory work synchronous; completed tasks are acceptable for existing framework/interface contracts. Offload expensive CPU work when needed for UI responsiveness; do not routinely wrap server work in `Task.Run`.
+* Accept and propagate `CancellationToken CancellationToken` for cancellable async operations you own. Use `HttpContext.RequestAborted` in request work. Respect framework signatures, propagate cancellation rather than reporting success, and avoid `async void` except required event handlers.
+* Use `System.Threading.Lock` for synchronous mutual exclusion. Neither `lock` nor an `EnterScope()` lifetime may span an `await`. For asynchronous mutual exclusion, use a suitable async primitive, commonly `SemaphoreSlim.WaitAsync(CancellationToken)`, with release in `finally` after successful acquisition.
+* Use `Task.WhenAll` only for independent, concurrency-safe operations with bounded resources. Await sequentially when ordering, limits, or a shared `DbContext` requires it. Prefer `ParallelOptions.MaxDegreeOfParallelism` for `Parallel.ForEachAsync`; use a shared semaphore only for an additional purpose.
+* Use channels for actual producer/consumer needs, with appropriate capacity/completion. Use `PeriodicTimer` for periodic ticks and cancellable `Task.Delay` for delay-after-work or backoff. Avoid `Thread.Sleep` in async/UI flows.
+* Prefer readable `foreach` loops. Change loops, allocation patterns, or data structures for demonstrated performance needs; preserve semantics and measure consequential claims. Do not assume a `for` loop is faster over arrays/spans.
 
-* `System.Text.Json` with one static `JsonSerializerOptions`: ISO‑8601 UTC, `WhenWritingNull`; consider source‑gen if perf matters.
+Reference when needed: [synchronous lock semantics](https://learn.microsoft.com/en-us/dotnet/api/system.threading.lock?view=net-10.0).
 
-## ASP.NET Core, DI & Middleware
+## Data access
 
-* **Keyed Services:** Use `[FromKeyedServices("KeyName")]` when you need multiple implementations of the same interface (e.g., different storage providers).
-* **Structured Logging:** Use `Logger.BeginScope` to attach context (like `OrderId`) to a block of logs rather than manually adding it to every log message string.
-* **Minimal API Validation:** Use `builder.Services.AddValidation()` for automatic validation with `System.ComponentModel.DataAnnotations`; disable per-endpoint with `.DisableValidation()`.
-* **Server-Sent Events:** Return `TypedResults.ServerSentEvents(IAsyncEnumerable<T>, eventType)` for real-time streaming instead of polling or WebSockets when unidirectional server-to-client push is sufficient.
-* **JSON Patch:** When implementing `PATCH`, use `Microsoft.AspNetCore.JsonPatch.SystemTextJson` with Minimal APIs instead of Newtonsoft.
-* **Robust HTTP Clients:** Prefer **Typed Clients** (`services.AddHttpClient<TClient>`) over named clients for better type safety and segregation.
-  * **Mandatory DNS Rotation:** Always configure `.ConfigurePrimaryHttpMessageHandler` to set `PooledConnectionLifetime` (e.g., `TimeSpan.FromMinutes(5)`) to ensure DNS updates are respected (defaults to infinite).
-  * **Resilience:** Use `.AddStandardResilienceHandler()` (requires `Microsoft.Extensions.Http.Resilience`) to enable standard retries, circuit breakers, and hedging.
-  * **Cookies Warning:** Do **not** use `IHttpClientFactory` (or Typed Clients) if the client requires a `CookieContainer`, as pooled handlers may accidentally share cookies. Use a Singleton/Static `HttpClient` in that specific case.
+### Transition and ownership
 
-## Idempotency & retries
+* Use EF Core 10 + SQLite for new projects. Maintain Dapper during ordinary maintenance and feature work in existing Dapper areas. Convert only within the migration scope already agreed for the task or an approved project plan.
+* `PROJECT.md` identifies the current stack and partially migrated areas. Preserve each area's established stack outside the agreed scope. EF-specific rules do not require introducing EF components into Dapper code, and an ORM migration does not follow automatically from a runtime upgrade.
+* Keep data access in established service/query boundaries rather than page markup or handlers. Do not add generic repositories, specifications, or interfaces without demonstrated value. Parameterize SQL values, including in retained Dapper queries.
 
-* For writes that clients may retry, accept an `Idempotency-Key` and dedupe in a short‑lived SQLite table (key hash + expiration UTC).
+### Contexts and queries
 
-## UX Strategy: Intentional Friction
+* A `DbContext` is a short-lived unit of work and is not thread-safe. Never run overlapping operations on one context, even if queries look independent. Await its operation before reusing it.
+* Use scoped contexts for normal web requests. Use an appropriate scope or `IDbContextFactory<TContext>` for background jobs, desktop/mobile operations, and independent concurrent units of work. Dispose contexts you create; do not retain one in a singleton or for application lifetime.
+* Project needed columns to DTOs in the query. Use `AsNoTracking()` for read-only entity results. Entity-free projections already avoid tracking; DTOs containing entities can still track them. Track entities when the unit of work updates them.
+* Keep filtering, projection, ordering, and bounded paging in `IQueryable` before materialization. Avoid unnecessary graphs, round trips, and accidental client evaluation. Use deterministic paging order with a tie-breaker when needed.
+* Prefer `Any()`/`AnyAsync()` for existence queries. In-memory `Chunk`, `MaxBy`/`MinBy`, and collection expressions are not universal EF optimizations. Check changed query shapes for translation and SQL; do not hide translation failures with client evaluation.
+* Use .NET 10 `LeftJoin`/`RightJoin` where clearer and supported by the provider/query shape. For EF Core 10 soft-delete or tenant filters, use named filters and selectively disable only the intended filter, such as `IgnoreQueryFilters(\["SoftDelete"])`. Preserve required tenant isolation; bypassing a filter is an explicit operation, not a default query workaround.
+* Write LINQ in method syntax. Use query syntax only where `let`, group joins, or multi-source joins are materially clearer; do not mix styles within one query without need. Prefer navigation properties over explicit joins.
+* Use raw SQL in EF areas only for constructs EF cannot translate (for example SQLite FTS5, recursive CTEs, window functions) or a measured query problem after inspecting the generated SQL. Use `FromSql`/`SqlQuery`/`ExecuteSql` with interpolated parameters; never pass concatenated or interpolated values to `FromSqlRaw`/`ExecuteSqlRaw`. Select explicit columns, not `*`, and keep raw SQL in the query/service boundary.
+* Raw SQL is not compile-checked: cover each raw query with a test against the actual provider so renames and schema changes fail in tests, not production.
+* Prefer `ExecuteUpdate`/`ExecuteDelete` for set-based writes. They and `ExecuteSql` bypass the change tracker; do not rely on entities already tracked by that context afterward.
 
-*   **Principle:** Optimize for **meaning**, not just motion. Speed is not the goal if it encourages "autopilot" errors.
-*   **Good vs. Bad Friction:** "Good friction" is a deliberate pause to ensure intent; "Bad friction" is accidental lag, confusion, or poor performance.
-*   **When to inject friction:**
-    *   **Irreversible/High-Stakes:** Deletions, financial transfers, publishing, or changing credentials. Use "undo" windows (delayed execution), hold-to-confirm, or explicit verification modals.
-    *   **Attention Limits:** Prefer pagination over infinite scroll to provide closure and respect user focus.
-    *   **Contextual Checks:** Warn on missing attachments or ambiguous inputs to force a "thinking pause."
+### SQLite, schemas, and durability
 
-## Front-End: Modern Vanilla CSS (Zero-JS & Zero-Build Strategy)
-**Rule:** Prefer native CSS and HTML features over JavaScript, polyfills, or preprocessors (no Sass/LESS).
+* EF's SQLite provider uses `Microsoft.Data.Sqlite`; let the configured context/provider manage ordinary connection lifetimes. Centralize connection settings, foreign-key enforcement, and initialization rather than repeating PRAGMAs in handlers.
+* Prefer WAL with normal/private cache for file-backed databases. Do not add `Cache=Shared` alongside WAL by default; special shared in-memory scenarios need an explicit reason.
+* SQLite's ADO.NET async methods execute synchronously. Propagate cancellation where supported, but do not promise nonblocking database I/O or immediate interruption merely because an API is async. Keep units of work short and respect provider concurrency limits.
+* Use EF migrations for schema evolution in new EF projects. For existing projects, follow the recorded schema owner and application procedure, including approved manual SQL. Do not silently introduce startup migrations, replace migration history, or mix `EnsureCreated` with a migrations-managed database.
+* Plan Dapper-to-EF baseline migrations around existing schema/data. Review generated changes for data, constraints, and externally managed objects. Justify indexes by queries and required correctness constraints.
+* Record who applies migrations and when. SQLite cannot generate EF standard idempotent scripts; use a supported procedure based on actual migration state. Test schema changes on representative disposable data and assess rollback/recovery before deployment.
+* Default to `synchronous=FULL` for durable writes in new SQLite setups. Preserve the project's documented durability policy and its configuration owner. Relax durability only for explicitly classified, reconstructible data with accepted loss; drafts/autosaves and user writing are not disposable by default. Do not alter durability inside an active transaction or add per-write wrappers when centralized configuration already owns it.
+* Document custom interceptors, durability scopes, and temporary pins per project, with affected versions, rationale, and verification-based removal criteria. Check resolved dependencies and the original failure before removing a workaround; a future major version alone is not evidence.
 
-* **Architecture & Logic:** Use native nesting (`&`), `@layer` for cascade control, and `@scope` for subtree isolation. Utilize native `@function`, inline `if()`, typed attributes `attr(data-x type(<percentage>))`, and register typed vars with `@property`.
-* **Selectors:** Target parents with `:has()`, group with `:is()`, use 0-specificity resets with `:where()`, and `:focus-visible` for accessibility.
-* **Layout:** Grid/Flex + `gap`. Center via `grid` + `place-items: center` (never absolute + transform hacks). Use `subgrid`, `grid-template-areas`, `aspect-ratio`, `inset`, `width: stretch` (to fill remaining space natively), and logical properties (`margin-inline-start`, etc.).
-* **Responsive & Containers:** Use `@container` for sizes, style queries (`@container style(--x > 50%)`), and scroll-state (`@container scroll-state(stuck:top)`). Fluid typography via `clamp()`. Responsive images: `<img width="100%">` + `object-fit: cover` (no background-image hacks).
-* **Zero-JS Interactivity:**
-  * **Modals:** Native `<dialog>` with `commandfor="id"`, `command="show-modal"`, `closedby="any"` (light dismiss), and `::backdrop`.
-  * **Popovers & Tooltips:** Use `popover`, `popovertarget`, and `interestfor="tip"`, paired with Anchor Positioning (`anchor-name`, `position-anchor`, `top: anchor(bottom)`).
-  * **Carousels & Scroll:** Native `scroll-snap`, `::scroll-marker`, `::scroll-button()`, and scroll-spy via `nav a:target-current` + `scroll-target-group`. Sticky elements via `position: sticky`.
-  * **Forms:** Auto-grow textareas with `field-sizing: content`; customize native selects via `appearance: base-select` + `::picker(select)`; defer validation styling until interaction via `:user-[in]valid`; theme inputs via `accent-color`.
-* **Colors & Theming:** Use perceptually uniform `oklch` or `display-p3`. Native dark mode via `color-scheme: light dark` on `:root` + the `light-dark()` function (avoid duplicate `@media` blocks). Compute palettes dynamically via relative syntax (`oklch(from var(--brand) calc(l + 0.2) c h)`) and `color-mix()`. Store variables in `:root`.
-* **Typography:** `text-wrap: balance` (headings), `text-box: trim-both cap alphabetic` (perfect vertical centering without padding hacks), `line-clamp` (truncation), single variable fonts, `font-display: swap`, and `initial-letter` (drop caps).
-* **Animations:** View Transitions API (`document.startViewTransition()`) for state/page changes; `animation-timeline: view()` for scroll-driven FX (no `IntersectionObserver`). Stagger natively via `sibling-index()`. Use independent `translate`/`rotate`/`scale`. Animate `display` or to/from `auto` heights via `@starting-style`, `transition-behavior: allow-discrete`, and `interpolate-size: allow-keywords`.
-* **Visuals & Perf:** `backdrop-filter: blur()` (glass), `corner-shape` (squircles/notches), and responsive percentage-based `clip-path: shape()`. Stabilize layout with `scrollbar-gutter: stable`; stop scroll chaining via `overscroll-behavior: contain`. Lazy render off-screen elements with `content-visibility: auto` + `contain-intrinsic-size`.
+References when needed: [context lifetime](https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/), [tracking](https://learn.microsoft.com/en-us/ef/core/querying/tracking), [SQLite limitations](https://learn.microsoft.com/en-us/ef/core/providers/sqlite/limitations), [SQLite async](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/async).
 
-## Browser DevTools & Console Debugging
+## DTOs, time, options, and serialization
 
-When writing web code, JS debugging snippets, or apps with embedded browsers (WebView2, etc.), prefer advanced console APIs over plain `console.log`:
+* Use ordinary classes for EF entities and `record class` DTOs where value semantics fit. Prefer `required` for mandatory DTO initialization and `init`/get-only properties for immutability. `required` alone is not immutable; record `with` copies are shallow, including mutable children.
+* Prefer `IReadOnlyList<T>`/`IReadOnlyDictionary<TKey, TValue>` results and `IEnumerable<T>` inputs when one pass suffices. Choose richer contracts for indexing, counts, or async streaming. Read-only interfaces do not guarantee immutable storage/elements.
+* Use UTC for instants, normalizing before textual round-trip (`"O"`) formatting. Use invariant machine-readable persistence and appropriate cultures for user-facing values. Preserve date-only/time-only business meaning; formatting itself does not convert to UTC.
+* Choose SQLite timestamp mappings that support required queries. `DateTimeOffset` comparison/ordering has limitations; use UTC `DateTime` or tested conversions where needed. Preserve UTC meaning on round trips; do not force text formatting into every EF mapping.
+* Use validated options, including data annotations and `ValidateOnStart()` where startup failure is appropriate. Prefer target-typed object initializers for values; retain framework builders such as `UseSqlite` where required.
+* Prefer `System.Text.Json`. Reuse preconfigured options per contract; preserve required naming/null behavior and omit nulls where allowed. Do not allocate options per call or force unrelated APIs to share them. Consider source generation for relevant performance/publishing needs.
+* Use exception filters for selection criteria, not mandatory logging. Follow the project handling boundary; do not swallow errors or lose stack information when rethrowing.
 
-* **Inspect variables:** `console.log({ User, Product })` (shorthand object) — shows names + values, not `console.log("user", User)`.
-* **Tabular data:** `console.table(Rows)` for arrays of objects.
-* **Call stacks:** `console.trace(Label)` when origin is unclear.
-* **Assertions:** `console.assert(Condition, Message, Context)` instead of `if`-wrapped logs.
-* **Timing:** `console.time(Label)` / `console.timeEnd(Label)` — never guess perf.
-* **Grouping:** `console.group` / `console.groupCollapsed` / `console.groupEnd` for related output.
-* **Log levels:** Use `info` / `warn` / `error` / `debug` — not `log` for everything — so DevTools filters work.
-* **DOM inspection:** `console.dir(Element)` for properties vs. `console.log` for markup.
-* **Styled output:** `%c` + CSS for critical/hard-to-miss messages.
----
+## ASP.NET Core and Razor Pages
 
-# How I want AI agents to respond
+* Prefer sealed, primary-constructor `PageModel` classes where compatible. Parameters are not automatically readonly fields; use explicit readonly storage when required. Preserve framework-required inheritance/members.
+* Use async handlers when they await asynchronous work, and synchronous handlers otherwise. Bind only the fields needed; enable GET binding with `SupportsGet = true` only intentionally. Prefer feature organization and reuse through partials within the established layout.
+* Use Minimal API `AddValidation()` with its required package when appropriate; disable per-endpoint validation only deliberately. Use keyed services for actual multiple-implementation selection needs.
+* Prefer `TypedResults.ServerSentEvents(...)` for suitable unidirectional updates. Select polling, SSE, or WebSockets according to required behavior.
+* For JSON Patch, prefer `Microsoft.AspNetCore.JsonPatch.SystemTextJson` with a compatible package and endpoint binding. A `PATCH` request does not inherently require JSON Patch. Restrict updates to the intended input surface and apply validation before persistence.
+* Use structured logs and scopes for meaningful operational context when logging is needed. Do not add logging boilerplate to every small method or leave temporary debugging output behind.
 
-* Provide the **smallest complete** snippet/method/delegate; full program **only on request**.
-* Follow every style rule above (tabs + brace‑on‑new‑line + PascalCase for everything except loop counters and single‑character variables; may omit braces/new line for a single‑line `if` that only returns).
-* Highlight nullable annotations, UTC handling, and modern C# features used.
-* Razor Pages: show paired `.cshtml` + `.cshtml.cs` fragments together.
-* Front‑end examples: plain CSS & JS—no frameworks.
-* Environment nuance: use `dotnet` CLI; if OS differs, show **both** Windows and Ubuntu commands; prefer forward‑slash paths in web code.
-* Options/config objects: **object‑initializers + target‑typed `new()`** over fluent chains.
-* If a request conflicts with these rules, ask which rule to relax.
-* When unsure, ask clarifying questions first.
+## HTTP clients, retries, and idempotency
 
-## Self‑check (for agents)
+* Centralize external-service configuration. Prefer typed factory clients for service integrations and named clients for dynamic selection or simpler configuration. Match lifetimes to consumers and reuse underlying connection pools.
+* The default factory `SocketsHttpHandler` sets `PooledConnectionLifetime` from `HandlerLifetime` on supported platforms. Inspect actual handlers before overriding; configure custom long-lived clients for real DNS needs. Do not assume factory lifetimes are infinite.
+* Isolate cookie containers by account/session. Avoid factory pooling that unintentionally shares/discards cookies. Dedicated long-lived clients may fit; a globally shared cookie container does not provide isolation.
+* Add resilience when the integration needs it, using one configured handler per client. `AddStandardResilienceHandler()` provides rate limiting, total/attempt timeouts, retries, and circuit breaking; hedging is a separate deliberate policy. Do not stack retry layers or enable duplicate attempts for writes without justified replay/idempotency semantics. `DisableForUnsafeHttpMethods()` is available to disable retries for unsafe HTTP methods.
+* Set operation-appropriate budgets. For a resilience pipeline, configure `TotalRequestTimeout.Timeout` and `AttemptTimeout.Timeout`, and ensure `HttpClient.Timeout` does not unintentionally pre-empt them; an infinite client timeout is appropriate only when another mechanism owns the required budget. Pass caller cancellation. Add a linked per-call deadline when needed, rather than mandating a second timeout for every request.
+* Distinguish short API calls, uploads/downloads, and long-lived streams. Specify whether a deadline covers connection/headers, body consumption, idle periods, or the whole operation. Stream large responses and deserialize from the stream, passing cancellation through body processing. Do not assume a headers-only timeout bounds later reads.
+* Add idempotency where retrying writes risks duplicate effects. Scope keys by caller/tenant and operation, bind request fingerprints, coordinate dedupe and writes atomically, and define concurrent requests, replay, mismatches, and retention. Keep storage details project-specific; do not mandate a dedupe table for every write.
 
-* Validate compliance with every bullet before sending. If a rule must be bent due to conflicts, prefer core style rules (PascalCase rules, explicit types, tabs/brace style, nullability) and state the trade‑off briefly.
-* Specifically ensure all code output conforms to style rules above, especially PascalCase rules, explicit typing, tabs + brace‑on‑new‑line, and nullability annotations.
-* After changes, ensure the project compiles and builds cleanly with no warnings/errors.
+References when needed: [factory handler behavior](https://learn.microsoft.com/en-us/dotnet/core/compatibility/networking/9.0/default-handler), [HTTP resilience](https://learn.microsoft.com/en-us/dotnet/core/resilience/http-resilience), [client lifetimes and cookies](https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines).
+
+## Website deployment: essential conventions
+
+The standard is a chiseled Docker container on a bare-metal Ubuntu host. Keep host provisioning, actual domains, registry values, schedules, and recovery procedures in the project's deployment runbook.
+
+* **Build:** use SDK container publishing (`dotnet publish -t:PublishContainer`), normally without a Dockerfile. Target the host's Linux architecture and a compatible chiseled image; use `ContainerFamily=noble-chiseled-extra` and `InvariantGlobalization=false` for culture/currency/time-zone features. Check native/font dependencies; runtime images have no shell/package manager.
+* **Edge:** single-app hosts expose Kestrel HTTP 80 / HTTPS 443 with app-side TLS. Do not add a proxy or forwarded-header processing by default; configure trusted proxies only when the project actually uses them.
+* **State/config:** keep binaries in `/app`, persistent data/uploads in bind-mounted `/app/data`, and certificates in `/app/certs`. Match production paths/endpoints to mounts. Run non-root; verify permissions against the image user (normally UID/GID 1654). Keep secrets outside tracked files/images.
+* **TLS:** serve only `/app/data/.well-known/acme-challenge` at its public ACME path before HTTP redirects/authentication; never expose the data root. Cover all hostnames, including redirect sources. Runbooks own issuance/renewal and certificate activation by restart or verified reload.
+* **Repository:** version scripts under `deploy/` and relevant task definitions. Use host-side Bash, LF endings, and executable permissions. Pull successfully before stopping the running container; support immutable rollback tags and bounded logs. Run maintenance host-side; use consistent SQLite backups, not live file copies.
+* **Check:** verify the actual image starts, serves HTTPS, preserves writable state, and handles cultures correctly. Follow the project schema procedure; containerization does not imply startup migrations. Probe from the host or an app endpoint, not assumed in-container shell/curl.
+
+Reference when needed: [SDK container configuration](https://learn.microsoft.com/en-us/dotnet/core/containers/publish-configuration).
+
+## Front end: native-first, no unnecessary build step
+
+* Prefer plain HTML, CSS, and JavaScript without frontend frameworks, Sass/LESS, or preprocessors. Use native features when they meet the requirement; small JavaScript fallbacks are appropriate for essential functionality.
+* Define browser/WebView support in `PROJECT.md`. If an absent matrix affects a feature choice, ask or use a broadly supported fallback. Check version-sensitive support and use progressive enhancement; essential functionality must work.
+* Use the viewport meta tag, Grid/Flex, `gap`, logical properties, and `clamp()` for responsive layouts. Prefer layout-based centering; use absolute positioning/transforms when appropriate. Use backgrounds for decoration and semantic images for content.
+* Give content images intrinsic numeric HTML `width`/`height` where known, appropriate alt text, and responsive CSS such as `max-inline-size: 100%; block-size: auto`. Use `object-fit: cover` for intentional cropping.
+* Require keyboard and touch operation, visible focus, appropriate semantics/labels, and reduced-motion behavior. Dialogs/popovers need working focus and dismissal behavior; hover must not be the only route to essential content.
+* Prefer native nesting, cascade layers, useful `:has()`/`:is()`/`:where()` selectors, `:focus-visible`, subgrid, and container queries when supported. Gate newer syntax such as CSS functions/conditionals, typed attributes, style/scroll-state queries, anchor positioning, declarative invokers, and scroll markers/buttons individually; essential interactions need a working fallback.
+* Use native `<dialog>`, popovers, scroll snapping, and form controls where suitable. Consider `field-sizing`, customizable selects, and `:user-valid`/`:user-invalid` with support checks. View Transitions can involve JavaScript; scroll-driven animations do not replace unrelated `IntersectionObserver` uses.
+* Prefer OKLCH for perceptually meaningful color adjustments. Display P3 (`color(display-p3 ...)`) is wide-gamut RGB, not perceptually uniform; provide fallbacks when needed. Use `color-scheme` and `light-dark()` when supported, while preserving an explicit user theme choice and appropriate media-query fallbacks.
+* Use typography, fonts, balancing/truncation, and effects deliberately. Apply `content-visibility`, intrinsic sizing, sticky positioning, and scroll containment to actual needs; test visibility, overflow, focus, and reduced motion.
+* Choose useful console diagnostics: named-value objects, `table`, `trace`, `assert`, timing, groups, levels, or `dir`. Use styled output sparingly and remove temporary diagnostics.
+
+## UX: intentional friction
+
+* Add deliberate confirmation or an undo window when it helps prevent consequential mistakes, such as destructive deletion, publishing, or credential changes. Match friction to the action and keep it accessible; do not add confirmation to every routine operation.
+* Prefer pagination over endless scrolling where it provides useful closure and respects attention.
+* Surface actionable contextual problems, such as missing attachments or materially ambiguous input. Avoid accidental lag, confusing controls, or repeated confirmations masquerading as thoughtful UX.
+
+## Verification and responses
+
+* Establish success criteria and applicable verification commands before implementation. Check affected behavior; avoid tests that merely restate implementation and unrelated verification scope.
+* Run the relevant build, tests, analyzers, and format checks available for the changed area. Fix regressions introduced by your change. For query/schema changes, verify against the actual provider on disposable data; for UI changes, check affected interactions and target platforms; for container changes, check the actual published image when available.
+* Do not suppress warnings, weaken checks, remove tests, or alter unrelated dependencies to manufacture success. Distinguish existing from new failures. Report unavailable tooling/credentials/platforms and exactly what remains unverified; never claim checks ran when they did not.
+* Stop when the requested behavior and applicable gates are sufficiently verified. If blocked, report the concrete blocker and useful completed work rather than making speculative changes or looping indefinitely.
+* **Repository work:** make authorized edits and report changed behavior, relevant verification/results, and material limitations. Do not substitute snippets for implementation or narrate every modern feature.
+* **Code examples:** give the smallest complete answer; a full program only when requested or necessary to run it. Pair `.cshtml`/`.cshtml.cs` when both are needed. Apply these conventions and include relevant environment commands.
+* Before sending, check the applicable instruction priorities, scope, contracts, documentation, style, and verification evidence. State material trade-offs briefly and do not ask me to reconfirm an override or action already authorized.
+

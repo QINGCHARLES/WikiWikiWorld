@@ -17,11 +17,13 @@ namespace WikiWikiWorld.Web.Pages.Profile;
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="UserManager">The user manager.</param>
+/// <param name="ArticleRevisionService">The article revision service.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 [Authorize]
 public sealed class NewMessageModel(
 	WikiWikiWorldDbContext Context,
 	UserManager<User> UserManager,
+	ArticleRevisionService ArticleRevisionService,
 	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
 	/// <summary>
@@ -161,32 +163,11 @@ public sealed class NewMessageModel(
 
 		await Strategy.ExecuteAsync(async CT =>
 		{
-			await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+			await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
-			// Get recipient's user article (to link the talk subject)
-			string RecipientSlug = $"@{RecipientUsername}";
-			ArticleRevisionsBySlugSpec ArticleSpec = new(RecipientSlug, IsCurrent: true);
-			ArticleRevision? RecipientArticle = await Context.ArticleRevisions.WithSpecification(ArticleSpec).FirstOrDefaultAsync(CT);
-
-			if (RecipientArticle is null)
-			{
-				RecipientArticle = new ArticleRevision
-				{
-					CanonicalArticleId = Guid.NewGuid(),
-					SiteId = SiteId,
-					Culture = Culture,
-					Title = RecipientSlug,
-					DisplayTitle = $"User: {RecipientUser.UserName}",
-					UrlSlug = RecipientSlug,
-					Type = ArticleType.User,
-					Text = $"Welcome to {RecipientUser.UserName}'s page.",
-					RevisionReason = "User article created for messaging.",
-					CreatedByUserId = RecipientUser.Id,
-					DateCreated = DateTimeOffset.UtcNow,
-					IsCurrent = true
-				};
-				Context.ArticleRevisions.Add(RecipientArticle);
-			}
+			// Get (or create) the recipient's user article to link the talk subject to. Inside this
+			// transaction a failure correctly rolls the whole message back, so the throwing variant is used.
+			ArticleRevision RecipientArticle = await ArticleRevisionService.EnsureUserArticleAsync(SiteId, Culture, RecipientUser, CT);
 
 			string SubjectSlug = SlugHelper.GenerateSlug(Input.Subject);
 			DateTimeOffset CreatedUtc = DateTimeOffset.UtcNow;
@@ -202,22 +183,19 @@ public sealed class NewMessageModel(
 			};
 			Context.ArticleTalkSubjects.Add(NewSubject);
 
-			using (WriteDurabilityScope.High())
-			{
-				await Context.SaveChangesAsync(CT);
+			await Context.SaveChangesAsync(CT);
 
-				ArticleTalkSubjectPost NewPost = new()
-				{
-					ArticleTalkSubjectId = NewSubject.Id,
-					ParentTalkSubjectPostId = null,
-					Text = Input.Message,
-					HasBeenEdited = false,
-					CreatedByUserId = CurrentUser.Id,
-					DateCreated = CreatedUtc
-				};
-				Context.ArticleTalkSubjectPosts.Add(NewPost);
-				await Context.SaveChangesAsync(CT);
-			}
+			ArticleTalkSubjectPost NewPost = new()
+			{
+				ArticleTalkSubjectId = NewSubject.Id,
+				ParentTalkSubjectPostId = null,
+				Text = Input.Message,
+				HasBeenEdited = false,
+				CreatedByUserId = CurrentUser.Id,
+				DateCreated = CreatedUtc
+			};
+			Context.ArticleTalkSubjectPosts.Add(NewPost);
+			await Context.SaveChangesAsync(CT);
 
 			await Transaction.CommitAsync(CT);
 		}, CancellationToken);

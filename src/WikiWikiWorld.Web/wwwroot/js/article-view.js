@@ -1,52 +1,54 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const videoContainers = document.querySelectorAll('.video-container');
+document.addEventListener("click", function (Event) {
+	if (!(Event.target instanceof Element))
+	{
+		return;
+	}
 
-    videoContainers.forEach(container => {
-        container.addEventListener('click', function () {
-            const videoId = container.getAttribute('data-id');
+	const ActivationLink = Event.target.closest(".youtube-embed__play");
+	if (!(ActivationLink instanceof HTMLAnchorElement) ||
+		Event.defaultPrevented ||
+		Event.ctrlKey ||
+		Event.metaKey ||
+		Event.shiftKey ||
+		Event.altKey)
+	{
+		return;
+	}
 
-            // Preserve the container's height to prevent layout collapse
-            const containerHeight = container.clientHeight;
-            container.style.height = containerHeight + 'px';
+	const VideoId = ActivationLink.getAttribute("data-youtube-video-id");
+	if (!VideoId || !/^[A-Za-z0-9_-]{11}$/.test(VideoId))
+	{
+		return;
+	}
 
-            // Get the thumbnail image and play button for removal later.
-            const thumbnail = container.querySelector('img');
-            const playButton = container.querySelector('.play-button');
+	const StartSecondsText = ActivationLink.getAttribute("data-youtube-start-seconds");
+	const StartSeconds = StartSecondsText && /^\d+$/.test(StartSecondsText)
+		? Number.parseInt(StartSecondsText, 10)
+		: 0;
+	if (!Number.isSafeInteger(StartSeconds) || StartSeconds < 0)
+	{
+		return;
+	}
 
-            // Create the YouTube iframe.
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-            iframe.setAttribute('frameborder', '0');
-            iframe.setAttribute('allowfullscreen', '');
-            iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+	Event.preventDefault();
 
-            // Set the iframe to fill the container and overlay the thumbnail.
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.position = 'absolute';
-            iframe.style.top = '0';
-            iframe.style.left = '0';
+	const TitleElement = ActivationLink.querySelector(".youtube-embed__title");
+	const VideoTitle = TitleElement?.textContent?.trim() || "YouTube video";
+	const Iframe = document.createElement("iframe");
+	const StartParameter = StartSeconds > 0 ? `&start=${StartSeconds}` : "";
 
-            // Append the iframe to the container (it will overlay the thumbnail).
-            container.appendChild(iframe);
+	Iframe.className = "youtube-embed__frame";
+	Iframe.width = "480";
+	Iframe.height = "270";
+	Iframe.title = `YouTube video: ${VideoTitle}`;
+	Iframe.loading = "lazy";
+	Iframe.referrerPolicy = "strict-origin-when-cross-origin";
+	Iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+	Iframe.setAttribute("allowfullscreen", "");
+	Iframe.src = `https://www.youtube-nocookie.com/embed/${VideoId}?autoplay=1${StartParameter}`;
+	Iframe.addEventListener("load", function () {
+		Iframe.focus();
+	}, { once: true });
 
-            let removed = false;
-            // Remove the thumbnail and play button once the iframe fully loads.
-            iframe.onload = function () {
-                if (!removed) {
-                    if (thumbnail) thumbnail.remove();
-                    if (playButton) playButton.remove();
-                    removed = true;
-                }
-            };
-
-            // Fallback removal after 3 seconds in case onload doesn't fire.
-            setTimeout(function () {
-                if (!removed) {
-                    if (thumbnail) thumbnail.remove();
-                    if (playButton) playButton.remove();
-                }
-            }, 3000);
-        });
-    });
+	ActivationLink.replaceWith(Iframe);
 });

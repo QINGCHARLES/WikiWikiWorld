@@ -37,10 +37,7 @@ public sealed class BookmarkService(WikiWikiWorldDbContext Context)
 			Existing.DateDeleted = DateTimeOffset.UtcNow;
 			Context.Bookmarks.Update(Existing);
 
-			using (WriteDurabilityScope.High())
-			{
-				await Context.SaveChangesAsync(CancellationToken);
-			}
+			await Context.SaveChangesAsync(CancellationToken);
 
 			return false;
 		}
@@ -56,10 +53,7 @@ public sealed class BookmarkService(WikiWikiWorldDbContext Context)
 
 		Context.Bookmarks.Add(NewBookmark);
 
-		using (WriteDurabilityScope.High())
-		{
-			await Context.SaveChangesAsync(CancellationToken);
-		}
+		await Context.SaveChangesAsync(CancellationToken);
 
 		return true;
 	}
@@ -110,10 +104,7 @@ public sealed class BookmarkService(WikiWikiWorldDbContext Context)
 		Bookmark.DateDeleted = DateTimeOffset.UtcNow;
 		Context.Bookmarks.Update(Bookmark);
 
-		using (WriteDurabilityScope.High())
-		{
-			await Context.SaveChangesAsync(CancellationToken);
-		}
+		await Context.SaveChangesAsync(CancellationToken);
 
 		return true;
 	}
@@ -139,10 +130,7 @@ public sealed class BookmarkService(WikiWikiWorldDbContext Context)
 
 		Context.BookmarkLists.Add(NewList);
 
-		using (WriteDurabilityScope.High())
-		{
-			await Context.SaveChangesAsync(CancellationToken);
-		}
+		await Context.SaveChangesAsync(CancellationToken);
 
 		return NewList;
 	}

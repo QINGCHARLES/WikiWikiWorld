@@ -133,6 +133,11 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	/// </summary>
 	public DbSet<PublicationUploadQueue> PublicationUploadQueue { get; set; } = null!;
 
+	/// <summary>
+	/// Gets or sets the article domain redirects.
+	/// </summary>
+	public DbSet<ArticleDomainRedirect> ArticleDomainRedirects { get; set; } = null!;
+
 	/// <inheritdoc/>
 	protected override void OnModelCreating(ModelBuilder Builder)
 	{
@@ -274,6 +279,17 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasIndex(e => e.SubmittedByUserId);
 			b.HasIndex(e => new { e.StatusId, e.DateCreated });
 			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
+		});
+
+		Builder.Entity<ArticleDomainRedirect>(b =>
+		{
+			b.ToTable("ArticleDomainRedirects");
+			b.HasKey(e => e.Id);
+			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
+			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
+			b.HasIndex(e => e.Domain).IsUnique().HasFilter("DateDeleted IS NULL");
+			b.HasIndex(e => new { e.SiteId, e.Culture, e.CanonicalArticleId });
 		});
 
 		// SQLite does not support DateTimeOffset natively in ORDER BY, so we convert to string

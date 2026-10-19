@@ -16,6 +16,7 @@
 	color: oklch(35% 0.05 250);
 }
 
+/*
 @media (prefers-color-scheme: dark) {
 	.stub-banner {
 		background-color: oklch(22% 0.02 250);
@@ -23,6 +24,7 @@
 		color: oklch(80% 0.04 250);
 	}
 }
+*/
 
 .stub-banner__icon {
 	flex-shrink: 0;
@@ -50,6 +52,7 @@
 	color: oklch(35% 0.2 250);
 }
 
+/*
 @media (prefers-color-scheme: dark) {
 	.stub-banner a {
 		color: oklch(70% 0.18 250);
@@ -63,3 +66,4 @@
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2390aed4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E");
 	}
 }
+*/

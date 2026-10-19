@@ -184,7 +184,7 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 			.Select(f => new { f.Id, f.CanonicalFileId, f.Filename, f.ImageWidthPixels, f.ImageHeightPixels })
 			.ToListAsync(CancellationToken);
 
-		Dictionary<Guid, string> FileLookup = Files.ToDictionary(f => f.CanonicalFileId, f => f.Filename);
+		Dictionary<Guid, (int Id, string Filename)> FileLookup = Files.ToDictionary(f => f.CanonicalFileId, f => (f.Id, f.Filename));
 
 		string? FirstFoundHeaderImage = null;
 
@@ -200,9 +200,9 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 
 			if (ArticleLookup.TryGetValue(Slug, out Guid? CanonicalFileId) &&
 				CanonicalFileId.HasValue &&
-				FileLookup.TryGetValue(CanonicalFileId.Value, out string? Filename))
+				FileLookup.TryGetValue(CanonicalFileId.Value, out (int Id, string Filename) FileInfo))
 			{
-				string Url = $"/sitefiles/{SiteId}/images/{CanonicalFileId}{Path.GetExtension(Filename)}";
+				string Url = ImageUrlHelper.BuildImageUrl(SiteId, CanonicalFileId.Value, FileInfo.Id, FileInfo.Filename);
 
 				// Update block for debug renderer
 				Block.ResolvedUrl = Url;

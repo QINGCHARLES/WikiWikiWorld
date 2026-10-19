@@ -12,6 +12,7 @@ public static class ArticleUrlHelper
 	/// </summary>
 	private static readonly HashSet<string> RestrictedSlugs = new(StringComparer.OrdinalIgnoreCase)
 	{
+		"admin",
 		"api",
 		"openapi",
 		"wiki:api-docs",

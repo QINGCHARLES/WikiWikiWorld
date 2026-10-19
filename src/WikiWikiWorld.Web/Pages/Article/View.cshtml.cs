@@ -225,25 +225,45 @@ public sealed class ViewModel(
 
         if (DisplayedRevision is null)
         {
-            // Check if this is a user home page request (starts with @)
+            // A missing @page for a real user is auto-created on first view (best-effort, any visitor)
+            // and then rendered, so user pages exist as soon as anyone looks at them. A username with no
+            // account, or a non-@ slug, still 404s.
             if (UrlSlug.StartsWith('@'))
             {
                 string TargetUsername = UrlSlug[1..];
                 User? TargetUser = await UserManager.FindByNameAsync(TargetUsername);
 
-                if (TargetUser is not null)
+                if (TargetUser is null)
                 {
-                    // Check if the current user is the owner of this profile
+                    return NotFound();
+                }
+
+                ArticleRevision? EnsuredArticle = await ArticleRevisionService.TryEnsureUserArticleAsync(SiteId, Culture, TargetUser, CancellationToken);
+
+                if (EnsuredArticle is not null)
+                {
+                    // Render the freshly created (or concurrently created) page; fall through to the pipeline below.
+                    CurrentRevision = EnsuredArticle;
+                    DisplayedRevision = EnsuredArticle;
+                    IsViewingCurrentRevision = true;
+                }
+                else
+                {
+                    // Creation failed (e.g. a transient error). Preserve prior behavior: send the owner to the
+                    // editor to create their home page; everyone else gets a 404.
                     User? CurrentUser = await UserManager.GetUserAsync(User);
                     if (CurrentUser is not null && CurrentUser.Id == TargetUser.Id)
                     {
-                        // Redirect to create the home page
                         return Redirect($"/Article/CreateEdit?UrlSlug={UrlSlug}");
                     }
+
+                    return NotFound();
                 }
             }
-
-            return NotFound();
+            else
+            {
+                return NotFound();
+            }
         }
 
         // Fetch recent authors (username and profile pic GUID) for this article.
@@ -298,8 +318,7 @@ public sealed class ViewModel(
 
             if (CurrentFile is not null)
             {
-                string FileExtension = Path.GetExtension(CurrentFile.Filename);
-                FileImageUrl = $"/sitefiles/{SiteId}/images/{CurrentFile.CanonicalFileId}{FileExtension}";
+                FileImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, CurrentFile.CanonicalFileId, CurrentFile.Id, CurrentFile.Filename);
                 FileMimeType = CurrentFile.MimeType;
                 FileOriginalFilename = CurrentFile.Filename;
                 FileSizeBytes = CurrentFile.FileSizeBytes;

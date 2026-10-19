@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model WikiWikiWorld.Web.Pages.Article.FirehoseModel
 @using WikiWikiWorld.Web.Helpers
 @{
@@ -28,36 +28,63 @@
 						<th>Reason</th>
 					</tr>
 				</thead>
-				<tbody>
-					@foreach (WikiWikiWorld.Data.Models.ArticleRevision Revision in Model.RecentRevisions)
-					{
-						string RevisionTimestamp = Revision.DateCreated.ToString("yyyyMMddHHmmssfffffff");
-
-						<tr>
-							<td>
-								<a href="@ArticleUrlHelper.BuildArticlePath(Revision)">@Revision.Title</a>
-							</td>
-
-							<td>
-								@if (Model.Users.TryGetValue(Revision.CreatedByUserId, out WikiWikiWorld.Data.Models.User? User))
-								{
-									<a href="/@@@User.UserName">@User.UserName</a>
-								}
-								else
-								{
-									<span>Unknown</span>
-								}
-							</td>
-							<td>
-								<a href="@ArticleUrlHelper.BuildRevisionPath(Revision, RevisionTimestamp)">
-									@Revision.DateCreated.ToString("dd MMM yyyy HH:mm")
-								</a>
-							</td>
-							<td>@Revision.RevisionReason</td>
-						</tr>
-					}
+				<tbody id="firehose-rows">
+					<partial name="_FirehoseRows" model="new WikiWikiWorld.Web.Pages.Article.FirehoseRowsViewModel(Model.RecentRevisions, Model.Users)" />
 				</tbody>
 			</table>
 		</div>
+
+		@* Only offer "Load more" when the first page filled up, i.e. there may be more. *@
+		@if (Model.RecentRevisions.Count >= WikiWikiWorld.Web.Pages.Article.FirehoseModel.InitialCount)
+		{
+			<p class="firehose-load-more">
+				<button id="firehose-load-more" type="button" class="button"
+						data-url="@Url.Page("Firehose", "Rows")"
+						data-skip="@WikiWikiWorld.Web.Pages.Article.FirehoseModel.InitialCount"
+						data-page-size="@WikiWikiWorld.Web.Pages.Article.FirehoseModel.LoadMoreCount">
+					Load @WikiWikiWorld.Web.Pages.Article.FirehoseModel.LoadMoreCount more
+				</button>
+			</p>
+		}
 	}
 </article>
+
+@section Scripts {
+	<script>
+		(() => {
+			const Button = document.getElementById("firehose-load-more");
+			if (!Button) { return; }
+
+			const Rows = document.getElementById("firehose-rows");
+			const PageSize = Number(Button.dataset.pageSize);
+
+			Button.addEventListener("click", async () => {
+				Button.disabled = true;
+
+				try {
+					const Skip = Number(Button.dataset.skip);
+					const Response = await fetch(`${Button.dataset.url}&skip=${Skip}`);
+
+					if (!Response.ok) { return; }
+
+					const Holder = document.createElement("tbody");
+					Holder.innerHTML = (await Response.text()).trim();
+					const Added = Holder.children.length;
+
+					while (Holder.firstChild) {
+						Rows.appendChild(Holder.firstChild);
+					}
+
+					Button.dataset.skip = Skip + Added;
+
+					// A short page means we've reached the end.
+					if (Added < PageSize) {
+						Button.closest(".firehose-load-more").remove();
+					}
+				} finally {
+					Button.disabled = false;
+				}
+			});
+		})();
+	</script>
+}

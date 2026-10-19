@@ -10,12 +10,12 @@ namespace WikiWikiWorld.Web.Pages.Account;
 /// </summary>
 /// <param name="UserManager">The user manager.</param>
 /// <param name="SignInManager">The sign-in manager.</param>
-/// <param name="Context">The database context.</param>
+/// <param name="ArticleRevisionService">The article revision service.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 public sealed class RegisterModel(
 	UserManager<User> UserManager,
 	SignInManager<User> SignInManager,
-	WikiWikiWorldDbContext Context,
+	ArticleRevisionService ArticleRevisionService,
 	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
 	private readonly UserManager<User> UserManager = UserManager;
@@ -39,8 +39,9 @@ public sealed class RegisterModel(
 	/// <summary>
 	/// Handles the POST request to register a new user.
 	/// </summary>
+	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>A redirect to the home page on success, or the page with errors on failure.</returns>
-	public async Task<IActionResult> OnPostAsync()
+	public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
 	{
 		if (!ModelState.IsValid)
 		{
@@ -48,17 +49,13 @@ public sealed class RegisterModel(
 		}
 
 		User NewUser = new() { UserName = Input.UserName, Email = Input.Email };
-		IdentityResult Result;
-
-		using (WriteDurabilityScope.High())
-		{
-			Result = await UserManager.CreateAsync(NewUser, Input.Password);
-		}
+		IdentityResult Result = await UserManager.CreateAsync(NewUser, Input.Password);
 
 		if (Result.Succeeded)
 		{
-			// Create user article for DM inbox
-			await CreateUserArticleAsync(NewUser);
+			// Best-effort: ensure the user's @page (their home page) exists. A failure here must never block
+			// registration — the page is recreated on demand when the profile is viewed or messaged.
+			await ArticleRevisionService.TryEnsureUserArticleAsync(SiteId, Culture, NewUser, CancellationToken);
 
 			await SignInManager.SignInAsync(NewUser, isPersistent: false);
 			return RedirectToPage("/Index");
@@ -70,39 +67,6 @@ public sealed class RegisterModel(
 		}
 
 		return Page();
-	}
-
-	/// <summary>
-	/// Creates a user article for the newly registered user.
-	/// </summary>
-	/// <param name="NewUser">The newly created user.</param>
-	private async Task CreateUserArticleAsync(User NewUser)
-	{
-		string UserSlug = $"@{NewUser.UserName}";
-
-		ArticleRevision NewUserArticle = new()
-		{
-			CanonicalArticleId = Guid.NewGuid(),
-			SiteId = SiteId,
-			Culture = Culture,
-			Title = UserSlug,
-			DisplayTitle = $"User: {NewUser.UserName}",
-			UrlSlug = UserSlug,
-			Type = ArticleType.User,
-			Text = $"Welcome to {NewUser.UserName}'s page.",
-			RevisionReason = "User article created on registration.",
-			CreatedByUserId = NewUser.Id,
-			DateCreated = DateTimeOffset.UtcNow,
-			IsCurrent = true
-		};
-
-		Context.ArticleRevisions.Add(NewUserArticle);
-
-		// High durability: ensures user article persists even on power loss
-		using (WriteDurabilityScope.High())
-		{
-			await Context.SaveChangesAsync();
-		}
 	}
 
 	/// <summary>

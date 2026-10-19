@@ -153,11 +153,8 @@ public sealed class TalkSubjectModel(
 			DateCreated = DateTimeOffset.UtcNow,
 		};
 
-		using (WriteDurabilityScope.High())
-		{
-			Context.ArticleTalkSubjectPosts.Add(NewPost);
-			await Context.SaveChangesAsync(CancellationToken);
-		}
+		Context.ArticleTalkSubjectPosts.Add(NewPost);
+		await Context.SaveChangesAsync(CancellationToken);
 
 		string Redirected = $"{SubjectPath}#post-{NewPost.Id}";
 		return Redirect(Redirected);

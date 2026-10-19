@@ -17,10 +17,11 @@ public static class SqliteInitializer
 		using SqliteConnection Connection = new(ConnectionString);
 		Connection.Open();
 
+		// PRAGMA synchronous is deliberately NOT set here: it is per-connection (not
+		// persistent like journal_mode), and is owned by SqliteDurabilityInterceptor.
 		using SqliteCommand Command = Connection.CreateCommand();
 		Command.CommandText = """
 			PRAGMA journal_mode = WAL;
-			PRAGMA synchronous = NORMAL;
 			PRAGMA page_size = 8192;
 			""";
 		Command.ExecuteNonQuery();
@@ -36,10 +37,11 @@ public static class SqliteInitializer
 		await using SqliteConnection Connection = new(ConnectionString);
 		await Connection.OpenAsync(CancellationToken).ConfigureAwait(false);
 
+		// PRAGMA synchronous is deliberately NOT set here: it is per-connection (not
+		// persistent like journal_mode), and is owned by SqliteDurabilityInterceptor.
 		await using SqliteCommand Command = Connection.CreateCommand();
 		Command.CommandText = """
 			PRAGMA journal_mode = WAL;
-			PRAGMA synchronous = NORMAL;
 			PRAGMA page_size = 8192;
 			""";
 		await Command.ExecuteNonQueryAsync(CancellationToken).ConfigureAwait(false);

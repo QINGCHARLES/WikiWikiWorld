@@ -320,7 +320,7 @@ public class CoverGridExtension : IMarkdownExtension
                     CoverArticle.CanonicalFileId.HasValue &&
                     FileLookup.TryGetValue(CoverArticle.CanonicalFileId.Value, out FileRevision? File))
                 {
-                    string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
+                    string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, File.CanonicalFileId, File.Id, File.Filename);
                     Block.CachedCoverImages.Add((ImageUrl, Article.Title ?? "Title", UrlSlug));
                 }
                 else

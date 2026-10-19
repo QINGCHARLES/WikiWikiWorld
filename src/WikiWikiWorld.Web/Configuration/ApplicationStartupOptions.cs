@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace WikiWikiWorld.Web.Configuration;
 
 /// <summary>
-/// Provides startup settings that control local hosting, storage paths, and rewrite-rule loading.
+/// Provides startup settings that control local hosting and storage paths.
 /// </summary>
 public sealed class ApplicationStartupOptions
 {
@@ -16,17 +16,6 @@ public sealed class ApplicationStartupOptions
 	/// Gets or sets the data root path used for database fallback storage and static file folders.
 	/// </summary>
 	public string DataPath { get; set; } = string.Empty;
-
-	/// <summary>
-	/// Gets or sets the relative or absolute URL rewrite rules file path.
-	/// </summary>
-	[Required]
-	public string RewriteRulesPath { get; set; } = "Config/UrlRewriteRules.xml";
-
-	/// <summary>
-	/// Gets or sets a value indicating whether startup should fail when rewrite rules are missing.
-	/// </summary>
-	public bool RequireRewriteRules { get; set; } = true;
 
 	/// <summary>
 	/// Gets or sets the development HTTPS listener port.

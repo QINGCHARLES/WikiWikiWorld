@@ -3,4 +3,7 @@
     <Project Path="src/WikiWikiWorld.Data/WikiWikiWorld.Data.csproj" />
     <Project Path="src/WikiWikiWorld.Web/WikiWikiWorld.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WikiWikiWorld.Web.Tests/WikiWikiWorld.Web.Tests.csproj" />
+  </Folder>
 </Solution>

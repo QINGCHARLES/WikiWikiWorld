@@ -1,0 +1,74 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "dependsOn": [
+                "🛑 Kill Stray Wiki Process"
+            ],
+            "dependsOrder": "sequence",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/WikiWikiWorld.Web/WikiWikiWorld.Web.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "🚀 Build & Push to GHCR",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "publish",
+                "/t:PublishContainer",
+                "-p:ContainerRegistry=ghcr.io",
+                "-p:ContainerRepository=qingcharles/wikiwikiworld",
+                "-p:ContainerImageTag=latest",
+                "-p:ContainerFamily=noble-chiseled-extra",
+                "-p:ContainerRegistryUsername=qingcharles", 
+                "-p:ContainerRegistryPassword=",
+                "-c", "Release"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "🔄 Deploy to Hetzner",
+            "type": "shell",
+            "command": "ssh deploy@magazedia.wiki '/home/deploy/update.sh'",
+            "problemMatcher": []
+        },
+        {
+            "label": "⚡ FULL RELEASE",
+            "dependsOn": ["🚀 Build & Push to GHCR", "🔄 Deploy to Hetzner"],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🛑 Kill Stray Wiki Process",
+            "type": "shell",
+            "command": "Get-Process -Name 'WikiWikiWorld.Web' -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host 'Done - any stray WikiWikiWorld.Web processes have been terminated.' -ForegroundColor Green",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "detail": "Finds and kills any running WikiWikiWorld.Web processes that may be holding ports"
+        }
+    ]
+}

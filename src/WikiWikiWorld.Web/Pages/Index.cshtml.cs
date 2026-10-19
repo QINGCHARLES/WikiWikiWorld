@@ -86,7 +86,7 @@ public sealed class IndexModel(
                 continue;
             }
 
-            string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
+            string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, File.CanonicalFileId, File.Id, File.Filename);
             ArticlesWithCovers.Add(new ArticleWithCover(
                 Article.Title,
                 Article.UrlSlug,

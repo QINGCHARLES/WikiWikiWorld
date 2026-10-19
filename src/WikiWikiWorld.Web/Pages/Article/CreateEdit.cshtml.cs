@@ -291,6 +291,7 @@ public sealed class CreateEditModel(
         Guid CanonicalArticleId = Guid.NewGuid();
         Guid? CanonicalFileId = null;
         StagedFileUpload? StagedUpload = null;
+        FileRevision? CreatedFileRevision = null;
 
         if (UploadedFile is not null && UploadedFile.Length > 0)
         {
@@ -320,7 +321,7 @@ public sealed class CreateEditModel(
 
             await Strategy.ExecuteAsync(async CT =>
             {
-                await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+                await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
                 ArticleRevision? ExistingArticleInsideTransaction = await Context.ArticleRevisions
                     .AsNoTracking()
@@ -354,6 +355,10 @@ public sealed class CreateEditModel(
                     };
 
                     Context.FileRevisions.Add(NewFile);
+
+                    // Captured so the file can be finalized at its per-revision path
+                    // after SaveChanges assigns the revision id.
+                    CreatedFileRevision = NewFile;
                 }
 
                 ArticleRevision NewArticle = new()
@@ -375,19 +380,16 @@ public sealed class CreateEditModel(
 
                 Context.ArticleRevisions.Add(NewArticle);
 
-                using (WriteDurabilityScope.High())
-                {
-                    await Context.SaveChangesAsync(CT);
-                }
+                await Context.SaveChangesAsync(CT);
 
                 await Transaction.CommitAsync(CT);
             }, CancellationToken);
 
-            if (StagedUpload is not null)
+            if (StagedUpload is not null && CreatedFileRevision is not null)
             {
                 try
                 {
-                    FileUploadStorageService.FinalizeStagedUpload(StagedUpload);
+                    FileUploadStorageService.FinalizeStagedUpload(StagedUpload, SiteId, CreatedFileRevision.Id);
                 }
                 catch (Exception Ex)
                 {

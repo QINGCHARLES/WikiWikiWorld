@@ -6,7 +6,10 @@
 
 # User-specific IDE state
 .vs/
-.vscode/
+# Ignore the .vscode contents, not the directory itself: git cannot re-include a file
+# whose parent directory is excluded, so ".vscode/" would defeat the negation below and
+# tasks.json (which holds the build/deploy pipeline) would stay untracked.
+.vscode/*
 !.vscode/tasks.json
 *.suo
 *.user

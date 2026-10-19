@@ -1,0 +1,109 @@
+/* Timeline - Chronological vertical timeline with dotted spine and circular node markers */
+
+ol.timeline {
+	list-style: none;
+	margin: var(--space-l, 2rem) 0;
+	padding: 0;
+	position: relative;
+}
+
+li.timeline-item {
+	position: relative;
+	padding-left: 2.25rem;
+	padding-bottom: var(--space-l, 2.25rem);
+}
+
+/* Vertical dotted connector line running from each marker down to the next */
+li.timeline-item::before {
+	content: "";
+	position: absolute;
+	left: 6px;
+	top: 18px;
+	bottom: 0;
+	width: 0;
+	border-left: 2px dotted var(--color-border, #555555);
+}
+
+/* Last timeline item has no trailing line below its node marker */
+li.timeline-item:last-child {
+	padding-bottom: 0;
+}
+
+li.timeline-item:last-child::before {
+	display: none;
+}
+
+/* Circular hollow node marker */
+li.timeline-item .timeline-marker {
+	position: absolute;
+	left: 0;
+	top: 0.2rem;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2px solid var(--color-foreground, #ffffff);
+	background-color: var(--color-background, #1c1b1f);
+	box-sizing: border-box;
+	z-index: 1;
+}
+
+/* Timeline Content container */
+li.timeline-item .timeline-content {
+	display: flex;
+	flex-direction: column;
+}
+
+/* Headline / Title */
+li.timeline-item .timeline-title {
+	font-size: var(--step-0, 1.125rem);
+	font-weight: 700;
+	line-height: 1.35;
+	margin: 0 0 0.25rem 0;
+	color: var(--color-title, var(--color-foreground));
+	letter-spacing: -0.01em;
+}
+
+/* Date / Timeframe */
+li.timeline-item .timeline-date {
+	font-size: var(--step--1, 0.9rem);
+	font-style: italic;
+	line-height: 1.4;
+	color: var(--color-muted, #a0a0a0);
+	margin-bottom: 0.75rem;
+}
+
+/* Narrative Body */
+li.timeline-item .timeline-body {
+	font-size: var(--step-0, 1rem);
+	line-height: 1.65;
+	color: var(--color-foreground);
+}
+
+li.timeline-item .timeline-body p {
+	margin: 0 0 0.75rem 0;
+}
+
+li.timeline-item .timeline-body p:last-child {
+	margin-bottom: 0;
+}
+
+li.timeline-item .timeline-body strong {
+	font-weight: 700;
+	color: var(--color-foreground);
+}
+
+li.timeline-item .timeline-body em {
+	font-style: italic;
+}
+
+li.timeline-item .timeline-body a {
+	color: var(--color-hyperlinks, var(--color-primary));
+	text-decoration: underline;
+	text-underline-offset: 0.2rem;
+	transition: text-underline-offset 0.15s ease, color 0.15s ease;
+}
+
+li.timeline-item .timeline-body a:hover {
+	text-underline-offset: 0.1rem;
+	color: var(--color-primary);
+}

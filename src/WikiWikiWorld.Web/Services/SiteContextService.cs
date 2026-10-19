@@ -19,6 +19,8 @@ public sealed class SiteContextService : ISiteContextService
 	private int? _currentSiteId;
 	private string? _currentCulture;
 
+	private bool _isCultureSelectorRootDomain;
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="SiteContextService"/> class.
 	/// </summary>
@@ -31,7 +33,14 @@ public sealed class SiteContextService : ISiteContextService
 	}
 
 	/// <inheritdoc/>
-	public bool AllowCrossSiteAndCultureQueries => _httpContextAccessor.HttpContext is null;
+	public bool AllowCrossSiteAndCultureQueries
+	{
+		get
+		{
+			EnsureResolved();
+			return _httpContextAccessor.HttpContext is null || _isCultureSelectorRootDomain;
+		}
+	}
 
 	/// <inheritdoc/>
 	public int? GetCurrentSiteId()
@@ -54,7 +63,7 @@ public sealed class SiteContextService : ISiteContextService
 			return;
 		}
 
-		(_currentSiteId, _currentCulture) = _siteResolver.ResolveSiteAndCulture();
+		(_currentSiteId, _currentCulture, _isCultureSelectorRootDomain) = _siteResolver.ResolveSiteAndCultureWithRootCheck();
 		_resolved = true;
 	}
 }

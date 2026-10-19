@@ -1,4 +1,5 @@
 using Markdig;
+using Markdig.Extensions.MediaLinks;
 using Markdig.Renderers;
 using Microsoft.Extensions.Options;
 using WikiWikiWorld.Web.Configuration;
@@ -100,6 +101,8 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 		PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
 		CoverGridExtension CoverGridExt = new();
 		CoverCarouselExtension CoverCarouselExt = new();
+		TimelineExtension TimelineExt = new();
+		YouTubeExtension YouTubeExt = new();
 		StubExtension StubExt = new();
 		SourceExtension SourceExt = new();
 
@@ -117,12 +120,17 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(PublicationIssueInfoboxExt)
 			.Use(CoverGridExt)
 			.Use(CoverCarouselExt)
+			.Use(TimelineExt)
+			.Use(YouTubeExt)
 			.Use(DownloadsBoxExt)
 			.Use(PullQuoteExt)
 			.Use(StubExt)
 			.Use(SourceExt)
 			.Use(LinksExt)
-			.UseAdvancedExtensions();
+			.UseAdvancedExtensions()
+			.DisableHtml();
+
+		Builder.Extensions.TryRemove<MediaLinkExtension>();
 
 		return Builder.Build();
 	}

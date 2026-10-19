@@ -93,27 +93,23 @@ Relevant files:
 - `src/WikiWikiWorld.Web/Pages/Article/CreateEdit.cshtml.cs`
 - `src/WikiWikiWorld.Web/Pages/Article/Delete.cshtml.cs`
 
-### 4. Article creation with file upload is partially improved, but still has filesystem/database edge cases
+### 4. Article creation with file upload now uses a recoverable finalize-after-commit pattern
 
-Status: Partially resolved.
+Status: Resolved for both the Razor Page and the API controller.
 
-Severity: Medium.
+Severity: Closed.
 
-The create path now stages uploads to a temporary file, writes `FileRevision` and `ArticleRevision` in one database transaction, finalizes the staged upload, and cleans up staged/final files on caught exceptions.
+Both create paths now stage uploads to a recoverable temporary file under `images/_staging/` via `FileUploadStorageService`, write `FileRevision` and `ArticleRevision` in one database transaction, and finalize the staged upload **after** the transaction commits. Finalizing post-commit means a crash in the finalize window leaves a recoverable staged file (reclaimed by startup recovery) rather than an orphaned final file with no committed database row. Uncommitted staged files are cleaned up on caught exceptions, and `FinalizeCommittedUploadsAndDeleteStaleTempFilesAsync` performs startup recovery (finalizing committed-but-unmoved files) plus stale `.tmp` cleanup.
 
-Residual risk:
+History:
 
-- The file is moved to its final path before the transaction commit call. The catch path attempts cleanup, but a process crash between file move and rollback could still leave a file without committed database state.
-- The XML docs currently say the final move happens after the database transaction succeeds, but the code moves before commit.
+- The API controller previously re-implemented staging by hand: it staged outside `_staging` and moved the file *before* `Transaction.CommitAsync`, so a crash between move and commit left an orphaned final file, and its temp/orphan files were invisible to startup recovery. It now delegates to `FileUploadStorageService` and finalizes after commit, matching the Razor Page path.
 
-Relevant file:
+Relevant files:
 
+- `src/WikiWikiWorld.Web/Controllers/Api/ArticleApiController.cs`
 - `src/WikiWikiWorld.Web/Pages/Article/CreateEdit.cshtml.cs`
-
-Recommended action:
-
-- Prefer a clear finalize-after-commit pattern, with compensating cleanup if post-commit file finalization fails.
-- Consider a small background cleanup task for stale `.tmp` files and orphaned final files.
+- `src/WikiWikiWorld.Web/Services/FileUploadStorageService.cs`
 
 ### 5. Response compression is still registered but not enabled
 

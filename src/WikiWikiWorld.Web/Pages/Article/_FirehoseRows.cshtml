@@ -1,0 +1,30 @@
+@using WikiWikiWorld.Web.Helpers
+@model WikiWikiWorld.Web.Pages.Article.FirehoseRowsViewModel
+
+@foreach (WikiWikiWorld.Data.Models.ArticleRevision Revision in Model.Revisions)
+{
+	string RevisionTimestamp = Revision.DateCreated.ToString("yyyyMMddHHmmssfffffff");
+
+	<tr>
+		<td>
+			<a href="@ArticleUrlHelper.BuildArticlePath(Revision)">@Revision.Title</a>
+		</td>
+
+		<td>
+			@if (Model.Users.TryGetValue(Revision.CreatedByUserId, out WikiWikiWorld.Data.Models.User? User))
+			{
+				<a href="/@@@User.UserName">@User.UserName</a>
+			}
+			else
+			{
+				<span>Unknown</span>
+			}
+		</td>
+		<td>
+			<a href="@ArticleUrlHelper.BuildRevisionPath(Revision, RevisionTimestamp)">
+				@Revision.DateCreated.ToString("dd MMM yyyy HH:mm")
+			</a>
+		</td>
+		<td>@Revision.RevisionReason</td>
+	</tr>
+}

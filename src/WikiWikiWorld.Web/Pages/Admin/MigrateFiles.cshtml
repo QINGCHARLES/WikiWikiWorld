@@ -1,0 +1,123 @@
+@page
+@using WikiWikiWorld.Web.Services
+@model WikiWikiWorld.Web.Pages.Admin.MigrateFilesModel
+@{
+	ViewData["Title"] = "Migrate Files";
+}
+
+<figure>
+	<h1>Migrate Legacy Image Files</h1>
+</figure>
+
+<article>
+	<p>
+		Moves legacy files (<code>images/{CanonicalFileId}.ext</code>) into the
+		revision-keyed layout (<code>images/{CanonicalFileId}/{RevisionId}.ext</code>).
+		Scanning is read-only; nothing moves until you press <strong>Migrate</strong>.
+		No database changes are required &mdash; URLs are derived from the existing
+		revision id and filename.
+	</p>
+
+	@if (Model.Report is null)
+	{
+		<div class="alert alert-danger">Unable to load the migration report.</div>
+		return;
+	}
+
+	@if (!string.IsNullOrEmpty(Model.ResultMessage))
+	{
+		<div class="alert @(Model.MigrationRan ? "alert-success" : "alert-info")">@Model.ResultMessage</div>
+	}
+
+	<p><small>Scanned root: <code>@Model.Report.RootPath</code></small></p>
+
+	@{
+		int ReadyCount = Model.Report.Items.Count(I => I.Status == FileMigrationStatus.ReadyToMove);
+		int OrphanCount = Model.Report.Items.Count(I => I.Status == FileMigrationStatus.OrphanNoDbMatch);
+	}
+
+	@if (Model.Report.LostHistory.Count > 0)
+	{
+		<div class="alert alert-warning">
+			<strong>&#9888; Lost revision history detected.</strong>
+			The following canonical files have more revisions in the database than surviving
+			files on disk. Older revisions were overwritten under the legacy layout and their
+			bytes cannot be recovered.
+		</div>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Canonical File Id</th>
+					<th>DB Revisions</th>
+					<th>Surviving Files</th>
+					<th>Lost</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (LostRevisionGroup Group in Model.Report.LostHistory)
+				{
+					<tr class="table-danger">
+						<td><code>@Group.CanonicalFileId</code></td>
+						<td>@Group.RevisionCount</td>
+						<td>@Group.SurvivingFileCount</td>
+						<td><strong>@Group.LostRevisionCount</strong></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+
+	@if (Model.Report.Items.Count == 0)
+	{
+		<div class="alert alert-success">No legacy-layout files found. Nothing to migrate.</div>
+	}
+	else
+	{
+		<p>
+			Found <strong>@Model.Report.Items.Count</strong> legacy file(s):
+			<strong>@ReadyCount</strong> ready to move, <strong>@OrphanCount</strong> orphaned (no DB match).
+		</p>
+
+		@if (ReadyCount > 0)
+		{
+			<form method="post" asp-page-handler="Migrate" onsubmit="return confirm('Move @ReadyCount file(s) into the revision-keyed layout?');">
+				<button type="submit" class="btn btn-primary">Migrate @ReadyCount file(s)</button>
+			</form>
+			<br />
+		}
+
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Site</th>
+					<th>Status</th>
+					<th>Source</th>
+					<th>Target</th>
+					<th>Revisions</th>
+					<th>Note</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (FileMigrationItem Item in Model.Report.Items)
+				{
+					string RowClass = Item.Status switch
+					{
+						FileMigrationStatus.Moved => "table-success",
+						FileMigrationStatus.Failed => "table-danger",
+						FileMigrationStatus.OrphanNoDbMatch => "table-warning",
+						FileMigrationStatus.AlreadyMigrated => "table-secondary",
+						_ => string.Empty
+					};
+					<tr class="@RowClass">
+						<td>@Item.SiteId</td>
+						<td>@Item.Status</td>
+						<td><code>@Item.SourceRelativePath</code></td>
+						<td>@(Item.TargetRelativePath is null ? "—" : Item.TargetRelativePath)</td>
+						<td>@Item.RevisionCount</td>
+						<td>@Item.Note</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+</article>

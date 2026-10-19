@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Extensions;
 using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Specifications;
 
 namespace WikiWikiWorld.Web.Pages.Account;
 
@@ -13,13 +10,11 @@ namespace WikiWikiWorld.Web.Pages.Account;
 /// </summary>
 /// <param name="SignInManager">The sign-in manager.</param>
 /// <param name="UserManager">The user manager.</param>
-/// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="Environment">The web host environment.</param>
 public sealed class LoginModel(
 	SignInManager<User> SignInManager,
 	UserManager<User> UserManager,
-	WikiWikiWorldDbContext Context,
 	SiteResolverService SiteResolverService,
 	IWebHostEnvironment Environment) : BasePageModel(SiteResolverService)
 {
@@ -78,17 +73,13 @@ public sealed class LoginModel(
 		}
 
 		// Authenticate user by username & password
-		Microsoft.AspNetCore.Identity.SignInResult Result;
-
-		using (WriteDurabilityScope.High())
-		{
-			Result = await SignInManager.PasswordSignInAsync(TargetUser, Input.Password, Input.RememberMe, lockoutOnFailure: true);
-		}
+		Microsoft.AspNetCore.Identity.SignInResult Result = await SignInManager.PasswordSignInAsync(TargetUser, Input.Password, Input.RememberMe, lockoutOnFailure: true);
 
 		if (Result.Succeeded)
 		{
-			// Ensure user article exists for DM inbox
-			await EnsureUserArticleExistsAsync(TargetUser);
+			// The user's @page (their home page) is no longer ensured here: it exists from registration and is
+			// otherwise created on demand when the profile is viewed or messaged. Keeping login off this
+			// write avoids turning a successful sign-in into a 500 if the write were to fail.
 			if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
 				return LocalRedirect(ReturnUrl);
 			return RedirectToPage("/Index");
@@ -103,44 +94,6 @@ public sealed class LoginModel(
 		}
 
 		return Page();
-	}
-
-	/// <summary>
-	/// Ensures that a user article exists for the specified user.
-	/// Creates one if it doesn't exist.
-	/// </summary>
-	/// <param name="TargetUser">The user to ensure an article exists for.</param>
-	private async Task EnsureUserArticleExistsAsync(User TargetUser)
-	{
-		string UserSlug = $"@{TargetUser.UserName}";
-		ArticleRevisionsBySlugSpec Spec = new(UserSlug, IsCurrent: true);
-		ArticleRevision? ExistingArticle = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
-
-		if (ExistingArticle is null)
-		{
-			ArticleRevision NewUserArticle = new()
-			{
-				CanonicalArticleId = Guid.NewGuid(),
-				SiteId = SiteId,
-				Culture = Culture,
-				Title = UserSlug,
-				DisplayTitle = $"User: {TargetUser.UserName}",
-				UrlSlug = UserSlug,
-				Type = ArticleType.User,
-				Text = $"Welcome to {TargetUser.UserName}'s page.",
-				RevisionReason = "User article created on login.",
-				CreatedByUserId = TargetUser.Id,
-				DateCreated = DateTimeOffset.UtcNow,
-				IsCurrent = true
-			};
-
-			Context.ArticleRevisions.Add(NewUserArticle);
-
-			using (WriteDurabilityScope.High())
-			{
-				await Context.SaveChangesAsync();
-			}
-		}
 	}
 
 	/// <summary>

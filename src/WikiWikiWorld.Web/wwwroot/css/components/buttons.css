@@ -9,10 +9,10 @@ a.button, button
 {
 	--button-padding: 0.7em 1.2em;
 	--button-gap: 0.1em;
-	--button-bg: light-dark(var(--uchu-yin-8), var(--uchu-yin-7));
-	--button-color: light-dark(var(--uchu-yang), var(--uchu-yin-1));
-	--button-hover-bg: light-dark(var(--uchu-green-6), var(--uchu-green-5));
-	--button-hover-color: light-dark(#ffffff, #ffffff);
+	--button-bg: var(--uchu-yin-8); /* light-dark(var(--uchu-yin-8), var(--uchu-yin-7)); */
+	--button-color: var(--uchu-yang); /* light-dark(var(--uchu-yang), var(--uchu-yin-1)); */
+	--button-hover-bg: var(--uchu-green-6); /* light-dark(var(--uchu-green-6), var(--uchu-green-5)); */
+	--button-hover-color: #ffffff; /* light-dark(#ffffff, #ffffff); */
 	--button-border-width: 3px;
 	--button-border-style: solid;
 	--button-border-color: var(--button-bg);
@@ -62,42 +62,42 @@ a.button, button
 
 	&[data-button-variant="primary"]
 	{
-		--button-bg: light-dark(var(--uchu-yellow-4), var(--uchu-yellow-5));
-		--button-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
+		--button-bg: var(--uchu-yellow-4); /* light-dark(var(--uchu-yellow-4), var(--uchu-yellow-5)); */
+		--button-color: var(--uchu-yin-8); /* light-dark(var(--uchu-yin-8), var(--uchu-yin-9)); */
 		--button-border-color: currentColor;
-		--button-hover-bg: light-dark(var(--uchu-yellow-5), var(--uchu-yellow-4));
-		--button-hover-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
+		--button-hover-bg: var(--uchu-yellow-5); /* light-dark(var(--uchu-yellow-5), var(--uchu-yellow-4)); */
+		--button-hover-color: var(--uchu-yin-8); /* light-dark(var(--uchu-yin-8), var(--uchu-yin-9)); */
 	}
 
 	&[data-button-variant="positive"]
 	{
-		--button-bg: light-dark(var(--uchu-green-6), var(--uchu-green-5));
-		--button-border-color: light-dark(var(--uchu-green-8), var(--uchu-green-7));
-		--button-hover-bg: light-dark(var(--uchu-green-5), var(--uchu-green-4));
+		--button-bg: var(--uchu-green-6); /* light-dark(var(--uchu-green-6), var(--uchu-green-5)); */
+		--button-border-color: var(--uchu-green-8); /* light-dark(var(--uchu-green-8), var(--uchu-green-7)); */
+		--button-hover-bg: var(--uchu-green-5); /* light-dark(var(--uchu-green-5), var(--uchu-green-4)); */
 	}
 
 	&[data-button-variant="negative"]
 	{
-		--button-bg: light-dark(var(--uchu-red-5), var(--uchu-red-4));
-		--button-border-color: light-dark(var(--uchu-red-7), var(--uchu-red-6));
-		--button-hover-bg: light-dark(var(--uchu-red-4), var(--uchu-red-3));
+		--button-bg: var(--uchu-red-5); /* light-dark(var(--uchu-red-5), var(--uchu-red-4)); */
+		--button-border-color: var(--uchu-red-7); /* light-dark(var(--uchu-red-7), var(--uchu-red-6)); */
+		--button-hover-bg: var(--uchu-red-4); /* light-dark(var(--uchu-red-4), var(--uchu-red-3)); */
 	}
 
 	&[data-button-variant="ghost"]
 	{
 		--button-bg: transparent;
-		--button-border-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-4));
-		--button-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
+		--button-border-color: var(--uchu-yin-7); /* light-dark(var(--uchu-yin-7), var(--uchu-yin-4)); */
+		--button-color: var(--uchu-yin-7); /* light-dark(var(--uchu-yin-7), var(--uchu-yin-3)); */
 	}
 
     &[data-button-variant="naked"] 
     {
         --button-bg: transparent;
         --button-border-color: transparent; 
-        --button-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
+        --button-color: var(--uchu-yin-7); /* light-dark(var(--uchu-yin-7), var(--uchu-yin-3)); */
         
-        --button-hover-bg: light-dark(var(--uchu-yin-7), var(--uchu-yin-3));
-        --button-hover-color: light-dark(var(--uchu-yin-8), var(--uchu-yin-9));
-        --button-hover-border-color: light-dark(var(--uchu-yin-7), var(--uchu-yin-4));
+        --button-hover-bg: var(--uchu-yin-7); /* light-dark(var(--uchu-yin-7), var(--uchu-yin-3)); */
+        --button-hover-color: var(--uchu-yin-8); /* light-dark(var(--uchu-yin-8), var(--uchu-yin-9)); */
+        --button-hover-border-color: var(--uchu-yin-7); /* light-dark(var(--uchu-yin-7), var(--uchu-yin-4)); */
     }
 }

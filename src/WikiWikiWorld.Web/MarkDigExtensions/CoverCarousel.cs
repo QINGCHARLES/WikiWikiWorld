@@ -325,7 +325,7 @@ public class CoverCarouselExtension : IMarkdownExtension
                     Article.CanonicalFileId.HasValue &&
                     FileLookup.TryGetValue(Article.CanonicalFileId.Value, out FileRevision? File))
                 {
-                    string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
+                    string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, File.CanonicalFileId, File.Id, File.Filename);
                     string AltText = Entry.AltText ?? Article.Title ?? "Cover";
                     Block.CachedCoverImages.Add(new CoverCarouselImage(ImageUrl, AltText, Entry.Caption));
                 }

@@ -383,7 +383,7 @@ public class PublicationIssueInfoboxExtension : IMarkdownExtension
                         Article.CanonicalFileId.HasValue &&
                         FileLookup.TryGetValue(Article.CanonicalFileId.Value, out FileRevision? File))
                     {
-                        string ImageUrl = $"/sitefiles/{SiteId}/images/{File.CanonicalFileId}{Path.GetExtension(File.Filename)}";
+                        string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, File.CanonicalFileId, File.Id, File.Filename);
                         Block.CachedCoverImages.Add((ImageUrl, Article.Title ?? "Publication Cover"));
                     }
                     else

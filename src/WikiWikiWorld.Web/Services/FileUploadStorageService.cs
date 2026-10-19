@@ -27,7 +27,6 @@ public sealed class FileUploadStorageService(
 		ArgumentNullException.ThrowIfNull(UploadedFile);
 
 		string OriginalFileName = Path.GetFileName(UploadedFile.FileName);
-		string FinalFilePath = GetFinalFilePath(SiteId, CanonicalFileId, OriginalFileName);
 		string StagingDirectory = GetStagingDirectory(SiteId);
 		Directory.CreateDirectory(StagingDirectory);
 
@@ -45,26 +44,32 @@ public sealed class FileUploadStorageService(
 			UploadedFile.ContentType,
 			UploadedFile.Length,
 			TemporaryFilePath,
-			FinalFilePath,
 			WidthPx,
 			HeightPx);
 	}
 
 	/// <summary>
-	/// Moves a staged upload into its final path.
+	/// Moves a staged upload into its final, revision-keyed path.
 	/// </summary>
 	/// <param name="Upload">The staged upload to finalize.</param>
-	public void FinalizeStagedUpload(StagedFileUpload Upload)
+	/// <param name="SiteId">The site identifier.</param>
+	/// <param name="RevisionId">The persisted file revision identifier (<see cref="FileRevision.Id"/>).</param>
+	/// <remarks>
+	/// The final path depends on the revision id, which is only known after the
+	/// <see cref="FileRevision"/> row has been saved, so callers must finalize after commit.
+	/// </remarks>
+	public void FinalizeStagedUpload(StagedFileUpload Upload, int SiteId, int RevisionId)
 	{
 		ArgumentNullException.ThrowIfNull(Upload);
 
-		string? FinalDirectory = Path.GetDirectoryName(Upload.FinalFilePath);
+		string FinalFilePath = GetFinalFilePath(SiteId, Upload.CanonicalFileId, RevisionId, Upload.OriginalFileName);
+		string? FinalDirectory = Path.GetDirectoryName(FinalFilePath);
 		if (!string.IsNullOrWhiteSpace(FinalDirectory))
 		{
 			Directory.CreateDirectory(FinalDirectory);
 		}
 
-		File.Move(Upload.TemporaryFilePath, Upload.FinalFilePath, overwrite: true);
+		File.Move(Upload.TemporaryFilePath, FinalFilePath, overwrite: true);
 	}
 
 	/// <summary>
@@ -98,16 +103,17 @@ public sealed class FileUploadStorageService(
 	}
 
 	/// <summary>
-	/// Gets the final filesystem path for an uploaded file.
+	/// Gets the final filesystem path for a specific revision of an uploaded file.
 	/// </summary>
 	/// <param name="SiteId">The site identifier.</param>
 	/// <param name="CanonicalFileId">The canonical file identifier.</param>
+	/// <param name="RevisionId">The file revision identifier (<see cref="FileRevision.Id"/>).</param>
 	/// <param name="OriginalFileName">The original uploaded filename.</param>
-	/// <returns>The final filesystem path.</returns>
-	public string GetFinalFilePath(int SiteId, Guid CanonicalFileId, string OriginalFileName)
+	/// <returns>The final filesystem path, keyed per revision so revisions never overwrite each other.</returns>
+	public string GetFinalFilePath(int SiteId, Guid CanonicalFileId, int RevisionId, string OriginalFileName)
 	{
-		string FileExtension = Path.GetExtension(OriginalFileName);
-		return Path.Combine(GetImageDirectory(SiteId), $"{CanonicalFileId}{FileExtension}");
+		string RelativePath = ImageUrlHelper.BuildImageRelativePath(CanonicalFileId, RevisionId, OriginalFileName);
+		return Path.Combine(GetImageDirectory(SiteId), RelativePath.Replace('/', Path.DirectorySeparatorChar));
 	}
 
 	/// <summary>
@@ -134,7 +140,7 @@ public sealed class FileUploadStorageService(
 
 			foreach (int SiteId in SiteIds)
 			{
-				string FinalFilePath = GetFinalFilePath(SiteId, FileRevision.CanonicalFileId, FileRevision.Filename);
+				string FinalFilePath = GetFinalFilePath(SiteId, FileRevision.CanonicalFileId, FileRevision.Id, FileRevision.Filename);
 				if (File.Exists(FinalFilePath))
 				{
 					continue;
@@ -226,7 +232,7 @@ public sealed class FileUploadStorageService(
 
 		return MatchingRevisions.Any(FileRevision =>
 			Path.GetExtension(FileRevision.Filename).Equals(FileExtension, StringComparison.OrdinalIgnoreCase)
-			&& !File.Exists(GetFinalFilePath(SiteId, CanonicalFileId, FileRevision.Filename)));
+			&& !File.Exists(GetFinalFilePath(SiteId, CanonicalFileId, FileRevision.Id, FileRevision.Filename)));
 	}
 
 	/// <summary>
@@ -331,16 +337,19 @@ public sealed class FileUploadStorageService(
 /// <param name="ContentType">The uploaded content type.</param>
 /// <param name="FileSizeBytes">The uploaded file size in bytes.</param>
 /// <param name="TemporaryFilePath">The temporary staged file path.</param>
-/// <param name="FinalFilePath">The final file path.</param>
 /// <param name="ImageWidthPixels">The detected image width in pixels.</param>
 /// <param name="ImageHeightPixels">The detected image height in pixels.</param>
+/// <remarks>
+/// The final path is intentionally absent: it depends on the file revision id,
+/// which is only assigned once the revision is persisted. Call
+/// <see cref="FileUploadStorageService.FinalizeStagedUpload"/> with that id after commit.
+/// </remarks>
 public sealed record class StagedFileUpload(
 	Guid CanonicalFileId,
 	string OriginalFileName,
 	string ContentType,
 	long FileSizeBytes,
 	string TemporaryFilePath,
-	string FinalFilePath,
 	int ImageWidthPixels,
 	int ImageHeightPixels);
 

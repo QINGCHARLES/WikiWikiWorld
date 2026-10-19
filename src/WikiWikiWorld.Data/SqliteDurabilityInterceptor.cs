@@ -1,93 +1,129 @@
 namespace WikiWikiWorld.Data;
 
 using System.Data;
+using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 /// <summary>
-/// Interceptor that applies the appropriate synchronous PRAGMA before SaveChanges
-/// based on the ambient WriteDurabilityScope.
+/// Applies PRAGMA synchronous based on the ambient <see cref="WriteDurabilityScope"/>.
+/// The default (no scope) is High (FULL); ephemeral hot paths opt down via
+/// <see cref="WriteDurabilityScope.Normal"/>. See doc/write-durability.md.
 /// </summary>
-public sealed class SqliteDurabilityInterceptor : SaveChangesInterceptor
+/// <remarks>
+/// The pragma cannot be changed while a transaction is active, so it is applied at
+/// the three points where no transaction can exist yet:
+/// <list type="bullet">
+/// <item>connection open — deterministic baseline (PRAGMA synchronous is per-connection
+/// and pooled connections otherwise keep whatever the previous user set), and covers
+/// single-statement saves where EF Core skips the implicit transaction;</item>
+/// <item>transaction starting — fires before BEGIN is issued, so explicit transactions
+/// commit at the level of the scope that was ambient when the transaction started;</item>
+/// <item>saving changes — only for non-transactional saves on a connection that was
+/// opened earlier and kept open (possibly under a different ambient scope).</item>
+/// </list>
+/// Failures are deliberately NOT swallowed: with this ordering the pragma can only be
+/// rejected if a transaction was started outside EF Core's tracking, which is a bug
+/// that must surface rather than silently downgrade durability.
+/// </remarks>
+public sealed class SqliteDurabilityInterceptor : IDbConnectionInterceptor, IDbTransactionInterceptor, ISaveChangesInterceptor
 {
 	/// <inheritdoc/>
-	public override InterceptionResult<int> SavingChanges(
-		DbContextEventData EventData,
-		InterceptionResult<int> Result)
+	public void ConnectionOpened(DbConnection Connection, ConnectionEndEventData EventData)
 	{
-		ApplyDurabilityPragma(EventData.Context);
-		return base.SavingChanges(EventData, Result);
+		if (Connection is SqliteConnection SqliteConnection)
+		{
+			ApplyDurabilityPragma(SqliteConnection);
+		}
 	}
 
 	/// <inheritdoc/>
-	public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
-		DbContextEventData EventData,
-		InterceptionResult<int> Result,
-		CancellationToken CancellationToken = default)
+	public async Task ConnectionOpenedAsync(DbConnection Connection, ConnectionEndEventData EventData, CancellationToken CancellationToken = default)
 	{
-		await ApplyDurabilityPragmaAsync(EventData.Context, CancellationToken).ConfigureAwait(false);
-		return await base.SavingChangesAsync(EventData, Result, CancellationToken).ConfigureAwait(false);
+		if (Connection is SqliteConnection SqliteConnection)
+		{
+			await ApplyDurabilityPragmaAsync(SqliteConnection, CancellationToken).ConfigureAwait(false);
+		}
+	}
+
+	/// <inheritdoc/>
+	public InterceptionResult<DbTransaction> TransactionStarting(DbConnection Connection, TransactionStartingEventData EventData, InterceptionResult<DbTransaction> Result)
+	{
+		if (Connection is SqliteConnection SqliteConnection)
+		{
+			ApplyDurabilityPragma(SqliteConnection);
+		}
+
+		return Result;
+	}
+
+	/// <inheritdoc/>
+	public async ValueTask<InterceptionResult<DbTransaction>> TransactionStartingAsync(DbConnection Connection, TransactionStartingEventData EventData, InterceptionResult<DbTransaction> Result, CancellationToken CancellationToken = default)
+	{
+		if (Connection is SqliteConnection SqliteConnection)
+		{
+			await ApplyDurabilityPragmaAsync(SqliteConnection, CancellationToken).ConfigureAwait(false);
+		}
+
+		return Result;
+	}
+
+	/// <inheritdoc/>
+	public InterceptionResult<int> SavingChanges(DbContextEventData EventData, InterceptionResult<int> Result)
+	{
+		if (TryGetOpenNonTransactionalConnection(EventData.Context) is SqliteConnection SqliteConnection)
+		{
+			ApplyDurabilityPragma(SqliteConnection);
+		}
+
+		return Result;
+	}
+
+	/// <inheritdoc/>
+	public async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData EventData, InterceptionResult<int> Result, CancellationToken CancellationToken = default)
+	{
+		if (TryGetOpenNonTransactionalConnection(EventData.Context) is SqliteConnection SqliteConnection)
+		{
+			await ApplyDurabilityPragmaAsync(SqliteConnection, CancellationToken).ConfigureAwait(false);
+		}
+
+		return Result;
 	}
 
 	/// <summary>
-	/// Applies the synchronous PRAGMA based on the current durability scope.
-	/// Silently skips if inside a transaction since SQLite forbids changing this pragma mid-transaction.
+	/// Returns the context's connection when it is open and no EF-tracked transaction is
+	/// active. Inside an explicit transaction the pragma was already applied at
+	/// TransactionStarting and cannot (and must not) be changed mid-transaction.
 	/// </summary>
 	/// <param name="Context">The database context.</param>
-	private static void ApplyDurabilityPragma(DbContext? Context)
+	/// <returns>The open, transaction-free connection, or null.</returns>
+	private static SqliteConnection? TryGetOpenNonTransactionalConnection(DbContext? Context)
 	{
-		if (Context?.Database.GetDbConnection() is not SqliteConnection Connection ||
-			Connection.State != ConnectionState.Open)
+		if (Context is null || Context.Database.CurrentTransaction is not null)
 		{
-			return;
+			return null;
 		}
 
-		string Synchronous = WriteDurabilityScope.Current is WriteDurability.High ? "FULL" : "NORMAL";
+		return Context.Database.GetDbConnection() is SqliteConnection { State: ConnectionState.Open } Connection
+			? Connection
+			: null;
+	}
+
+	private static string BuildPragmaSql() =>
+		$"PRAGMA synchronous = {(WriteDurabilityScope.Current is WriteDurability.Normal ? "NORMAL" : "FULL")};";
+
+	private static void ApplyDurabilityPragma(SqliteConnection Connection)
+	{
 		using SqliteCommand Command = Connection.CreateCommand();
-		Command.CommandText = $"PRAGMA synchronous = {Synchronous};";
-
-		try
-		{
-			Command.ExecuteNonQuery();
-		}
-		catch (SqliteException Ex) when (Ex.SqliteErrorCode == 1)
-		{
-			// SQLite forbids changing PRAGMA synchronous inside a transaction.
-			// This can occur with raw "BEGIN IMMEDIATE" transactions that bypass
-			// EF Core's CurrentTransaction tracking. Safe to skip — the pragma
-			// is a session-level setting that persists from before the transaction.
-		}
+		Command.CommandText = BuildPragmaSql();
+		Command.ExecuteNonQuery();
 	}
 
-	/// <summary>
-	/// Asynchronously applies the synchronous PRAGMA based on the current durability scope.
-	/// Silently skips if inside a transaction since SQLite forbids changing this pragma mid-transaction.
-	/// </summary>
-	/// <param name="Context">The database context.</param>
-	/// <param name="CancellationToken">The cancellation token.</param>
-	private static async Task ApplyDurabilityPragmaAsync(DbContext? Context, CancellationToken CancellationToken)
+	private static async Task ApplyDurabilityPragmaAsync(SqliteConnection Connection, CancellationToken CancellationToken)
 	{
-		if (Context?.Database.GetDbConnection() is not SqliteConnection Connection ||
-			Connection.State != ConnectionState.Open)
-		{
-			return;
-		}
-
-		string Synchronous = WriteDurabilityScope.Current is WriteDurability.High ? "FULL" : "NORMAL";
 		await using SqliteCommand Command = Connection.CreateCommand();
-		Command.CommandText = $"PRAGMA synchronous = {Synchronous};";
-
-		try
-		{
-			await Command.ExecuteNonQueryAsync(CancellationToken).ConfigureAwait(false);
-		}
-		catch (SqliteException Ex) when (Ex.SqliteErrorCode == 1)
-		{
-			// SQLite forbids changing PRAGMA synchronous inside a transaction.
-			// This can occur with raw "BEGIN IMMEDIATE" transactions that bypass
-			// EF Core's CurrentTransaction tracking. Safe to skip — the pragma
-			// is a session-level setting that persists from before the transaction.
-		}
+		Command.CommandText = BuildPragmaSql();
+		await Command.ExecuteNonQueryAsync(CancellationToken).ConfigureAwait(false);
 	}
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Extensions;
 using WikiWikiWorld.Data.Models;
@@ -11,7 +12,8 @@ namespace WikiWikiWorld.Web.Services;
 /// Coordinates article revision write workflows.
 /// </summary>
 /// <param name="Context">The database context.</param>
-public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
+/// <param name="Logger">The logger.</param>
+public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogger<ArticleRevisionService> Logger)
 {
 	/// <summary>
 	/// Gets the recent authors for an article revision in most-recent contribution order.
@@ -66,6 +68,96 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 	}
 
 	/// <summary>
+	/// Gets the user's <c>@username</c> article — their home page (which also hosts their messages) — creating
+	/// a placeholder revision if one does not already exist. Idempotent: an existing current revision is returned unchanged.
+	/// </summary>
+	/// <remarks>
+	/// This is the load-bearing variant — it may throw and participates in any ambient transaction. Callers
+	/// whose primary operation must not be broken by a failure should use <see cref="TryEnsureUserArticleAsync"/>.
+	/// </remarks>
+	/// <param name="SiteId">The site identifier for a newly created article.</param>
+	/// <param name="Culture">The culture code for a newly created article.</param>
+	/// <param name="User">The user whose article should exist.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>The existing or newly created current article revision.</returns>
+	public async Task<ArticleRevision> EnsureUserArticleAsync(int SiteId, string Culture, User User, CancellationToken CancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(User);
+
+		string UserSlug = $"@{User.UserName}";
+		ArticleRevisionsBySlugSpec Spec = new(UserSlug, IsCurrent: true);
+		ArticleRevision? ExistingArticle = await Context.ArticleRevisions
+			.WithSpecification(Spec)
+			.FirstOrDefaultAsync(CancellationToken);
+
+		if (ExistingArticle is not null)
+		{
+			return ExistingArticle;
+		}
+
+		ArticleRevision NewUserArticle = new()
+		{
+			CanonicalArticleId = Guid.NewGuid(),
+			SiteId = SiteId,
+			Culture = Culture,
+			Title = UserSlug,
+			DisplayTitle = $"User: {User.UserName}",
+			UrlSlug = UserSlug,
+			Type = ArticleType.User,
+			Text = $"Welcome to {User.UserName}'s page.",
+			RevisionReason = "User page created automatically.",
+			CreatedByUserId = User.Id,
+			DateCreated = DateTimeOffset.UtcNow,
+			IsCurrent = true
+		};
+
+		Context.ArticleRevisions.Add(NewUserArticle);
+		await Context.SaveChangesAsync(CancellationToken);
+
+		return NewUserArticle;
+	}
+
+	/// <summary>
+	/// Best-effort variant of <see cref="EnsureUserArticleAsync"/> that never throws. On failure it logs a
+	/// warning, detaches the failed insert so a later save on the same context does not retry it, then
+	/// re-queries once (covering the race where a concurrent request created the article).
+	/// </summary>
+	/// <param name="SiteId">The site identifier for a newly created article.</param>
+	/// <param name="Culture">The culture code for a newly created article.</param>
+	/// <param name="User">The user whose article should exist.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>The existing or newly created current article revision, or <see langword="null"/> if it could not be ensured.</returns>
+	public async Task<ArticleRevision?> TryEnsureUserArticleAsync(int SiteId, string Culture, User User, CancellationToken CancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(User);
+
+		try
+		{
+			return await EnsureUserArticleAsync(SiteId, Culture, User, CancellationToken);
+		}
+		catch (Exception Ex)
+		{
+			Logger.LogWarning(Ex, "Failed to ensure user article for {UserName}; continuing without it.", User.UserName);
+
+			// A failed SaveChanges leaves the new revision in the Added state. Detach it so a later save on this
+			// scoped context (e.g. sign-in resetting the access-failed counter) does not retry the bad insert.
+			foreach (var Entry in Context.ChangeTracker.Entries<ArticleRevision>()
+				.Where(Entry => Entry.State == EntityState.Added)
+				.ToList())
+			{
+				Entry.State = EntityState.Detached;
+			}
+
+			// A concurrent request may have created it in the meantime; re-read once before giving up.
+			string UserSlug = $"@{User.UserName}";
+			ArticleRevisionsBySlugSpec Spec = new(UserSlug, IsCurrent: true);
+			return await Context.ArticleRevisions
+				.WithSpecification(Spec)
+				.FirstOrDefaultAsync(CancellationToken);
+		}
+	}
+
+	/// <summary>
 	/// Updates an article by replacing its current revision with a new current revision.
 	/// </summary>
 	/// <param name="Command">The update command.</param>
@@ -86,7 +178,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 
 		await Strategy.ExecuteAsync(async CT =>
 		{
-			await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+			await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
 			ArticleRevisionsBySlugSpec CurrentSpec = new(Command.OriginalUrlSlug, IsCurrent: true);
 			ArticleRevision? CurrentArticle = await Context.ArticleRevisions
@@ -134,10 +226,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 
 			Context.ArticleRevisions.Add(ArticleRevision);
 
-			using (WriteDurabilityScope.High())
-			{
-				await Context.SaveChangesAsync(CT);
-			}
+			await Context.SaveChangesAsync(CT);
 
 			await Transaction.CommitAsync(CT);
 
@@ -163,7 +252,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 
 		await Strategy.ExecuteAsync(async CT =>
 		{
-			await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+			await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
 			ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
 			ArticleRevision? CurrentArticle = await Context.ArticleRevisions
@@ -192,10 +281,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 			PreviousRevision.IsCurrent = true;
 			Context.ArticleRevisions.Update(PreviousRevision);
 
-			using (WriteDurabilityScope.High())
-			{
-				await Context.SaveChangesAsync(CT);
-			}
+			await Context.SaveChangesAsync(CT);
 
 			await Transaction.CommitAsync(CT);
 		}, CancellationToken);
@@ -217,7 +303,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 
 		await Strategy.ExecuteAsync(async CT =>
 		{
-			await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+			await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
 			ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
 			ArticleRevision? CurrentArticle = await Context.ArticleRevisions
@@ -243,10 +329,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context)
 				Context.ArticleRevisions.Update(Revision);
 			}
 
-			using (WriteDurabilityScope.High())
-			{
-				await Context.SaveChangesAsync(CT);
-			}
+			await Context.SaveChangesAsync(CT);
 
 			await Transaction.CommitAsync(CT);
 		}, CancellationToken);

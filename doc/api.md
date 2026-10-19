@@ -75,7 +75,7 @@ Base Path: `/api/article`
 - **Request Format**: `multipart/form-data`
   - `Title` (required string)
   - `DisplayTitle` (optional string)
-  - `Type` (required string): `"Article"`, `"Help"`, `"File"`, `"Project"`
+  - `Type` (required string): `"Article"`, `"Category"`, `"File"`, `"User"`, `"Info"`
   - `Text` (required string)
   - `RevisionReason` (required string)
   - `Source` (optional string): Used only if `Type` is `"File"`.
@@ -96,7 +96,7 @@ Base Path: `/api/article`
       "CanonicalArticleId": "e12a4b3d-...", // optional Guid
       "Title": "Updated Title",
       "DisplayTitle": "Updated Display Title", // optional
-      "Type": "Article",
+      "Type": "Article", // one of "Article", "Category", "File", "User", "Info"
       "CanonicalFileId": null, // optional Guid
       "Text": "Updated markdown content...",
       "RevisionReason": "Fixed typos"
@@ -165,10 +165,12 @@ Base Path: `/api/file`
   - `200 OK`: Returns metadata regarding the uploaded file.
     ```json
     {
-        "CanonicalFileId": "...",
-        "Filename": "...",
-        "MimeType": "...",
-        "FileSizeBytes": 12345
+        "CanonicalFileId": "e12a4b3d-...",
+        "Filename": "image.jpg",
+        "MimeType": "image/jpeg",
+        "FileSizeBytes": 12345,
+        "ImageWidthPixels": 1920,
+        "ImageHeightPixels": 1080
     }
     ```
   - `400 Bad Request`: No file uploaded, invalid image format, or missing Culture when Source/RevisionReason provided.
@@ -176,19 +178,21 @@ Base Path: `/api/file`
   - `404 Not Found`: Article not found or article is not of type File.
 
 ### Get File Metadata
-- **Endpoint**: `GET /api/file/{CanonicalFileId}`
-- **Description**: Retrieves metadata for a file revision using its unique canonical file identifier.
+- **Endpoint**: `GET /api/file/{UrlSlug}`
+- **Description**: Retrieves metadata for the file article identified by the given slug.
 - **Responses**:
   - `200 OK`: Returns the file's metadata object.
     ```json
     {
-        "CanonicalFileId": "e55d...",
         "Filename": "image.jpg",
         "MimeType": "image/jpeg",
         "FileSizeBytes": 102400,
         "Type": "Image2D",
         "Source": "https://example.com/source-image",
-        "DateCreated": "2023-10-25T14:32:00+00:00"
+        "ImageWidthPixels": 1920,
+        "ImageHeightPixels": 1080,
+        "DateCreated": "2023-10-25T14:32:00+00:00",
+        "Url": "/sitefiles/1/123/image.jpg"
     }
     ```
   - `404 Not Found`: File not found.

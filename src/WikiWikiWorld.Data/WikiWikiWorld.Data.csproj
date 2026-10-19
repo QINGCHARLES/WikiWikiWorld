@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- UPGRADE TO .NET 11 (GA ~Nov 2026): when this becomes net11.0 and the EF Core packages
+         below go to 11.x, EF Core 11 adopts SQLitePCLRaw 3.x itself — REMOVE the explicit
+         SQLitePCLRaw.bundle_e_sqlite3 pin below (dotnet/efcore#36535). See doc/sqlite-package-pin.md. -->
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -9,6 +12,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <!-- TEMPORARY PIN — remove when upgrading to EF Core 11+ (which adopts SQLitePCLRaw 3.x
+         itself: dotnet/efcore#36535). Overrides EF Core 10.0.x's transitive SQLitePCLRaw
+         2.1.11, whose native lib.e_sqlite3 has GHSA-2m69-gcr7-jv3q / CVE-2025-6965. The 3.x
+         bundle ships the patched native binary (SourceGear.sqlite3 3.50.x) and renames the
+         lib package, so the vulnerable package drops out of the graph. Not PrivateAssets=all:
+         the native binary must flow to the referencing app at runtime. Full rationale and
+         removal/verification steps: doc/sqlite-package-pin.md -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,8 +28,11 @@
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0" />
     <PackageReference Include="Ardalis.Specification" Version="8.0.0" />
     <PackageReference Include="Ardalis.Specification.EntityFrameworkCore" Version="8.0.0" />
-    <!-- Pins a patched version for EF Core design-time tooling's transitive Microsoft.Build dependency. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" PrivateAssets="all" />
+    <!-- Pins a patched version for EF Core design-time tooling's transitive Microsoft.Build
+         dependency. Raised 10.0.6 -> 10.0.11 on 2026-08-29: 10.0.6 itself became vulnerable to
+         five .NET denial-of-service advisories (CVE-2026-50527, CVE-2026-50648 and related),
+         all first patched in 10.0.10. Keep this at the newest 10.0.x patch. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" PrivateAssets="all" />
   </ItemGroup>
 
 

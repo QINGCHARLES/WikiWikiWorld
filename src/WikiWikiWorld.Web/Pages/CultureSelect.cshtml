@@ -54,7 +54,9 @@
     <nav class="languages">
         @foreach (WikiWikiWorld.Web.Pages.CultureLink CultureLink in Model.CultureLinks)
         {
-            <a href="@CultureLink.Url">@CultureLink.DisplayName</a>
+            @* lang/hreflang mark the link as being in its own language; dir="auto" lets the
+               browser infer direction per item, so Arabic renders RTL beside LTR entries. *@
+            <a href="@CultureLink.Url" hreflang="@CultureLink.CultureCode" lang="@CultureLink.CultureCode" dir="auto">@CultureLink.DisplayName</a>
         }
     </nav>
 </body>

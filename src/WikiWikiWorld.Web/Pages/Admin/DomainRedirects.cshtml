@@ -1,0 +1,317 @@
+@page
+@using WikiWikiWorld.Web.Configuration
+@using WikiWikiWorld.Web.Helpers
+@using WikiWikiWorld.Web.Services
+@model WikiWikiWorld.Web.Pages.Admin.DomainRedirectsModel
+@{
+	ViewData["Title"] = "Domain Redirects";
+}
+
+<figure>
+	<h1>Domain Redirects</h1>
+</figure>
+
+<article>
+	<p>
+		Map legacy or alternate domains to specific articles. Requests to these domains receive an
+		<strong>HTTP 308 Permanent Redirect</strong> to the target article on that culture.
+		Because mappings link to the canonical article identifier, <strong>redirects survive article renames and slug changes</strong>.
+	</p>
+
+	@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+	{
+		<div class="alert alert-success" role="alert">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+				<polyline points="22 4 12 14.01 9 11.01"></polyline>
+			</svg>
+			<span>@Model.SuccessMessage</span>
+		</div>
+	}
+
+	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+	{
+		<div class="alert alert-error" role="alert">
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="12" cy="12" r="10"></circle>
+				<line x1="12" y1="8" x2="12" y2="12"></line>
+				<line x1="12" y1="16" x2="12.01" y2="16"></line>
+			</svg>
+			<span>@Model.ErrorMessage</span>
+		</div>
+	}
+
+	<section class="card" style="margin-block: 2rem; padding: 1.5rem; border: 1px solid var(--md-outline-variant, #ccc); border-radius: 8px;">
+		<h2>Add Domain Redirect</h2>
+		<form method="post" asp-page-handler="Create" id="create-redirect-form">
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+				<div>
+					<div class="md3-field md3-filled">
+						<input asp-for="InputDomain" id="InputDomain" placeholder=" " required />
+						<label asp-for="InputDomain">Incoming Domain (e.g. oldmag.com)</label>
+						<span class="md-line"></span>
+					</div>
+					<span class="form-help">Enter bare domain or host without http://</span>
+				</div>
+
+				<div>
+					<div class="md3-field md3-filled">
+						<select asp-for="InputSiteId" id="InputSiteId">
+							@foreach (SiteInfo Site in Model.Sites)
+							{
+								<option value="@Site.SiteId">@Site.SiteName (ID: @Site.SiteId)</option>
+							}
+						</select>
+						<label asp-for="InputSiteId">Target Site</label>
+						<span class="md-line"></span>
+					</div>
+				</div>
+
+				<div>
+					<div class="md3-field md3-filled">
+						<select asp-for="InputCulture" id="InputCulture">
+							@if (Model.Sites.Count > 0)
+							{
+								List<string> InitialCultures = DomainRedirectsModel.GetCulturesForSite(Model.Sites[0]);
+								foreach (string CultureCode in InitialCultures)
+								{
+									<option value="@CultureCode" selected="@(CultureCode == Model.InputCulture ? "selected" : null)">@CultureCode</option>
+								}
+							}
+							else
+							{
+								<option value="en">en</option>
+							}
+						</select>
+						<label asp-for="InputCulture">Target Culture</label>
+						<span class="md-line"></span>
+					</div>
+				</div>
+			</div>
+
+			<div style="margin-bottom: 1.5rem;">
+				<label style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Target Article</label>
+				
+				<input type="hidden" asp-for="InputCanonicalArticleId" id="InputCanonicalArticleId" />
+				<input type="hidden" asp-for="SelectedArticleTitle" id="SelectedArticleTitle" />
+
+				<div id="selected-article-display" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "flex" : "none"); align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: var(--md-surface-variant, #f0f0f0); border-radius: 6px; margin-bottom: 0.75rem;">
+					<div>
+						<strong>Selected:</strong> <span id="selected-article-text">@Model.SelectedArticleTitle</span>
+						<br /><small style="color: var(--md-on-surface-variant, #666);"><code id="selected-article-guid">@Model.InputCanonicalArticleId</code></small>
+					</div>
+					<button type="button" class="button" id="clear-article-btn" style="margin-left: auto; font-size: 0.85rem;" data-button-variant="naked">Change</button>
+				</div>
+
+				<div id="article-search-container" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "none" : "block");">
+					<div class="md3-field md3-filled" style="margin-bottom: 0.5rem;">
+						<input type="text" id="article-search-input" placeholder=" " autocomplete="off" />
+						<label for="article-search-input">Search for target article by title or slug...</label>
+						<span class="md-line"></span>
+					</div>
+					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary, #0066cc);">Searching...</div>
+					<div id="article-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--md-outline-variant, #ddd); border-radius: 6px; display: none;"></div>
+				</div>
+			</div>
+
+			<button type="submit" class="button" id="submit-btn">Add Domain Redirect</button>
+		</form>
+	</section>
+
+	<h2>Configured Domain Redirects (@Model.Redirects.Count)</h2>
+
+	@if (Model.Redirects.Count == 0)
+	{
+		<div class="alert alert-info">No domain redirects configured yet.</div>
+	}
+	else
+	{
+		<table class="table" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+			<thead>
+				<tr>
+					<th>Domain</th>
+					<th>Site</th>
+					<th>Culture</th>
+					<th>Target Article</th>
+					<th>Created</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (ArticleDomainRedirectAdminDto Item in Model.Redirects)
+				{
+					<tr>
+						<td><code>@Item.Domain</code></td>
+						<td>@Item.SiteName</td>
+						<td><span class="badge">@Item.Culture</span></td>
+						<td>
+							@if (!string.IsNullOrEmpty(Item.ArticleUrlSlug))
+							{
+								string Path = ArticleUrlHelper.BuildArticlePath(Item.ArticleUrlSlug, Item.ArticleType);
+								<a href="@Path" target="_blank" rel="noopener">@Item.ArticleTitle</a>
+								<br /><small style="color: var(--md-on-surface-variant, #666);"><code>@Path</code></small>
+							}
+							else
+							{
+								<span>@Item.ArticleTitle</span>
+							}
+						</td>
+						<td><small>@Item.DateCreated.ToString("yyyy-MM-dd HH:mm") UTC</small></td>
+						<td>
+							<form method="post" asp-page-handler="Delete" asp-route-id="@Item.Id" onsubmit="return confirm('Are you sure you want to delete the redirect for @Item.Domain?');">
+								<button type="submit" class="button" style="color: var(--md-error, #b00020); font-size: 0.85rem;" data-button-variant="naked">Delete</button>
+							</form>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+</article>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		var siteSelect = document.getElementById('InputSiteId');
+		var cultureSelect = document.getElementById('InputCulture');
+		var searchInput = document.getElementById('article-search-input');
+		var resultsList = document.getElementById('article-results-list');
+		var spinner = document.getElementById('search-spinner');
+		var canonicalIdInput = document.getElementById('InputCanonicalArticleId');
+		var articleTitleInput = document.getElementById('SelectedArticleTitle');
+		var selectedDisplay = document.getElementById('selected-article-display');
+		var selectedText = document.getElementById('selected-article-text');
+		var selectedGuid = document.getElementById('selected-article-guid');
+		var searchContainer = document.getElementById('article-search-container');
+		var clearBtn = document.getElementById('clear-article-btn');
+		var debounceTimeout = null;
+
+		// Update cultures when site changes
+		if (siteSelect) {
+			siteSelect.addEventListener('change', function () {
+				var siteId = siteSelect.value;
+				fetch('?handler=Cultures&siteId=' + encodeURIComponent(siteId))
+					.then(function (res) { return res.json(); })
+					.then(function (cultures) {
+						cultureSelect.innerHTML = '';
+						cultures.forEach(function (c) {
+							var opt = document.createElement('option');
+							opt.value = c;
+							opt.textContent = c;
+							cultureSelect.appendChild(opt);
+						});
+						clearSelection();
+					});
+			});
+		}
+
+		if (cultureSelect) {
+			cultureSelect.addEventListener('change', function () {
+				clearSelection();
+			});
+		}
+
+		// Debounced article search
+		if (searchInput) {
+			searchInput.addEventListener('input', function () {
+				clearTimeout(debounceTimeout);
+				var query = searchInput.value.trim();
+
+				if (query.length < 2) {
+					resultsList.style.display = 'none';
+					resultsList.innerHTML = '';
+					return;
+				}
+
+				spinner.style.display = 'block';
+
+				debounceTimeout = setTimeout(function () {
+					var siteId = siteSelect ? siteSelect.value : 1;
+					var culture = cultureSelect ? cultureSelect.value : 'en';
+					var url = '?handler=SearchArticles&siteId=' + encodeURIComponent(siteId) +
+						'&culture=' + encodeURIComponent(culture) +
+						'&q=' + encodeURIComponent(query);
+
+					fetch(url)
+						.then(function (res) { return res.json(); })
+						.then(function (items) {
+							spinner.style.display = 'none';
+							resultsList.innerHTML = '';
+
+							if (items.length === 0) {
+								var emptyEl = document.createElement('div');
+								emptyEl.style.padding = '0.75rem 1rem';
+								emptyEl.style.color = '#888';
+								emptyEl.textContent = 'No matching articles found.';
+								resultsList.appendChild(emptyEl);
+								resultsList.style.display = 'block';
+								return;
+							}
+
+							items.forEach(function (item) {
+								var row = document.createElement('div');
+								row.style.padding = '0.6rem 1rem';
+								row.style.cursor = 'pointer';
+								row.style.borderBottom = '1px solid var(--md-outline-variant, #eee)';
+								row.innerHTML = '<strong>' + escapeHtml(item.Title) + '</strong> <small style="color:#666;">(/' + escapeHtml(item.UrlSlug) + ')</small>';
+
+								row.addEventListener('mouseover', function () {
+									row.style.background = 'var(--md-surface-variant, #f5f5f5)';
+								});
+								row.addEventListener('mouseout', function () {
+									row.style.background = 'transparent';
+								});
+
+								row.addEventListener('click', function () {
+									selectArticle(item.CanonicalArticleId, item.Title, item.UrlSlug);
+								});
+
+								resultsList.appendChild(row);
+							});
+
+							resultsList.style.display = 'block';
+						})
+						.catch(function () {
+							spinner.style.display = 'none';
+						});
+				}, 300);
+			});
+		}
+
+		function selectArticle(guid, title, slug) {
+			canonicalIdInput.value = guid;
+			articleTitleInput.value = title;
+			selectedText.textContent = title + ' (/' + slug + ')';
+			selectedGuid.textContent = guid;
+
+			resultsList.style.display = 'none';
+			resultsList.innerHTML = '';
+			searchInput.value = '';
+
+			searchContainer.style.display = 'none';
+			selectedDisplay.style.display = 'flex';
+		}
+
+		function clearSelection() {
+			canonicalIdInput.value = '';
+			articleTitleInput.value = '';
+			selectedText.textContent = '';
+			selectedGuid.textContent = '';
+
+			selectedDisplay.style.display = 'none';
+			searchContainer.style.display = 'block';
+			if (searchInput) searchInput.value = '';
+			resultsList.style.display = 'none';
+			resultsList.innerHTML = '';
+		}
+
+		if (clearBtn) {
+			clearBtn.addEventListener('click', clearSelection);
+		}
+
+		function escapeHtml(str) {
+			var div = document.createElement('div');
+			div.appendChild(document.createTextNode(str));
+			return div.innerHTML;
+		}
+	});
+</script>

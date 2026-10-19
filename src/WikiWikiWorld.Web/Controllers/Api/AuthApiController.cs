@@ -47,13 +47,8 @@ public sealed class AuthApiController(
 			return Unauthorized("Invalid credentials.");
 		}
 
-		Microsoft.AspNetCore.Identity.SignInResult Result;
-
-		using (WriteDurabilityScope.High())
-		{
-			Result = await SignInManager.CheckPasswordSignInAsync(
-				TargetUser, Model.Password, lockoutOnFailure: true);
-		}
+		Microsoft.AspNetCore.Identity.SignInResult Result = await SignInManager.CheckPasswordSignInAsync(
+			TargetUser, Model.Password, lockoutOnFailure: true);
 
 		if (!Result.Succeeded)
 		{

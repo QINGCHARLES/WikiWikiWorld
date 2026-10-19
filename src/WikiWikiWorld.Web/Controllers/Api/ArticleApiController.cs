@@ -8,8 +8,6 @@ using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Options;
-using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
@@ -20,7 +18,7 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="ArticleRevisionService">The article revision workflow service.</param>
-/// <param name="FileStorageOptions">The file storage options.</param>
+/// <param name="FileUploadStorageService">The file upload storage service.</param>
 [Route("api/article")]
 [ApiController]
 [Produces("application/json")]
@@ -28,7 +26,7 @@ public class ArticleApiController(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     ArticleRevisionService ArticleRevisionService,
-    IOptions<FileStorageOptions> FileStorageOptions) : ControllerBase
+    FileUploadStorageService FileUploadStorageService) : ControllerBase
 {
     /// <summary>
     /// Gets an article revision.
@@ -191,13 +189,8 @@ public class ArticleApiController(
 
         Guid CanonicalArticleId = Guid.NewGuid();
         Guid? CanonicalFileId = null;
-        string? OriginalFileName = null;
-        string? UploadedContentType = null;
-        long UploadedFileSizeBytes = 0;
-        string? TemporaryFilePath = null;
-        string? FinalFilePath = null;
-        int UploadedImageWidthPixels = 0;
-        int UploadedImageHeightPixels = 0;
+        StagedFileUpload? StagedUpload = null;
+        FileRevision? CreatedFile = null;
 
         if (Type == ArticleType.File && File is not null)
         {
@@ -206,26 +199,11 @@ public class ArticleApiController(
                 return BadRequest(ValidationError);
             }
 
-            CanonicalFileId = Guid.NewGuid();
-            OriginalFileName = Path.GetFileName(File.FileName);
-            string FileExtension = Path.GetExtension(OriginalFileName);
-            string UniqueFileName = $"{CanonicalFileId}{FileExtension}";
-
-            string SiteFilesDirectory = Path.Combine(
-                FileStorageOptions.Value.SiteFilesPath,
-                SiteId.ToString(),
-                "images");
-            Directory.CreateDirectory(SiteFilesDirectory);
-
-            FinalFilePath = Path.Combine(SiteFilesDirectory, UniqueFileName);
-            TemporaryFilePath = Path.Combine(SiteFilesDirectory, $"{UniqueFileName}.{Guid.NewGuid():N}.tmp");
-
-            // Stage the file
-            await using FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-            await File.CopyToAsync(FileStream, CancellationToken);
-            UploadedContentType = File.ContentType;
-            UploadedFileSizeBytes = File.Length;
-            (UploadedImageWidthPixels, UploadedImageHeightPixels) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
+            // Stage the upload under a recoverable temporary path. It is finalized only
+            // after the database transaction commits (see below), so a crash never leaves
+            // an orphaned final file with no committed revision.
+            StagedUpload = await FileUploadStorageService.StageUploadedFileAsync(File, SiteId, Guid.NewGuid(), CancellationToken);
+            CanonicalFileId = StagedUpload.CanonicalFileId;
         }
 
         IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
@@ -234,7 +212,7 @@ public class ArticleApiController(
         {
             await Strategy.ExecuteAsync(async CT =>
             {
-                await using IDbContextTransaction Transaction = await Context.Database.BeginImmediateTransactionAsync(CT);
+                await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
 
                 ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: true);
                 ArticleRevision? ExistingArticle = await Context.ArticleRevisions
@@ -247,17 +225,17 @@ public class ArticleApiController(
                     throw new InvalidOperationException("An article with this URL slug already exists.");
                 }
 
-                if (Type == ArticleType.File && CanonicalFileId.HasValue && OriginalFileName is not null && UploadedContentType is not null)
+                if (Type == ArticleType.File && CanonicalFileId.HasValue && StagedUpload is not null)
                 {
                     FileRevision NewFile = new()
                     {
                         CanonicalFileId = CanonicalFileId.Value,
                         Type = FileType.Image2D,
-                        Filename = OriginalFileName,
-                        MimeType = UploadedContentType,
-                        FileSizeBytes = UploadedFileSizeBytes,
-                        ImageWidthPixels = UploadedImageWidthPixels > 0 ? UploadedImageWidthPixels : null,
-                        ImageHeightPixels = UploadedImageHeightPixels > 0 ? UploadedImageHeightPixels : null,
+                        Filename = StagedUpload.OriginalFileName,
+                        MimeType = StagedUpload.ContentType,
+                        FileSizeBytes = StagedUpload.FileSizeBytes,
+                        ImageWidthPixels = StagedUpload.ImageWidthPixels > 0 ? StagedUpload.ImageWidthPixels : null,
+                        ImageHeightPixels = StagedUpload.ImageHeightPixels > 0 ? StagedUpload.ImageHeightPixels : null,
                         Source = Source,
                         RevisionReason = "Initial upload",
                         SourceAndRevisionReasonCulture = Culture,
@@ -267,6 +245,7 @@ public class ArticleApiController(
                     };
 
                     Context.FileRevisions.Add(NewFile);
+                    CreatedFile = NewFile;
                 }
 
                 ArticleRevision NewArticle = new()
@@ -288,44 +267,42 @@ public class ArticleApiController(
 
                 Context.ArticleRevisions.Add(NewArticle);
 
-                using (WriteDurabilityScope.High())
-                {
-                    await Context.SaveChangesAsync(CT);
-                }
-
-                if (TemporaryFilePath is not null && FinalFilePath is not null)
-                {
-                    System.IO.File.Move(TemporaryFilePath, FinalFilePath, overwrite: false);
-                }
+                await Context.SaveChangesAsync(CT);
 
                 await Transaction.CommitAsync(CT);
             }, CancellationToken);
+
+            // Finalize the staged upload only after the transaction has committed. The
+            // final path depends on the revision id assigned during SaveChanges, and
+            // finalizing post-commit means a crash here leaves a recoverable staged file
+            // (reclaimed by startup recovery) rather than an orphaned final file.
+            if (StagedUpload is not null && CreatedFile is not null)
+            {
+                try
+                {
+                    FileUploadStorageService.FinalizeStagedUpload(StagedUpload, SiteId, CreatedFile.Id);
+                }
+                catch (Exception)
+                {
+                    // The article is committed and the staged file is recoverable, so this
+                    // is a success: startup recovery finalizes the file. Reporting an error
+                    // here would invite a duplicate-create retry.
+                    return Ok("Article created successfully. The uploaded file is awaiting filesystem recovery.");
+                }
+            }
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {
-            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
             return Conflict(Ex.Message);
         }
         catch (Exception)
         {
-            CleanupStagedUpload(TemporaryFilePath, FinalFilePath);
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
             throw;
         }
 
         return Ok("Article created successfully.");
-    }
-
-    private static void CleanupStagedUpload(string? TemporaryFilePath, string? FinalFilePath)
-    {
-        if (!string.IsNullOrWhiteSpace(TemporaryFilePath) && System.IO.File.Exists(TemporaryFilePath))
-        {
-            System.IO.File.Delete(TemporaryFilePath);
-        }
-
-        if (!string.IsNullOrWhiteSpace(FinalFilePath) && System.IO.File.Exists(FinalFilePath))
-        {
-            System.IO.File.Delete(FinalFilePath);
-        }
     }
 
     /// <summary>

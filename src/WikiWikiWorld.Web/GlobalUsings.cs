@@ -10,3 +10,4 @@ global using Microsoft.AspNetCore.Mvc;
 global using WikiWikiWorld.Data.Models;
 global using WikiWikiWorld.Data;
 global using WikiWikiWorld.Web.Services;
+global using WikiWikiWorld.Web.Helpers;

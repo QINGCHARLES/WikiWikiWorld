@@ -121,23 +121,20 @@ public sealed class TalkSubjectsModel(
 			DateCreated = Now,
 		};
 
-		using (WriteDurabilityScope.High())
-		{
-			Context.ArticleTalkSubjects.Add(NewSubject);
-			await Context.SaveChangesAsync(CancellationToken);
+		Context.ArticleTalkSubjects.Add(NewSubject);
+		await Context.SaveChangesAsync(CancellationToken);
 
-			ArticleTalkSubjectPost RootPost = new()
-			{
-				ArticleTalkSubjectId = NewSubject.Id,
-				ParentTalkSubjectPostId = null,
-				Text = Input.Text.Trim(),
-				HasBeenEdited = false,
-				CreatedByUserId = CurrentUser.Id,
-				DateCreated = Now,
-			};
-			Context.ArticleTalkSubjectPosts.Add(RootPost);
-			await Context.SaveChangesAsync(CancellationToken);
-		}
+		ArticleTalkSubjectPost RootPost = new()
+		{
+			ArticleTalkSubjectId = NewSubject.Id,
+			ParentTalkSubjectPostId = null,
+			Text = Input.Text.Trim(),
+			HasBeenEdited = false,
+			CreatedByUserId = CurrentUser.Id,
+			DateCreated = Now,
+		};
+		Context.ArticleTalkSubjectPosts.Add(RootPost);
+		await Context.SaveChangesAsync(CancellationToken);
 
 		return Redirect(ArticleUrlHelper.BuildRelativePath(Article!, $"talk/{SubjectSlug}"));
 	}

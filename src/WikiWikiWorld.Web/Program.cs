@@ -1,25 +1,16 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.OpenApi;
 using Scalar.AspNetCore;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.Intrinsics.Arm;
-using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Web;
 using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Infrastructure;
-using WikiWikiWorld.Web.Services;
 using SixLabors.ImageSharp.Web.DependencyInjection;
 
 WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
@@ -72,6 +63,7 @@ if (Builder.Environment.IsDevelopment())
 }
 
 Builder.Services.Configure<SiteConfiguration>(Builder.Configuration.GetSection("SiteConfiguration"));
+Builder.Services.Configure<DomainRedirectOptions>(Builder.Configuration.GetSection(DomainRedirectOptions.SectionName));
 
 // Add memory cache service
 Builder.Services.AddMemoryCache();
@@ -85,6 +77,18 @@ string DataPath = string.IsNullOrWhiteSpace(StartupOptions.DataPath)
 
 string SiteFilesPath = Path.Combine(DataPath, "sitefiles");
 string WellKnownPath = Path.Combine(DataPath, ".well-known");
+string DataProtectionKeysPath = Path.Combine(DataPath, "dataprotection-keys");
+
+// Data Protection keys encrypt Identity authentication cookies and antiforgery tokens. Persist
+// them under the data volume rather than the container filesystem: update.sh replaces the
+// container on every deploy, and regenerated keys would sign out every logged-in user and reject
+// the form post of anyone mid-edit with a 400. SetApplicationName pins the isolation key, which
+// otherwise derives from the content root path.
+Directory.CreateDirectory(DataProtectionKeysPath);
+
+Builder.Services.AddDataProtection()
+	.PersistKeysToFileSystem(new DirectoryInfo(DataProtectionKeysPath))
+	.SetApplicationName("WikiWikiWorld");
 
 // Register Options
 Builder.Services.AddOptions<FileStorageOptions>()
@@ -132,6 +136,8 @@ Builder.Services.AddScoped<ArticleRevisionService>();
 Builder.Services.AddScoped<BookmarkService>();
 Builder.Services.AddScoped<IArticleRenderer, ArticleRenderer>();
 Builder.Services.AddScoped<FileUploadStorageService>();
+Builder.Services.AddScoped<FileMigrationService>();
+Builder.Services.AddScoped<ArticleDomainRedirectService>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddTransient<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
@@ -147,7 +153,7 @@ Builder.Services.Configure<IdentityOptions>(options =>
     // Password settings
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
 
@@ -170,8 +176,13 @@ Builder.Services.AddAuthentication(options =>
 {
     options.ForwardDefaultSelector = context =>
     {
+        // Route Bearer requests to JWT; everything else (incl. browser cookie auth) to the
+        // cookie scheme. The scheme token is matched ordinal/case-insensitively per RFC 7235
+        // §2.1 (a client may legitimately send "bearer <token>"). A present-but-invalid Bearer
+        // token deliberately does NOT fall back to cookies — API clients should get a 401 and
+        // refresh rather than be silently cookie-authed.
         string? AuthHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(AuthHeader) && AuthHeader.StartsWith("Bearer "))
+        if (!string.IsNullOrEmpty(AuthHeader) && AuthHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             return JwtBearerDefaults.AuthenticationScheme;
         }
@@ -204,13 +215,42 @@ Builder.Services.AddResponseCompression(options =>
     options.EnableForHttps = true;
 });
 
+// 308 matches the previous rewrite-rule behavior (default is 307)
+Builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+});
+
 Builder.Services.AddAuthorization();
 
 // Add services to the container.
 Builder.Services.AddRazorPages(options =>
 {
     options.Conventions.ConfigureFilter(new ThemePageFilter());
+
+    // Vanity URL routes (previously IIS-style rewrite rules)
+    options.Conventions.AddPageRoute("/Account/Login", "login:");
+    options.Conventions.AddPageRoute("/Account/Register", "register:");
+    options.Conventions.AddPageRoute("/Dmca", "dmca:");
+    options.Conventions.AddPageRoute("/Privacy", "privacy-policy:");
+    options.Conventions.AddPageRoute("/Terms", "terms:");
+    options.Conventions.AddPageRoute("/Settings/Theme", "settings/theme:");
+    options.Conventions.AddPageRoute("/Article/Firehose", "firehose:");
+    options.Conventions.AddPageRoute("/Search", "search:");
+    // Note: "create:" is routed by ArticleRouteTransformer, not a page route convention.
+    // A page targeted by the dynamic transformer must keep a single conventional route,
+    // otherwise dynamic matches become ambiguous (CreateEdit is also the /edit target).
+    options.Conventions.AddPageRoute("/Wiki/Upload", "wiki:upload");
+    options.Conventions.AddPageRoute("/Profile/View", "@{Username}/profile");
+    options.Conventions.AddPageRoute("/Profile/Contributions", "@{Username}/contributions");
+    options.Conventions.AddPageRoute("/Profile/Messages", "@{Username}/messages/{Tab?}");
+    options.Conventions.AddPageRoute("/Profile/Bookmarks", "@{Username}/bookmarks");
+    options.Conventions.AddPageRoute("/Profile/NewMessage", "message/new");
+    options.Conventions.AddPageRoute("/Profile/NewMessage", "@{Recipient}/message/new");
 });
+
+// Catch-all article routing (article view, /edit, /history, /talk, /revision, /links, 404:)
+Builder.Services.AddSingleton<ArticleRouteTransformer>();
 Builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -238,9 +278,6 @@ if (!App.Environment.IsDevelopment())
 
 App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
 
-// Inject IWebHostEnvironment to access the content root
-IWebHostEnvironment Environment = App.Services.GetRequiredService<IWebHostEnvironment>();
-
 using (IServiceScope StartupScope = App.Services.CreateScope())
 {
 	FileUploadStorageService FileUploadStorageService = StartupScope.ServiceProvider.GetRequiredService<FileUploadStorageService>();
@@ -251,11 +288,14 @@ App.MapControllers();
 App.MapOpenApi();
 App.MapScalarApiReference("/wiki:api-docs");
 
-App.MapGet("/sitemap.xml", async (ISitemapService SitemapService) =>
+Func<ISitemapService, Task<IResult>> SitemapHandler = async (ISitemapService SitemapService) =>
 {
     string Sitemap = await SitemapService.GenerateSitemapAsync();
     return Results.Content(Sitemap, "application/xml");
-}).ExcludeFromDescription();
+};
+
+App.MapGet("/sitemap.xml", SitemapHandler).ExcludeFromDescription();
+App.MapGet("/info:sitemap", SitemapHandler).ExcludeFromDescription();
 
 App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context) =>
 {
@@ -313,8 +353,8 @@ App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context
     }
 }).ExcludeFromDescription();
 
-// Serve .well-known BEFORE rewrite rules so certbot HTTP-01 challenges on port 80
-// are served directly without being caught by the HTTP→HTTPS 308 redirect in the XML rules
+// Serve .well-known BEFORE UseHttpsRedirection so certbot HTTP-01 challenges on port 80
+// are served directly without being caught by the HTTP→HTTPS 308 redirect
 if (!Directory.Exists(WellKnownPath))
 {
 	Directory.CreateDirectory(WellKnownPath);
@@ -327,26 +367,11 @@ App.UseStaticFiles(new StaticFileOptions
 	ServeUnknownFileTypes = true
 });
 
-// Load the XML file from the correct path
-string RewriteFile = Path.IsPathRooted(StartupOptions.RewriteRulesPath)
-	? StartupOptions.RewriteRulesPath
-	: Path.Combine(Environment.ContentRootPath, StartupOptions.RewriteRulesPath);
-
-if (File.Exists(RewriteFile))
-{
-	using StreamReader StreamReader = File.OpenText(RewriteFile);
-	RewriteOptions Options = new RewriteOptions().AddIISUrlRewrite(StreamReader);
-	App.UseRewriter(Options);
-}
-else
-{
-	if (StartupOptions.RequireRewriteRules)
-	{
-		throw new FileNotFoundException("Rewrite rules file not found", RewriteFile);
-	}
-}
-
 App.UseHttpsRedirection();
+
+// Canonical host redirects (www strip, domain mappings, unknown hosts) and the
+// culture-selector root-domain rewrite. Config-driven via DomainRedirects + SiteConfiguration.
+App.UseMiddleware<CanonicalDomainMiddleware>();
 
 App.UseRouting();
 
@@ -355,7 +380,7 @@ App.Use(async (Context, Next) =>
 {
     Context.Response.OnStarting(() =>
     {
-        Context.Response.Headers[HeaderNames.ContentSecurityPolicy] = "frame-ancestors 'none'";
+        Context.Response.Headers[HeaderNames.ContentSecurityPolicy] = "frame-ancestors 'none'; frame-src https://www.youtube-nocookie.com";
         Context.Response.Headers[HeaderNames.XFrameOptions] = "DENY";
         return Task.CompletedTask;
     });
@@ -397,5 +422,10 @@ App.UseStaticFiles(new StaticFileOptions
 App.UseMiddleware<HtmlPrettifyMiddleware>();
 
 App.MapRazorPages();
+
+// Lowest-precedence catch-all: routes unmatched paths into the article page space
+// (view, /edit, /history, /talk, /revision, /links, 404:). Replaces the old XML catch-all
+// rewrite rule; all conventional routes above win automatically.
+App.MapDynamicPageRoute<ArticleRouteTransformer>($"{{**{ArticleRouteTransformer.SlugRouteValueName}}}");
 
 App.Run();
