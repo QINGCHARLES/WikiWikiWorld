@@ -36,7 +36,7 @@ html[data-theme="light"] { color-scheme: light; }
 }
 
 :root {
-    --color-background: var(--uchu-yang); /* light-dark(var(--uchu-yang), var(--uchu-yin-8)); */
+    --color-background: #ffffff; /* light-dark(#ffffff, var(--uchu-yin-8)); */
     --color-foreground: var(--uchu-yin-8); /* light-dark(var(--uchu-yin-8), var(--uchu-yang)); */
     --color-foreground-inverse: var(--uchu-yang); /* light-dark(var(--uchu-yang), var(--uchu-yin-8)); */
     --color-muted: #555555; /* light-dark(#555555, #d0d0d0); */

@@ -25,7 +25,7 @@ public sealed class ArticleRouteTransformer : DynamicRouteValueTransformer
 	/// </summary>
 	private static readonly HashSet<string> StaticAssetExtensions = new(StringComparer.OrdinalIgnoreCase)
 	{
-		".jpg", ".jpeg", ".gif", ".png", ".webp", ".avif",
+		".jpg", ".jpeg", ".gif", ".png", ".webp", ".avif", ".heic", ".svg",
 		".css", ".js", ".ico", ".txt", ".webmanifest",
 		".woff", ".woff2", ".ttf", ".otf", ".eot"
 	};
@@ -46,7 +46,7 @@ public sealed class ArticleRouteTransformer : DynamicRouteValueTransformer
 		}
 
 		Slug = Slug.TrimEnd('/');
-		if (Slug.Length == 0)
+		if (Slug.Length == 0 || Slug.StartsWith("sitefiles/", StringComparison.OrdinalIgnoreCase))
 		{
 			return NoMatch();
 		}

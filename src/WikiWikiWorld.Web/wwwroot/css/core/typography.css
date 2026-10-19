@@ -40,10 +40,56 @@ h1 {
     font-weight: 800;
     letter-spacing: -0.2rem;
     text-transform: uppercase;
-    text-shadow: .1rem .1rem .1rem #919191, .2rem .2rem .1rem #919191, .3rem .3rem .1rem #919191, .4rem .4rem .1rem #919191, .5rem .5rem .1rem #919191, .6rem .6rem .6rem rgba(60,60,60,0.4), 1rem 1rem 1rem rgba(60,60,60,0.2), 1.5rem 1.5rem 3.5rem rgba(60,60,60,0.2), 2.0rem 2.0rem 6.0rem rgba(60,60,60,0.4);
+    text-shadow:
+        0.06rem 0.06rem 0.04rem #919191,
+        0.12rem 0.12rem 0.04rem #919191,
+        0.18rem 0.18rem 0.04rem #919191,
+        0.24rem 0.24rem 0.04rem #919191,
+        0.32rem 0.32rem 0.45rem rgb(60 60 60 / 0.32),
+        0.55rem 0.55rem 1.1rem rgb(60 60 60 / 0.22);
     text-align: center;
     color: var(--color-foreground);
     line-height: 1.0;
+}
+
+h1 .title-logo {
+    display: flex;
+    justify-content: center;
+    margin-block: 0.08em 0.06em;
+    filter:
+        drop-shadow(0.08rem 0.08rem 0.02rem #919191)
+        drop-shadow(0.08rem 0.08rem 0.02rem #919191)
+        drop-shadow(0.08rem 0.08rem 0.02rem #919191)
+        drop-shadow(0.18rem 0.18rem 0.45rem rgb(60 60 60 / 0.28));
+}
+
+h1 .title-logo__graphic {
+    --logo-aspect: calc(var(--logo-width, 1) / var(--logo-height, 1));
+    --logo-max-block: 1.75em;
+    --logo-max-inline: min(86vw, 6.5em);
+
+    display: block;
+    inline-size: min(var(--logo-max-inline), calc(var(--logo-max-block) * var(--logo-aspect)));
+    block-size: min(var(--logo-max-block), calc(var(--logo-max-inline) / var(--logo-aspect)));
+    aspect-ratio: var(--logo-width, 1) / var(--logo-height, 1);
+    background-color: currentColor;
+    -webkit-mask: var(--logo-url) center / contain no-repeat;
+    mask: var(--logo-url) center / contain no-repeat;
+}
+
+.visually-hidden {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+    opacity: 0;
+    text-shadow: none;
 }
 
 h1.title {
@@ -57,7 +103,13 @@ h1.title {
     font-weight: 800;
     letter-spacing: -0.2rem;
     text-transform: uppercase;
-    text-shadow: .1rem .1rem .1rem #919191, .2rem .2rem .1rem #919191, .3rem .3rem .1rem #919191, .4rem .4rem .1rem #919191, .5rem .5rem .1rem #919191, .6rem .6rem .6rem rgba(60,60,60,0.4), 1rem 1rem 1rem rgba(60,60,60,0.2), 1.5rem 1.5rem 3.5rem rgba(60,60,60,0.2), 2.0rem 2.0rem 6.0rem rgba(60,60,60,0.4);
+    text-shadow:
+        0.06rem 0.06rem 0.04rem #919191,
+        0.12rem 0.12rem 0.04rem #919191,
+        0.18rem 0.18rem 0.04rem #919191,
+        0.24rem 0.24rem 0.04rem #919191,
+        0.32rem 0.32rem 0.45rem rgb(60 60 60 / 0.32),
+        0.55rem 0.55rem 1.1rem rgb(60 60 60 / 0.22);
     padding: var(--grid-gutter) 20vw;
     padding-top: calc(6rem + var(--grid-gutter));
     width: 100vw;

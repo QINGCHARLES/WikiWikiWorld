@@ -34,6 +34,11 @@ public sealed class LinksModel(
     public List<ArticleRevision> Backlinks { get; set; } = [];
 
     /// <summary>
+    /// Gets the rendered HTML for the article's display title.
+    /// </summary>
+    public string DisplayTitleHtml { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Gets the canonical article path for the current article.
     /// </summary>
     public string CanonicalArticlePath => CurrentArticle is null ? string.Empty : ArticleUrlHelper.BuildArticlePath(CurrentArticle);
@@ -80,7 +85,17 @@ public sealed class LinksModel(
         string SearchTerm2 = $"](/{UrlSlug})";
         string FileSearchTerm1 = $"](file:{UrlSlug})";
         string FileSearchTerm2 = $"](/file:{UrlSlug})";
+        string DisplayTitleLogoTerm1 = $"|#|{UrlSlug}]]";
+        string DisplayTitleLogoTerm2 = $"|#|file:{UrlSlug}]]";
         bool IncludeFileNamespaceTerms = CurrentArticle.Type == ArticleType.File;
+
+        DisplayTitleHtml = await DisplayTitleHelper.RenderHtmlAsync(
+            CurrentArticle.DisplayTitle,
+            CurrentArticle.Title,
+            Context,
+            SiteId,
+            Culture,
+            CancellationToken);
 
         Backlinks = await Context.ArticleRevisions
             .Where(r => r.SiteId == SiteId 
@@ -91,7 +106,11 @@ public sealed class LinksModel(
                             r.Text.Contains(SearchTerm1) ||
                             r.Text.Contains(SearchTerm2) ||
                             (IncludeFileNamespaceTerms &&
-                                (r.Text.Contains(FileSearchTerm1) || r.Text.Contains(FileSearchTerm2)))))
+                                (r.Text.Contains(FileSearchTerm1) ||
+                                 r.Text.Contains(FileSearchTerm2) ||
+                                 (r.DisplayTitle != null &&
+                                    (r.DisplayTitle.Contains(DisplayTitleLogoTerm1) ||
+                                     r.DisplayTitle.Contains(DisplayTitleLogoTerm2)))))))
             .OrderByDescending(r => r.DateCreated)
             .ToListAsync(CancellationToken);
 

@@ -124,6 +124,45 @@
 						<span class="form-help">Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)</span>
 					</div>
 				}
+				else if (Model.SelectedType == WikiWikiWorld.Data.Models.ArticleType.File || Model.HasExistingFile)
+				{
+					<div class="form-group form-group-full" id="file-upload-section">
+						<label for="UploadedFile" class="form-label">
+							<span class="label-text">Replace Image</span>
+						</label>
+						@if (!string.IsNullOrWhiteSpace(Model.ExistingFileImageUrl))
+						{
+							<div class="current-file-preview">
+								<a href="@Model.ExistingFileImageUrl" target="_blank" rel="noopener">
+									<img src="@Model.ExistingFileImageUrl" alt="@Model.Title" class="current-file-thumb" />
+								</a>
+								<div class="current-file-info">
+									<p class="current-file-name"><strong>Current File:</strong> @Model.ExistingFileRevision?.Filename</p>
+									<p class="current-file-meta">
+										@if (Model.ExistingFileRevision?.ImageWidthPixels > 0 && Model.ExistingFileRevision?.ImageHeightPixels > 0)
+										{
+											<span>@Model.ExistingFileRevision.ImageWidthPixels &times; @Model.ExistingFileRevision.ImageHeightPixels px</span>
+											<span class="separator">&bull;</span>
+										}
+										<span>@Model.ExistingFileRevision?.MimeType</span>
+										@if (Model.ExistingFileRevision?.FileSizeBytes > 0)
+										{
+											<span class="separator">&bull;</span>
+											<span>@((Model.ExistingFileRevision.FileSizeBytes / 1024.0).ToString("F1")) KB</span>
+										}
+									</p>
+								</div>
+							</div>
+						}
+						<input 
+							type="file" 
+							id="UploadedFile" 
+							asp-for="UploadedFile" 
+							class="form-file"
+							accept="image/*" />
+						<span class="form-help">Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history.</span>
+					</div>
+				}
 
 				<div class="form-group form-group-full">
 					<label for="ArticleText" class="form-label">
@@ -469,6 +508,49 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
     }
+
+	/* Current File Preview Styles */
+	.current-file-preview {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem;
+		padding: 0.75rem 1rem;
+		margin-bottom: 0.5rem;
+		background: var(--color-surface-subtle, #f9fafb);
+		border: 1px solid var(--color-border, #e5e5e5);
+		border-radius: 0.5rem;
+	}
+
+	.current-file-thumb {
+		max-width: 100px;
+		max-height: 80px;
+		object-fit: contain;
+		border-radius: 0.25rem;
+		border: 1px solid var(--color-border, #e5e5e5);
+		background: #fff;
+	}
+
+	.current-file-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		font-size: var(--step--1);
+	}
+
+	.current-file-name {
+		margin: 0;
+		color: var(--color-foreground);
+		word-break: break-all;
+	}
+
+	.current-file-meta {
+		margin: 0;
+		color: var(--color-muted, #6b7280);
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
 
 	/* Responsive Design */
 	@@media (max-width: 768px) {

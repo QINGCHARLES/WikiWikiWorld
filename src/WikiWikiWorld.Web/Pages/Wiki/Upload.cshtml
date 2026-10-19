@@ -54,7 +54,7 @@
 	{
 		<p class="associated-article">
 			You are submitting a copy for
-			<strong>@(Model.AssociatedArticle.DisplayTitle ?? Model.AssociatedArticle.Title)</strong>.
+			<strong>@DisplayTitleHelper.ToPlainText(Model.AssociatedArticle.DisplayTitle, Model.AssociatedArticle.Title)</strong>.
 		</p>
 	}
 

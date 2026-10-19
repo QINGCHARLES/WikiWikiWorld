@@ -34,7 +34,7 @@ header .header-avatar {
     overflow: hidden;
 }
 
-header .header-avatar .avatar-initials {
+.avatar .avatar-initials {
     display: flex;
     align-items: center;
     justify-content: center;

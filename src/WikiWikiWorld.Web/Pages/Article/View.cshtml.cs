@@ -64,6 +64,16 @@ public sealed class ViewModel(
     public string ArticleRevisionHtml { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the rendered HTML for the article's display title (including any resolved SVG logos).
+    /// </summary>
+    public string DisplayTitleHtml { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the single-line plain-text display title (with any logo markup stripped to fallback text).
+    /// </summary>
+    public string PlainTextTitle { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets a value indicating whether this is a prior revision.
     /// </summary>
     public bool IsPriorRevision { get; set; }
@@ -139,6 +149,21 @@ public sealed class ViewModel(
     public long FileSizeBytes { get; private set; }
 
     /// <summary>
+    /// Gets the friendly codec or image format name of the displayed file (e.g., JPEG, PNG, WebP).
+    /// </summary>
+    public string? FileCodec { get; private set; }
+
+    /// <summary>
+    /// Gets the list of all file revision history items for this file article.
+    /// </summary>
+    public IReadOnlyList<FileRevisionHistoryItem> FileRevisionHistory { get; private set; } = [];
+
+    /// <summary>
+    /// Gets a value indicating whether this file article has previous (older) revisions.
+    /// </summary>
+    public bool HasPreviousFileRevisions => FileRevisionHistory.Count > 1;
+
+    /// <summary>
     /// Gets the display text of the source citation for this file, if provided.
     /// </summary>
     public string? FileSourceText { get; private set; }
@@ -210,6 +235,7 @@ public sealed class ViewModel(
         {
             ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
             CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
+            IsViewingCurrentRevision = true;
         }
 
         DisplayedRevision = SpecificRevision ?? CurrentRevision;
@@ -286,6 +312,15 @@ public sealed class ViewModel(
         }
 
         ArticleRevision RevisionToRender = DisplayedRevision ?? throw new InvalidOperationException("Displayed revision was not loaded.");
+        PlainTextTitle = DisplayTitleHelper.ToPlainText(RevisionToRender.DisplayTitle, RevisionToRender.Title);
+        DisplayTitleHtml = await DisplayTitleHelper.RenderHtmlAsync(
+            RevisionToRender.DisplayTitle,
+            RevisionToRender.Title,
+            Context,
+            SiteId,
+            Culture,
+            CancellationToken);
+
         string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(RevisionToRender)}/edit";
         RenderedArticle RenderedArticle = await ArticleRenderer.RenderAsync(RevisionToRender, SiteId, Culture, EditUrl, CancellationToken);
         ArticleRevisionHtml = RenderedArticle.Html;
@@ -308,24 +343,53 @@ public sealed class ViewModel(
             }
         }
 
-        // Fetch file metadata if this is a file article with an associated file
+        // Fetch file metadata and revision history if this is a file article with an associated file
         if (RevisionToRender.Type == ArticleType.File && RevisionToRender.CanonicalFileId.HasValue)
         {
-            FileRevision? CurrentFile = await Context.FileRevisions
+            List<FileRevision> AllFileRevisions = await Context.FileRevisions
                 .AsNoTracking()
-                .Where(f => f.CanonicalFileId == RevisionToRender.CanonicalFileId.Value && f.IsCurrent == true)
-                .FirstOrDefaultAsync(CancellationToken);
+                .Where(F => F.CanonicalFileId == RevisionToRender.CanonicalFileId.Value && F.DateDeleted == null)
+                .OrderByDescending(F => F.DateCreated)
+                .ThenByDescending(F => F.Id)
+                .ToListAsync(CancellationToken);
 
-            if (CurrentFile is not null)
+            FileRevision? TargetFile = IsPriorRevision
+                ? AllFileRevisions.FirstOrDefault(F => F.DateCreated <= RevisionToRender.DateCreated) ?? AllFileRevisions.LastOrDefault()
+                : AllFileRevisions.FirstOrDefault(F => F.IsCurrent == true) ?? AllFileRevisions.FirstOrDefault();
+
+            if (TargetFile is not null)
             {
-                FileImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, CurrentFile.CanonicalFileId, CurrentFile.Id, CurrentFile.Filename);
-                FileMimeType = CurrentFile.MimeType;
-                FileOriginalFilename = CurrentFile.Filename;
-                FileSizeBytes = CurrentFile.FileSizeBytes;
+                FileImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, TargetFile.CanonicalFileId, TargetFile.Id, TargetFile.Filename);
+                FileMimeType = TargetFile.MimeType;
+                FileOriginalFilename = TargetFile.Filename;
+                FileSizeBytes = TargetFile.FileSizeBytes;
+                FileCodec = FormatCodecName(TargetFile.MimeType, TargetFile.Filename);
 
-                FileWidthPx = CurrentFile.ImageWidthPixels.GetValueOrDefault();
-                FileHeightPx = CurrentFile.ImageHeightPixels.GetValueOrDefault();
+                FileWidthPx = TargetFile.ImageWidthPixels.GetValueOrDefault();
+                FileHeightPx = TargetFile.ImageHeightPixels.GetValueOrDefault();
             }
+
+            List<Guid> UploaderUserIds = [.. AllFileRevisions.Select(F => F.CreatedByUserId).Distinct()];
+            Dictionary<Guid, string> UploaderNames = await Context.Users
+                .AsNoTracking()
+                .Where(U => UploaderUserIds.Contains(U.Id) && U.UserName != null)
+                .ToDictionaryAsync(U => U.Id, U => U.UserName!, CancellationToken);
+
+            FileRevisionHistory = [.. AllFileRevisions.Select(F => new FileRevisionHistoryItem(
+                F.Id,
+                F.CanonicalFileId,
+                F.Filename,
+                ImageUrlHelper.BuildImageUrl(SiteId, F.CanonicalFileId, F.Id, F.Filename),
+                F.MimeType,
+                FormatCodecName(F.MimeType, F.Filename),
+                F.FileSizeBytes,
+                F.ImageWidthPixels,
+                F.ImageHeightPixels,
+                F.IsCurrent == true,
+                F.DateCreated,
+                F.CreatedByUserId,
+                UploaderNames.GetValueOrDefault(F.CreatedByUserId),
+                F.RevisionReason))];
         }
 
         return Page();
@@ -407,4 +471,72 @@ public sealed class ViewModel(
         return false;
     }
 
+    /// <summary>
+    /// Derives a friendly image codec or format name from the MIME type and filename.
+    /// </summary>
+    /// <param name="MimeType">The MIME type of the file.</param>
+    /// <param name="Filename">The filename of the file.</param>
+    /// <returns>A friendly format name (e.g. JPEG, PNG, WebP, AVIF).</returns>
+    public static string FormatCodecName(string? MimeType, string? Filename)
+    {
+        string CleanMime = MimeType?.Trim().ToLowerInvariant() ?? string.Empty;
+        return CleanMime switch
+        {
+            "image/jpeg" => "JPEG",
+            "image/png" => "PNG",
+            "image/webp" => "WebP",
+            "image/avif" => "AVIF",
+            "image/gif" => "GIF",
+            "image/heic" => "HEIC",
+            "image/heif" => "HEIF",
+            "image/svg+xml" => "SVG",
+            _ => Path.GetExtension(Filename ?? string.Empty).TrimStart('.').ToUpperInvariant() switch
+            {
+                "JPG" or "JPEG" => "JPEG",
+                "PNG" => "PNG",
+                "WEBP" => "WebP",
+                "AVIF" => "AVIF",
+                "GIF" => "GIF",
+                "HEIC" => "HEIC",
+                "HEIF" => "HEIF",
+                "SVG" => "SVG",
+                var Ext when !string.IsNullOrWhiteSpace(Ext) => Ext,
+                _ => string.IsNullOrWhiteSpace(MimeType) ? "Unknown" : MimeType
+            }
+        };
+    }
 }
+
+/// <summary>
+/// Represents a file revision entry shown in the file history list.
+/// </summary>
+/// <param name="Id">The unique file revision identifier.</param>
+/// <param name="CanonicalFileId">The canonical file identifier.</param>
+/// <param name="Filename">The original filename.</param>
+/// <param name="FileImageUrl">The public image URL for this specific revision.</param>
+/// <param name="MimeType">The MIME type.</param>
+/// <param name="Codec">The friendly image codec or format name.</param>
+/// <param name="FileSizeBytes">The file size in bytes.</param>
+/// <param name="ImageWidthPixels">The image width in pixels, if known.</param>
+/// <param name="ImageHeightPixels">The image height in pixels, if known.</param>
+/// <param name="IsCurrent">Whether this is the current active revision.</param>
+/// <param name="DateCreated">The creation date and time.</param>
+/// <param name="CreatedByUserId">The identifier of the user who created this revision.</param>
+/// <param name="CreatedByUserName">The username of the user who created this revision, if known.</param>
+/// <param name="RevisionReason">The optional reason or upload comment.</param>
+public sealed record FileRevisionHistoryItem(
+    int Id,
+    Guid CanonicalFileId,
+    string Filename,
+    string FileImageUrl,
+    string MimeType,
+    string Codec,
+    long FileSizeBytes,
+    int? ImageWidthPixels,
+    int? ImageHeightPixels,
+    bool IsCurrent,
+    DateTimeOffset DateCreated,
+    Guid CreatedByUserId,
+    string? CreatedByUserName,
+    string? RevisionReason);
+

@@ -101,6 +101,21 @@ public sealed class CreateEditModel(
     public bool CanRevert { get; private set; }
 
     /// <summary>
+    /// Gets the existing file revision for this article if it has an associated file.
+    /// </summary>
+    public FileRevision? ExistingFileRevision { get; private set; }
+
+    /// <summary>
+    /// Gets the public image URL for the existing file revision, if available.
+    /// </summary>
+    public string? ExistingFileImageUrl { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this article has an existing file associated with it.
+    /// </summary>
+    public bool HasExistingFile => ExistingFileRevision is not null;
+
+    /// <summary>
     /// Handles the GET request to load the form.
     /// </summary>
     /// <returns>The page or result.</returns>
@@ -145,18 +160,7 @@ public sealed class CreateEditModel(
             ArticleText = CurrentArticle.Text;
             SelectedType = CurrentArticle.Type;
 
-            // Check if there is a previous revision to revert to
-            // We need to find any revision for the same CanonicalArticleId that is NOT the current one (IsCurrent = false)
-            // and is not deleted.
-            var PreviousRevisionSpec = new ArticleRevisionsByCanonicalIdSpec(CurrentArticle.CanonicalArticleId, null);
-            // We just need to know if ANY exist, so AnyAsync is sufficient.
-            // Note: ArticleRevisionsByCanonicalIdSpec might return all revisions, we need to filter.
-            // But Spec implementation isn't visible here, assuming it filters by CanonicalId only.
-            // Let's manually construct the query to be safe and efficient.
-            CanRevert = await Context.ArticleRevisions
-                .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId &&
-                            !x.IsCurrent)
-                .AnyAsync();
+            await PopulateEditStateAsync(CurrentArticle.UrlSlug, default);
         }
         // Create mode: Form starts blank
         if (!IsEditMode && !string.IsNullOrWhiteSpace(UrlSlug) && UrlSlug.StartsWith('@'))
@@ -422,42 +426,209 @@ public sealed class CreateEditModel(
     /// <returns>A redirect to the updated article or a page with errors.</returns>
     private async Task<IActionResult> HandleEditAsync(Guid CurrentUserId, CancellationToken CancellationToken)
     {
-        try
+        if (UploadedFile is null || UploadedFile.Length == 0)
         {
-            ArticleRevisionUpdateCommand Command = new(
-                OriginalUrlSlug: OriginalUrlSlug,
-                NewUrlSlug: UrlSlug!,
-                SiteId: SiteId,
-                Culture: Culture,
-                Title: Title,
-                DisplayTitle: DisplayTitle,
-                Type: SelectedType,
-                CanonicalFileId: null,
-                Text: ArticleText,
-                RevisionReason: "User edit",
-                CreatedByUserId: CurrentUserId);
+            try
+            {
+                ArticleRevisionUpdateCommand Command = new(
+                    OriginalUrlSlug: OriginalUrlSlug,
+                    NewUrlSlug: UrlSlug!,
+                    SiteId: SiteId,
+                    Culture: Culture,
+                    Title: Title,
+                    DisplayTitle: DisplayTitle,
+                    Type: SelectedType,
+                    CanonicalFileId: null,
+                    Text: ArticleText,
+                    RevisionReason: "User edit",
+                    CreatedByUserId: CurrentUserId);
 
-            await ArticleRevisionService.UpdateArticleAsync(Command, CancellationToken);
-            return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+                await ArticleRevisionService.UpdateArticleAsync(Command, CancellationToken);
+                return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+            }
+            catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
+            {
+                return NotFound("Article not found.");
+            }
+            catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Conflict)
+            {
+                ErrorMessage = Ex.Message;
+                await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+                return Page();
+            }
+            catch (Exception Ex)
+            {
+                ErrorMessage = $"Error updating article: {Ex.Message}";
+                await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+                return Page();
+            }
         }
-        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
+
+        if (!IsValidImageFile(UploadedFile, out string ValidationError))
+        {
+            ErrorMessage = ValidationError;
+            await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+            return Page();
+        }
+
+        ArticleRevisionsBySlugSpec Spec = new(OriginalUrlSlug, IsCurrent: true);
+        ArticleRevision? CurrentArticle = await Context.ArticleRevisions
+            .AsNoTracking()
+            .WithSpecification(Spec)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        if (CurrentArticle is null)
         {
             return NotFound("Article not found.");
         }
-        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Conflict)
+
+        Guid TargetCanonicalFileId = CurrentArticle.CanonicalFileId ?? Guid.NewGuid();
+        StagedFileUpload? StagedUpload = null;
+        FileRevision? CreatedFileRevision = null;
+
+        try
         {
+            StagedUpload = await FileUploadStorageService.StageUploadedFileAsync(UploadedFile, SiteId, TargetCanonicalFileId, CancellationToken);
+            SelectedType = ArticleType.File;
+        }
+        catch (Exception Ex)
+        {
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            ErrorMessage = $"Error uploading file: {Ex.Message}";
+            await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+            return Page();
+        }
+
+        try
+        {
+            IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
+
+            await Strategy.ExecuteAsync(async CT =>
+            {
+                await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
+
+                ArticleRevisionsBySlugSpec InsideSpec = new(OriginalUrlSlug, IsCurrent: true);
+                ArticleRevision? ArticleToUpdate = await Context.ArticleRevisions
+                    .WithSpecification(InsideSpec)
+                    .FirstOrDefaultAsync(CT);
+
+                if (ArticleToUpdate is null)
+                {
+                    FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+                    throw new InvalidOperationException("Article not found.");
+                }
+
+                if (!OriginalUrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase))
+                {
+                    ArticleRevisionsBySlugSpec ConflictSpec = new(UrlSlug!, IsCurrent: true);
+                    ArticleRevision? ConflictArticle = await Context.ArticleRevisions
+                        .AsNoTracking()
+                        .WithSpecification(ConflictSpec)
+                        .FirstOrDefaultAsync(CT);
+
+                    if (ConflictArticle is not null)
+                    {
+                        FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+                        throw new InvalidOperationException("An article with this URL slug already exists.");
+                    }
+                }
+
+                FileRevision? CurrentFile = await Context.FileRevisions
+                    .Where(f => f.CanonicalFileId == TargetCanonicalFileId && f.IsCurrent == true)
+                    .FirstOrDefaultAsync(CT);
+
+                string? PreservedSource = CurrentFile?.Source;
+
+                if (CurrentFile is not null)
+                {
+                    CurrentFile.IsCurrent = false;
+                    Context.FileRevisions.Update(CurrentFile);
+                }
+
+                FileRevision NewFile = new()
+                {
+                    CanonicalFileId = TargetCanonicalFileId,
+                    Type = FileType.Image2D,
+                    Filename = StagedUpload.OriginalFileName,
+                    MimeType = StagedUpload.ContentType,
+                    FileSizeBytes = StagedUpload.FileSizeBytes,
+                    ImageWidthPixels = StagedUpload.ImageWidthPixels > 0 ? StagedUpload.ImageWidthPixels : null,
+                    ImageHeightPixels = StagedUpload.ImageHeightPixels > 0 ? StagedUpload.ImageHeightPixels : null,
+                    Source = PreservedSource,
+                    RevisionReason = "Uploaded new file version",
+                    SourceAndRevisionReasonCulture = Culture,
+                    CreatedByUserId = CurrentUserId,
+                    DateCreated = DateTimeOffset.UtcNow,
+                    IsCurrent = true
+                };
+
+                Context.FileRevisions.Add(NewFile);
+                CreatedFileRevision = NewFile;
+
+                ArticleToUpdate.IsCurrent = false;
+                Context.ArticleRevisions.Update(ArticleToUpdate);
+
+                ArticleRevision NewArticleRevision = new()
+                {
+                    CanonicalArticleId = ArticleToUpdate.CanonicalArticleId,
+                    SiteId = SiteId,
+                    Culture = Culture,
+                    Title = Title,
+                    DisplayTitle = DisplayTitle,
+                    UrlSlug = UrlSlug!,
+                    Type = SelectedType,
+                    CanonicalFileId = TargetCanonicalFileId,
+                    Text = ArticleText,
+                    RevisionReason = "Updated image file and article",
+                    CreatedByUserId = CurrentUserId,
+                    DateCreated = DateTimeOffset.UtcNow,
+                    IsCurrent = true
+                };
+
+                Context.ArticleRevisions.Add(NewArticleRevision);
+
+                await Context.SaveChangesAsync(CT);
+                await Transaction.CommitAsync(CT);
+            }, CancellationToken);
+
+            if (StagedUpload is not null && CreatedFileRevision is not null)
+            {
+                try
+                {
+                    FileUploadStorageService.FinalizeStagedUpload(StagedUpload, SiteId, CreatedFileRevision.Id);
+                }
+                catch (Exception Ex)
+                {
+                    ErrorMessage = $"Image revision was created, but the uploaded file is awaiting filesystem recovery: {Ex.Message}";
+                    await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+                    return Page();
+                }
+            }
+
+            return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+        }
+        catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
+        {
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
             ErrorMessage = Ex.Message;
-            await PopulateCanRevertAsync(OriginalUrlSlug, CancellationToken);
+            await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+            return Page();
+        }
+        catch (Exception Ex)
+        {
+            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            ErrorMessage = $"Error updating article: {Ex.Message}";
+            await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
         }
     }
 
     /// <summary>
-    /// Populates whether the current article can be reverted.
+    /// Populates state needed when rendering the edit form, such as revert availability and existing file details.
     /// </summary>
     /// <param name="LookupUrlSlug">The URL slug used to find the current article.</param>
     /// <param name="CancellationToken">The cancellation token.</param>
-    private async Task PopulateCanRevertAsync(string LookupUrlSlug, CancellationToken CancellationToken)
+    private async Task PopulateEditStateAsync(string LookupUrlSlug, CancellationToken CancellationToken)
     {
         ArticleRevisionsBySlugSpec Spec = new(LookupUrlSlug, IsCurrent: true);
         ArticleRevision? CurrentArticle = await Context.ArticleRevisions
@@ -474,6 +645,19 @@ public sealed class CreateEditModel(
         CanRevert = await Context.ArticleRevisions
             .Where(x => x.CanonicalArticleId == CurrentArticle.CanonicalArticleId && !x.IsCurrent)
             .AnyAsync(CancellationToken);
+
+        if (CurrentArticle.CanonicalFileId.HasValue)
+        {
+            ExistingFileRevision = await Context.FileRevisions
+                .AsNoTracking()
+                .Where(f => f.CanonicalFileId == CurrentArticle.CanonicalFileId.Value && f.IsCurrent == true)
+                .FirstOrDefaultAsync(CancellationToken);
+
+            if (ExistingFileRevision is not null)
+            {
+                ExistingFileImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, ExistingFileRevision.CanonicalFileId, ExistingFileRevision.Id, ExistingFileRevision.Filename);
+            }
+        }
     }
 
     /// <summary>

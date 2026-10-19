@@ -7,7 +7,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <h1>@Html.Raw(System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(Model.CurrentArticle?.DisplayTitle) ? Model.CurrentArticle?.Title : Model.CurrentArticle?.DisplayTitle)?.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />"))</h1>
+            <h1>@Html.Raw(Model.DisplayTitleHtml)</h1>
             <p class="lead">
                 The following pages link here:
             </p>

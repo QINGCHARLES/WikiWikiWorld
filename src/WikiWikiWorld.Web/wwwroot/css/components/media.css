@@ -5,7 +5,7 @@
     width: calc(100% + 2 * var(--grid-gutter));
 }
 
-.hero-image, hgroup {
+hgroup {
     display: block;
     width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
     calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter))
@@ -16,11 +16,85 @@
     transform: translateX(-50%);
 }
 
+figure:has(.hero-image) {
+    --hero-max-width: calc(2 * var(--grid-max-width));
+    --feather-size: clamp(0px, (100vw - var(--hero-max-width)) * 0.5, 6rem);
+
+    inline-size: min(100vw, var(--hero-max-width));
+    max-inline-size: none;
+    position: relative;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    overflow: clip;
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black 0% 50%,
+            rgb(0 0 0 / 0.96) 58%,
+            rgb(0 0 0 / 0.82) 68%,
+            rgb(0 0 0 / 0.5) 80%,
+            rgb(0 0 0 / 0.15) 91%,
+            transparent 100%
+        ),
+        linear-gradient(
+            to right,
+            transparent 0,
+            rgb(0 0 0 / 0.15) calc(var(--feather-size) * 0.25),
+            rgb(0 0 0 / 0.5) calc(var(--feather-size) * 0.5),
+            rgb(0 0 0 / 0.85) calc(var(--feather-size) * 0.75),
+            rgb(0 0 0 / 0.97) calc(var(--feather-size) * 0.9),
+            black var(--feather-size),
+            black calc(100% - var(--feather-size)),
+            rgb(0 0 0 / 0.97) calc(100% - var(--feather-size) * 0.9),
+            rgb(0 0 0 / 0.85) calc(100% - var(--feather-size) * 0.75),
+            rgb(0 0 0 / 0.5) calc(100% - var(--feather-size) * 0.5),
+            rgb(0 0 0 / 0.15) calc(100% - var(--feather-size) * 0.25),
+            transparent 100%
+        );
+    mask-composite: intersect;
+}
+
 .hero-image {
-    border-radius: 1rem;
-    max-height: 60vh;
+    display: block;
+    inline-size: 100%;
+    max-inline-size: none;
+    block-size: clamp(26rem, 52vw, 60vh);
     object-fit: cover;
     object-position: top;
+}
+
+figure:has(.hero-image) + hgroup {
+    position: relative;
+    z-index: 1;
+    margin-block-start: calc(-1 * clamp(3.5rem, 10vw, min(14vh, 7.5rem)));
+}
+
+figure:has(.hero-image) + hgroup > .eyebrow {
+    margin-block-start: 0;
+}
+
+@supports ((animation-timeline: view()) and (animation-range: entry) and (animation-range: exit-crossing)) {
+    @media (prefers-reduced-motion: no-preference) {
+        figure:has(.hero-image) {
+            view-timeline-name: --hero-scroll;
+            view-timeline-axis: block;
+        }
+
+        .hero-image {
+            animation: hero-image-parallax linear both;
+            animation-timeline: --hero-scroll;
+            animation-range: exit-crossing 0% exit-crossing 100%;
+        }
+    }
+}
+
+@keyframes hero-image-parallax {
+    from {
+        transform: translateY(0) scale(1.025);
+    }
+    to {
+        transform: translateY(65%) scale(1.025);
+    }
 }
 
 .subtitle {
@@ -33,18 +107,19 @@
     width: fit-content;
     margin-block: var(--space-m) 0;
     margin-inline: auto;
-    padding-block: 0.3rem;
-    padding-inline: 0.85rem;
+    padding: 0.28rem 0.72rem;
     font-family: var(--font-family-san-serif);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     line-height: 1.2;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-foreground);
-    background-color: var(--uchu-green-1);
-    border: 1px solid var(--uchu-green-3);
+    color: rgb(28 29 35 / 0.82);
+    background: rgb(242 243 247 / 0.72);
+    border: 1px solid rgb(0 0 0 / 0.1);
     border-radius: 9999px;
+    backdrop-filter: blur(0.7rem) saturate(120%);
+    -webkit-backdrop-filter: blur(0.7rem) saturate(120%);
 }
 
 .eyebrow + h1 {

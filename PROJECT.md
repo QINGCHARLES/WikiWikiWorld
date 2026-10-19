@@ -11,6 +11,9 @@
 - **Test URL for multi-language project home page:** https://localhost:7126/
 - **Note:** These credentials are blocked from production; use only for local/dev testing. Before entering credentials, ensure that you are using the correct server. Before entering credentials, clear the input fields on the login page to avoid any issues.
 
+## 🎨 CSS & Responsive Design
+- **Avoid `@media` Breakpoints:** Avoid CSS `@media` width breakpoints whenever possible to keep the site continuously and fluidly responsive across all viewport sizes. Prefer intrinsic sizing and fluid CSS math functions (`clamp()`, `min()`, `max()`, CSS Grid `auto-fit`/`auto-fill`, Flexbox wrapping, and logical properties) so layouts, spacing, typography, and visual effects adapt smoothly without stepped breakpoint jumps.
+
 ## 🧩 Markdig Extensions
 
 Custom Markdig extensions live in [src/WikiWikiWorld.Web/MarkDigExtensions](src/WikiWikiWorld.Web/MarkDigExtensions). They extend authoring syntax for the wiki and follow shared conventions so authors and parsers stay consistent.

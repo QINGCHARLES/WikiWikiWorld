@@ -10,7 +10,7 @@ public static class ImageValidationHelper
 	/// </summary>
 	public static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
 	{
-		".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic"
+		".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".svg"
 	};
 
 	/// <summary>
@@ -19,7 +19,7 @@ public static class ImageValidationHelper
 	public static readonly HashSet<string> AllowedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
 	{
 		"image/jpeg", "image/jpg", "image/png", "image/gif",
-		"image/webp", "image/avif", "image/heic"
+		"image/webp", "image/avif", "image/heic", "image/svg+xml"
 	};
 
 	/// <summary>
@@ -129,9 +129,10 @@ public static class ImageValidationHelper
 				   Signature[3] == 0x46;
 		}
 
-		// For AVIF and HEIC, trust extension and MIME type
+		// For AVIF, HEIC, and SVG, trust extension and MIME type
 		if (FileExtension.Equals(".avif", StringComparison.OrdinalIgnoreCase) ||
-			FileExtension.Equals(".heic", StringComparison.OrdinalIgnoreCase))
+			FileExtension.Equals(".heic", StringComparison.OrdinalIgnoreCase) ||
+			FileExtension.Equals(".svg", StringComparison.OrdinalIgnoreCase))
 		{
 			return true;
 		}

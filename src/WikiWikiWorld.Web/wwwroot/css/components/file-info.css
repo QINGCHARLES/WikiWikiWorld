@@ -89,7 +89,205 @@
 	}
 
 	.file-info-row:last-child,
-	.file-info-row:nth-last-child(2):nth-child(odd) {
-		border-block-end: none;
-	}
 }
+
+/* File Info Action Bar */
+.file-info-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	padding: 0.875rem 1.25rem;
+	background: var(--color-surface-subtle, #f5f5f5);
+	border-block-start: 1px solid var(--color-border, #e0e0e0);
+	align-items: center;
+}
+
+/* File History Section */
+.file-history {
+	margin-block: 2rem;
+	border: 2px solid var(--color-border, #e0e0e0);
+	border-radius: 1rem;
+	background: var(--color-surface, #fafafa);
+	overflow: hidden;
+}
+
+.file-history-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 1.25rem;
+	border-block-end: 2px solid var(--color-border, #e0e0e0);
+	background: var(--color-surface-subtle, #f5f5f5);
+}
+
+.file-history-title {
+	margin: 0;
+	font-size: var(--step-1, 1.25rem);
+	font-weight: 700;
+	color: var(--color-title, #111827);
+}
+
+.file-history-subtitle {
+	margin: 0.25rem 0 0 0;
+	font-size: var(--step--1, 0.875rem);
+	color: var(--color-muted, #6b7280);
+}
+
+.file-history-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.file-history-item {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.25rem;
+	padding: 1.25rem;
+	border-block-end: 1px solid var(--color-border, #e0e0e0);
+	align-items: flex-start;
+}
+
+.file-history-item:last-child {
+	border-block-end: none;
+}
+
+.file-history-item.is-current {
+	background: color-mix(in oklch, var(--color-surface, #fafafa) 90%, var(--uchu-green-6, #15803d) 10%);
+}
+
+.file-history-thumb-link {
+	flex: 0 0 clamp(90px, 22%, 140px);
+	aspect-ratio: 4 / 3;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	border: 1px solid var(--color-border, #e0e0e0);
+	background:
+		repeating-conic-gradient(
+			oklch(0.88 0 0) 0% 25%,
+			oklch(0.96 0 0) 0% 50%
+		) 0 0 / 0.875rem 0.875rem;
+	text-decoration: none;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.file-history-thumb-link:hover {
+	transform: scale(1.02);
+	box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
+}
+
+.file-history-thumb {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+	display: block;
+}
+
+.file-history-details {
+	flex: 1 1 280px;
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+	min-width: 0;
+}
+
+.file-history-item-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.625rem;
+	font-size: var(--step--1, 0.875rem);
+}
+
+.file-history-badge {
+	display: inline-block;
+	font-size: var(--step--2, 0.75rem);
+	font-weight: 700;
+	padding: 0.15rem 0.5rem;
+	border-radius: 9999px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.badge-current {
+	background: #dcfce7;
+	color: #15803d;
+	border: 1px solid #86efac;
+}
+
+.badge-previous {
+	background: #f3f4f6;
+	color: #4b5563;
+	border: 1px solid #d1d5db;
+}
+
+.file-history-timestamp {
+	font-weight: 600;
+	color: var(--color-foreground, #111827);
+}
+
+.file-history-author {
+	color: var(--color-muted, #6b7280);
+}
+
+.file-history-author a {
+	color: var(--color-primary, #2563eb);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.file-history-author a:hover {
+	text-decoration: underline;
+}
+
+.file-history-meta-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(clamp(7.5rem, 25%, 11rem), 1fr));
+	gap: 0.5rem 1rem;
+	padding: 0.625rem 0.875rem;
+	background: var(--color-surface, #ffffff);
+	border: 1px solid var(--color-border, #e5e7eb);
+	border-radius: 0.5rem;
+}
+
+.file-history-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.file-history-stat-label {
+	font-size: var(--step--2, 0.75rem);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--color-muted, #6b7280);
+	font-weight: 600;
+}
+
+.file-history-stat-value {
+	font-size: var(--step--1, 0.875rem);
+	color: var(--color-foreground, #1f2937);
+	font-weight: 500;
+	word-break: break-all;
+}
+
+.file-history-comment {
+	font-size: var(--step--1, 0.875rem);
+	color: var(--color-foreground, #374151);
+	background: var(--color-surface, #ffffff);
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--color-border, #d1d5db);
+	border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.file-history-comment-label {
+	font-weight: 600;
+	margin-right: 0.35rem;
+	color: var(--color-muted, #6b7280);
+}
+

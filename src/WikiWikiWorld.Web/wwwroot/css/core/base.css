@@ -4,11 +4,14 @@ html, body {
     height: 100%;
     margin: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 1fr auto;
+    overflow-x: clip;
 }
 
 main {
     box-sizing: border-box;
+    inline-size: 100%;
     max-inline-size: var(--grid-max-width);
     margin-inline: auto;
     padding-inline: var(--grid-gutter);

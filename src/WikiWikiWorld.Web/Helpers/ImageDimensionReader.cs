@@ -1,8 +1,10 @@
+using System.Xml;
+
 namespace WikiWikiWorld.Web.Helpers;
 
 /// <summary>
 /// Reads image dimensions from file headers without loading the full image into memory.
-/// Supports JPEG, PNG, GIF, WebP, and AVIF formats.
+/// Supports JPEG, PNG, GIF, WebP, AVIF, and SVG formats.
 /// </summary>
 public static class ImageDimensionReader
 {
@@ -23,6 +25,12 @@ public static class ImageDimensionReader
 		try
 		{
 			using FileStream Stream = new(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+			if (FilePath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+			{
+				return ReadSvgDimensions(Stream);
+			}
+
 			using BinaryReader Reader = new(Stream);
 
 			if (Stream.Length < 8)
@@ -290,6 +298,95 @@ public static class ImageDimensionReader
 	{
 		byte[] Bytes = Reader.ReadBytes(4);
 		return (Bytes[0] << 24) | (Bytes[1] << 16) | (Bytes[2] << 8) | Bytes[3];
+	}
+
+	/// <summary>
+	/// Reads dimensions from an SVG file by inspecting the root <c>&lt;svg&gt;</c> element's
+	/// <c>width</c>/<c>height</c> attributes or <c>viewBox</c>.
+	/// </summary>
+	/// <param name="Stream">The underlying file stream.</param>
+	/// <returns>The width and height in pixels, or (0, 0) if not specified.</returns>
+	private static (int WidthPx, int HeightPx) ReadSvgDimensions(FileStream Stream)
+	{
+		Stream.Position = 0;
+		XmlReaderSettings Settings = new()
+		{
+			DtdProcessing = DtdProcessing.Ignore,
+			XmlResolver = null
+		};
+
+		using XmlReader Xml = XmlReader.Create(Stream, Settings);
+		while (Xml.Read())
+		{
+			if (Xml.NodeType == XmlNodeType.Element)
+			{
+				break;
+			}
+		}
+
+		if (Xml.NodeType != XmlNodeType.Element || !string.Equals(Xml.LocalName, "svg", StringComparison.OrdinalIgnoreCase))
+		{
+			return (0, 0);
+		}
+
+		string? WidthAttr = Xml.GetAttribute("width");
+		string? HeightAttr = Xml.GetAttribute("height");
+
+		if (TryParseSvgLength(WidthAttr, out int WidthPx) && TryParseSvgLength(HeightAttr, out int HeightPx))
+		{
+			return (WidthPx, HeightPx);
+		}
+
+		string? ViewBoxAttr = Xml.GetAttribute("viewBox");
+		if (!string.IsNullOrWhiteSpace(ViewBoxAttr))
+		{
+			string[] Parts = ViewBoxAttr.Split([' ', ',', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+			if (Parts.Length == 4 &&
+				double.TryParse(Parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double ViewBoxWidth) &&
+				double.TryParse(Parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out double ViewBoxHeight) &&
+				ViewBoxWidth > 0 &&
+				ViewBoxHeight > 0)
+			{
+				return ((int)Math.Round(ViewBoxWidth), (int)Math.Round(ViewBoxHeight));
+			}
+		}
+
+		return (0, 0);
+	}
+
+	/// <summary>
+	/// Attempts to parse an SVG length attribute (such as <c>872</c>, <c>872px</c>, or <c>872.000000pt</c>) into integer pixels.
+	/// </summary>
+	/// <param name="RawValue">The raw attribute string.</param>
+	/// <param name="Pixels">The parsed integer dimension.</param>
+	/// <returns><see langword="true"/> if a positive dimension was parsed; otherwise, <see langword="false"/>.</returns>
+	private static bool TryParseSvgLength(string? RawValue, out int Pixels)
+	{
+		Pixels = 0;
+		if (string.IsNullOrWhiteSpace(RawValue))
+		{
+			return false;
+		}
+
+		ReadOnlySpan<char> Span = RawValue.AsSpan().Trim();
+		if (Span.EndsWith("%", StringComparison.Ordinal))
+		{
+			return false;
+		}
+
+		if (Span.EndsWith("px", StringComparison.OrdinalIgnoreCase) ||
+			Span.EndsWith("pt", StringComparison.OrdinalIgnoreCase))
+		{
+			Span = Span[..^2].Trim();
+		}
+
+		if (double.TryParse(Span, NumberStyles.Float, CultureInfo.InvariantCulture, out double Value) && Value > 0)
+		{
+			Pixels = (int)Math.Round(Value);
+			return Pixels > 0;
+		}
+
+		return false;
 	}
 
 	/// <summary>

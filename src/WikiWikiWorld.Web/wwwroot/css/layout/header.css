@@ -2,8 +2,13 @@
 
 header {
     position: relative;
-    z-index: 1;
-    height: 9rem;
+    z-index: 10;
+}
+
+body:has(.hero-image) > header {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
 }
 
 header li {
@@ -21,12 +26,6 @@ header li {
 }
 
 .header {
-    overflow: hidden;
-    padding: var(--grid-gutter);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-lg, 1.5rem);
     color: var(--color-foreground);
 }
 
@@ -40,11 +39,22 @@ header li {
 .header a.logo {
     font-size: 25px;
     color: var(--color-foreground);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 var(--space-lg, 1.5rem);
+    display: grid;
+    place-items: center;
+    min-inline-size: 3rem;
+    min-block-size: 3rem;
+    margin: 0;
     flex: 0 0 auto;
+    filter: drop-shadow(0 0.35rem 0.75rem rgb(0 0 0 / 0.28));
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.header a.logo:hover {
+    filter: drop-shadow(0 0.45rem 0.95rem rgb(0 0 0 / 0.4)) brightness(1.05);
+}
+
+.header a.logo:active {
+    transform: scale(0.94);
 }
 
 .header a:hover {
@@ -58,7 +68,6 @@ header li {
 .header-a, .header-b {
     display: flex;
     align-items: center;
-    flex: 1 1 0;
 }
 
 .header-a {
@@ -68,7 +77,7 @@ header li {
 
 .header-b {
     justify-content: flex-end;
-    gap: var(--space-sm, .75rem);
+    gap: var(--space-sm, 0.75rem);
 }
 
 .header-a svg, .header-b svg {
@@ -76,11 +85,18 @@ header li {
 }
 
 nav.header {
-    display: flex;
+    --hero-max-width: calc(2 * var(--grid-max-width));
+    --feather-size: clamp(0px, (100vw - var(--hero-max-width)) * 0.5, 6rem);
+
+    box-sizing: border-box;
+    inline-size: min(100%, var(--hero-max-width));
+    margin-inline: auto;
+    padding-block: max(0.85rem, env(safe-area-inset-top)) 0.85rem;
+    padding-inline: calc(var(--grid-gutter) + var(--feather-size));
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-m);
-    padding: var(--space-xs) var(--grid-gutter);
+    gap: clamp(0.5rem, 2vw, 0.85rem);
     background-color: transparent;
 }
 
@@ -89,53 +105,84 @@ nav.header .logo {
 }
 
 nav.header .logo-svg {
-    height: 2rem;
+    height: 2.25rem;
     width: auto;
 }
 
+nav.header .header-avatar {
+    width: 3rem;
+    height: 3rem;
+    box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 0.22);
+}
+
 .search-form {
-    flex: 1;
-    max-width: 40rem;
-    margin-inline: auto;
-    display: flex;
+    inline-size: min(100%, 24rem);
+    justify-self: center;
+    min-block-size: 3rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: var(--space-3xs);
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.75);
+    border: 1px solid rgb(0 0 0 / 0.12);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 0.4rem 1.25rem rgb(0 0 0 / 0.14);
+    backdrop-filter: blur(1.2rem) saturate(135%);
+    -webkit-backdrop-filter: blur(1.2rem) saturate(135%);
+    transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.search-form .md3-field {
-    flex: 1;
-    margin-bottom: 0;
-    min-block-size: 2.5rem;
-    --field-size: 2.5rem;
+.search-form:focus-within {
+    background: rgb(255 255 255 / 0.92);
+    border-color: var(--color-primary);
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
-.search-form .md3-field > input {
-    min-block-size: 2.5rem;
-    font-size: var(--step--1);
-}
-
-.search-form .md3-field > label {
-    font-size: var(--step--1);
-}
-
-.search-form .md3-field:is(:focus-within, :has(input:not(:placeholder-shown))) > label {
-    font-size: var(--step--2);
-}
-
-.search-form button {
-    padding: var(--space-3xs) var(--space-s);
-    background-color: var(--color-primary);
-    color: var(--color-foreground-inverse);
-    border: none;
-    border-radius: 4px;
+.search-form .search-submit {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: rgb(28 29 35 / 0.7);
     cursor: pointer;
-    font-family: var(--font-family-san-serif);
-    font-weight: 500;
-    font-size: var(--step--1);
-    transition: background-color 0.15s ease;
-    align-self: stretch;
+
+    &:hover,
+    &:focus {
+        background: transparent;
+        border-color: transparent;
+        color: var(--color-foreground);
+        outline: none;
+    }
+
+    & svg {
+        inline-size: 1.2rem;
+        block-size: 1.2rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-width: 2;
+    }
 }
 
-.search-form button:hover {
-    opacity: 0.9;
+.search-form input[type="search"] {
+    box-sizing: border-box;
+    min-inline-size: 0;
+    inline-size: 100%;
+    min-block-size: 2.85rem;
+    padding: 0 1rem 0 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    font-family: var(--font-family-san-serif);
+    font-size: 0.95rem;
+}
+
+.search-form input[type="search"]::placeholder {
+    color: rgb(28 29 35 / 0.58);
 }
