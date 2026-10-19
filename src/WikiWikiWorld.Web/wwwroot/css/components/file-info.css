@@ -1,6 +1,6 @@
 /* File Info - Image preview and metadata panel for file articles */
 
-.file-info {
+section.file-info {
 	margin-block-end: 2rem;
 	border: 2px solid var(--color-border, #e0e0e0);
 	border-radius: 1rem;

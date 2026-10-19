@@ -48,12 +48,13 @@ header .header-avatar {
 }
 
 .editor-info {
-    margin-top: 2rem;
+    margin-block-start: calc(var(--step-6) * 0.14 - 0.2rem);
+    margin-block-end: calc(var(--step-6) * 0.28 - 0.45rem);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    padding: 8px 0;
+    padding: 0;
     font-family: sans-serif;
     text-transform: uppercase;
     color: var(--uchu-gray-8);

@@ -27,6 +27,11 @@ public class DownloadsBoxBlock(BlockParser Parser) : ContainerBlock(Parser)
     /// Gets or sets the cached download URL information.
     /// </summary>
     public DownloadUrl? CachedDownload { get; set; }
+
+    /// <summary>
+    /// Gets or sets the username of the user who uploaded this download.
+    /// </summary>
+    public String? UploadedByUserName { get; set; }
 }
 
 // Block parser for DownloadsBoxBlock
@@ -110,7 +115,7 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
 
         if (Block.CachedDownload is not null)
         {
-            RenderDownload(Renderer, Block.CachedDownload);
+            RenderDownload(Renderer, Block.CachedDownload, Block.UploadedByUserName);
         }
         else
         {
@@ -121,23 +126,31 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
     }
 
     /// <summary>
-    /// Renders a single download entry with file info and download button.
+    /// Renders a single download entry with file icon, filename, metadata, provider, and download button.
     /// </summary>
     /// <param name="Renderer">The HTML renderer.</param>
     /// <param name="Download">The download URL information.</param>
-    private void RenderDownload(HtmlRenderer Renderer, DownloadUrl Download)
+    /// <param name="UploadedByUserName">The username of the uploader, if available.</param>
+    private static void RenderDownload(HtmlRenderer Renderer, DownloadUrl Download, String? UploadedByUserName)
     {
-        String QualityText = Download.Quality.HasValue ? $"Quality: {Download.Quality}" : "";
         String FileSizeText = FormatFileSize(Download.FileSizeBytes);
+        String FileFormatText = Path.GetExtension(Download.Filename).TrimStart('.').ToUpperInvariant();
+        if (String.IsNullOrWhiteSpace(FileFormatText))
+        {
+            FileFormatText = "FILE";
+        }
 
-        // Render file info
+        // Render file info with PDF icon to the left of the filename and metadata/provider below
         Renderer.Write("<div class=\"file-info\">");
         Renderer.Write("<div class=\"file-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1.5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M14 3v4a1 1 0 0 0 1 1h4\" /><path d=\"M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4\" /><path d=\"M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6\" /><path d=\"M17 18h2\" /><path d=\"M20 15h-3v6\" /><path d=\"M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z\" /></svg></div>");
         Renderer.Write("<div class=\"text-content\">");
         Renderer.Write($"<p class=\"filename\">{HtmlEscape(Download.Filename)}</p>");
-        Renderer.Write($"<p class=\"filesize\">{FileSizeText}</p>");
-        // Note: Provider text logic removed for simplicity as it requires another DB lookup or join. 
-        // If needed, it should be fetched in EnrichAsync.
+        Renderer.Write($"<p class=\"filesize\">{HtmlEscape(FileFormatText)} &middot; {FileSizeText}</p>");
+        if (!String.IsNullOrWhiteSpace(UploadedByUserName))
+        {
+            String EscapedUserName = HtmlEscape(UploadedByUserName);
+            Renderer.Write($"<p class=\"provider\">Provided by <a href=\"/@{EscapedUserName}\">@{EscapedUserName}</a></p>");
+        }
         Renderer.Write("</div>");
         Renderer.Write("</div>");
 
@@ -230,18 +243,36 @@ public class DownloadsBoxExtension : IMarkdownExtension
         // 2. Gather IDs
         List<string> Hashes = DownloadBlocks.Select(b => b.Hash).Distinct().ToList();
 
-        // 3. Batch Query
+        // 3. Batch Query downloads
         Dictionary<string, DownloadUrl> Downloads = await Context.DownloadUrls
             .AsNoTracking()
             .Where(d => d.SiteId == SiteId && Hashes.Contains(d.HashSha256))
             .ToDictionaryAsync(d => d.HashSha256, CancellationToken);
 
-        // 4. Update Blocks
+        // 4. Batch Query uploader usernames
+        List<Guid> UploaderIds = Downloads.Values
+            .Select(d => d.UploadedByUserId)
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        Dictionary<Guid, string?> UserNamesById = UploaderIds.Count > 0
+            ? await Context.Users
+                .AsNoTracking()
+                .Where(u => UploaderIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.UserName, CancellationToken)
+            : [];
+
+        // 5. Update Blocks
         foreach (DownloadsBoxBlock Block in DownloadBlocks)
         {
             if (Downloads.TryGetValue(Block.Hash, out DownloadUrl? Data))
             {
                 Block.CachedDownload = Data;
+                if (UserNamesById.TryGetValue(Data.UploadedByUserId, out string? UserName))
+                {
+                    Block.UploadedByUserName = UserName;
+                }
             }
         }
     }
