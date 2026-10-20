@@ -1,43 +1,48 @@
 @page
 @model WikiWikiWorld.Web.Pages.Account.LoginModel
 @{
-	ViewData["Title"] = "Login";
+	ViewData["Title"] = "Log In";
 }
 
-<figure>
-	<h1>Login</h1>
-</figure>
+<section class="auth" aria-labelledby="AuthTitle">
+	<header class="auth-header">
+		<p class="auth-eyebrow">Welcome back</p>
+		<h1 id="AuthTitle">Log In</h1>
+		<p class="auth-lede">Sign in to edit articles, upload covers and join the discussion.</p>
+	</header>
 
-<article>
-	<div>
-		<form method="post">
-			<input type="hidden" asp-for="ReturnUrl" />
+	<form class="auth-card" method="post">
+		<input type="hidden" asp-for="ReturnUrl" />
+
+		<div asp-validation-summary="ModelOnly" class="auth-alert" role="alert"></div>
+
+		<div class="auth-field">
 			<div class="md3-field md3-filled">
-				<input asp-for="Input.UserName" placeholder=" " />
+				<input asp-for="Input.UserName" placeholder=" " autocomplete="username" autocapitalize="none" spellcheck="false" />
 				<label asp-for="Input.UserName"></label>
 				<span class="md-line"></span>
 			</div>
-			<span asp-validation-for="Input.UserName" class="text-danger"></span>
+			<span asp-validation-for="Input.UserName"></span>
+		</div>
 
+		<div class="auth-field">
 			<div class="md3-field md3-filled">
-				<input asp-for="Input.Password" placeholder=" " />
+				<input asp-for="Input.Password" placeholder=" " autocomplete="current-password" />
 				<label asp-for="Input.Password"></label>
 				<span class="md-line"></span>
 			</div>
-			<span asp-validation-for="Input.Password" class="text-danger"></span>
-
-			<div class="form-group">
-				<div class="form-check">
-					<input asp-for="Input.RememberMe" class="form-check-input" />
-					<label asp-for="Input.RememberMe" class="form-check-label"></label>
-				</div>
-			</div>
-			<br />
-			<button type="submit" class="button button-primary">Login</button>
-		</form>
-
-		<div>
-			<a asp-page="/Account/Register">Register</a>
+			<span asp-validation-for="Input.Password"></span>
 		</div>
-	</div>
-</article>
+
+		<label class="auth-check">
+			<input asp-for="Input.RememberMe" />
+			<span>@Html.DisplayNameFor(m => m.Input.RememberMe)</span>
+		</label>
+
+		<button type="submit" class="button auth-submit">Log In</button>
+	</form>
+
+	<p class="auth-switch">
+		New here? <a asp-page="/Account/Register">Create an account</a>
+	</p>
+</section>

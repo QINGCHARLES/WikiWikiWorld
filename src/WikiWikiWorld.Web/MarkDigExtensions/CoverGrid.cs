@@ -269,9 +269,7 @@ public class CoverGridExtension : IMarkdownExtension
 
         foreach (ArticleRevision Article in Articles)
         {
-            if (!Article.Text.Contains("{{PublicationIssueInfobox", StringComparison.OrdinalIgnoreCase)) continue;
-
-            string? CoverImageSlug = ExtractCoverImageFromInfobox(Article.Text);
+            string? CoverImageSlug = ArticleCoverReference.Extract(Article.Text);
             if (!string.IsNullOrEmpty(CoverImageSlug))
             {
                 CoverImageSlugs.Add(CoverImageSlug);
@@ -331,92 +329,4 @@ public class CoverGridExtension : IMarkdownExtension
         }
     }
 
-    /// <summary>
-    /// Extracts the cover image slug from a PublicationIssueInfobox in the article text.
-    /// </summary>
-    /// <param name="Text">The article text containing the infobox.</param>
-    /// <returns>The cover image slug, or null if not found.</returns>
-    private static string? ExtractCoverImageFromInfobox(string Text)
-    {
-        // Find the start of the infobox
-        int Start = Text.IndexOf("{{PublicationIssueInfobox", StringComparison.OrdinalIgnoreCase);
-        if (Start == -1)
-        {
-            return null;
-        }
-
-        // Find the end of the infobox
-        int End = Text.IndexOf("}}", Start, StringComparison.Ordinal);
-        if (End == -1)
-        {
-            return null;
-        }
-
-        // Extract the infobox content
-        string InfoboxContent = Text[Start..(End + 2)];
-
-        // Special handling for CoverImage which might be the first property
-        int CoverImagePos = InfoboxContent.IndexOf("CoverImage=", StringComparison.OrdinalIgnoreCase);
-        if (CoverImagePos != -1)
-        {
-            // Extract from after "CoverImage=" to the next separator or end
-            int ValueStart = CoverImagePos + "CoverImage=".Length;
-            int ValueEnd = InfoboxContent.IndexOf("|#|", ValueStart, StringComparison.Ordinal);
-
-            if (ValueEnd == -1)
-            {
-                // If no separator found, extract until the end marker
-                ValueEnd = InfoboxContent.IndexOf("}}", ValueStart, StringComparison.Ordinal);
-            }
-
-            if (ValueEnd != -1)
-            {
-                string Value = InfoboxContent[ValueStart..ValueEnd].Trim();
-
-                // Handle "file:" prefix
-                if (Value.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-                {
-                    Value = Value["file:".Length..];
-                }
-
-                return Value;
-            }
-        }
-
-        // If we get here, try the token-based approach as fallback
-        const string AttributeSeparator = "|#|";
-        string[] Tokens = InfoboxContent.Split(AttributeSeparator, StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (string Token in Tokens)
-        {
-            string Trimmed = Token.Trim();
-            if (string.IsNullOrEmpty(Trimmed))
-            {
-                continue;
-            }
-
-            int EqPos = Trimmed.IndexOf('=');
-            if (EqPos <= 0)
-            {
-                continue;
-            }
-
-            string Key = Trimmed[..EqPos].Trim();
-            // Check if the key ends with "CoverImage" for first token case
-            if (Key.EndsWith("CoverImage", StringComparison.OrdinalIgnoreCase))
-            {
-                string Value = Trimmed[(EqPos + 1)..].Trim();
-
-                // Handle "file:" prefix
-                if (Value.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-                {
-                    Value = Value["file:".Length..];
-                }
-
-                return Value;
-            }
-        }
-
-        return null;
-    }
 }

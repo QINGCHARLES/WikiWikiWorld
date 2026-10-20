@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.Pages.Account;
 
@@ -63,10 +64,8 @@ public sealed class LoginModel(
 			return Page();
 		}
 
-		// Restrict llmtest account to Development environment only
-		if (!Environment.IsDevelopment() &&
-			(string.Equals(TargetUser.UserName, "llmtest", StringComparison.OrdinalIgnoreCase) ||
-			 string.Equals(TargetUser.Email, "llmtest@ave.nu", StringComparison.OrdinalIgnoreCase)))
+		// Restrict DevvyTheBot and its legacy aliases to Development.
+		if (DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, TargetUser.UserName, TargetUser.Email))
 		{
 			ModelState.AddModelError(string.Empty, "Invalid username or password.");
 			return Page();
@@ -105,6 +104,7 @@ public sealed class LoginModel(
 		/// Gets or sets the username.
 		/// </summary>
 		[Required]
+		[Display(Name = "Username")]
 		public required string UserName { get; set; }
 
 		/// <summary>
@@ -117,7 +117,7 @@ public sealed class LoginModel(
 		/// <summary>
 		/// Gets or sets a value indicating whether to remember the user's login session.
 		/// </summary>
-		[Display(Name = "Remember Me")]
+		[Display(Name = "Remember me")]
 		public bool RememberMe { get; set; }
 	}
 }

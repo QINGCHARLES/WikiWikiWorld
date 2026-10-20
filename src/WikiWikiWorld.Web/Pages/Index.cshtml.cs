@@ -1,6 +1,7 @@
 namespace WikiWikiWorld.Web.Pages;
 
 using WikiWikiWorld.Data;
+using WikiWikiWorld.Web.MarkdigExtensions;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
@@ -27,7 +28,7 @@ public sealed class IndexModel(
     /// <param name="CancellationToken">A cancellation token.</param>
     public async Task OnGetAsync(CancellationToken CancellationToken)
     {
-        // Fetch the latest articles with publication issue infoboxes (ordered by DateCreated DESC)
+        // Include standalone carousels after cover-only infoboxes have been migrated.
         LatestArticlesWithPublicationIssueInfoboxSpec LatestSpec = new(50);
         IReadOnlyList<ArticleRevision> Articles = await Context.ArticleRevisions
             .WithSpecification(LatestSpec)
@@ -36,8 +37,9 @@ public sealed class IndexModel(
 
         // 1. Extract all cover slugs from articles
         List<string> CoverSlugs = Articles
-            .Select(a => ExtractCoverImageFromInfobox(a.Text))
+            .Select(a => ArticleCoverReference.Extract(a.Text))
             .OfType<string>()
+            .Select(SlugHelper.GenerateSlug)
             .Distinct()
             .ToList();
 
@@ -70,11 +72,12 @@ public sealed class IndexModel(
 
         foreach (ArticleRevision Article in Articles)
         {
-            string? CoverImageSlug = ExtractCoverImageFromInfobox(Article.Text);
+            string? CoverImageSlug = ArticleCoverReference.Extract(Article.Text);
             if (string.IsNullOrEmpty(CoverImageSlug))
             {
                 continue;
             }
+            CoverImageSlug = SlugHelper.GenerateSlug(CoverImageSlug);
 
             if (!CoverArticleLookup.TryGetValue(CoverImageSlug, out ArticleRevision? CoverArticle) || CoverArticle.CanonicalFileId is null)
             {
@@ -96,63 +99,6 @@ public sealed class IndexModel(
         }
     }
 
-    /// <summary>
-    /// Extracts the cover image slug from a PublicationIssueInfobox in the article text.
-    /// </summary>
-    /// <param name="Text">The article text containing the infobox.</param>
-    /// <returns>The URL slug for the cover image, or null if not found.</returns>
-    private static string? ExtractCoverImageFromInfobox(string Text)
-    {
-        // Find the start of the infobox
-        int Start = Text.IndexOf("{{PublicationIssueInfobox", StringComparison.OrdinalIgnoreCase);
-        if (Start == -1)
-        {
-            return null;
-        }
-
-        // Find the end of the infobox
-        int End = Text.IndexOf("}}", Start, StringComparison.Ordinal);
-        if (End == -1)
-        {
-            return null;
-        }
-
-        // Extract the infobox content and remove markers
-        string InfoboxContent = Text[Start..(End + 2)]
-            .Replace("{{PublicationIssueInfobox", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("}}", "", StringComparison.Ordinal);
-
-        const string AttributeSeparator = "|#|";
-        string[] Tokens = InfoboxContent.Split(AttributeSeparator, StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (string Token in Tokens)
-        {
-            string Trimmed = Token.Trim();
-            if (string.IsNullOrEmpty(Trimmed))
-            {
-                continue;
-            }
-
-            int EqPos = Trimmed.IndexOf('=');
-            if (EqPos <= 0)
-            {
-                continue;
-            }
-
-            string Key = Trimmed[..EqPos].Trim();
-            if (Key.Equals("CoverImage", StringComparison.OrdinalIgnoreCase))
-            {
-                string Value = Trimmed[(EqPos + 1)..].Trim();
-                if (Value.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-                {
-                    Value = Value["file:".Length..];
-                }
-                return SlugHelper.GenerateSlug(Value);
-            }
-        }
-
-        return null;
-    }
 }
 
 /// <summary>

@@ -53,6 +53,23 @@
     opacity: 1;
 }
 
+/* Mouse and trackpad devices: keep the arrows out of the way until the carousel is hovered or a
+   keyboard user tabs into it. Touch-first devices report hover: none / pointer: coarse and keep
+   the arrows visible; they can also swipe. Opacity (not display) keeps the buttons focusable. */
+@media (hover: hover) and (pointer: fine) {
+    .carousel .slide .nav {
+        opacity: 0;
+    }
+
+    .carousel:is(:hover, :has(:focus-visible)) .slide .nav {
+        opacity: 0.7;
+    }
+
+    .carousel .slide .nav:is(:hover, :focus-visible) {
+        opacity: 1;
+    }
+}
+
 .carousel .slide .nav svg {
     stroke: currentColor;
 }

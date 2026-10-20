@@ -40,13 +40,9 @@ h1 {
     font-weight: 800;
     letter-spacing: -0.2rem;
     text-transform: uppercase;
-    text-shadow:
-        0.06rem 0.06rem 0.04rem #919191,
-        0.12rem 0.12rem 0.04rem #919191,
-        0.18rem 0.18rem 0.04rem #919191,
-        0.24rem 0.24rem 0.04rem #919191,
-        0.32rem 0.32rem 0.45rem rgb(60 60 60 / 0.32),
-        0.55rem 0.55rem 1.1rem rgb(60 60 60 / 0.22);
+    /* A filter shadows everything the heading paints, so title text and SVG title logos get
+       identical depth (text-shadow never reaches the logo). See --extrusion in variables.css. */
+    filter: var(--extrusion);
     text-align: center;
     color: var(--color-foreground);
     line-height: 1.0;
@@ -56,11 +52,6 @@ h1 .title-logo {
     display: flex;
     justify-content: center;
     margin-block: 0.08em 0.06em;
-    filter:
-        drop-shadow(0.08rem 0.08rem 0.02rem #919191)
-        drop-shadow(0.08rem 0.08rem 0.02rem #919191)
-        drop-shadow(0.08rem 0.08rem 0.02rem #919191)
-        drop-shadow(0.18rem 0.18rem 0.45rem rgb(60 60 60 / 0.28));
 }
 
 h1 .title-logo__graphic {
@@ -99,6 +90,8 @@ h1.title {
     color: var(--color-title);
     background: linear-gradient(to bottom, #3338, #fff0), url(/sitefiles/1/gqstyletest4.jpg) top center / cover no-repeat;
     margin-bottom: var(--space-2xl);
+    /* Keeps its own text-shadow; a filter here would also shadow the background box */
+    filter: none;
     font-size: var(--step-6);
     font-weight: 800;
     letter-spacing: -0.2rem;

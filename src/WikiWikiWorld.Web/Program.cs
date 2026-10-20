@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Scalar.AspNetCore;
@@ -170,6 +171,20 @@ Builder.Services.Configure<IdentityOptions>(options =>
     options.SignIn.RequireConfirmedAccount = false;
 });
 
+// Preserve Identity's security-stamp validation while refusing test-account cookies outside Development.
+Builder.Services.ConfigureApplicationCookie(Options =>
+{
+    Options.Events.OnValidatePrincipal = async Context =>
+    {
+        await SecurityStampValidator.ValidatePrincipalAsync(Context);
+        if (DevelopmentAccountPolicy.IsBlocked(Builder.Environment.EnvironmentName, Context.Principal?.Identity?.Name))
+        {
+            Context.RejectPrincipal();
+            await Context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        }
+    };
+});
+
 // ✅ Add Authentication & Authorization Middleware with JWT and Cookies
 Builder.Services.AddAuthentication(options =>
 {
@@ -209,6 +224,17 @@ Builder.Services.AddAuthentication(options =>
         ValidIssuer = Builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = Builder.Configuration["JwtSettings:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret))
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = Context =>
+        {
+            if (DevelopmentAccountPolicy.IsBlocked(Builder.Environment.EnvironmentName, Context.Principal?.Identity?.Name))
+            {
+                Context.Fail("Invalid credentials.");
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 

@@ -138,6 +138,19 @@ html[data-theme="light"] { color-scheme: light; }
     --field-size: clamp(3.5rem, 2cqi + 3.25rem, 4rem);
     --label-space: 1.65rem;
 
+    /* The site's one extrusion, shared by display titles (text and SVG logos) and the dark
+       floated cards. Apply it with `filter`, never box-shadow or text-shadow, so everything
+       rounds the same way: chained drop-shadows compound into four gray layers, and the soft
+       shadow falls from the extruded shape. Steps are whole pixels because browsers round each
+       drop-shadow offset down to device pixels (0.06rem = 0.96px steps render as nothing); on
+       125%/150% scaling the depth is a little shallower, but identically so everywhere. */
+    --extrusion:
+        drop-shadow(1px 1px 0.02rem #919191)
+        drop-shadow(1px 1px 0.02rem #919191)
+        drop-shadow(1px 1px 0.02rem #919191)
+        drop-shadow(1px 1px 0.02rem #919191)
+        drop-shadow(0.3rem 0.3rem 0.8rem rgb(60 60 60 / 0.3));
+
     /* Radio Specific Tokens */
     --radio-radius: 12px;
     --radio-gutter: 16px;

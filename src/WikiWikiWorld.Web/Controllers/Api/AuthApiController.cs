@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
 
@@ -15,16 +16,18 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="UserManager">The user manager.</param>
 /// <param name="SignInManager">The sign-in manager.</param>
 /// <param name="Configuration">The application configuration.</param>
+/// <param name="Environment">The host environment used to restrict development accounts.</param>
 [Route("api/auth")]
 [ApiController]
 [Produces("application/json")]
 public sealed class AuthApiController(
 	UserManager<User> UserManager,
 	SignInManager<User> SignInManager,
-	IConfiguration Configuration) : ControllerBase
+	IConfiguration Configuration,
+	IWebHostEnvironment Environment) : ControllerBase
 {
 	/// <summary>
-	/// Issues a JWT token for valid credentials.
+	/// Issues a JWT token for valid credentials, refusing development accounts outside Development.
 	/// </summary>
 	/// <param name="Model">The login credentials.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
@@ -42,7 +45,7 @@ public sealed class AuthApiController(
 		}
 
 		User? TargetUser = await UserManager.FindByNameAsync(Model.Username);
-		if (TargetUser is null)
+		if (TargetUser is null || DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, TargetUser.UserName, TargetUser.Email))
 		{
 			return Unauthorized("Invalid credentials.");
 		}

@@ -33,18 +33,23 @@
 					Guid? ProfilePic = Model.UserProfilePics.TryGetValue(Revision.CreatedByUserId, out Guid? pic) ? pic : null;
 
 					<li class="revision-item @(IsFirstRow ? "current" : "")">
-						<div class="revision-avatar">
-							@if (Username is not null && ProfilePic is not null)
-							{
-								<a href="/@@Username" title="@Username">
+						@if (Username is not null)
+						{
+							<a class="avatar" href="/@@Username" title="@Username">
+								@if (ProfilePic is not null)
+								{
 									<img src="/sitefiles/@(Model.SiteId)/profilepics/@(ProfilePic).png" alt="@Username" />
-								</a>
-							}
-							else
-							{
-								<div class="avatar-placeholder">@(Username?[0].ToString().ToUpperInvariant() ?? "?")</div>
-							}
-						</div>
+								}
+								else
+								{
+									<span class="avatar-initials">@(Username[0].ToString().ToUpperInvariant())</span>
+								}
+							</a>
+						}
+						else
+						{
+							<span class="avatar"><span class="avatar-initials">?</span></span>
+						}
 						<div class="revision-content">
 							<div class="revision-header">
 								<a href="@RevisionUrl" class="revision-date-link">
@@ -160,35 +165,8 @@
 		background: linear-gradient(135deg, var(--color-surface) 0%, var(--uchu-green-1) 100%);
 	}
 
-	.revision-avatar {
-		flex-shrink: 0;
-		width: 48px;
-		height: 48px;
-		border-radius: 50%;
-		overflow: hidden;
-		background: var(--color-surface-alt);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 2px solid var(--color-border);
-	}
-
-	.revision-avatar img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.revision-avatar a {
-		display: flex;
-		width: 100%;
-		height: 100%;
-	}
-
-	.avatar-placeholder {
-		font-size: 1.25rem;
-		font-weight: bold;
-		color: var(--color-muted);
+	.revision-item > .avatar {
+		--avatar-size: clamp(2.5rem, 2.25rem + 0.75vw, 3rem);
 	}
 
 	.revision-content {
@@ -306,11 +284,6 @@
 	@@media (max-width: 600px) {
 		.revision-item {
 			flex-wrap: wrap;
-		}
-
-		.revision-avatar {
-			width: 40px;
-			height: 40px;
 		}
 
 		.revision-actions {

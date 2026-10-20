@@ -406,14 +406,12 @@ To contribute a magazine download scan or link, visit the [Upload Tool](/wiki:up
         "slug": "wiki:infobox",
         "title": "Wiki: Publication Issue Infobox Directive",
         "display_title": "Wiki: Publication Issue Infobox Directive",
-        "text": """The `{{PublicationIssueInfobox}}` directive renders a structured magazine issue sidebar on the right side of the page, displaying cover images and publication facts.
+        "text": """The `{{PublicationIssueInfobox}}` directive renders a structured magazine issue sidebar on the right side of the page, displaying publication facts. Use a separate `{{CoverCarousel}}` block for cover images.
 
 ## Syntax
 
 ```markdown
 {{PublicationIssueInfobox
-CoverImage=file:wired-issue-1-cover |#|
-CoverImage=file:wired-issue-1-back |#|
 CoverDate=1993-01 |#|
 CoverPrice=$4.95 |#|
 PublicationFormats=Print |#|
@@ -430,7 +428,6 @@ The following canonical keys automatically receive human-friendly display labels
 
 | Key | Rendered Label | Description |
 | :--- | :--- | :--- |
-| `CoverImage` | *(Top Carousel)* | File article slug for issue cover scans. Repeatable. |
 | `CoverDate` | **Cover Date** | Issue date as printed on the cover (e.g. `September 1975`). |
 | `CoverPrice` | **Cover Price** | Newsstand cover price (e.g. `$1.50`, `£0.95`). |
 | `PublicationFormats` | **Publication Formats** | Format medium (e.g. `Print`, `Digital`). |
@@ -446,7 +443,7 @@ Any additional `Key=Value` pair is accepted and rendered as a definition row in 
 
 ## Interactive Cover Carousel
 
-When multiple `CoverImage` properties are specified, the infobox automatically generates an interactive scroll-snap carousel with previous/next controls and position indicator dots.
+Place cover images in a separate `{{CoverCarousel CoverImage=file:front-cover |~| CoverImage=file:back-cover}}` block. Legacy `CoverImage` properties in an infobox are ignored; existing article text is not automatically migrated.
 
 ---
 *Return to the [Formatting Guide](/wiki:formatting).*"""
@@ -511,7 +508,7 @@ wired-issue-5
 ## How It Works
 
 1. **Issue Resolution:** The grid looks up each referenced article.
-2. **Cover Extraction:** It inspects each issue article's `PublicationIssueInfobox` to locate its primary `CoverImage`.
+2. **Cover Extraction:** It inspects each issue article's `CoverCarousel` to locate its primary `CoverImage`, falling back to legacy infobox metadata.
 3. **Linked Thumbnail:** Each cover is rendered in a responsive CSS grid, linking directly to the respective issue page (`/{culture}/{issue-slug}`).
 4. **Fallback Handling:** If an issue article is missing a cover image, a default cover placeholder is displayed.
 

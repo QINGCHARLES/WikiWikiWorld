@@ -77,6 +77,11 @@ public sealed class CategoryRenderer : HtmlObjectRenderer<CategoryInline>
 /// </summary>
 public sealed class CategoryExtension : IMarkdownExtension
 {
+	/// <summary>
+	/// Number of category links shown before the reader expands the remaining categories.
+	/// </summary>
+	public const int InitialVisibleCategoryCount = 8;
+
 	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
@@ -145,7 +150,7 @@ public sealed class CategoriesBlockParser : BlockParser
 }
 
 /// <summary>
-/// Renders a <see cref="CategoriesBlock"/> as an HTML unordered list.
+/// Renders category links with a native disclosure for entries beyond the initial visible limit.
 /// </summary>
 public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 {
@@ -161,11 +166,35 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 
 		if (Root is not MarkdownDocument Document) return;
 
-		var Categories = CategoryExtension.GetCategories(Document);
+		List<Category> Categories = CategoryExtension.GetCategories(Document);
 		if (Categories.Count == 0) return;
 
-		Renderer.WriteLine("<ul class=\"categories\">");
-		foreach (var CategoryItem in Categories)
+		Renderer.WriteLine("<div class=\"article-categories\">");
+		Renderer.WriteLine("<h2 class=\"categories-label\">Categories</h2>");
+		RenderList(Renderer, Categories.Take(CategoryExtension.InitialVisibleCategoryCount));
+
+		int RemainingCount = Categories.Count - CategoryExtension.InitialVisibleCategoryCount;
+		if (RemainingCount > 0)
+		{
+			Renderer.WriteLine("<details class=\"categories-disclosure\">");
+			Renderer.Write("<summary class=\"categories-toggle\"><span class=\"categories-show-more\">");
+			Renderer.Write($"… Show {RemainingCount} more");
+			Renderer.WriteLine("</span><span class=\"categories-show-fewer\">Show fewer</span></summary>");
+			RenderList(Renderer, Categories.Skip(CategoryExtension.InitialVisibleCategoryCount));
+			Renderer.WriteLine("</details>");
+		}
+		Renderer.WriteLine("</div>");
+	}
+
+	/// <summary>
+	/// Writes category links in source order, escaping their labels and URLs.
+	/// </summary>
+	/// <param name="Renderer">The HTML output writer.</param>
+	/// <param name="Categories">The visible or expandable subset of categories.</param>
+	private static void RenderList(HtmlRenderer Renderer, IEnumerable<Category> Categories)
+	{
+		Renderer.WriteLine("<ul class=\"categories\" role=\"list\">");
+		foreach (Category CategoryItem in Categories)
 		{
 			string Url = Slugify(CategoryItem.Title);
 			Renderer.Write("<li>");

@@ -19,13 +19,9 @@ article aside.issue-credits {
     background: var(--color-foreground);
     color: var(--credits-ink);
     font-family: var(--font-family-san-serif);
-    box-shadow:
-        0.06rem 0.06rem 0 #919191,
-        0.12rem 0.12rem 0 #919191,
-        0.18rem 0.18rem 0 #919191,
-        0.24rem 0.24rem 0 #919191,
-        0.32rem 0.32rem 0.55rem rgb(60 60 60 / 0.28),
-        0.5rem 0.5rem 1.1rem rgb(60 60 60 / 0.18);
+    /* Same extrusion as the display titles (variables.css); replaces the generic aside shadow */
+    box-shadow: none;
+    filter: var(--extrusion);
 }
 
 /* "CREDITS" label followed by a hairline that runs to the card edge. */

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.Pages.Account;
 
@@ -12,11 +13,13 @@ namespace WikiWikiWorld.Web.Pages.Account;
 /// <param name="SignInManager">The sign-in manager.</param>
 /// <param name="ArticleRevisionService">The article revision service.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="Environment">The host environment used to reserve development-only accounts.</param>
 public sealed class RegisterModel(
 	UserManager<User> UserManager,
 	SignInManager<User> SignInManager,
 	ArticleRevisionService ArticleRevisionService,
-	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+	SiteResolverService SiteResolverService,
+	IWebHostEnvironment Environment) : BasePageModel(SiteResolverService)
 {
 	private readonly UserManager<User> UserManager = UserManager;
 	private readonly SignInManager<User> SignInManager = SignInManager;
@@ -37,7 +40,7 @@ public sealed class RegisterModel(
 	}
 
 	/// <summary>
-	/// Handles the POST request to register a new user.
+	/// Registers a new user, refusing the reserved development account outside Development.
 	/// </summary>
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>A redirect to the home page on success, or the page with errors on failure.</returns>
@@ -45,6 +48,12 @@ public sealed class RegisterModel(
 	{
 		if (!ModelState.IsValid)
 		{
+			return Page();
+		}
+
+		if (DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, Input.UserName, Input.Email))
+		{
+			ModelState.AddModelError(string.Empty, "This username or email is unavailable.");
 			return Page();
 		}
 
@@ -90,10 +99,11 @@ public sealed class RegisterModel(
 		public required string Email { get; set; }
 
 		/// <summary>
-		/// Gets or sets the password.
+		/// Gets or sets the password, with an eight-character minimum matching the account policy.
+		/// Identity validates the required character types when creating the account.
 		/// </summary>
 		[Required]
-		[StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+		[StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
 		[DataType(DataType.Password)]
 		[Display(Name = "Password")]
 		public required string Password { get; set; }

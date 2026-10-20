@@ -7,14 +7,14 @@
 
 <div class="profile-container">
     <div class="profile-header">
-        <div class="profile-avatar">
+        <div class="avatar">
             @if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
             {
                 <img src="@Model.ProfilePicPath" alt="@Model.Username" />
             }
             else
             {
-                <span class="avatar-initial">@Model.Username?[0].ToString().ToUpperInvariant()</span>
+                <span class="avatar-initials">@Model.Username?[0].ToString().ToUpperInvariant()</span>
             }
         </div>
         <div class="profile-info">
@@ -77,29 +77,8 @@
         margin-bottom: 2rem;
     }
 
-    .profile-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        overflow: hidden;
-        background: var(--color-surface-alt);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid var(--color-surface);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .profile-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .avatar-initial {
-        font-size: 2rem;
-        font-weight: bold;
-        color: var(--color-foreground);
+    .profile-header > .avatar {
+        --avatar-size: 5rem;
     }
 
     .profile-info h1 {

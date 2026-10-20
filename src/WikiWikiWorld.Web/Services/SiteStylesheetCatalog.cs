@@ -33,6 +33,7 @@ public sealed class SiteStylesheetCatalog
 		"pages/search.css",
 		"pages/static.css",
 		"pages/talk.css",
+		"pages/account.css",
 	];
 
 	private readonly IReadOnlyList<string> SharedPaths = Array.AsReadOnly(RelativePaths.Select(Path => $"~/css/{Path}").ToArray());

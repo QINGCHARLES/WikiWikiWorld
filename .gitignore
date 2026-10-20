@@ -69,6 +69,7 @@ data/
 *.crt
 appsettings.Development.json
 secrets.json
+.local/
 
 # Retired agent/tool state
 .claude/

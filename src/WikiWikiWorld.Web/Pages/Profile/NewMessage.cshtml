@@ -12,7 +12,7 @@
 			<div class="recipient-badge">
 				@if (!string.IsNullOrEmpty(Model.RecipientProfilePicPath))
 				{
-					<img src="@Model.RecipientProfilePicPath" alt="" class="recipient-avatar" />
+					<span class="avatar"><img src="@Model.RecipientProfilePicPath" alt="" /></span>
 				}
 				<span class="recipient-name">To: <strong>@Model.RecipientDisplayName</strong></span>
 			</div>
@@ -109,11 +109,8 @@
 		border: 1px solid var(--color-border);
 	}
 
-	.recipient-avatar {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		object-fit: cover;
+	.recipient-badge > .avatar {
+		--avatar-size: 1.5rem;
 	}
 
 	.recipient-name {
@@ -327,24 +324,8 @@
         color: white; /* Contrast text */
     }
 
-    .autocomplete-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-        background-color: var(--color-surface-alt);
-    }
-    
-    .autocomplete-initial {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: var(--color-surface-alt);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: var(--color-foreground);
+    .autocomplete-item > .avatar {
+        --avatar-size: 2rem;
     }
 </style>
 
@@ -381,10 +362,10 @@
                             // Avatar logic
                             let avatarHtml = '';
                             if (user.profilePicGuid) {
-                                avatarHtml = `<img src="/sitefiles/@Model.SiteId/profilepics/${user.profilePicGuid}.png" class="autocomplete-avatar" alt="">`;
+                                avatarHtml = `<span class="avatar"><img src="/sitefiles/@Model.SiteId/profilepics/${user.profilePicGuid}.png" alt=""></span>`;
                             } else {
                                 const initial = user.userName.charAt(0).toUpperCase();
-                                avatarHtml = `<div class="autocomplete-initial">${initial}</div>`;
+                                avatarHtml = `<span class="avatar"><span class="avatar-initials">${initial}</span></span>`;
                             }
                             
                             item.innerHTML = `${avatarHtml}<span>${user.userName}</span>`;
