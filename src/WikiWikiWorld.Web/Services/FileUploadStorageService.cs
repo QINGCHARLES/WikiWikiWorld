@@ -33,10 +33,14 @@ public sealed class FileUploadStorageService(
 		string FileExtension = Path.GetExtension(OriginalFileName);
 		string TemporaryFilePath = Path.Combine(StagingDirectory, $"{CanonicalFileId}{FileExtension}.{Guid.NewGuid():N}.tmp");
 
-		await using FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-		await UploadedFile.CopyToAsync(FileStream, CancellationToken);
+		await using (FileStream FileStream = new(TemporaryFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+		{
+			await UploadedFile.CopyToAsync(FileStream, CancellationToken);
+		}
 
-		(int WidthPx, int HeightPx) = ImageDimensionReader.ReadDimensions(TemporaryFilePath);
+		// Read only once the exclusive write handle is closed (otherwise the reader's open fails and
+		// it reports 0x0), and pass the real extension because the staged name ends in .tmp.
+		(int WidthPx, int HeightPx) = ImageDimensionReader.ReadDimensions(TemporaryFilePath, FileExtension);
 
 		return new StagedFileUpload(
 			CanonicalFileId,

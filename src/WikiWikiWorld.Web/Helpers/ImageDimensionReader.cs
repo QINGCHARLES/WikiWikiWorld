@@ -12,8 +12,13 @@ public static class ImageDimensionReader
 	/// Reads the pixel dimensions of an image from its file header.
 	/// </summary>
 	/// <param name="FilePath">The absolute path to the image file.</param>
+	/// <param name="FormatExtension">
+	/// The image's real extension (for example <c>.svg</c>) when <paramref name="FilePath"/> does not
+	/// end with it, such as a staged <c>.tmp</c> upload. Defaults to the extension of <paramref name="FilePath"/>.
+	/// Only SVG is detected by extension; raster formats are detected from their headers.
+	/// </param>
 	/// <returns>The width and height in pixels, or (0, 0) if the format is unsupported or unreadable.</returns>
-	public static (int WidthPx, int HeightPx) ReadDimensions(string FilePath)
+	public static (int WidthPx, int HeightPx) ReadDimensions(string FilePath, string? FormatExtension = null)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(FilePath);
 
@@ -26,7 +31,7 @@ public static class ImageDimensionReader
 		{
 			using FileStream Stream = new(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-			if (FilePath.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+			if (string.Equals(FormatExtension ?? Path.GetExtension(FilePath), ".svg", StringComparison.OrdinalIgnoreCase))
 			{
 				return ReadSvgDimensions(Stream);
 			}
