@@ -5,9 +5,10 @@
  * CSS Load Order:
  * 1. Core: reset, colors, variables, typography, base
  * 2. Layout: header, footer
- * 3. Components: buttons, tables, forms, cards, carousel, navigation, avatar, pullquote, media
+ * 3. Components: buttons, tables, forms, cards, carousel, navigation, avatar, timeline, pullquote, issue-credits, stub, media, file-info
  * 4. Pages: article, search, static
  * 
- * This file is kept for any site-wide overrides or temporary styles during development.
- * In production, all CSS files are bundled into bundle.min.css
+ * This placeholder is not loaded. SiteStylesheetCatalog defines the shared load order.
+ * Optional overrides mirror those paths under css/sites/<SiteId>/ and load afterward.
+ * All environments load individual files; adding/removing overrides requires a restart.
  */

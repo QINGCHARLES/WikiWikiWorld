@@ -69,11 +69,9 @@ article > p
     margin-block-end: 1rem;
 }
 
-article > aside.downloads-box {
+/* Shared dark card shell for the downloads box and the issue infobox (matches issue-credits.css). */
+article > aside:is(.downloads-box, .infobox) {
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 1.05rem;
     padding: 1.3rem 1.4rem;
     margin-block-end: 1.25rem;
     background: var(--color-foreground);
@@ -87,6 +85,100 @@ article > aside.downloads-box {
         0.24rem 0.24rem 0 #919191,
         0.32rem 0.32rem 0.55rem rgb(60 60 60 / 0.28),
         0.5rem 0.5rem 1.1rem rgb(60 60 60 / 0.18);
+}
+
+article > aside.downloads-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1.05rem;
+}
+
+/* Issue infobox: publication facts typeset like the credits roles and names. Each fact is a
+   dt/dd sibling pair; a hairline above every label after the first separates the facts. */
+article > aside.infobox {
+    --infobox-ink: #ffffff;
+    --infobox-quiet: rgb(255 255 255 / 0.56);
+    --infobox-rule: rgb(255 255 255 / 0.14);
+
+    container: infobox / inline-size;
+    font-family: var(--font-family-san-serif);
+}
+
+aside.infobox > dl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+}
+
+aside.infobox > dl > dt {
+    padding-block-start: 0.8rem;
+    font-family: var(--font-family-wide-grotesque);
+    font-stretch: 112%;
+    font-size: 0.64rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--infobox-quiet);
+}
+
+aside.infobox > dl > dd {
+    margin: 0;
+    padding-block: 0.22rem 0.8rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.005em;
+    color: var(--infobox-ink);
+    overflow-wrap: anywhere;
+}
+
+aside.infobox > dl > dt:first-of-type {
+    padding-block-start: 0;
+}
+
+aside.infobox > dl > dd:last-of-type {
+    padding-block-end: 0;
+}
+
+aside.infobox > dl > dt:not(:first-of-type) {
+    border-block-start: 1px solid var(--infobox-rule);
+}
+
+/* Wide cards (full-width on small screens) set each label beside its value, as the credits masthead does. */
+@container infobox (inline-size >= 26rem) {
+    aside.infobox > dl {
+        grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+    }
+
+    /* Cells stretch so each row's hairline stays continuous; the label's extra top padding
+       lines its smaller caps up with the value's baseline. */
+    aside.infobox > dl > dt {
+        padding-block: 0.98rem 0.7rem;
+        padding-inline-end: 1rem;
+        text-align: end;
+    }
+
+    aside.infobox > dl > dd {
+        padding-block: 0.7rem;
+    }
+
+    aside.infobox > dl > dt:not(:first-of-type) + dd {
+        border-block-start: 1px solid var(--infobox-rule);
+    }
+
+    aside.infobox > dl > dt:first-of-type {
+        padding-block-start: 0.28rem;
+    }
+
+    aside.infobox > dl > dt:first-of-type + dd {
+        padding-block-start: 0;
+    }
+
+    aside.infobox > dl > dt:last-of-type,
+    aside.infobox > dl > dd:last-of-type {
+        padding-block-end: 0;
+    }
 }
 
 aside.downloads-box .file-info {

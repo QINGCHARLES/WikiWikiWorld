@@ -1,44 +1,84 @@
-/* Pullquote - Styled blockquote with zig-zag borders */
+/* Pullquote - Magazine-style pull quote framed by pinned zig-zag rules.
+   Large serif quote text; **bold** words switch to a wide, heavy grotesque in caps. */
 
 blockquote.pullquote {
-    --zig-angle: 90deg;
-    --zig-size: 3rem;
-    --zig-thickness: .5rem;
-    --zig-color: var(--uchu-green-5);
+    --pullquote-color: var(--uchu-green-9);
+    --pullquote-ornament-color: var(--uchu-yin-4);
+    --pullquote-cite-color: var(--uchu-yin-7);
+    /* Zig-zag with a small hollow "pin" at each end; used as a mask so the colour stays a CSS token. */
+    --pullquote-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -2 118 24'%3E%3Cg fill='none' stroke='%23000'%3E%3Cpolyline stroke-width='4' stroke-linejoin='miter' points='6.4,5.2 14,17 23,3 32,17 41,3 50,17 59,3 68,17 77,3 86,17 95,3 104,17 111.6,5.2'/%3E%3Ccircle cx='5' cy='3' r='2.6' stroke-width='1.9'/%3E%3Ccircle cx='113' cy='3' r='2.6' stroke-width='1.9'/%3E%3C/g%3E%3C/svg%3E");
 
-    position: relative;
-    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-m);
+    max-inline-size: 40rem;
+    margin: var(--space-xl) auto;
+    padding: 0;
     text-align: center;
-    font-style: italic;
-    font-size: var(--step-1);
-    margin: var(--space-l) 0;
-    overflow-wrap: anywhere;
-    padding-top: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)) + var(--space-s));
-    padding-bottom: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)) + var(--space-s));
+    font-style: normal;
+    color: var(--pullquote-color);
 }
 
 blockquote.pullquote::before,
 blockquote.pullquote::after {
     content: "";
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 20%;
-    height: calc(var(--zig-thickness) + var(--zig-size)/(2*tan(var(--zig-angle)/2)));
-    background: var(--zig-color);
-    --_g: var(--zig-size) repeat-x conic-gradient(from calc(var(--zig-angle)/-2) at bottom, #0000,#000 1deg calc(var(--zig-angle) - 1deg),#0000 var(--zig-angle));
-    mask: 50% calc(-1*var(--zig-thickness))/var(--_g) exclude,50%/var(--_g);
+    display: block;
+    flex-shrink: 0;
+    inline-size: clamp(7rem, 6rem + 3vw, 9.5rem);
+    aspect-ratio: 118 / 24;
+    background-color: var(--pullquote-ornament-color);
+    mask: var(--pullquote-ornament) center / contain no-repeat;
 }
 
-blockquote.pullquote::before {
-    top: 0;
-}
-
+/* The bottom rule is the top one flipped, so the pins point outward from the quote. */
 blockquote.pullquote::after {
-    bottom: 0;
+    scale: 1 -1;
 }
 
 blockquote.pullquote p {
-    max-width: 100%;
-    overflow-wrap: inherit;
+    margin: 0;
+    max-inline-size: 100%;
+    font-family: var(--font-family-serif);
+    font-style: normal;
+    font-weight: 400;
+    font-size: clamp(1.7rem, 1.2rem + 2.2vw, 2.7rem);
+    line-height: 1.1;
+    letter-spacing: -0.012em;
+    color: inherit;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+}
+
+blockquote.pullquote p :is(strong, b) {
+    font-family: var(--font-family-wide-grotesque);
+    font-stretch: 125%;
+    font-weight: 850;
+    font-size: 0.86em;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+blockquote.pullquote p :is(em, i) {
+    font-style: italic;
+}
+
+blockquote.pullquote cite {
+    display: block;
+    max-inline-size: 34rem;
+    margin-block-start: calc(var(--space-2xs) - var(--space-m));
+    font-family: var(--font-family-wide-grotesque);
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    color: var(--pullquote-cite-color);
+    text-wrap: balance;
+}
+
+blockquote.pullquote cite :is(em, i) {
+    font-style: italic;
 }

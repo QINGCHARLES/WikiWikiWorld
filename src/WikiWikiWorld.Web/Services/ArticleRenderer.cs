@@ -109,7 +109,6 @@ public sealed class ArticleRenderer(
 		SourceExtension.Enrich(Document);
 		await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
-		await PublicationIssueInfoboxExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await CoverCarouselExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await DownloadsBoxExtension.EnrichAsync(Document, Context, SiteId, CancellationToken);

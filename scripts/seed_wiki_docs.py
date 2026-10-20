@@ -2,6 +2,7 @@ import sqlite3
 import uuid
 from datetime import datetime, timezone
 import os
+from pathlib import Path
 
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(__file__), "..", "data", "app.db"))
 USER_ID = "7240be61-df81-46f9-8152-6a48b96abc40"  # QINGCHARLES
@@ -10,6 +11,12 @@ CULTURE = "en"
 TYPE_INFO = 4  # ArticleType.Info
 
 ARTICLES = [
+    {
+        "slug": "wiki:issue-credits",
+        "title": "Wiki: Issue Credits Directive",
+        "display_title": "Wiki: Issue Credits Directive",
+        "text": (Path(__file__).resolve().parents[1] / "doc" / "issue-credits.md").read_text(encoding="utf-8"),
+    },
     {
         "slug": "wiki:formatting",
         "title": "Wiki: Formatting Guide",
@@ -65,6 +72,7 @@ Components specifically tailored for magazine archives:
 Stylistic elements for editorial presentation:
 
 * [**Timelines** `{{Timeline}}`](/wiki:timeline) — Chronological vertical milestone timeline with hollow nodes and connectors.
+* [**Issue Credits** `{{IssueCredits}}`](/wiki:issue-credits) — Featured and collapsible contributor groups with roles and linked names.
 * [**Pull Quotes** `{{PullQuote}}`](/wiki:pull-quote) — Stylized quote callout with optional attribution.
 
 ### Taxonomy, References & Maintenance

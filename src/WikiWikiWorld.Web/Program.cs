@@ -63,6 +63,9 @@ if (Builder.Environment.IsDevelopment())
 }
 
 Builder.Services.Configure<SiteConfiguration>(Builder.Configuration.GetSection("SiteConfiguration"));
+Builder.Services.AddSingleton(new SiteStylesheetCatalog(
+	Builder.Environment.WebRootFileProvider,
+	(Builder.Configuration.GetSection("SiteConfiguration").Get<SiteConfiguration>() ?? new()).Sites.Select(Site => Site.SiteId)));
 Builder.Services.Configure<DomainRedirectOptions>(Builder.Configuration.GetSection(DomainRedirectOptions.SectionName));
 
 // Add memory cache service

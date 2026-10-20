@@ -5,11 +5,6 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using System.Text;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Specifications;
-using WikiWikiWorld.Data.Extensions;
-using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -29,10 +24,6 @@ public class PublicationIssueInfoboxBlock(BlockParser Parser) : LeafBlock(Parser
     /// </summary>
     public Dictionary<string, List<string>> Properties { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Gets or sets the cached list of cover images to display.
-    /// </summary>
-    public List<(string ImageUrl, string AltText)> CachedCoverImages { get; set; } = [];
 }
 
 /// <summary>
@@ -100,7 +91,7 @@ public class PublicationIssueInfoboxBlockParser : BlockParser
 }
 
 /// <summary>
-/// Renders the <see cref="PublicationIssueInfoboxBlock"/> as an HTML aside element with image carousel.
+/// Renders the <see cref="PublicationIssueInfoboxBlock"/> as an HTML aside containing publication facts only. Legacy CoverImage properties are ignored.
 /// </summary>
 public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIssueInfoboxBlock>
 {
@@ -113,7 +104,7 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
 
         const string AttributeSeparator = "|#|";
 
-        // Only parse properties if they haven't been populated by EnrichAsync
+        // Parse facts once; cover references belong in a separate CoverCarousel block.
         if (Block.Properties.Count == 0)
         {
             string Raw = Block.RawContent.ToString();
@@ -147,21 +138,6 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
 
         Renderer.Write("<aside class=\"infobox\">");
 
-        if (Block.CachedCoverImages.Count > 0)
-        {
-            // If there's only one image, render it directly
-            if (Block.CachedCoverImages.Count == 1)
-            {
-                (string ImageUrl, string AltText) = Block.CachedCoverImages[0];
-                Renderer.Write($"<img src=\"{ImageUrl}\" alt=\"{AltText}\" />");
-            }
-            // If there are multiple images, render the carousel
-            else if (Block.CachedCoverImages.Count > 1)
-            {
-                RenderCarousel(Renderer, Block.CachedCoverImages);
-            }
-        }
-
         List<KeyValuePair<string, List<string>>> OtherProps = [.. Block.Properties
             .Where(KeyValuePair => !KeyValuePair.Key.Equals("CoverImage", StringComparison.OrdinalIgnoreCase))];
 
@@ -180,68 +156,6 @@ public class PublicationIssueInfoboxRenderer : HtmlObjectRenderer<PublicationIss
         }
 
         Renderer.Write("</aside>");
-    }
-
-    /// <summary>
-    /// Renders an image carousel using CSS Scroll Snap with JavaScript button navigation.
-    /// </summary>
-    /// <param name="Renderer">The HTML renderer.</param>
-    /// <param name="Images">The list of images with URL and alt text.</param>
-    private void RenderCarousel(HtmlRenderer Renderer, List<(string ImageUrl, string AltText)> Images)
-    {
-        int ImageCount = Images.Count;
-
-        Renderer.Write("<div class=\"carousel\">");
-
-        // Slides container with scroll snap
-        Renderer.Write("<div class=\"slides\">");
-
-        // Render each slide with navigation buttons
-        for (int i = 0; i < ImageCount; i++)
-        {
-            (string ImageUrl, string AltText) = Images[i];
-
-            Renderer.Write("<div class=\"slide\">");
-            Renderer.Write($"<img src=\"{ImageUrl}\" alt=\"{AltText}\">");
-
-            // Navigation buttons (only show if more than one image)
-            if (ImageCount > 1)
-            {
-                // Show prev button only if not first slide
-                if (i > 0)
-                {
-                    Renderer.Write("<button type=\"button\" class=\"nav prev\" aria-label=\"Previous image\" data-dir=\"-1\">");
-                    Renderer.Write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\" /><path d=\"M13 15l-3 -3l3 -3\" /><path d=\"M21 12a9 9 0 1 0 -18 0a9 9 0 0 0 18 0z\" /></svg>");
-                    Renderer.Write("</button>");
-                }
-
-                // Show next button only if not last slide
-                if (i < ImageCount - 1)
-                {
-                    Renderer.Write("<button type=\"button\" class=\"nav next\" aria-label=\"Next image\" data-dir=\"1\">");
-                    Renderer.Write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\" /><path d=\"M11 9l3 3l-3 3\" /><path d=\"M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0z\" /></svg>");
-                    Renderer.Write("</button>");
-                }
-            }
-
-            Renderer.Write("</div>");
-        }
-
-        Renderer.Write("</div>");
-
-        // Dot indicators (only show if more than one image)
-        if (ImageCount > 1)
-        {
-            Renderer.Write("<div class=\"dots\">");
-            for (int i = 0; i < ImageCount; i++)
-            {
-                string ActiveClass = i == 0 ? " active" : "";
-                Renderer.Write($"<button type=\"button\" class=\"dot{ActiveClass}\" data-index=\"{i}\" aria-label=\"Go to image {i + 1}\"></button>");
-            }
-            Renderer.Write("</div>");
-        }
-
-        Renderer.Write("</div>");
     }
 
     /// <summary>
@@ -287,111 +201,4 @@ public class PublicationIssueInfoboxExtension : IMarkdownExtension
         }
     }
 
-    /// <summary>
-    /// Asynchronously fetches cover images for publication issue infoboxes.
-    /// </summary>
-    /// <param name="Document">The markdown document.</param>
-    /// <param name="Context">The database context.</param>
-    /// <param name="SiteId">The current site ID.</param>
-    /// <param name="Culture">The culture code.</param>
-    /// <param name="CancellationToken">A cancellation token.</param>
-    public static async Task EnrichAsync(MarkdownDocument Document, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken = default)
-    {
-        // 1. Find the blocks
-        List<PublicationIssueInfoboxBlock> InfoboxBlocks = Document.Descendants<PublicationIssueInfoboxBlock>().ToList();
-
-        if (InfoboxBlocks.Count == 0) return;
-
-        // 2. Parse properties to find CoverImages
-        const string AttributeSeparator = "|#|";
-        List<string> AllCoverSlugs = [];
-
-        foreach (PublicationIssueInfoboxBlock Block in InfoboxBlocks)
-        {
-            string Raw = Block.RawContent.ToString();
-            string[] Tokens = Raw.Split(AttributeSeparator, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (string Token in Tokens)
-            {
-                string Trimmed = Token.Trim();
-                if (string.IsNullOrEmpty(Trimmed)) continue;
-
-                int EqPos = Trimmed.IndexOf('=');
-                if (EqPos <= 0) continue;
-
-                string Key = Trimmed[..EqPos].Trim();
-                string Value = Trimmed[(EqPos + 1)..].Trim();
-
-                if (!Block.Properties.TryGetValue(Key, out List<string>? List))
-                {
-                    List = [];
-                    Block.Properties[Key] = List;
-                }
-                List.Add(Value);
-
-                if (Key.Equals("CoverImage", StringComparison.OrdinalIgnoreCase))
-                {
-                    string Slug = Value;
-                    if (Slug.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Slug = Slug["file:".Length..];
-                    }
-                    AllCoverSlugs.Add(Slug);
-                }
-            }
-        }
-
-        if (AllCoverSlugs.Count == 0) return;
-
-        // 3. Batch Query Articles
-        List<ArticleRevision> Articles = await Context.ArticleRevisions
-            .AsNoTracking()
-            .Where(x => x.SiteId == SiteId && x.Culture == Culture && AllCoverSlugs.Contains(x.UrlSlug) && x.IsCurrent)
-            .ToListAsync(CancellationToken);
-
-        Dictionary<string, ArticleRevision> ArticleLookup = Articles.ToDictionary(a => a.UrlSlug, StringComparer.OrdinalIgnoreCase);
-
-        // 4. Gather File IDs
-        List<Guid> FileIds = Articles
-            .Where(a => a.CanonicalFileId.HasValue)
-            .Select(a => a.CanonicalFileId!.Value)
-            .Distinct()
-            .ToList();
-
-        // 5. Batch Query Files
-        List<FileRevision> Files = await Context.FileRevisions
-            .AsNoTracking()
-            .Where(f => FileIds.Contains(f.CanonicalFileId) && f.IsCurrent == true)
-            .ToListAsync(CancellationToken);
-
-        Dictionary<Guid, FileRevision> FileLookup = Files.ToDictionary(f => f.CanonicalFileId);
-
-        // 6. Update Blocks with cached images
-        foreach (PublicationIssueInfoboxBlock Block in InfoboxBlocks)
-        {
-            if (Block.Properties.TryGetValue("CoverImage", out List<string>? CoverImages))
-            {
-                foreach (string Cover in CoverImages)
-                {
-                    string Slug = Cover;
-                    if (Slug.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Slug = Slug["file:".Length..];
-                    }
-
-                    if (ArticleLookup.TryGetValue(Slug, out ArticleRevision? Article) &&
-                        Article.CanonicalFileId.HasValue &&
-                        FileLookup.TryGetValue(Article.CanonicalFileId.Value, out FileRevision? File))
-                    {
-                        string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, File.CanonicalFileId, File.Id, File.Filename);
-                        Block.CachedCoverImages.Add((ImageUrl, Article.Title ?? "Publication Cover"));
-                    }
-                    else
-                    {
-                        Block.CachedCoverImages.Add(($"/sitefiles/{SiteId}/missing-image.png", "Missing Image"));
-                    }
-                }
-            }
-        }
-    }
 }

@@ -49,6 +49,13 @@ Directive names are case-sensitive. Named properties are generally case-insensit
 | `CoverGrid` | `CoverGridExtension` | Container block | Grid of publication issue covers |
 | `CoverCarousel` | `CoverCarouselExtension` | Container block | Standalone cover carousel |
 | `Timeline` | `TimelineExtension` | Container block | Chronological milestone list |
+| `IssueCredits` | `IssueCreditsExtension` | Container block | Featured and collapsible contributor groups |
+
+### Issue credits
+
+`{{IssueCredits ...}}` groups contributor entries beneath author-defined titles. Group-header items use `Group=Title`, optional `Featured=true` (always visible), and optional `Open=true` (initially expanded). Other groups start closed. Separate items with `|~|` and properties with `|#|`. Each credit entry accepts an optional plain-text `Role=` and one or more `Name=` properties; names support inline Markdown and article links. Each group needs at least one entry. Group headers and credit entries are separate items.
+
+See the [complete authoring guide](doc/issue-credits.md), [designer handoff](doc/issue-credits-designer-handoff.md), and [unstyled HTML fixture](doc/issue-credits-example.html). The local wiki guide is `/wiki:issue-credits`. Run `python scripts/publish_issue_credits_docs.py` to add it and a revisioned formatting-index link to an existing local database; existing credits documentation is preserved.
 
 `ApprovedNoFollowLinksExtension` has no author directive. It post-processes links and is documented under [Link processing](#link-processing).
 
@@ -253,10 +260,12 @@ Renders a styled pull quote with optional attribution.
 
 | Parameter | Required | Features |
 | --- | --- | --- |
-| Quote text | Yes | Plain text placed in the quote paragraph |
-| Attribution | No | Plain text after `|#|`, rendered as a citation line |
+| Quote text | Yes | HTML-encoded text placed in the quote paragraph; `**bold**` words render in wide heavy caps for emphasis, `*italic*` renders as italic |
+| Attribution | No | Text after `|#|` (or after a new line starting with `—`), rendered as a small-caps citation line; `*italic*` is supported for publication names |
 
 - This is an inline directive and can appear within prose.
+- Surrounding straight or curly double quotes on the quote text are stripped; curly quotes are added by the renderer.
+- Emphasise a few key words or a short phrase, e.g. `{{PullQuote We didn’t wake up for less than **$10,000 a day**. |#| Linda Evangelista, *Vogue* — 1990}}`.
 - One pair of surrounding straight double quotes is removed from the quote.
 - Quote and attribution values are not parsed as nested Markdown.
 

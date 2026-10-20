@@ -119,7 +119,7 @@ public class CoverCarouselBlockParser : BlockParser
 
 /// <summary>
 /// Renders the <see cref="CoverCarouselBlock"/> as an <c>&lt;aside&gt;</c> containing
-/// the cover image(s) and a page-position dots row. Mirrors the carousel markup used by
+/// the cover image(s) and a page-position dots row, independently of
 /// <see cref="PublicationIssueInfoboxRenderer"/>, but without the infobox property list.
 /// </summary>
 public class CoverCarouselBlockRenderer : HtmlObjectRenderer<CoverCarouselBlock>
@@ -201,8 +201,8 @@ public class CoverCarouselBlockRenderer : HtmlObjectRenderer<CoverCarouselBlock>
 
 /// <summary>
 /// A Markdig extension that adds support for standalone cover carousels via <c>{{CoverCarousel ...}}</c>.
-/// Reuses the same <c>CoverImage=slug</c> property convention as <see cref="PublicationIssueInfoboxExtension"/>
-/// so authors can lift the cover lines from an infobox directly into a carousel.
+/// Uses <c>CoverImage=slug</c> entries separated by <c>|~|</c>
+/// to keep cover images separate from publication facts.
 /// </summary>
 public class CoverCarouselExtension : IMarkdownExtension
 {
