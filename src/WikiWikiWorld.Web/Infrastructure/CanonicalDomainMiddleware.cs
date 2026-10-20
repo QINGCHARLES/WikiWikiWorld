@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using WikiWikiWorld.Web.Configuration;
 
@@ -40,10 +42,16 @@ public sealed class CanonicalDomainMiddleware
 	/// <summary>
 	/// Processes the request, issuing a canonical-host redirect or culture-selector rewrite when required.
 	/// </summary>
+	/// <remarks>
+	/// Redirect source hosts (www hosts, mapped domains, article redirect domains, unknown hosts) are not
+	/// configured sites, so nothing on this path may resolve the request-scoped
+	/// <see cref="WikiWikiWorldDbContext"/>: its constructor resolves the site from the host and throws
+	/// for those hosts. The configuration-driven redirects run without any database access, and the
+	/// article redirect lookup uses its own cross-site context.
+	/// </remarks>
 	/// <param name="Context">The HTTP context.</param>
-	/// <param name="DomainRedirectService">The article domain redirect service.</param>
 	/// <returns>A task that completes when the request has been handled.</returns>
-	public async Task InvokeAsync(HttpContext Context, Services.ArticleDomainRedirectService DomainRedirectService)
+	public async Task InvokeAsync(HttpContext Context)
 	{
 		string Host = Context.Request.Host.Host;
 
@@ -74,10 +82,7 @@ public sealed class CanonicalDomainMiddleware
 		}
 
 		// 3. Database-driven article domain redirects (308)
-		string? ArticleRedirectUrl = await DomainRedirectService.ResolveRedirectUrlAsync(
-			Host,
-			Context.Request,
-			Context.RequestAborted);
+		string? ArticleRedirectUrl = await ResolveArticleRedirectUrlAsync(Context, Host);
 
 		if (!string.IsNullOrEmpty(ArticleRedirectUrl))
 		{
@@ -103,6 +108,39 @@ public sealed class CanonicalDomainMiddleware
 		}
 
 		await Next(Context);
+	}
+
+	/// <summary>
+	/// Looks up a database-driven article domain redirect for the host using a dedicated cross-site
+	/// <see cref="WikiWikiWorldDbContext"/>, so the lookup works for hosts that are not configured sites.
+	/// </summary>
+	/// <remarks>
+	/// The context is built from the registered options (keeping the SQLite interceptors) with the
+	/// options-only constructor, which skips per-request site resolution. Every query in
+	/// <see cref="ArticleDomainRedirectService.ResolveRedirectUrlAsync"/> already ignores the site and
+	/// culture filters, so the result matches the request-scoped service. The redirect map cache is the
+	/// shared <see cref="IMemoryCache"/> entry, so invalidation by the admin page still applies.
+	/// </remarks>
+	/// <param name="Context">The HTTP context whose request services and request are used.</param>
+	/// <param name="Host">The request host to look up.</param>
+	/// <returns>The absolute redirect URL, or <see langword="null"/> when the host has no article redirect.</returns>
+	private static async Task<string?> ResolveArticleRedirectUrlAsync(HttpContext Context, string Host)
+	{
+		IServiceProvider RequestServices = Context.RequestServices;
+
+		await using WikiWikiWorldDbContext CrossSiteDbContext = new(
+			RequestServices.GetRequiredService<DbContextOptions<WikiWikiWorldDbContext>>());
+
+		ArticleDomainRedirectService DomainRedirectService = new(
+			CrossSiteDbContext,
+			RequestServices.GetRequiredService<IMemoryCache>(),
+			RequestServices.GetRequiredService<IOptions<SiteConfiguration>>(),
+			RequestServices.GetRequiredService<IOptions<DomainRedirectOptions>>());
+
+		return await DomainRedirectService.ResolveRedirectUrlAsync(
+			Host,
+			Context.Request,
+			Context.RequestAborted);
 	}
 
 	private static Task RedirectToHostAsync(HttpContext Context, string NewHost, int StatusCode)
