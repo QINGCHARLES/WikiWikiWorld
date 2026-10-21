@@ -15,12 +15,18 @@ namespace WikiWikiWorld.Web;
 public sealed class HtmlPrettifyMiddleware(RequestDelegate Next)
 {
     /// <summary>
-    /// Invokes the middleware.
+    /// Formats full HTML pages while preserving Datastar fragments verbatim so they cannot replace the entire document.
     /// </summary>
     /// <param name="Context">The HTTP context.</param>
     /// <returns>A task that represents the completion of request processing.</returns>
     public async Task Invoke(HttpContext Context)
     {
+        if (Context.Request.Headers["Datastar-Request"] == "true")
+        {
+            await Next(Context);
+            return;
+        }
+
         Stream OriginalBodyStream = Context.Response.Body;
         using MemoryStream CaptureStream = new();
         Context.Response.Body = CaptureStream;

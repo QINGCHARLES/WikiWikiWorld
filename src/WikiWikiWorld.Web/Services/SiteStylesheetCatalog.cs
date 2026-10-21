@@ -26,6 +26,7 @@ public sealed class SiteStylesheetCatalog
 		"components/timeline.css",
 		"components/pullquote.css",
 		"components/issue-credits.css",
+		"components/issue-contents.css",
 		"components/stub.css",
 		"components/media.css",
 		"components/file-info.css",

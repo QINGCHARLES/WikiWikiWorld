@@ -42,6 +42,12 @@ article {
     --aside-outset: calc(((var(--grid-max-width) - 100vw) / 2) + var(--grid-gutter));
 }
 
+/* The page's article is the size container that decides whether its asides float (see the
+   container query near the end of this file). Its containment also contains the floats. */
+main > article {
+    container: article-body / inline-size;
+}
+
 article aside {
     float: right;
     clear: right;
@@ -332,13 +338,18 @@ li > ul > li {
     list-style-type: square;
 }
 
-@media screen and (max-width: calc(280px + 22rem) ) {
+/* Asides only float when a readable column fits beside them: 22rem card + gutter + 20rem of
+   text. Below that the column beside a float is too narrow (the issue contents block, for one,
+   needs 20rem), so floating would just leave an empty strip next to the cards. Instead they stack
+   in the flow and centre themselves, capped at 32rem so covers don't grow huge; on phones that is
+   simply full width. 32rem still lets the infobox use its wide two-column layout (26rem+). */
+@container article-body (inline-size < 44rem) {
     article aside {
         float: none;
         width: 100%;
-        max-width: none;
-        margin-left: 0;
-        margin-right: 0;
+        max-width: 32rem;
+        margin-left: auto;
+        margin-right: auto;
 
         & ul {
             padding-bottom: var(--grid-gutter);

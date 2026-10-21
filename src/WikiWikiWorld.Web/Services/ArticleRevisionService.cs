@@ -15,6 +15,13 @@ namespace WikiWikiWorld.Web.Services;
 /// <param name="Logger">The logger.</param>
 public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogger<ArticleRevisionService> Logger)
 {
+	/// <summary>Counts active discussion threads for an article within the current site's query scope.</summary>
+	/// <param name="CanonicalArticleId">The stable article identifier shared by its revisions.</param>
+	/// <param name="CancellationToken">The request cancellation token.</param>
+	/// <returns>The number of non-deleted threads, excluding replies.</returns>
+	public Task<int> GetThreadCountAsync(Guid CanonicalArticleId, CancellationToken CancellationToken)
+		=> Context.ArticleTalkSubjects.CountAsync(s => s.CanonicalArticleId == CanonicalArticleId, CancellationToken);
+
 	/// <summary>
 	/// Gets the recent authors for an article revision in most-recent contribution order.
 	/// </summary>

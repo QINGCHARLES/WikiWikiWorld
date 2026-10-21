@@ -193,6 +193,21 @@ public sealed class ViewModel(
     /// </summary>
     public bool IsBookmarked { get; private set; }
 
+	/// <summary>Gets the current number of active discussion threads, including when viewing an older revision.</summary>
+	public int ThreadCount { get; private set; }
+
+	/// <summary>Gets the discussion list URL using the current article slug when available.</summary>
+	public string TalkPath => (CurrentRevision ?? DisplayedRevision) is { } Article
+		? ArticleUrlHelper.BuildRelativePath(Article, "talk") : string.Empty;
+
+	/// <summary>Gets the discussion action label: an invitation ("Discuss") when there are no threads yet, otherwise the thread count.</summary>
+	public string TalkLabel => ThreadCount switch
+	{
+		0 => "Discuss",
+		1 => "1 Thread",
+		_ => $"{ThreadCount} Threads"
+	};
+
     /// <summary>
     /// Gets a value indicating whether to render the publication-upload call-to-action aside.
     /// True when the displayed revision is a standard Article that does not already embed a {{DownloadsBox ...}} extension.
@@ -295,6 +310,7 @@ public sealed class ViewModel(
         // Fetch recent authors (username and profile pic GUID) for this article.
         DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
         RecentAuthors = await ArticleRevisionService.GetRecentAuthorsAsync(DisplayedRevision.CanonicalArticleId, MaxRevisionDate, CancellationToken);
+		ThreadCount = await ArticleRevisionService.GetThreadCountAsync(DisplayedRevision.CanonicalArticleId, CancellationToken);
 
         // Calculate View Properties
         // Note: Logic moved from View.cshtml
@@ -396,15 +412,19 @@ public sealed class ViewModel(
     }
 
     /// <summary>
-    /// Toggles a bookmark on the displayed article for the current user.
+    /// Toggles a bookmark and returns its saved state for in-place updates on the article page.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
-    /// <returns>A redirect back to the article, a challenge if unauthenticated, or NotFound if the article cannot be resolved.</returns>
+    /// <returns>A Razor partial for Datastar requests; other callers are rejected without changing a bookmark.</returns>
     public async Task<IActionResult> OnPostToggleBookmarkAsync(CancellationToken CancellationToken)
     {
+        if (Request.Headers["Datastar-Request"] != "true")
+        {
+            return BadRequest("Bookmark updates require an enhanced request.");
+        }
         if (!(User.Identity?.IsAuthenticated ?? false))
         {
-            return Challenge();
+            return Partial("_BookmarkStatus", "Sign in to bookmark articles.");
         }
 
         if (SiteId < 1 || string.IsNullOrWhiteSpace(UrlSlug))
@@ -415,7 +435,7 @@ public sealed class ViewModel(
         User? CurrentUser = await UserManager.GetUserAsync(User);
         if (CurrentUser is null)
         {
-            return Challenge();
+            return Partial("_BookmarkStatus", "Sign in to bookmark articles.");
         }
 
         string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
@@ -430,9 +450,9 @@ public sealed class ViewModel(
             return NotFound();
         }
 
-        await BookmarkService.ToggleBookmarkAsync(Current.CanonicalArticleId, CurrentUser.Id, SiteId, CancellationToken);
+        bool Bookmarked = await BookmarkService.ToggleBookmarkAsync(Current.CanonicalArticleId, CurrentUser.Id, SiteId, CancellationToken);
 
-        return Redirect(ArticleUrlHelper.BuildArticlePath(Current));
+        return Partial("_Bookmark", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), Bookmarked));
     }
 
     /// <summary>

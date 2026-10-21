@@ -18,6 +18,88 @@ ARTICLES = [
         "text": (Path(__file__).resolve().parents[1] / "doc" / "issue-credits.md").read_text(encoding="utf-8"),
     },
     {
+        "slug": "wiki:issue-contents",
+        "title": "Wiki: Issue Contents Directive",
+        "display_title": "Wiki: Issue Contents Directive",
+        "text": """The `{{IssueContents}}` directive displays a publication issue's table of contents, transcribed by hand from the printed issue. Entries are grouped into sections such as features and regular departments, and the block appears under the heading **In This Issue**.
+
+The directive only shows what you type. It does not build contents from the article's headings, look anything up, or link entries to other articles. Every section stays visible, and no JavaScript is needed.
+
+## Example
+
+```markdown
+{{IssueContents
+Group=Features |#| Featured=true
+|~| Title=Wild at Heart |#| Description=The Trinity in the fall collections |#| Credit=Photographs by Steven Meisel |#| Pages=212
+|~| Title=American Anthem |#| Description=Seventh Avenue's new guard |#| Credit=Photographs by Peter Lindbergh |#| Pages=230–241
+|~| Group=Fashion & Beauty
+|~| Title=Grunge & Glory |#| Credit=Styling by Carlyne Cerf de Dudzeele
+|~| Title=Bare Essentials |#| Description=The new face, with François Nars
+|~| Group=Regular Features
+|~| Title=Letter from the Editor |#| Credit=Anna Wintour |#| Pages=24
+|~| Title=Last Look |#| Description=The back page
+}}
+```
+
+This example is illustrative. Check every title, credit, and page number against the actual issue before publishing.
+
+## Delimiters
+
+* **`|~|`:** Separates items. An item is either a section header or an entry.
+* **`|#|`:** Separates properties within an item.
+
+Place the directive on its own line. Single-line and multiline blocks both work; line breaks are treated as spaces.
+
+## Sections
+
+Start a section with its own `Group=` item. Every entry that follows belongs to that section until the next `Group=` item.
+
+| Property | Required | Description |
+| :--- | :--- | :--- |
+| **`Group`** | Yes | Section title as printed, such as `Features` or `Departments`. |
+| **`Featured`** | No | `true` or `false` (default `false`). A featured section spans the full width; other sections flow into columns where space allows. |
+
+Any section can be featured, and several can be. Section names may repeat. Sections appear in the order you write them, so put a featured section first if it should be shown first. Every section needs at least one entry.
+
+## Entries
+
+| Property | Required | Description |
+| :--- | :--- | :--- |
+| **`Title`** | Yes | Title as printed. |
+| **`Description`** | No | Descriptive text or subtitle. |
+| **`Credit`** | No | Attribution with its wording, such as `Photographs by Jane Doe`. |
+| **`Pages`** | No | Printed page number or range, such as `42`, `120–143`, `iv`, or `12, 46–48`. Shown with a `p.` prefix. Use the page numbers printed in the magazine, not the PDF viewer's page index. |
+
+For an issue without sections, write entries only:
+
+```markdown
+{{IssueContents Title=Editor's Letter |#| Pages=3 |~| Title=Feature Story}}
+```
+
+Entries before the first `Group=` item form an unnamed, full-width list.
+
+## Rules and Troubleshooting
+
+* All values are plain text. Markdown, links, and images are not interpreted, and HTML is escaped. Commas, ampersands, and equals signs are kept as written.
+* Leave out an optional property you don't know rather than writing it with an empty value.
+* The directive name `IssueContents` is case-sensitive. Property names and `true`/`false` are not.
+* Section items accept only `Group` and `Featured`; entries accept only `Title`, `Description`, `Credit`, and `Pages`.
+* An unknown property, a property repeated within one item, a missing title, an empty value, an invalid `true`/`false` value, or an empty section makes the whole block invalid. Invalid blocks are shown as an error box containing the source, so no entries are silently lost.
+* The delimiters `|#|`, `|~|`, `{{`, and `}}` cannot appear inside values. Nested directives are not supported.
+* Close every block with `}}`. An unclosed block takes in the rest of the article until a `}}` appears.
+
+## Transcribing with an AI Assistant
+
+To transcribe a contents page with an AI assistant, give it a scan of the page together with this prompt:
+
+> Transcribe the magazine's table of contents into one `{{IssueContents ...}}` block using the authoring contract on this page. Preserve the printed titles, section names, ordering, descriptions, credits, and page labels. Use `Group=` items for sections and separate entries with `|~|`. Separate properties with `|#|`. Every entry needs `Title`; `Description`, `Credit`, and `Pages` are optional. Mark the main feature section `Featured=true` when clearly identifiable; otherwise omit that flag. Do not invent sections, attribution, page numbers, summaries, or links. Omit unknown optional fields. If a title or section is unreadable, report the uncertainty outside the block for human review rather than guessing. Use plain text without HTML or Markdown links, and close the block with `}}`.
+
+Always check the result against the printed page before saving.
+
+---
+*Return to the [Formatting Guide](/wiki:formatting).*"""
+    },
+    {
         "slug": "wiki:formatting",
         "title": "Wiki: Formatting Guide",
         "display_title": "Wiki: Formatting & Extensions Guide",
@@ -73,6 +155,7 @@ Stylistic elements for editorial presentation:
 
 * [**Timelines** `{{Timeline}}`](/wiki:timeline) — Chronological vertical milestone timeline with hollow nodes and connectors.
 * [**Issue Credits** `{{IssueCredits}}`](/wiki:issue-credits) — Featured and collapsible contributor groups with roles and linked names.
+* [**Issue Contents** `{{IssueContents}}`](/wiki:issue-contents) — Hand-transcribed issue table of contents with featured and regular sections, credits, and page numbers.
 * [**Pull Quotes** `{{PullQuote}}`](/wiki:pull-quote) — Stylized quote callout with optional attribution.
 
 ### Taxonomy, References & Maintenance

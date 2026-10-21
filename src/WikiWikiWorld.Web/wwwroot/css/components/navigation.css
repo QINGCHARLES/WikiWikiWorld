@@ -107,12 +107,49 @@ ul.categories a {
     font-size: var(--step--1);
 }
 
+/* Compact labels as the row narrows, before the buttons have to wrap: "Edit article" becomes
+   "Edit", then Bookmark becomes icon-only. The talk button keeps its full label ("Discuss" or the
+   thread count), which is already short. Hidden words stay in the accessibility tree (same technique as
+   .visually-hidden), so every button keeps its full name.
+   These are viewport queries on purpose: a container query would need containment on the row,
+   and containment traps the menu's full-screen click-away layer (position: fixed) inside it.
+   Breakpoints are measured: with the longest labels ("Bookmarked", "12 Threads") the full row
+   fits from ~470px and the short-Edit row from ~430px; the icon row fits down to ~300px. */
+@media (width < 30rem) {
+    .article-actions .action-label-extra {
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
+@media (width < 27.5rem) {
+    .article-actions .article-action-bookmark {
+        inline-size: var(--action-height);
+        padding: 0;
+
+        & .action-label {
+            position: absolute;
+            inline-size: 1px;
+            block-size: 1px;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+    }
+}
+
 .article-action-form {
     margin: 0;
     display: inline-flex;
 }
 
-.article-actions button.article-action-pill,
+.article-actions .article-action-pill,
 .article-actions .m3-split-button__leading,
 .article-actions .m3-split-button__trailing > .menu-trigger {
     box-sizing: border-box;
@@ -156,7 +193,7 @@ ul.categories a {
     }
 }
 
-.article-actions button.article-action-pill {
+.article-actions .article-action-pill {
     gap: 0.48rem;
     padding: 0 1.1rem;
     border-radius: 9999px;

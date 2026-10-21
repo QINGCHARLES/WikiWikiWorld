@@ -122,6 +122,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(CoverCarouselExt)
 			.Use(TimelineExt)
 			.Use(new IssueCreditsExtension(ApprovedLinkDomains))
+			.Use(new IssueContentsExtension())
 			.Use(YouTubeExt)
 			.Use(DownloadsBoxExt)
 			.Use(PullQuoteExt)
