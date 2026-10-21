@@ -1,0 +1,5 @@
+# Vendored third-party files must stay byte-for-byte identical to their pinned upstream releases
+# (hashes are recorded in each folder's README). Some bundles, such as Datastar, contain newlines
+# inside template-literal strings, so core.autocrlf rewriting them to CRLF on checkout would change
+# program behaviour, not just formatting.
+src/WikiWikiWorld.Web/wwwroot/js/vendor/** -text
