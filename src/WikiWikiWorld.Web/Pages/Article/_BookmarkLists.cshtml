@@ -1,0 +1,26 @@
+@model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@* Checkable rows, one per list. Each URL carries the state the user is asking for (the opposite of the tick shown).
+   The default row uses the default-list handler, which creates the list on first use; other rows name their list in
+   the query string, and the server checks the list belongs to the user. *@
+<div id="article-bookmark-lists" class="bookmark-lists" role="group" aria-label="Save to lists">
+	@foreach (WikiWikiWorld.Web.Services.BookmarkListMembership List in Model.Lists)
+	{
+		string Saved = List.ContainsArticle ? "false" : "true";
+		string Url = List.IsDefault
+			? $"{Model.ArticlePath}?handler=SetBookmark&Saved={Saved}"
+			: $"{Model.ArticlePath}?handler=SetBookmarkList&BookmarkListId={List.BookmarkListId}&Saved={Saved}";
+		<button type="button" class="menu-item-button bookmark-list-item @(List.ContainsArticle ? "is-checked" : "")" role="checkbox" aria-checked="@(List.ContainsArticle ? "true" : "false")" disabled
+			data-url="@Url"
+			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
+			data-on:click="$_bookmarkError = ''; @@post(el.dataset.url, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your lists before trying again.' })"
+			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your lists before trying again.'">
+			<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="@(List.ContainsArticle ? "currentColor" : "none")" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+			</svg>
+			<span class="bookmark-list-name">@List.Name</span>
+			<svg class="menu-item-icon bookmark-list-check" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M20 6 9 17l-5-5"></path>
+			</svg>
+		</button>
+	}
+</div>

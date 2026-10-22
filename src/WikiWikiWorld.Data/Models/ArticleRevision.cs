@@ -62,6 +62,12 @@ public sealed record ArticleRevision
     /// </summary>
     public required string Text { get; init; }
 
+	/// <summary>
+	/// Gets the derived category memberships saved with this revision; excluded from the public article JSON contract.
+	/// </summary>
+	[JsonIgnore]
+	public List<ArticleCategoryMembership> CategoryMemberships { get; init; } = [];
+
     /// <summary>
     /// Gets the reason for this revision.
     /// </summary>

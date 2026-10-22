@@ -14,6 +14,12 @@ using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Infrastructure;
 using SixLabors.ImageSharp.Web.DependencyInjection;
 
+if (args.Length > 0 && args[0] == "backfill-categories")
+{
+	Environment.ExitCode = await CategoryMembershipBackfillCommand.RunAsync(args[1..]);
+	return;
+}
+
 WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
 
 Builder.Host.UseSystemd();
@@ -124,13 +130,14 @@ SqlitePragmaInterceptor PragmaInterceptor = new(
 );
 SqliteDurabilityInterceptor DurabilityInterceptor = new();
 
-Builder.Services.AddDbContext<WikiWikiWorldDbContext>(Options =>
+Builder.Services.AddSingleton<CategoryMembershipSaveInterceptor>();
+Builder.Services.AddDbContext<WikiWikiWorldDbContext>((Services, Options) =>
     Options.UseSqlite(ConnectionString, SqliteOptions =>
     {
         SqliteOptions.ExecutionStrategy(Dependencies =>
             new SqliteRetryExecutionStrategy(Dependencies, MaxRetryCount: 3));
     })
-    .AddInterceptors(PragmaInterceptor, DurabilityInterceptor));
+    .AddInterceptors(PragmaInterceptor, DurabilityInterceptor, Services.GetRequiredService<CategoryMembershipSaveInterceptor>()));
 
 // ✅ Register Repositories
 

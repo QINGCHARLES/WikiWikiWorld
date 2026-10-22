@@ -257,6 +257,8 @@ CREATE TABLE BookmarkLists (
 
 CREATE INDEX IX_BookmarkLists_CreatedByUserId ON BookmarkLists (CreatedByUserId);
 CREATE INDEX IX_BookmarkLists_SiteId_CreatedByUserId ON BookmarkLists (SiteId, CreatedByUserId);
+CREATE UNIQUE INDEX UX_BookmarkLists_SiteId_CreatedByUserId_Default_Active
+    ON BookmarkLists (SiteId, CreatedByUserId) WHERE IsDefault = 1 AND DateDeleted IS NULL;
 
 CREATE TABLE Bookmarks (
     Id INTEGER NOT NULL CONSTRAINT PK_Bookmarks PRIMARY KEY AUTOINCREMENT,

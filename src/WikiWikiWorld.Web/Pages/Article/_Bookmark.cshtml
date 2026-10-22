@@ -1,14 +1,42 @@
 @model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
-<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=ToggleBookmark")" asp-antiforgery="true" class="article-action-form"
-	data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
-	<button type="button" class="article-action-pill article-action-bookmark @(Model.IsBookmarked ? "is-active" : "")" aria-pressed="@(Model.IsBookmarked ? "true" : "false")" disabled
-		data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
-		data-on:click="$_bookmarkError = ''; @@post(el.form.action, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.' })"
-		data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.'">
-		<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="@(Model.IsBookmarked ? "currentColor" : "none")" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-			<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-		</svg>
-		<span class="action-label">@(Model.IsBookmarked ? "Bookmarked" : "Bookmark")</span>
-	</button>
-	<partial name="_BookmarkStatus" model="@(string.Empty)" />
-</form>
+@if (!Model.IsSignedIn)
+{
+	@* Anonymous visitors: a single button whose POST answers with a sign-in prompt. *@
+	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&Saved=true")" asp-antiforgery="true" class="article-action-form"
+		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
+		<button type="button" class="article-action-pill article-action-bookmark" aria-pressed="false" disabled
+			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
+			data-on:click="$_bookmarkError = ''; @@post(el.form.action, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.' })"
+			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.'">
+			<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+			</svg>
+			<span class="action-label">Bookmark</span>
+		</button>
+		<partial name="_BookmarkStatus" model="@(string.Empty)" />
+	</form>
+}
+else
+{
+	@* Signed-in users: the leading half toggles the default list; the chevron opens a checkable menu of all lists.
+	   Responses patch the toggle, trigger and list elements by id, so the open <details> stays open between toggles. *@
+	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&Saved=true")" asp-antiforgery="true" class="article-action-form m3-split-button article-bookmark-split"
+		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
+		<partial name="_BookmarkToggle" model="Model" />
+		<details class="article-menu m3-split-button__trailing article-bookmark-menu">
+			<partial name="_BookmarkMenuTrigger" model="Model" />
+			<div class="menu-content">
+				<partial name="_BookmarkLists" model="Model" />
+				<hr class="menu-divider" />
+				@* Placeholder: creating lists is a later piece of work, so this item intentionally does nothing yet. *@
+				<button type="button" class="menu-item-button bookmark-new-list">
+					<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 5v14M5 12h14"></path>
+					</svg>
+					<span>New list…</span>
+				</button>
+			</div>
+		</details>
+		<partial name="_BookmarkStatus" model="@(string.Empty)" />
+	</form>
+}

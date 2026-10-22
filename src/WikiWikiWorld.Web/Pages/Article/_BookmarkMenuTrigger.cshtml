@@ -1,0 +1,20 @@
+@model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@{
+	string Label = Model.OtherListCount switch
+	{
+		0 => "Bookmark lists",
+		1 => "Bookmark lists, saved in 1 other list",
+		_ => $"Bookmark lists, saved in {Model.OtherListCount} other lists"
+	};
+}
+@* Chevron half of the bookmark split button. The badge counts non-default lists holding the article, since the
+   leading half only reflects the default list. *@
+<summary id="article-bookmark-trigger" class="menu-trigger" aria-label="@Label">
+	<svg class="action-icon menu-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+		<path d="m6 9 6 6 6-6"></path>
+	</svg>
+	@if (Model.OtherListCount > 0)
+	{
+		<span class="bookmark-menu-badge" aria-hidden="true">@Model.OtherListCount</span>
+	}
+</summary>

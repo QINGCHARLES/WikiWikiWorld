@@ -1,3 +1,21 @@
+// Escape closes an open article menu (the Edit and Bookmark split-button menus) and returns focus to its
+// trigger. Clicking outside is handled in CSS by a full-screen layer on the open trigger.
+document.addEventListener("keydown", function (Event) {
+	if (Event.key !== "Escape" || Event.defaultPrevented)
+	{
+		return;
+	}
+
+	const OpenMenu = document.querySelector("details.article-menu[open]");
+	if (!(OpenMenu instanceof HTMLDetailsElement))
+	{
+		return;
+	}
+
+	OpenMenu.open = false;
+	OpenMenu.querySelector("summary")?.focus();
+});
+
 document.addEventListener("click", function (Event) {
 	if (!(Event.target instanceof Element))
 	{

@@ -126,7 +126,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 
 	/// <summary>
 	/// Best-effort variant of <see cref="EnsureUserArticleAsync"/> that never throws. On failure it logs a
-	/// warning, detaches the failed insert so a later save on the same context does not retry it, then
+	/// warning, detaches the failed revision and its memberships so a later save does not retry them, then
 	/// re-queries once (covering the race where a concurrent request created the article).
 	/// </summary>
 	/// <param name="SiteId">The site identifier for a newly created article.</param>
@@ -152,6 +152,10 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 				.Where(Entry => Entry.State == EntityState.Added)
 				.ToList())
 			{
+				foreach (ArticleCategoryMembership Membership in Entry.Entity.CategoryMemberships.ToArray())
+				{
+					Context.Entry(Membership).State = EntityState.Detached;
+				}
 				Entry.State = EntityState.Detached;
 			}
 
@@ -297,11 +301,12 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	}
 
 	/// <summary>
-	/// Soft-deletes all revisions for an article.
+	/// Soft-deletes all revisions for an article, reusing tracked instances and preserving historical memberships.
 	/// </summary>
 	/// <param name="UrlSlug">The URL slug of the article to delete.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be deleted.</exception>
+	/// <returns>A task completing when all revision tombstones have been committed.</returns>
 	public async Task DeleteArticleAsync(string UrlSlug, CancellationToken CancellationToken)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(UrlSlug);
@@ -325,6 +330,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 			ArticleRevisionsByCanonicalIdSpec AllRevisionsSpec = new(CurrentArticle.CanonicalArticleId, null);
 			IReadOnlyList<ArticleRevision> Revisions = await Context.ArticleRevisions
 				.WithSpecification(AllRevisionsSpec)
+				.AsTracking()
 				.ToListAsync(CT);
 
 			DateTimeOffset DeletedUtc = DateTimeOffset.UtcNow;

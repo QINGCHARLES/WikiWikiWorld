@@ -140,8 +140,8 @@ else if(Model.DisplayedRevision is not null)
 		</div>
 	</div>
 	<div class="article-actions" role="toolbar" aria-label="Article actions">
-		<partial name="_Bookmark" model="@(new BookmarkControlModel(Model.DisplayedArticlePath, Model.IsBookmarked))" />
-		<a href="@Model.TalkPath" class="article-action-pill" rel="nofollow">
+		<partial name="_Bookmark" model="Model.BookmarkControl" />
+		<a href="@Model.TalkPath" class="article-action-pill article-action-talk" rel="nofollow">
 			<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
 				<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"></path>
 				<path d="M8 10h9M8 14h6"></path>

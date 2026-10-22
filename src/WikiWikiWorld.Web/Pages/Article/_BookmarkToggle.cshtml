@@ -1,0 +1,13 @@
+@model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@* Leading half of the bookmark split button: one tap saves to or removes from the default list. The URL carries the
+   state the user is asking for (the opposite of what is shown), so repeated clicks from stale views settle on it. *@
+<button id="article-bookmark-toggle" type="button" class="m3-split-button__leading article-action-bookmark @(Model.IsBookmarked ? "is-active" : "")" aria-pressed="@(Model.IsBookmarked ? "true" : "false")" disabled
+	data-url="@($"{Model.ArticlePath}?handler=SetBookmark&Saved={(Model.IsBookmarked ? "false" : "true")}")"
+	data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
+	data-on:click="$_bookmarkError = ''; @@post(el.dataset.url,{contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.' })"
+	data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.'">
+	<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="@(Model.IsBookmarked ? "currentColor" : "none")" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+		<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+	</svg>
+	<span class="action-label">@(Model.IsBookmarked ? "Bookmarked" : "Bookmark")</span>
+</button>

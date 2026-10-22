@@ -29,7 +29,7 @@
 
 ## Category membership storage
 
-- Schema and EF mapping are implemented for revision-owned `ArticleCategoryMemberships`. Category slugs are immutable identities, independent of display names. Save integration, backfill, and the listing directive are pending.
+- Schema, EF mapping, save-time indexing, the `backfill-categories` maintenance command, and `{{CategoryArticles}}` are implemented for revision-owned `ArticleCategoryMemberships`. Category slugs are immutable identities, independent of display names. The listing uses indexed membership lookups with 100 links per page. External SQL writers bypass indexing and require a subsequent backfill. See [category list authoring](doc/category-articles.md).
 - Existing databases require an explicitly applied additive SQL script; there are no automatic startup migrations. See [schema, application and verification procedure](doc/category-membership-schema.md).
 
 ## 🧩 Markdig Extensions

@@ -43,6 +43,10 @@ public sealed class ViewModel(
     [BindProperty(SupportsGet = true)]
     public string? Revision { get; set; }
 
+	/// <summary>Gets or sets the requested page of category members; rendering clamps invalid ranges.</summary>
+	[BindProperty(SupportsGet = true)]
+	public int CategoryPage { get; set; } = 1;
+
     /// <summary>
     /// Gets or sets the revision currently being displayed (could be current or history).
     /// </summary>
@@ -189,9 +193,9 @@ public sealed class ViewModel(
     public string? SubtitleText { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether the current user has bookmarked the displayed article.
+    /// Gets the bookmark control state for the displayed article: the signed-in user's lists and which contain it.
     /// </summary>
-    public bool IsBookmarked { get; private set; }
+    public BookmarkControlModel BookmarkControl { get; private set; } = new(string.Empty, IsSignedIn: false, []);
 
 	/// <summary>Gets the current number of active discussion threads, including when viewing an older revision.</summary>
 	public int ThreadCount { get; private set; }
@@ -338,7 +342,7 @@ public sealed class ViewModel(
             CancellationToken);
 
         string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(RevisionToRender)}/edit";
-        RenderedArticle RenderedArticle = await ArticleRenderer.RenderAsync(RevisionToRender, SiteId, Culture, EditUrl, CancellationToken);
+        RenderedArticle RenderedArticle = await ArticleRenderer.RenderAsync(RevisionToRender, SiteId, Culture, EditUrl, CancellationToken, CategoryPage);
         ArticleRevisionHtml = RenderedArticle.Html;
         Categories = RenderedArticle.Categories;
         HeaderImage = RenderedArticle.HeaderImage;
@@ -350,12 +354,14 @@ public sealed class ViewModel(
         IsFileSourceApprovedDomain = RenderedArticle.IsFileSourceApprovedDomain;
 
         // Resolve bookmark state for the displayed (canonical) article when the visitor is signed in.
+        BookmarkControl = new(DisplayedArticlePath, IsSignedIn: false, []);
         if (User.Identity?.IsAuthenticated == true)
         {
             User? CurrentUserForBookmark = await UserManager.GetUserAsync(User);
             if (CurrentUserForBookmark is not null)
             {
-                IsBookmarked = await BookmarkService.IsBookmarkedAsync(RevisionToRender.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
+                IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(RevisionToRender.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
+                BookmarkControl = new(DisplayedArticlePath, IsSignedIn: true, Lists);
             }
         }
 
@@ -412,30 +418,82 @@ public sealed class ViewModel(
     }
 
     /// <summary>
-    /// Toggles a bookmark and returns its saved state for in-place updates on the article page.
+    /// Saves the article to, or removes it from, the default list and returns the refreshed control.
+    /// </summary>
+    /// <param name="Saved">
+    /// The state the user asked for, rendered into the button's URL as the opposite of what the page showed. Sending the
+    /// intent rather than a toggle makes repeated or concurrent clicks settle on one state.
+    /// </param>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>Razor partials for Datastar requests; other callers are rejected without changing a bookmark.</returns>
+    public async Task<IActionResult> OnPostSetBookmarkAsync([FromQuery] bool Saved, CancellationToken CancellationToken)
+    {
+        (IActionResult? Rejection, User? CurrentUser, ArticleRevision? Current) = await ResolveBookmarkRequestAsync(CancellationToken);
+        if (Rejection is not null || CurrentUser is null || Current is null)
+        {
+            return Rejection ?? NotFound();
+        }
+
+        await BookmarkService.SetBookmarkAsync(Current.CanonicalArticleId, CurrentUser.Id, SiteId, Saved, CancellationToken);
+
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
+    }
+
+    /// <summary>
+    /// Saves the article to, or removes it from, one of the user's bookmark lists from the split button's menu.
+    /// </summary>
+    /// <param name="BookmarkListId">The list to change, taken from the query string; it must belong to the current user.</param>
+    /// <param name="Saved">The state the user asked for; see <see cref="OnPostSetBookmarkAsync"/>.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>
+    /// Razor partials that refresh the button and menu in place, leaving the open menu open; a status message when the list
+    /// is not the user's. Non-Datastar callers are rejected without changing a bookmark.
+    /// </returns>
+    public async Task<IActionResult> OnPostSetBookmarkListAsync([FromQuery] int BookmarkListId, [FromQuery] bool Saved, CancellationToken CancellationToken)
+    {
+        (IActionResult? Rejection, User? CurrentUser, ArticleRevision? Current) = await ResolveBookmarkRequestAsync(CancellationToken);
+        if (Rejection is not null || CurrentUser is null || Current is null)
+        {
+            return Rejection ?? NotFound();
+        }
+
+        bool Applied = await BookmarkService.SetBookmarkInListAsync(BookmarkListId, Current.CanonicalArticleId, CurrentUser.Id, SiteId, Saved, CancellationToken);
+        if (!Applied)
+        {
+            return Partial("_BookmarkStatus", "That list no longer exists. Reload to see your lists.");
+        }
+
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
+    }
+
+    /// <summary>
+    /// Validates a bookmark POST and loads the acting user and the current revision of the requested article.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
-    /// <returns>A Razor partial for Datastar requests; other callers are rejected without changing a bookmark.</returns>
-    public async Task<IActionResult> OnPostToggleBookmarkAsync(CancellationToken CancellationToken)
+    /// <returns>
+    /// A rejection result (bad request, sign-in prompt, or not found) with no user or article, or no rejection with both
+    /// the signed-in user and the article's current revision.
+    /// </returns>
+    private async Task<(IActionResult? Rejection, User? CurrentUser, ArticleRevision? Current)> ResolveBookmarkRequestAsync(CancellationToken CancellationToken)
     {
         if (Request.Headers["Datastar-Request"] != "true")
         {
-            return BadRequest("Bookmark updates require an enhanced request.");
+            return (BadRequest("Bookmark updates require an enhanced request."), null, null);
         }
         if (!(User.Identity?.IsAuthenticated ?? false))
         {
-            return Partial("_BookmarkStatus", "Sign in to bookmark articles.");
+            return (Partial("_BookmarkStatus", "Sign in to bookmark articles."), null, null);
         }
 
         if (SiteId < 1 || string.IsNullOrWhiteSpace(UrlSlug))
         {
-            return BadRequest("Invalid parameters.");
+            return (BadRequest("Invalid parameters."), null, null);
         }
 
         User? CurrentUser = await UserManager.GetUserAsync(User);
         if (CurrentUser is null)
         {
-            return Partial("_BookmarkStatus", "Sign in to bookmark articles.");
+            return (Partial("_BookmarkStatus", "Sign in to bookmark articles."), null, null);
         }
 
         string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
@@ -445,14 +503,21 @@ public sealed class ViewModel(
             .WithSpecification(CurrentSpec)
             .FirstOrDefaultAsync(CancellationToken);
 
-        if (Current is null)
-        {
-            return NotFound();
-        }
+        return Current is null ? (NotFound(), null, null) : (null, CurrentUser, Current);
+    }
 
-        bool Bookmarked = await BookmarkService.ToggleBookmarkAsync(Current.CanonicalArticleId, CurrentUser.Id, SiteId, CancellationToken);
+    /// <summary>
+    /// Re-reads the user's list memberships after a toggle and renders the parts of the control that change.
+    /// </summary>
+    /// <param name="CurrentUser">The signed-in user.</param>
+    /// <param name="Current">The article's current revision.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>The state partial, whose top-level elements Datastar patches by id.</returns>
+    private async Task<IActionResult> BookmarkStateResultAsync(User CurrentUser, ArticleRevision Current, CancellationToken CancellationToken)
+    {
+        IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(Current.CanonicalArticleId, CurrentUser.Id, CancellationToken);
 
-        return Partial("_Bookmark", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), Bookmarked));
+        return Partial("_BookmarkState", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), IsSignedIn: true, Lists));
     }
 
     /// <summary>

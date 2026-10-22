@@ -108,14 +108,15 @@ ul.categories a {
 }
 
 /* Compact labels as the row narrows, before the buttons have to wrap: "Edit article" becomes
-   "Edit", then Bookmark becomes icon-only. The talk button keeps its full label ("Discuss" or the
-   thread count), which is already short. Hidden words stay in the accessibility tree (same technique as
-   .visually-hidden), so every button keeps its full name.
+   "Edit", then Bookmark becomes icon-only, then the talk button ("Discuss" or the thread count).
+   Hidden words stay in the accessibility tree (same technique as .visually-hidden), so every
+   button keeps its full name.
    These are viewport queries on purpose: a container query would need containment on the row,
    and containment traps the menu's full-screen click-away layer (position: fixed) inside it.
-   Breakpoints are measured: with the longest labels ("Bookmarked", "12 Threads") the full row
-   fits from ~470px and the short-Edit row from ~430px; the icon row fits down to ~300px. */
-@media (width < 30rem) {
+   Breakpoints are measured with the signed-in bookmark split button (chevron and badge) and the
+   longest labels ("Bookmarked", "12 Threads"): the full row fits from ~535px, the short-Edit row
+   from ~485px, the icon-bookmark row from ~390px, and with the talk icon too it fits to ~306px. */
+@media (width < 34rem) {
     .article-actions .action-label-extra {
         position: absolute;
         inline-size: 1px;
@@ -127,7 +128,7 @@ ul.categories a {
     }
 }
 
-@media (width < 27.5rem) {
+@media (width < 30.5rem) {
     .article-actions .article-action-bookmark {
         inline-size: var(--action-height);
         padding: 0;
@@ -144,9 +145,45 @@ ul.categories a {
     }
 }
 
+@media (width < 24.5rem) {
+    .article-actions .article-action-talk {
+        inline-size: var(--action-height);
+        padding: 0;
+
+        & .action-label {
+            position: absolute;
+            inline-size: 1px;
+            block-size: 1px;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+    }
+}
+
 .article-action-form {
+    position: relative;
     margin: 0;
     display: inline-flex;
+}
+
+/* Bookmark status (errors, sign-in prompt) floats under the button instead of pushing the row apart.
+   Kept below the open menu (z-index 100) so it never covers the list. */
+#article-bookmark-status:not(:empty) {
+    position: absolute;
+    inset-block-start: calc(100% + 0.4rem);
+    inset-inline-start: 0;
+    z-index: 50;
+    inline-size: max-content;
+    max-inline-size: min(22rem, calc(100vw - 2rem));
+    padding: 0.45rem 0.75rem;
+    border-radius: 0.6rem;
+    background: var(--color-foreground);
+    color: #ffffff;
+    font-size: 0.85em;
+    line-height: 1.35;
+    white-space: normal;
 }
 
 .article-actions .article-action-pill,
@@ -320,6 +357,130 @@ ul.categories a {
 
 .article-menu[open] .menu-content {
     display: block;
+}
+
+/* Bookmark split button: leading half toggles the default list, chevron opens the list menu. */
+.article-actions .m3-split-button__leading.is-active {
+    background: #f5f3ee;
+    border-color: #cfc9bc;
+}
+
+.article-actions .m3-split-button__leading:disabled {
+    cursor: default;
+}
+
+.article-bookmark-split {
+    position: relative;
+}
+
+/* Anchor the menu to the whole split button's start edge rather than the chevron's end edge: the bookmark
+   button sits first in the row, so a right-anchored menu would run off the left of narrow screens. */
+.article-bookmark-menu {
+    position: static;
+}
+
+.article-bookmark-menu .menu-content {
+    inset-inline: 0 auto;
+    max-inline-size: calc(100vw - 2rem);
+}
+
+.article-bookmark-menu .menu-trigger {
+    position: relative;
+}
+
+.article-bookmark-menu .menu-chevron {
+    transition: rotate 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.article-bookmark-menu[open] .menu-chevron {
+    rotate: 180deg;
+}
+
+.bookmark-menu-badge {
+    position: absolute;
+    inset-block-start: -0.35rem;
+    inset-inline-end: -0.3rem;
+    min-inline-size: 1.05rem;
+    block-size: 1.05rem;
+    padding-inline: 0.25rem;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    background: var(--color-foreground);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.05rem;
+    text-align: center;
+}
+
+.article-bookmark-menu[open] .bookmark-menu-badge {
+    background: #ffffff;
+    color: var(--color-foreground);
+    box-shadow: 0 0 0 1px var(--color-foreground);
+}
+
+.bookmark-lists {
+    max-block-size: min(20rem, 55vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.article-menu .menu-content .menu-item-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    inline-size: 100%;
+    margin: 0;
+    padding: 0.62rem 1.05rem;
+    border: 0;
+    background: none;
+    color: var(--color-foreground);
+    font-family: var(--font-family-san-serif);
+    font-size: 0.92em;
+    font-weight: 450;
+    line-height: 1.25;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+        background-color: #f5f3ee;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+    }
+
+    &:disabled {
+        cursor: progress;
+    }
+}
+
+.bookmark-list-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.article-menu .menu-content .bookmark-list-check {
+    visibility: hidden;
+}
+
+.article-menu .menu-content .bookmark-list-item.is-checked {
+    font-weight: 550;
+
+    & .bookmark-list-check {
+        visibility: visible;
+    }
+}
+
+/* No press-scale on an open trigger: a transform makes the trigger the containing block of its fixed
+   ::before, so pressing the click-away layer would shrink it to the button and the mouseup would land
+   outside, cancelling the click that closes the menu. */
+.article-actions .article-menu[open] > .menu-trigger:active {
+    transform: none;
 }
 
 .article-menu[open] .menu-trigger::before {

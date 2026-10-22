@@ -201,7 +201,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasKey(e => new { e.ArticleRevisionId, e.CategorySlug });
 			b.Property(e => e.CategorySlug).IsRequired();
 			b.HasIndex(e => new { e.CategorySlug, e.ArticleRevisionId });
-			b.HasOne<ArticleRevision>().WithMany()
+			b.HasOne<ArticleRevision>().WithMany(e => e.CategoryMemberships)
 				.HasForeignKey(e => e.ArticleRevisionId)
 				.OnDelete(DeleteBehavior.Cascade);
 		});
@@ -266,6 +266,10 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.CreatedByUserId });
+			// Named so EF keeps it separate from the unnamed lookup index on the same columns: one active default list per user per site.
+			b.HasIndex(e => new { e.SiteId, e.CreatedByUserId }, "UX_BookmarkLists_SiteId_CreatedByUserId_Default_Active")
+				.IsUnique()
+				.HasFilter("IsDefault = 1 AND DateDeleted IS NULL");
 		});
 
 		Builder.Entity<Bookmark>(b =>

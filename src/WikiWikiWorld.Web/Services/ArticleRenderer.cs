@@ -24,13 +24,14 @@ public interface IArticleRenderer
 	/// <param name="Culture">The current culture code.</param>
 	/// <param name="EditUrl">The article edit URL used by stub banners.</param>
 	/// <param name="CancellationToken">A cancellation token.</param>
+	/// <param name="CategoryPage">One-based page of indexed category members.</param>
 	/// <returns>The rendered article content and extracted metadata.</returns>
 	Task<RenderedArticle> RenderAsync(
 		ArticleRevision Revision,
 		int SiteId,
 		string Culture,
 		string EditUrl,
-		CancellationToken CancellationToken);
+		CancellationToken CancellationToken, int CategoryPage = 1);
 }
 
 /// <summary>
@@ -98,7 +99,7 @@ public sealed class ArticleRenderer(
 		int SiteId,
 		string Culture,
 		string EditUrl,
-		CancellationToken CancellationToken)
+		CancellationToken CancellationToken, int CategoryPage = 1)
 	{
 		MarkdownPipeline Pipeline = MarkdownPipelineFactory.GetPipeline();
 		MarkdownDocument Document = Markdown.Parse(Revision.Text, Pipeline);
@@ -107,6 +108,7 @@ public sealed class ArticleRenderer(
 		EyebrowExtension.Enrich(Document);
 		SubtitleExtension.Enrich(Document);
 		SourceExtension.Enrich(Document);
+		await CategoryArticlesExtension.EnrichAsync(Document, Context, Revision, SiteId, Culture, CategoryPage, CancellationToken);
 		await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);

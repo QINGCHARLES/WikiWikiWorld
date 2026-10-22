@@ -115,6 +115,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(EyebrowExt)
 			.Use(SubtitleExt)
 			.Use(CategoryExt)
+			.Use(new CategoryArticlesExtension())
 			.Use(FootnoteExt)
 			.Use(CitationExt)
 			.Use(PublicationIssueInfoboxExt)
