@@ -63,6 +63,17 @@ figure:has(.hero-image) {
     object-position: top;
 }
 
+/* Optional paper shader shares the image's crop, fade and parallax; original stays underneath. */
+.hero-paper-texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.hero-paper-texture canvas {
+    z-index: 0;
+}
+
 figure:has(.hero-image) + hgroup {
     position: relative;
     z-index: 1;

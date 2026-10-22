@@ -22,8 +22,15 @@
 - Verify changes in a modern Chromium browser with JavaScript both enabled and disabled, including anonymous and authenticated requests, persistence after reload, network failures, antiforgery rejection, and an unchanged article URL. Other browser support has not yet been formally defined.
 
 ## 🎨 CSS & Responsive Design
+- **Header paper texture:** Approved preset (2026-10-21): folds 0.0, wrinkles 0.3, crumples 0.3, drops 0.0. CMYK was rejected and removed. A single static shader specializes disabled folds, drops and roughness stripes as compile-time constants; original images are preserved. See [settings, verification and reversal instructions](doc/header-paper-texture.md). The pinned self-hosted shader loads only for enabled headers.
 - **Stylesheet loading:** `SiteStylesheetCatalog` builds an ordered snapshot at startup for the site IDs in `SiteConfiguration:Sites`. Shared defaults live in `src/WikiWikiWorld.Web/wwwroot/css/`; optional overrides mirror their relative paths under `wwwroot/css/sites/<SiteId>/` (for example `sites/1/core/variables.css`). The shared layout emits all defaults first, then existing overrides in the same relative order, with cache-versioned URLs. Sites without overrides use defaults. No cascade layers are introduced. Adding/removing override files or changing configured sites requires an app restart. Keep the catalog's ordered list updated when adding a new shared stylesheet. Files ship with the application; they are not stored in the persistent data directory. The standalone culture selector retains its own styling.
+- **Home category pills:** The curated list (title + fixed slug) lives in `IndexModel.Categories`; styles in `css/pages/home.css`. From 32rem container width up, the strip clamps to two wrapped rows and a native `<details>` toggle expands it; no JavaScript. Below 32rem it is always one swipeable row with no toggle, because expanding all pills on a phone buries the page (a deliberate container-query exception to the rule below). `/category:<slug>` pages do not exist yet.
 - **Avoid `@media` Breakpoints:** Avoid CSS `@media` width breakpoints whenever possible to keep the site continuously and fluidly responsive across all viewport sizes. Prefer intrinsic sizing and fluid CSS math functions (`clamp()`, `min()`, `max()`, CSS Grid `auto-fit`/`auto-fill`, Flexbox wrapping, and logical properties) so layouts, spacing, typography, and visual effects adapt smoothly without stepped breakpoint jumps.
+
+## Category membership storage
+
+- Schema and EF mapping are implemented for revision-owned `ArticleCategoryMemberships`. Category slugs are immutable identities, independent of display names. Save integration, backfill, and the listing directive are pending.
+- Existing databases require an explicitly applied additive SQL script; there are no automatic startup migrations. See [schema, application and verification procedure](doc/category-membership-schema.md).
 
 ## 🧩 Markdig Extensions
 

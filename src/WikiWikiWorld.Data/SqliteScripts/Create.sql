@@ -108,6 +108,17 @@ CREATE INDEX IX_ArticleRevisions_CreatedByUserId ON ArticleRevisions (CreatedByU
 CREATE INDEX IX_ArticleRevisions_SiteId_Culture_UrlSlug_DateCreated ON ArticleRevisions (SiteId, Culture, UrlSlug, DateCreated);
 CREATE INDEX IX_ArticleRevisions_SiteId_Culture_UrlSlug_IsCurrent ON ArticleRevisions (SiteId, Culture, UrlSlug, IsCurrent);
 
+CREATE TABLE ArticleCategoryMemberships (
+    ArticleRevisionId INTEGER NOT NULL,
+    CategorySlug TEXT NOT NULL,
+    CONSTRAINT PK_ArticleCategoryMemberships PRIMARY KEY (ArticleRevisionId, CategorySlug),
+    CONSTRAINT FK_ArticleCategoryMemberships_ArticleRevisions_ArticleRevisionId
+        FOREIGN KEY (ArticleRevisionId) REFERENCES ArticleRevisions (Id) ON DELETE CASCADE
+) STRICT;
+
+CREATE INDEX IX_ArticleCategoryMemberships_CategorySlug_ArticleRevisionId
+    ON ArticleCategoryMemberships (CategorySlug, ArticleRevisionId);
+
 CREATE TABLE FileRevisions (
     Id INTEGER NOT NULL CONSTRAINT PK_FileRevisions PRIMARY KEY AUTOINCREMENT,
     CanonicalFileId TEXT NOT NULL,

@@ -49,6 +49,23 @@
 	<h1>Magazedia</h1>
 </figure>
 
+<nav class="home-categories" aria-label="Categories">
+	<ul class="home-category-list" role="list">
+		<li><a href="/" aria-current="page">All</a></li>
+		@foreach (HomeCategory Category in IndexModel.Categories)
+		{
+			<li><a href="/category:@Category.Slug">@Category.Title</a></li>
+		}
+	</ul>
+	<details class="home-categories-toggle">
+		<summary>
+			<span class="home-categories-more">All categories</span>
+			<span class="home-categories-less">Show less</span>
+			<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" /></svg>
+		</summary>
+	</details>
+</nav>
+
 <article>
 	@if (Model.ArticlesWithCovers.Any())
 	{

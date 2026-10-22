@@ -30,6 +30,7 @@ public sealed class SiteStylesheetCatalog
 		"components/stub.css",
 		"components/media.css",
 		"components/file-info.css",
+		"pages/home.css",
 		"pages/article.css",
 		"pages/search.css",
 		"pages/static.css",

@@ -130,6 +130,15 @@ nav.header .header-b a.button {
     white-space: nowrap;
 }
 
+/* House-green contribution CTA with dark text for contrast. */
+nav.header .header-b a.button[href="/Account/Register"] {
+    --button-bg: var(--color-primary);
+    --button-color: var(--color-foreground);
+    --button-hover-bg: var(--uchu-green-6);
+    --button-hover-color: var(--color-foreground);
+    --button-outline-color: var(--color-foreground);
+}
+
 .search-form {
     box-sizing: border-box;
     inline-size: min(100%, 24rem);

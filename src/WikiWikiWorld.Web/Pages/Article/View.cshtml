@@ -237,6 +237,10 @@ else if(Model.DisplayedRevision is not null)
 
 	@section Scripts {
 		<script src="~/js/article-view.js" asp-append-version="true"></script>
+		@if (!string.IsNullOrWhiteSpace(Model.HeaderImage))
+		{
+			<script type="module" src="~/js/header-paper-texture.js" asp-append-version="true"></script>
+		}
 		<script type="module" src="~/js/vendor/datastar-1.0.4.js" asp-append-version="true"></script>
 	}
 

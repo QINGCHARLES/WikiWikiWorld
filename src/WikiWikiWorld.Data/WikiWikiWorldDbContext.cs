@@ -69,6 +69,11 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	public DbSet<ArticleRevision> ArticleRevisions { get; set; } = null!;
 
 	/// <summary>
+	/// Gets or sets revision memberships; join filtered article revisions to enforce visibility and site/culture scope.
+	/// </summary>
+	public DbSet<ArticleCategoryMembership> ArticleCategoryMemberships { get; set; } = null!;
+
+	/// <summary>
 	/// Gets or sets the file revisions.
 	/// </summary>
 	public DbSet<FileRevision> FileRevisions { get; set; } = null!;
@@ -188,6 +193,17 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.DateCreated });
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.IsCurrent }).HasFilter("IsCurrent = 1 AND DateDeleted IS NULL");
+		});
+
+		Builder.Entity<ArticleCategoryMembership>(b =>
+		{
+			b.ToTable("ArticleCategoryMemberships");
+			b.HasKey(e => new { e.ArticleRevisionId, e.CategorySlug });
+			b.Property(e => e.CategorySlug).IsRequired();
+			b.HasIndex(e => new { e.CategorySlug, e.ArticleRevisionId });
+			b.HasOne<ArticleRevision>().WithMany()
+				.HasForeignKey(e => e.ArticleRevisionId)
+				.OnDelete(DeleteBehavior.Cascade);
 		});
 
 		Builder.Entity<FileRevision>(b =>

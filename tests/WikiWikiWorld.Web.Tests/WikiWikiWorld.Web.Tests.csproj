@@ -18,6 +18,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="../../src/WikiWikiWorld.Web/WikiWikiWorld.Web.csproj" />
+		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/AddArticleCategoryMemberships.sql" Link="SqliteScripts/AddArticleCategoryMemberships.sql" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/Create.sql" Link="SqliteScripts/Create.sql" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>
