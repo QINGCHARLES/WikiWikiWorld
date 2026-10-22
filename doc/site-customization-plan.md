@@ -1,6 +1,7 @@
 # Site customization plan: separating the platform from Magazedia
 
-Status: proposal, planning only (no code changes yet). Written 2026-10-22.
+Status: proposal, planning only (no code changes yet). Written 2026-10-22; first decisions recorded the
+same day (§8).
 Target runtime: .NET 11, after the upgrade lands as its own change.
 Database schema changes are out of scope.
 
@@ -10,12 +11,15 @@ Database schema changes are out of scope.
   ([appsettings.Production.json](../src/WikiWikiWorld.Web/appsettings.Production.json)). Today they get
   Magazedia's title, logo, footer, social links, licensed fonts, Typekit kit, Google CSE script, magazine
   category pills, magazine-cover home grid, publication upload page, and the full magazine Markdig set.
-- The proposal sorts customization into three tiers by who does the customizing:
-  1. **Configuration** (platform operator, restart): a typed, validated per-site profile.
-  2. **Code** (platform developers, deploy): site-aware Razor overrides, home sections as view
-     components, per-site Markdig directive sets, and feature-gated pages, all chosen per request.
-  3. **Content** (wiki admins, no deploy): reserved `site:` articles for the home intro, footer and legal
-     pages, with a few widget directives.
+- Only developers will customize the wikis (decision 1), so the proposal uses two tiers:
+  1. **Configuration** (restart): a typed, validated per-site profile for simple values such as names,
+     logos, links, fonts, feature flags and which directives are on.
+  2. **Code** (deploy): site-aware Razor overrides (including each site's home page), per-site Markdig
+     directive sets, and feature-gated pages, all chosen per request.
+
+  A third tier for non-developer admins, driven by wiki content, is described in §5.D but not planned.
+- A big wiki may later move to its own, possibly sharded, deployment (decision 2). The design keeps that a
+  configuration change: the same image, with that deployment's configuration listing only its sites (§5.J).
 - Magazine functionality moves into a reusable **Publications pack**, not into "Magazedia". A future
   comics, books or records wiki will want covers, issues and credits too.
 - Use folders inside `WikiWikiWorld.Web` first. Extract Razor class libraries only when a second site needs
@@ -30,7 +34,7 @@ Database schema changes are out of scope.
 | Line | What | Note |
 | --- | --- | --- |
 | 17 | `<html lang="en">` | Ignores `ja`/`ar` cultures, with no `dir="rtl"` for Arabic. This is a platform bug, not branding. |
-| 20–21 | Lyon font preloads | Lyon is a commercially licensed face. Check that its web licence covers the Fanfare and CRTR domains. |
+| 20–21 | Lyon font preloads | Branding. The Lyon licence covers multiple sites at current traffic (decision 5), but other sites should only load Lyon if they adopt Magazedia's look. |
 | 27 | `<title>… - Magazedia` | Branding. |
 | 28 | Typekit kit `kwb1ind` | Adobe Fonts web projects are domain-restricted, so Fanfare and CRTR make a blocking stylesheet request for fonts that will not load. |
 | 65 | Google CSE script `cx=d2fb19070cd0c4f3d` | Loads on every page of every site, but nothing in the app references it (no `gcse` element). |
@@ -83,8 +87,10 @@ caveats:
   configured domains. That means Fanfare and CRTR cannot be exercised locally, which would block verifying
   everything in this plan.
 - `Admin/DomainRedirects` and `Admin/MigrateFiles` are protected by `[Authorize]` only, so any registered
-  user on any site can use them. This matters because the content tier (§5.D) needs a real "site admin"
-  concept.
+  user on any site can use them. `Article/Delete` is the same, so any signed-in user can soft-delete any
+  article. Roles exist, but nothing checks them (§8, question 4).
+- User accounts and roles are global. The `User` and `Role` tables have no `SiteId`, so one login, and any
+  role, applies on every wiki.
 - `ContentDeliveryNetworkSettings.BaseUrl` (`static.magazedia.com`) is global.
 
 Out of scope because they are database work: the `PublicationUploadQueue*` and `DownloadUrl*` tables stay in
@@ -96,9 +102,8 @@ the shared schema, and the Publications pack keeps using them through the shared
    resolved from the host. Build-time switches (`#if`, conditional project references) cannot work while
    the sites share a container.
 2. **Trust boundary.** All sites share one process and one SQLite file, so code written for one wiki can
-   read every wiki's data. Code customizations must therefore be written or reviewed by the platform owner.
-   Wiki admins get configuration (through the operator) and content only. This rules out uploaded plugin
-   DLLs.
+   read every wiki's data. Code customizations must therefore be written or reviewed by the platform owner,
+   which matches decision 1. This rules out uploaded plugin DLLs.
 3. **No schema changes.** Customization state lives in configuration files, in code, or in ordinary article
    revisions.
 4. **A lightweight front end.** Server-rendered Razor and native HTML and CSS, with no build step. The things
@@ -111,9 +116,9 @@ the shared schema, and the Publications pack keeps using them through the shared
 
 | Tier | Who | A change needs | Good for | Mechanisms |
 | --- | --- | --- | --- | --- |
-| Configuration | Operator | Restart (reload for plain text) | Names, links, fonts, feature flags, enabled directives, home section list, eyebrow labels, infobox schemas | §5.A, §5.F |
-| Code | Developers | Deploy | Structurally different chrome, sections that query data, directives with database enrichment, site-only pages | §5.B, §5.C, §5.E, §5.G, §5.H |
-| Content | Wiki admins | An edit | Home intro, footer prose, legal pages, curated lists, and translations of all of these | §5.D |
+| Configuration | Developers | Restart (reload for plain text) | Names, links, fonts, feature flags, enabled directives, eyebrow labels, infobox schemas | §5.A, §5.F |
+| Code | Developers | Deploy | Home pages, structurally different chrome, legal pages and translated prose, directives with database enrichment, site-only pages | §5.B, §5.C, §5.E, §5.G, §5.H |
+| Content (not planned) | Wiki admins | An edit | Home intro, footer prose, legal pages, curated lists, and translations of all of these | §5.D |
 
 **Packs versus sites.** A *pack* is reusable domain functionality. The Publications pack contains covers,
 issues, credits, contents, downloads and the upload queue. A *site* is one wiki's branding and composition.
@@ -153,12 +158,7 @@ avoids that.
 				"MAGAZINE": { "en": "Magazine" },
 				"MAGAZINEISSUE": { "en": "Magazine Issue" },
 				"MAGAZINEFRANCHISE": { "en": "Magazine Franchise" }
-			},
-			"HomeSections": [
-				{ "Component": "CategoryPills", "Settings": { "Categories": [ { "Title": "News & Politics", "Slug": "news-politics" } ] } },
-				{ "Component": "RecentCovers", "Settings": { "Count": 50 } },
-				{ "Component": "QuickLinks" }
-			]
+			}
 		},
 		"fanfare": {
 			"SiteId": 2,
@@ -201,9 +201,6 @@ public sealed class SiteInfo
 
 	/// <summary>Gets or sets eyebrow codes mapped to culture-keyed display labels.</summary>
 	public Dictionary<string, Dictionary<string, string>> EyebrowTypes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-
-	/// <summary>Gets or sets the ordered home page sections; empty means the platform default sections.</summary>
-	public List<HomeSectionOptions> HomeSections { get; set; } = [];
 }
 ```
 
@@ -211,10 +208,13 @@ Implementation notes:
 
 - **Validation.** Use an `IValidateOptions<SiteConfiguration>` that takes dependencies through DI, plus
   `ValidateOnStart()`. It checks that `SiteId` and `SiteKey` are unique, that keys match `^[a-z0-9-]+$`, and
-  that every named feature, directive and home component is registered. A typo should fail at startup, not
-  on first request.
+  that every named feature and directive is registered. A typo should fail at startup, not on first request.
 - **Per-culture text.** Short strings in configuration are culture-keyed dictionaries. They fall back to the
-  site's `DefaultCulture` and then to the first entry. Long prose belongs in the content tier.
+  site's `DefaultCulture` and then to the first entry. Long prose, such as legal pages, belongs in per-site,
+  per-culture partials (§5.B).
+- **Configuration or Razor?** With only developers customizing, keep configuration for simple values that
+  let a new wiki launch with no Razor at all. Anything with structure, such as the home page, is clearer and
+  compile-checked as a Razor override.
 - **Resolve the site once per request.** A middleware after `CanonicalDomainMiddleware` stores
   `SiteRequestFeature(SiteInfo Site, string Culture)` in `HttpContext.Features`. `BasePageModel.Site`, the
   layout, the view expander and filters all read it. Today the site is resolved separately in
@@ -232,38 +232,45 @@ override it:
 | `_SiteHead` | Font preloads, external stylesheets, favicons and analytics from the profile |
 | `_SiteBrand` | The logo from `Branding.LogoPath`, or the site name as a wordmark |
 | `_SiteFooter` | Tagline, social links (from an icon sprite), licence, copyright and legal links |
-| `_HomeBody` | The configured home sections (§5.C) |
+| `_HomeBody` | The platform default home page (§5.C) |
 | `_ArticleHeader`, `_ArticleMeta` | Hero, eyebrow, title and subtitle, then the authors and actions bar (carved out of the 440-line `View.cshtml`) |
+| `_Privacy`, `_Terms`, `_Dmca` | Generic placeholder text. Each site supplies its own, which also fixes the two missing pages. |
 
-An `IViewLocationExpander` resolves overrides from `/Sites/{SiteKey}/Shared/`. Razor looks up partials,
-layouts and view-component views (`Components/{Name}/Default`) through the same location formats, so one
-prepended location covers all three.
+An `IViewLocationExpander` resolves overrides from `/Sites/{SiteKey}/Shared/`, trying a culture-specific
+file first (for example `_Privacy.ja.cshtml`). Razor looks up partials, layouts and view-component views
+(`Components/{Name}/Default`) through the same location formats, so the prepended locations cover all
+three. The app does not set `CurrentUICulture` today, so this uses the site culture directly instead of
+Razor's built-in `LanguageViewLocationExpander`. Setting the request culture would also change date and
+number formatting on `ja` and `ar` pages, which is a separate decision.
 
 ```csharp
 /// <summary>
-/// Lets a site override any partial, layout or view-component view by placing a file under <c>/Sites/{SiteKey}/Shared/</c>.
-/// Platform locations remain the fallback.
+/// Lets a site override any partial, layout or view-component view by placing a file under <c>/Sites/{SiteKey}/Shared/</c>,
+/// optionally per culture as <c>{Name}.{Culture}.cshtml</c>. Platform locations remain the fallback.
 /// </summary>
 public sealed class SiteViewLocationExpander : IViewLocationExpander
 {
 	private const string SiteKeyName = "SiteKey";
+	private const string CultureName = "Culture";
 
 	/// <summary>
-	/// Records the request's site key. Razor includes these values in its view lookup cache key;
-	/// without this, the first site to request a partial would have its override served to every site.
+	/// Records the request's site key and culture. Razor includes these values in its view lookup cache key;
+	/// without them, the first site or culture to request a partial would have its override served to all of them.
 	/// </summary>
 	/// <param name="Context">The expansion context for the current lookup.</param>
 	public void PopulateValues(ViewLocationExpanderContext Context)
 	{
-		Context.Values[SiteKeyName] = Context.ActionContext.HttpContext.Features.Get<SiteRequestFeature>()?.Site.SiteKey;
+		SiteRequestFeature? Request = Context.ActionContext.HttpContext.Features.Get<SiteRequestFeature>();
+		Context.Values[SiteKeyName] = Request?.Site.SiteKey;
+		Context.Values[CultureName] = Request?.Culture;
 	}
 
 	/// <summary>
-	/// Prepends the site's folder ahead of the platform locations.
+	/// Prepends the site's culture-specific and culture-neutral locations ahead of the platform locations.
 	/// </summary>
-	/// <param name="Context">The expansion context carrying the populated site key.</param>
+	/// <param name="Context">The expansion context carrying the populated site key and culture.</param>
 	/// <param name="ViewLocations">The platform location formats.</param>
-	/// <returns>The site location followed by the unchanged platform locations.</returns>
+	/// <returns>The site locations followed by the unchanged platform locations.</returns>
 	public IEnumerable<string> ExpandViewLocations(ViewLocationExpanderContext Context, IEnumerable<string> ViewLocations)
 	{
 		if (!Context.Values.TryGetValue(SiteKeyName, out string? SiteKey) || string.IsNullOrEmpty(SiteKey))
@@ -271,7 +278,13 @@ public sealed class SiteViewLocationExpander : IViewLocationExpander
 			return ViewLocations;
 		}
 
-		return [$"/Sites/{SiteKey}/Shared/{{0}}.cshtml", .. ViewLocations];
+		string SiteFolder = $"/Sites/{SiteKey}/Shared/";
+		if (!Context.Values.TryGetValue(CultureName, out string? Culture) || string.IsNullOrEmpty(Culture))
+		{
+			return [$"{SiteFolder}{{0}}.cshtml", .. ViewLocations];
+		}
+
+		return [$"{SiteFolder}{{0}}.{Culture}.cshtml", $"{SiteFolder}{{0}}.cshtml", .. ViewLocations];
 	}
 }
 ```
@@ -289,30 +302,35 @@ public sealed class SiteViewLocationExpander : IViewLocationExpander
   contribute their CSS, so `issue-credits.css` loads only where Publications is enabled. Replace the two
   hardcoded Lyon references with a variable.
 
-### 5.C Home page as configured sections (code and configuration tiers)
+### 5.C Home page composed in Razor from view components (code tier)
 
-`Index` becomes a loop over the site's sections. Each section is a view component, which is the Razor Pages
-native unit for "a partial with its own data loading". Components can be invoked by name, which is what makes
-them configurable.
+`Index.cshtml` shrinks to `<partial name="_HomeBody" />`. The platform's default `_HomeBody` renders a
+generic wiki home, and each site that wants something different overrides it through §5.B. The building
+blocks are view components, which are the Razor Pages native unit for "a partial with its own data loading".
+
+Because only developers customize (decision 1), the home page is composed in Razor rather than listed in
+JSON. View-component tag helpers are checked by the compiler, so a misspelt section fails the build instead
+of needing startup validation. The first draft of this plan used JSON-configured sections, and that version
+needed extra code to pass settings through and validate component names.
 
 ```cshtml
-@for (int i = 0; i < Model.Sections.Count; i++)
-{
-	HomeSection Section = Model.Sections[i];
-	<cache vary-by="@($"{Model.SiteId}:{Model.Culture}:{i}")" expires-after="@TimeSpan.FromMinutes(5)">
-		@await Component.InvokeAsync(Section.Component, new { Settings = Section.Settings })
-	</cache>
-}
+@* Sites/magazedia/Shared/_HomeBody.cshtml *@
+<cache vary-by="@($"{Model.SiteId}:{Model.Culture}")" expires-after="@TimeSpan.FromMinutes(5)">
+	<vc:category-pills categories="@MagazediaHome.Categories" />
+	<vc:recent-covers count="50" />
+</cache>
+<vc:quick-links />
+```
+
+```cshtml
+@* Pages/Shared/_HomeBody.cshtml: platform default for any site without an override *@
+<vc:site-hero />
+<cache vary-by="@($"{Model.SiteId}:{Model.Culture}")" expires-after="@TimeSpan.FromMinutes(5)">
+	<vc:recent-articles count="20" />
+</cache>
 ```
 
 ```csharp
-/// <summary>
-/// One configured home page section: a view component name plus its raw settings, which the component binds to its own typed record.
-/// </summary>
-/// <param name="Component">The view component name, validated at startup.</param>
-/// <param name="Settings">The section's configuration subtree.</param>
-public sealed record HomeSection(string Component, IConfigurationSection Settings);
-
 /// <summary>
 /// Renders the most recent cover-bearing articles as a grid. Belongs to the Publications pack.
 /// </summary>
@@ -322,31 +340,36 @@ public sealed class RecentCoversViewComponent(WikiWikiWorldDbContext Context) : 
 	/// <summary>
 	/// Loads recent covers for the current site and culture; the query filters already scope the context.
 	/// </summary>
-	/// <param name="Settings">The section settings; <c>Count</c> is clamped to 1–100.</param>
+	/// <param name="Count">The number of covers to show, clamped to 1–100.</param>
 	/// <returns>The rendered section.</returns>
-	public async Task<IViewComponentResult> InvokeAsync(IConfigurationSection Settings)
+	public async Task<IViewComponentResult> InvokeAsync(int Count)
 	{
-		int Count = Math.Clamp(Settings.GetValue("Count", 50), 1, 100);
-		IReadOnlyList<ArticleWithCover> Covers = await RecentCoverQuery.LoadAsync(Context, Count, HttpContext.RequestAborted);
+		IReadOnlyList<ArticleWithCover> Covers = await RecentCoverQuery.LoadAsync(Context, Math.Clamp(Count, 1, 100), HttpContext.RequestAborted);
 		return View(Covers);
 	}
 }
 ```
 
-- **Proposed components.** Core: `SiteHero`, `CategoryPills`, `RecentArticles`, `ContentBlock` (renders a
-  `site:` article, §5.D) and `QuickLinks`. Publications pack: `RecentCovers`, which is today's
-  `IndexModel.OnGetAsync` moved.
-- **Default sections for an unconfigured site:** `SiteHero` followed by `RecentArticles`, which is a sensible
-  generic wiki home.
-- **Category pills, step by step.**
-  1. Move the 46 entries into configuration.
+- **Proposed components.** Core: `SiteHero`, `CategoryPills`, `RecentArticles` and `QuickLinks`.
+  Publications pack: `RecentCovers`, which is today's `IndexModel.OnGetAsync` moved into a view component.
+- **Tag helpers.** `vc:` tag helpers need `@addTagHelper *, WikiWikiWorld.Web` in `_ViewImports.cshtml`, and
+  later the pack's assembly name once code is extracted (§5.H).
+- **Category pills.**
+  1. Move the 46 entries into Magazedia's folder, where they stay a code-reviewed list.
   2. Later, take each pill's title from its category article in the current culture. The articles are
      already scoped by site and culture, so this also resolves "titles are English on every culture for now".
   3. As an alternative for small wikis: the top N categories by membership count, once the
      category-membership save integration lands. This needs no curation.
-- **Escape hatch.** Override `_HomeBody` through §5.B for a fully bespoke home page.
+- **The `<cache>` key.** Each `<cache>` tag helper's key includes its position in the source file, so the
+  same cached block in two sites' partials never collides. `vary-by` must still include site and culture,
+  because the platform default partial is shared by every site that does not override it.
 
-### 5.D Content-defined site pages, the MediaWiki model (content tier)
+### 5.D Content-defined site pages, the MediaWiki model (content tier, not planned)
+
+> **Not planned (decision 1).** Non-developers will not customize the wikis, so this tier is not needed.
+> Legal pages and translated prose become per-site, per-culture partials (§5.B) instead. This section is
+> kept as a record in case that changes. If it is revived, protection (below) must exist before any
+> `site:` page is editable.
 
 Reserve a `site:` namespace, following the existing `category:`, `file:` and `wiki:` conventions. Articles are
 already scoped by site and culture, so translation comes for free, and so do revision history and revert.
@@ -366,9 +389,8 @@ already scoped by site and culture, so translation comes for free, and so do rev
   exchange, layout precision is lower, widget syntax becomes another public contract to keep stable, and
   protection must exist before this is enabled.
 
-The tiers work together. Configuration and Razor own the structure, while content owns the prose and the
-curation. For example, Magazedia's `HomeSections` could be
-`[ContentBlock(site:home-intro), CategoryPills, RecentCovers]`.
+If revived, a `ContentBlock` view component rendering a `site:` article would slot into any `_HomeBody`, so
+Razor would own the structure while content owned the prose.
 
 ### 5.E Per-site Markdown pipelines and a directive registry (code and configuration tiers)
 
@@ -449,7 +471,8 @@ foreach (IWikiDirective Directive in SitePipeline.Directives)
 
 - **Pipelines.** Build them once per site at startup and cache them in a `FrozenDictionary<int, SitePipeline>`.
   This matches the stylesheet catalog's "restart to change" behaviour. Variants are keyed by
-  `(Site, Kind)`, where `Kind` is `Article`, `SitePage` (adds the widgets) or `Talk` (unchanged and shared).
+  `(Site, Kind)`, where `Kind` is `Article` or `Talk` (unchanged and shared). A `SitePage` variant with
+  widget directives would be added only if §5.D is revived.
   Keep the current `Use(...)` order, because Markdig tries block parsers that share the `{` opening character
   in registration order. The golden test in Phase 2 catches any drift.
 - **Per-site link domains fall out naturally.** `CitationExtension` and `IssueCreditsExtension` already take
@@ -478,7 +501,9 @@ foreach (IWikiDirective Directive in SitePipeline.Directives)
 
 ### 5.F Declarative directives (configuration tier)
 
-Many "custom data types" are really infoboxes and labels, which a schema can describe without code:
+Many "custom data types" are really infoboxes and labels, which a schema can describe without code. Only
+developers will write these schemas (decision 1), but a schema is still far less code to write and review
+than a new parser for each data type:
 
 - **Eyebrow types** come from the site's `EyebrowTypes`, with labels per culture. Fanfare could define
   `CHARACTER` and `EPISODE`. Unknown codes are consumed silently, as they are today.
@@ -609,8 +634,40 @@ stylesheet catalog must probe there.
 | Orchard Core | Real per-tenant containers, themes and modules, but adopting it means migrating the platform. This plan borrows its ideas instead: theme fallback (§5.B), zones, and per-tenant features (§5.G). |
 | Finbuckle.MultiTenant | Mature tenant resolution, per-tenant options and per-tenant auth cookies. Worth adopting if per-tenant authentication or data-protection isolation becomes a requirement. Until then the existing resolver and the profile are enough. |
 | A dedicated image per wiki (build-time composition) | Contradicts today's one-container topology. The module design still allows it later for a large customer, because a host would simply register only that site's packs. |
-| Templates stored in the database (Liquid or Fluid) for admins | Adds a second template language and an HTML-injection risk on each site's own origin. The content tier with directives gives admins power without raw HTML. |
+| Templates stored in the database (Liquid or Fluid) for admins | Adds a second template language and an HTML-injection risk on each site's own origin. Moot after decision 1: only developers customize, and they have Razor. |
 | Razor components through `DynamicComponent` for sections | Workable from Razor Pages, but adds a second component model. View components are native to this app. .NET 11's `CacheView` targets Blazor static SSR, so do not assume it applies inside Razor Pages. |
+
+### 5.J A dedicated or sharded deployment for a big wiki
+
+A big wiki may move to its own, possibly sharded, deployment (decision 2). The customization design should
+make that a configuration change, not a rebuild:
+
+- **One image, different configuration.** Every deployment runs the same image. A deployment's
+  configuration lists only the sites it serves. Other sites' code ships in the image but never runs, because
+  nothing executes for a site that is not configured. Extracting Razor class libraries therefore stays
+  optional even then.
+- **Keep the `SiteId`.** Every row carries `SiteId`, and uploads live under `data/sitefiles/{SiteId}`. A wiki
+  that moves keeps its ID, so its data moves unchanged.
+- **Keep deployment settings out of the site profile.** `DomainRedirects` (including `UnknownHostTarget`),
+  `ContentDeliveryNetworkSettings`, Kestrel certificates and the data path belong to a deployment, not to a
+  site.
+- **No in-process cross-site features.** Nothing should assume every wiki lives in the same process or
+  database, such as an "all our wikis" page. The plan already resolves everything from configuration and
+  the request host.
+- **What "sharded" changes depends on its meaning (§8, question 8).**
+  - *Split by culture* (for example English on one deployment, Japanese on another): data is already scoped
+    by site and culture. The culture-selector root page builds its links from `Domains`, which today also
+    means "domains this deployment serves". A shard would need to link to cultures it does not serve, so
+    that list would split into served domains and linked culture domains.
+  - *Several copies behind a load balancer:*
+    - In-memory caches (`<cache>`, `IMemoryCache`, the startup-built catalogs and pipelines) are per
+      instance. That is fine for read caches with a time-to-live, but nothing may rely on in-memory state
+      being the same on every instance.
+    - The Data Protection key ring must be shared across instances, or sign-ins and antiforgery tokens fail
+      when a request lands on a different node.
+    - A load balancer replaces "Kestrel terminates TLS directly", so forwarded-header handling becomes
+      necessary.
+    - SQLite's single-writer model is the bigger question, but that is database work and out of scope.
 
 ## 6. Recommended path
 
@@ -630,7 +687,7 @@ Upgrade to .NET 11 first, as its own change, so failures stay attributable.
 6. Gate `Wiki/Upload` and the publication call-to-action behind `PublicationUploads`, and make the
    Login/Register text generic.
 7. Make `ApprovedLinkDomains` per site, merging in the global list during the transition.
-8. Require an administrator role on the `Admin/*` pages.
+8. Require an administrator role on the `Admin/*` pages and on article deletion (§8, question 4).
 
 Verify Phase 0 with `dotnet build WikiWikiWorld.slnx` and
 `dotnet test tests/WikiWikiWorld.Web.Tests -c Release`. Then run the app and compare Magazedia's home and
@@ -643,6 +700,8 @@ and confirm no Magazedia branding, fonts or scripts remain.
   `Sites/magazedia/Shared`.
 - Key the stylesheet catalog by `SiteKey`, support site-only sheets and pack CSS, and replace the hardcoded
   Lyon references.
+- Add per-site, per-culture legal partials behind `/privacy-policy:`, `/terms:` and `/dmca:`, fixing the
+  two missing pages.
 - Tests:
   - Two sites requesting the same partial name get different views. This guards the view cache key.
   - Profile validation rejects duplicate IDs and keys, and unknown names.
@@ -659,18 +718,17 @@ and confirm no Magazedia branding, fonts or scripts remain.
   both the old and new renderer. Magazedia output must be byte-identical. Also check that Fanfare's pipeline
   rejects `{{CoverGrid}}` visibly.
 
-**Phase 3: home sections (medium).** Build the view components from §5.C and move today's home query into
-`RecentCovers`. Index becomes the section loop with `<cache>` keyed by site and culture. Startup validation
-rejects unknown component names.
+**Phase 3: home composition (medium).** Build the view components from §5.C and move today's home query
+into `RecentCovers`. Write the platform default `_HomeBody` and Magazedia's override. `Index.cshtml` becomes
+a single partial call.
 
-**Phase 4: content tier (medium).** Add the `site:` namespace with role-based protection, the `ContentBlock`
-component, legal pages served from content, and the widget directives in the `SitePage` pipeline variant.
+**Phase 4: not planned.** The content tier (§5.D) existed for non-developer admins (decision 1).
 
 **Phase 5: as demand appears.** Declarative infobox schemas with aliases, extraction into Razor class
 libraries, a theme level, and the matcher-policy spike if it is ever needed.
 
 Order and value: Phases 0 and 1 immediately stop Fanfare and CRTR from shipping as Magazedia. Phases 2 and 3
-are where "other wikis get options" becomes real. Phase 4 is what lets non-developers run a wiki.
+are where "other wikis get options" becomes real. Nothing here blocks a later dedicated deployment (§5.J).
 
 ## 7. .NET 11 relevance
 
@@ -687,20 +745,57 @@ are where "other wikis get options" becomes real. Phase 4 is what lets non-devel
   tag helper, output caching (.NET 7), keyed DI (.NET 8), options validation, frozen collections, and C# 14
   extension blocks.
 
-## 8. Decisions needed
+## 8. Decisions
 
-1. **Who customizes?** Only you, through code and deploys, or wiki admins without deploys? This decides
-   whether Phase 4 is core or optional.
-2. **Hosting.** Will every wiki stay co-hosted in the one container, or might a large wiki get a dedicated
-   deployment? The plan supports both, but the answer changes how hard to push on library extraction.
-3. **Publications.** A reusable pack (recommended), or Magazedia-only?
-4. **Per-site admin roles.** Is the `SiteAdmin:{SiteKey}` role-name convention acceptable as a
-   no-schema-change measure?
-5. **Restart semantics.** Is a restart acceptable for directive and section changes, as it already is for
+### Answered 2026-10-22
+
+1. **Who customizes:** developers only. The content tier (§5.D) is not planned. Home pages are composed in
+   Razor (§5.C), and legal pages and translated prose are per-site, per-culture partials (§5.B).
+2. **Hosting:** a big wiki may later get its own, possibly sharded, deployment. See §5.J.
+5. **Lyon:** the licence covers multiple sites at current traffic.
+
+### Still open
+
+3. **Where does the magazine code live?** This is the code for:
+   - the directives CoverCarousel, CoverGrid, PublicationIssueInfobox, IssueContents, IssueCredits and
+     DownloadsBox;
+   - the "Submit a Publication" page and the "Have a copy of this publication?" prompt;
+   - the recent-covers home grid.
+
+   The tables behind them stay where they are either way. The two options:
+   - *Magazedia-only.* The code goes in `Sites/magazedia/`, and only Magazedia can switch it on. Magazine
+     wording can stay hardcoded. This is the simplest option.
+   - *A shared Publications pack.* The code goes in `Packs/Publications/`, and any site can switch on
+     individual pieces in its profile. Wording that says "magazine" or "publication" has to become a label
+     each site sets.
+
+   The real question is whether any wiki you host, now or plausibly later, has covers, issues or credits:
+   comics, records, books, games or podcasts, for example. If yes, or if you are unsure, use the pack, but
+   generalize wording only when a second site actually turns a piece on. The choice is cheap to reverse,
+   because the directive registry (§5.E) already lets each piece be switched on separately; moving a folder
+   later is mechanical. A finer split also works: covers and credits are broadly useful, while the upload
+   queue and its copyright exemptions are archive-specific and could stay Magazedia's.
+4. **Who may use admin tools, and is that per wiki?** Today, user accounts and roles are global, so one login
+   works on all three wikis and a role would apply on all of them. Nothing checks roles yet:
+   `Admin/DomainRedirects`, `Admin/MigrateFiles` and `Article/Delete` only require a login. Phase 0 locks
+   these down with a role whatever the answer.
+
+   The question is whether you will ever give someone elevated rights on one wiki but not the others, such
+   as a Fanfare moderator who should not moderate Magazedia:
+   - *No:* one global `Administrator` role is enough. This is the recommendation for now.
+   - *Yes:* doing it properly needs a site column on the user-to-role link, which is a schema change. The
+     workaround with no schema change puts the site in the role name, for example `Moderator:fanfare`, and
+     checks `IsInRole("Administrator") || IsInRole($"Moderator:{SiteKey}")`.
+
+   A dedicated deployment (decision 2) has its own database, so its users and roles would be separate
+   anyway.
+6. **Restart semantics.** Is a restart acceptable for directive and feature changes, as it already is for
    stylesheets, with only plain text reloading live?
-6. **Site keys and folders.** Rename the CSS override folder from `css/sites/1/` to a key-based path.
-7. **Fonts.** Confirm the Lyon licence scope and whether the Typekit kit can or should be added for other
-   domains.
+7. **Site keys and folders.** Rename the CSS override folder from `css/sites/1/` to a key-based path.
+8. **What "sharded" means.** Split by culture, or several copies behind a load balancer (§5.J)? This does
+   not change Phases 0–3, but it decides how much of §5.J applies.
+9. **Typekit.** Adobe Fonts kits only work on the domains listed in the kit. Should Fanfare and CRTR stop
+   loading `kwb1ind` (the default in this plan), or will they share Magazedia's type?
 
 ## 9. Testing the assumptions
 
@@ -716,4 +811,6 @@ are where "other wikis get options" becomes real. Phase 4 is what lets non-devel
   helper keeps those cheap.
 - **Risk of over-engineering.** Building a full module platform for three sites, when two may have little
   content, would be speculative. The phases are ordered so the cheap work (Phases 0 and 1) pays off
-  immediately, and the library, theme and matcher-policy work waits for a real second customer.
+  immediately, and the library, theme and matcher-policy work waits for a real second customer. Decision 1
+  removed the largest optional piece, the content tier, and simplified the home page from JSON sections to
+  Razor composition.
