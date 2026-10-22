@@ -6,6 +6,7 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using WikiWikiWorld.Data.Models;
+using WikiWikiWorld.Web.Helpers;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -15,9 +16,9 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 public sealed class CategoryInline : LeafInline
 {
 	/// <summary>
-	/// Gets or initializes the raw string data of the category.
+	/// Gets the display label and resolved category identity parsed from the directive.
 	/// </summary>
-	public required StringSlice Data { get; init; }
+	public required Category Category { get; init; }
 }
 
 /// <summary>
@@ -48,6 +49,25 @@ public sealed class CategoryParser : InlineParser
 			return false;
 		}
 
+		string Payload = Slice.Text[Slice.Start..EndPos];
+		int Separator = Payload.IndexOf("|#|", StringComparison.Ordinal);
+		string Label = (Separator < 0 ? Payload : Payload[..Separator]).Trim();
+		string Slug;
+		try
+		{
+			Slug = Separator < 0 ? CategorySlugHelper.Generate(Label) : Payload[(Separator + 3)..].Trim();
+		}
+		catch (ArgumentException)
+		{
+			Slice.Start = StartPosition;
+			return false;
+		}
+		if (Label.Length == 0 || !CategorySlugHelper.IsValidExplicitSlug(Slug))
+		{
+			Slice.Start = StartPosition;
+			return false;
+		}
+
 		int InlineStart = Processor.GetSourcePosition(Slice.Start, out int Line, out int Column);
 
 		Processor.Inline = new CategoryInline
@@ -55,7 +75,7 @@ public sealed class CategoryParser : InlineParser
 			Span = new SourceSpan(InlineStart, InlineStart + (EndPos - Slice.Start)),
 			Line = Line,
 			Column = Column,
-			Data = new StringSlice(Slice.Text, Slice.Start, EndPos - 1)
+			Category = new Category { Title = Label, UrlSlug = Slug }
 		};
 
 		Slice.Start = EndPos + MarkerEnd.Length;
@@ -106,15 +126,14 @@ public sealed class CategoryExtension : IMarkdownExtension
 	}
 
 	/// <summary>
-	/// Extracts a list of categories from a parsed Markdown document.
+	/// Extracts resolved category labels and slugs in source order, retaining repeated references.
 	/// </summary>
 	/// <param name="Document">The markdown document to inspect.</param>
-	/// <returns>A list of distinct categories found in the document.</returns>
+	/// <returns>The valid category references found in the document, including duplicates.</returns>
 	public static List<Category> GetCategories(MarkdownDocument Document)
 	{
 		return [.. Document.Descendants<CategoryInline>()
-			.Select(c => new Category { Title = c.Data.ToString().Trim() })
-			.Where(c => !string.IsNullOrEmpty(c.Title))];
+			.Select(c => c.Category)];
 	}
 }
 
@@ -196,7 +215,7 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 		Renderer.WriteLine("<ul class=\"categories\" role=\"list\">");
 		foreach (Category CategoryItem in Categories)
 		{
-			string Url = Slugify(CategoryItem.Title);
+			string Url = CategoryItem.UrlSlug!;
 			Renderer.Write("<li>");
 			Renderer.Write("<a class=\"button\" href=\"/category:");
 			Renderer.WriteEscapeUrl(Url);
@@ -208,13 +227,4 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 		Renderer.WriteLine("</ul>");
 	}
 
-	/// <summary>
-	/// Converts a string into a URL-friendly slug.
-	/// </summary>
-	/// <param name="Input">The input string to slugify.</param>
-	/// <returns>A lowercase URL-friendly slug.</returns>
-	private static string Slugify(string Input)
-	{
-		return Input.Trim().Replace(" ", "-").ToLowerInvariant();
-	}
 }

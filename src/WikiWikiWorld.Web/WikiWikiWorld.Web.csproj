@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <Folder Include="Pages\Identity\" />
+    <None Update="ThirdPartyNotices/Django-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
