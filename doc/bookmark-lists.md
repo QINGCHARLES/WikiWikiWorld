@@ -35,4 +35,5 @@ Run the duplicate check in the script's header first; the index cannot be create
 exist. Verify with `.indexes BookmarkLists`. Fresh databases get the index from `Create.sql`; do not
 run the upgrade script afterward. Rolling back the code can leave the index in place.
 
-Applied: development `data/app.db` on 2026-10-22. Production: not yet applied.
+Applied: development `data/app.db` and production `/opt/wiki/data/app.db` on 2026-10-22.
+Production had no duplicate default lists. Release `d9a69c4` includes the matching UI and service changes.

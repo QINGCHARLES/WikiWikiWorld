@@ -102,7 +102,15 @@ the existing database directory with the normal application write permissions;
 invoke the executable directly because the chiseled runtime has no shell.
 
 Development backfill on 2026-10-22 scanned 597 revisions and added 1,439 memberships.
-A repeat dry run reported zero changes. Production has not been backfilled by this step.
+A repeat dry run reported zero changes.
+
+Production release `d9a69c4` was deployed on 2026-10-22. A consistent backup was taken
+at `/opt/wiki/data/before-release-d9a69c4-20261022T171719Z.db` before schema/index work
+and backfill. Production scanned 598 revisions and added 1,429 memberships; a repeat
+dry run reported zero changes. Article revision rows were unchanged and membership
+foreign keys validated. Current visible results: 236 memberships across 58 articles
+and 46 categories. The previous application image `c173763` remains available for
+code rollback; retain the additive schema and avoid restoring the backup over newer writes.
 
 ## Verification
 
