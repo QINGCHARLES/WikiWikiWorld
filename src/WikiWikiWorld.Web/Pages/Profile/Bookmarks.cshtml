@@ -1,177 +1,50 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.BookmarksModel
-@using WikiWikiWorld.Web.Helpers
 @{
-    ViewData["Title"] = $"{Model.Username}'s Bookmarks";
+	ProfileHeader Header = Model.Header;
+	ViewData["Title"] = $"{Header.UserName} · Bookmarks";
+	DateTimeOffset Now = DateTimeOffset.UtcNow;
 }
 
-<div class="profile-container">
-    <div class="profile-header">
-        <div class="avatar">
-            @if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
-            {
-                <img src="@Model.ProfilePicPath" alt="@Model.Username" />
-            }
-            else
-            {
-                <span class="avatar-initials">@Model.Username?[0].ToString().ToUpperInvariant()</span>
-            }
-        </div>
-        <div class="profile-info">
-            <h1>@Model.Username</h1>
-            <p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
-        </div>
-    </div>
+<div class="profile">
+	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Header, ProfileTab.Bookmarks)" />
 
-    <div class="profile-nav">
-        <a href="/@@@Model.Username/profile" class="nav-link">Profile</a>
-        <a href="/@@@Model.Username/contributions" class="nav-link">Contributions</a>
-        <a href="/@@@Model.Username/messages" class="nav-link">Messages</a>
-        <a href="/@@@Model.Username/bookmarks" class="nav-link active">Bookmarks</a>
-    </div>
+	<div class="profile-stack">
+		<section class="profile-card" aria-labelledby="profile-bookmarks-title">
+			<header class="profile-card-head">
+				<h2 class="profile-card-title" id="profile-bookmarks-title">Bookmarks</h2>
+				<p class="profile-card-note">Only you can see these</p>
+			</header>
 
-    <div class="bookmarks-list">
-        <h2>Bookmarks</h2>
-        @if (Model.Items.Count > 0)
-        {
-            <ul class="revision-list">
-                @foreach (var Item in Model.Items)
-                {
-                    <li class="revision-item">
-                        <div class="revision-meta">
-                            <span class="revision-date">@TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, Item.DateBookmarked)</span>
-                        </div>
-                        <div class="revision-content">
-                            <a href="@Item.ArticlePath" class="revision-title">@Item.Title</a>
-                            <form method="post" asp-page-handler="Remove" asp-route-Username="@Model.Username" class="bookmark-remove-form">
-                                <input type="hidden" name="BookmarkId" value="@Item.BookmarkId" />
-                                <button type="submit" class="link-button">Remove</button>
-                            </form>
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-        else
-        {
-            <p class="text-muted">You haven't bookmarked anything yet.</p>
-        }
-    </div>
+			@if (Model.Items.Count > 0)
+			{
+				<ol class="profile-list">
+					@foreach (WikiWikiWorld.Web.Pages.Profile.BookmarksModel.BookmarkListItem Item in Model.Items)
+					{
+						<li class="profile-list-row">
+							<span class="profile-list-icon" aria-hidden="true">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+							</span>
+							<div class="profile-list-main">
+								<a class="profile-list-title" href="@Item.ArticlePath">@Item.Title</a>
+								<p class="profile-list-meta">Saved <time datetime="@Item.DateBookmarked.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.DateBookmarked, Now)</time></p>
+							</div>
+							<form method="post" asp-page-handler="Remove" asp-route-Username="@Header.UserName" class="profile-list-form">
+								<input type="hidden" name="BookmarkId" value="@Item.BookmarkId" />
+								<button type="submit" class="profile-list-action" aria-label="Remove @Item.Title from bookmarks">Remove</button>
+							</form>
+						</li>
+					}
+				</ol>
+			}
+			else
+			{
+				<p class="profile-card-empty">You haven't bookmarked anything yet. Use the bookmark button on any article to save it here.</p>
+			}
+		</section>
+	</div>
 </div>
 
-<style>
-    .profile-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: var(--color-surface);
-        border-radius: 1rem;
-        border: 1px solid var(--color-border);
-    }
-
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .profile-header > .avatar {
-        --avatar-size: 5rem;
-    }
-
-    .profile-info h1 {
-        margin: 0;
-        font-size: 2rem;
-        color: var(--color-title);
-    }
-
-    .profile-joined {
-        margin-top: 0.25rem;
-        color: var(--color-muted);
-    }
-
-    .profile-nav {
-        display: flex;
-        gap: 1rem;
-        border-bottom: 1px solid var(--color-border);
-        margin-bottom: 2rem;
-    }
-
-    .nav-link {
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        color: var(--color-muted);
-        font-weight: 600;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-    }
-
-    .nav-link:hover {
-        color: var(--color-foreground);
-    }
-
-    .nav-link.active {
-        color: var(--color-primary);
-        border-bottom-color: var(--color-primary);
-    }
-
-    .revision-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .revision-item {
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--color-border);
-    }
-
-    .revision-item:last-child {
-        border-bottom: none;
-    }
-
-    .revision-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.875rem;
-        color: var(--color-muted);
-        margin-bottom: 0.25rem;
-    }
-
-    .revision-content {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .revision-title {
-        font-weight: 600;
-        text-decoration: none;
-        color: var(--color-primary);
-        font-size: 1.125rem;
-    }
-
-    .revision-title:hover {
-        text-decoration: underline;
-    }
-
-    .bookmark-remove-form {
-        margin: 0;
-    }
-
-    .link-button {
-        background: none;
-        border: none;
-        color: var(--color-muted);
-        cursor: pointer;
-        font: inherit;
-        padding: 0;
-        text-decoration: underline;
-    }
-
-    .link-button:hover {
-        color: var(--color-foreground);
-    }
-</style>
+@section Scripts {
+	<script src="~/js/profile.js" asp-append-version="true" defer></script>
+}

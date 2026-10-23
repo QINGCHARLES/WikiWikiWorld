@@ -1,10 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Web.Services;
-using WikiWikiWorld.Web.Helpers;
 
 namespace WikiWikiWorld.Web.Pages.Profile;
 
@@ -15,11 +10,13 @@ namespace WikiWikiWorld.Web.Pages.Profile;
 /// <param name="UserManager">The user manager.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="BookmarkService">The bookmark service.</param>
+/// <param name="ProfileService">Loads the shared profile header.</param>
 public sealed class BookmarksModel(
     WikiWikiWorldDbContext Context,
     UserManager<User> UserManager,
     SiteResolverService SiteResolverService,
-    BookmarkService BookmarkService) : BasePageModel(SiteResolverService)
+    BookmarkService BookmarkService,
+    ProfileService ProfileService) : BasePageModel(SiteResolverService)
 {
     /// <summary>
     /// Gets or sets the username whose bookmarks are being viewed.
@@ -28,24 +25,14 @@ public sealed class BookmarksModel(
     public string Username { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the path to the user's profile picture.
+    /// Gets the shared profile header; set before the page renders.
     /// </summary>
-    public string? ProfilePicPath { get; set; }
-
-    /// <summary>
-    /// Gets or sets the date the user joined.
-    /// </summary>
-    public DateTimeOffset DateJoined { get; set; }
+    public ProfileHeader Header { get; private set; } = null!;
 
     /// <summary>
     /// Gets or sets the bookmarked articles, ordered newest first.
     /// </summary>
     public IReadOnlyList<BookmarkListItem> Items { get; set; } = [];
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the current user is viewing their own profile.
-    /// </summary>
-    public bool IsViewingOwnProfile { get; set; }
 
     /// <summary>
     /// Handles the GET request to view the user's bookmarks.
@@ -88,15 +75,15 @@ public sealed class BookmarksModel(
         return RedirectToPage(new { Username });
     }
 
+    /// <summary>
+    /// Loads the profile header and enforces that only a signed-in owner may see their bookmarks.
+    /// </summary>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns><see langword="null"/> when the page may render; otherwise the not-found, challenge, or forbid result.</returns>
     private async Task<IActionResult?> LoadProfileAsync(CancellationToken CancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(Username))
-        {
-            return NotFound();
-        }
-
-        User? TargetUser = await UserManager.FindByNameAsync(Username);
-        if (TargetUser is null)
+        ProfileHeader? LoadedHeader = await ProfileService.GetHeaderAsync(Username, User, SiteId, CancellationToken);
+        if (LoadedHeader is null)
         {
             return NotFound();
         }
@@ -106,21 +93,14 @@ public sealed class BookmarksModel(
             return Challenge();
         }
 
-        User? CurrentUser = await UserManager.GetUserAsync(User);
-        IsViewingOwnProfile = CurrentUser?.Id == TargetUser.Id;
-
         // Bookmarks are private to their owner.
-        if (!IsViewingOwnProfile)
+        if (!LoadedHeader.IsOwner)
         {
             return Forbid();
         }
 
-        DateJoined = TargetUser.DateCreated;
-        if (TargetUser.ProfilePicGuid.HasValue)
-        {
-            ProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{TargetUser.ProfilePicGuid}.png");
-        }
-
+        Header = LoadedHeader;
+        AllowSearchEngineIndexingOfPage = false;
         return null;
     }
 

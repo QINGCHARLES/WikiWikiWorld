@@ -32,6 +32,16 @@
 - Schema, EF mapping, save-time indexing, the `backfill-categories` maintenance command, and `{{CategoryArticles}}` are implemented for revision-owned `ArticleCategoryMemberships`. Category slugs are immutable identities, independent of display names. The listing uses indexed membership lookups with 100 links per page. External SQL writers bypass indexing and require a subsequent backfill. See [category list authoring](doc/category-articles.md).
 - Existing databases require an explicitly applied additive SQL script; there are no automatic startup migrations. See [schema, application and verification procedure](doc/category-membership-schema.md).
 
+## Contributor profiles
+
+- **Pages:** `/@user/profile` (overview), `/@user/contributions` (paged with `?PageNumber=`, 50 per page), and the owner-only `/@user/bookmarks` and `/@user/messages` share `Pages/Profile/_ProfileHeader.cshtml` (masthead, identity bar, tabs) and `css/pages/profile.css`. `js/profile.js` only adds the Share button (native share sheet or copy link; hidden without JavaScript) and centres the current tab on narrow screens.
+- **Data:** `ProfileService` loads everything through the context's site and culture filters. Contribution figures, the calendar and the edit list leave out user pages (`ArticleType.User`), because registration auto-creates one. An article counts as "started" when the user wrote the revision with its earliest timestamp (identifiers are not trusted for ordering). The auto-created placeholder text (`ArticleRevisionService.GetDefaultUserArticleText`) counts as an unwritten profile article. Accounts with the legacy default `DateCreated` (registration did not set it before 2026-10-23) show their first revision as the join date.
+- **User-authored masthead:** the profile article's `{{Subtitle}}` is the masthead epigraph and its `{{ShortDescription}}` the one-line bio. The volume numeral is the membership year in Roman numerals.
+- **Badges and ranks** are computed per request from the totals in `ProfileBadgeCatalog`; there is no schema. Changing a threshold changes every profile retroactively.
+- **Previews (no storage yet):** the Reputation card, the Watchlist tab and the owner-only watchlist alerts card are labelled "Coming soon" or "Preview" and never show invented numbers. Replace them when those features have data.
+- **Performance:** finding each article's first revision groups `ArticleRevisions` by `CanonicalArticleId`, which has no index, so the profile header and each contributions page scan the table once. If profiles become slow, the optional additive index is `CREATE INDEX IX_ArticleRevisions_CanonicalArticleId_DateCreated ON ArticleRevisions (CanonicalArticleId, DateCreated);`. It has not been applied; follow the explicit schema procedure if adopted.
+- **Verification:** `dotnet test tests/WikiWikiWorld.Web.Tests -c Release --filter FullyQualifiedName~ProfileTests` (calendar, badge and formatting rules, plus the queries against SQLite).
+
 ## 🧩 Markdig Extensions
 
 Custom Markdig extensions live in [src/WikiWikiWorld.Web/MarkDigExtensions](src/WikiWikiWorld.Web/MarkDigExtensions). They extend authoring syntax for the wiki and follow shared conventions so authors and parsers stay consistent.

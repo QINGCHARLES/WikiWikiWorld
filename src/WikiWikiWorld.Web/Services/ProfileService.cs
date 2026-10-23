@@ -66,7 +66,8 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 			? TargetUser.DateCreated
 			: await Context.ArticleRevisions
 				.Where(r => r.CreatedByUserId == TargetUser.Id)
-				.OrderBy(r => r.Id)
+				.OrderBy(r => r.DateCreated)
+				.ThenBy(r => r.Id)
 				.Select(r => (DateTimeOffset?)r.DateCreated)
 				.FirstOrDefaultAsync(CancellationToken);
 		string? ProfileArticleText = await Context.ArticleRevisions
@@ -191,24 +192,22 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 	/// <returns>The revisions as activity entries.</returns>
 	private async Task<IReadOnlyList<ProfileActivityItem>> GetRevisionItemsAsync(Guid UserId, int Skip, int Take, bool LinkToRevision, CancellationToken CancellationToken)
 	{
-		IQueryable<int> FirstRevisionIds = GetFirstRevisionIdsQuery(UserId);
 		var Rows = await GetContributionRevisions(UserId)
-			.OrderByDescending(r => r.Id)
+			.OrderByDescending(r => r.DateCreated)
+			.ThenByDescending(r => r.Id)
 			.Skip(Skip)
 			.Take(Take)
-			.Select(r => new
-			{
-				r.Title,
-				r.UrlSlug,
-				r.Type,
-				r.RevisionReason,
-				r.DateCreated,
-				IsCreation = FirstRevisionIds.Contains(r.Id)
-			})
+			.Select(r => new { r.CanonicalArticleId, r.Title, r.UrlSlug, r.Type, r.RevisionReason, r.DateCreated })
 			.ToListAsync(CancellationToken);
 
+		List<Guid> ArticleIds = [.. Rows.Select(r => r.CanonicalArticleId).Distinct()];
+		Dictionary<Guid, DateTimeOffset> FirstRevisionDates = await GetFirstRevisionDatesQuery(Context.ArticleRevisions.Where(r => ArticleIds.Contains(r.CanonicalArticleId)))
+			.ToDictionaryAsync(f => f.CanonicalArticleId, f => f.FirstDate, CancellationToken);
+
 		return [.. Rows.Select(r => new ProfileActivityItem(
-			r.IsCreation ? ProfileActivityKind.Created : ProfileActivityKind.Edited,
+			FirstRevisionDates.TryGetValue(r.CanonicalArticleId, out DateTimeOffset FirstDate) && FirstDate == r.DateCreated
+				? ProfileActivityKind.Created
+				: ProfileActivityKind.Edited,
 			r.Title,
 			LinkToRevision
 				? ArticleUrlHelper.BuildRelativePath(r.UrlSlug, r.Type, $"revision/{r.DateCreated.UtcDateTime.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture)}")
@@ -227,11 +226,19 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 	private async Task<ProfileStats> GetStatsAsync(Guid UserId, CancellationToken CancellationToken)
 	{
 		IQueryable<ArticleRevision> UserRevisions = GetContributionRevisions(UserId);
-		IQueryable<int> FirstRevisionIds = GetFirstRevisionIdsQuery(UserId);
 
 		int EditCount = await UserRevisions.CountAsync(CancellationToken);
 		int ArticlesEditedCount = await UserRevisions.Select(r => r.CanonicalArticleId).Distinct().CountAsync(CancellationToken);
-		int ArticlesStartedCount = await UserRevisions.CountAsync(r => FirstRevisionIds.Contains(r.Id), CancellationToken);
+
+		// An article was started by the user when one of their revisions carries its earliest timestamp.
+		IQueryable<Guid> EditedArticleIds = UserRevisions.Select(r => r.CanonicalArticleId);
+		int ArticlesStartedCount = await UserRevisions
+			.Join(GetFirstRevisionDatesQuery(Context.ArticleRevisions.Where(r => EditedArticleIds.Contains(r.CanonicalArticleId))),
+				r => new { r.CanonicalArticleId, r.DateCreated },
+				f => new { f.CanonicalArticleId, DateCreated = f.FirstDate },
+				(r, f) => r.CanonicalArticleId)
+			.Distinct()
+			.CountAsync(CancellationToken);
 
 		// Posts carry no site of their own; joining the subject applies its site filter.
 		int TalkPostCount = await Context.ArticleTalkSubjectPosts
@@ -257,25 +264,37 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 		=> Context.ArticleRevisions.Where(r => r.CreatedByUserId == UserId && r.Type != ArticleType.User);
 
 	/// <summary>
-	/// Builds a query for the identifier of the first surviving revision of every article the user has edited. It is
-	/// composed as an uncorrelated <c>IN</c> subquery, which SQLite evaluates once per statement; ArticleRevisions has
-	/// no index on CanonicalArticleId, so a correlated lookup would rescan the table for every row.
+	/// Groups revisions by article and finds each article's earliest surviving timestamp, the time its first revision
+	/// was saved. Timestamps, not identifiers, decide which revision came first, because identifiers are not guaranteed
+	/// to follow time for imported or backfilled revisions. The grouping is uncorrelated, so SQLite evaluates it once:
+	/// ArticleRevisions has no index on CanonicalArticleId, and a per-row lookup would rescan the table for every row.
 	/// </summary>
-	/// <param name="UserId">The profile owner.</param>
-	/// <returns>A composable query of first-revision identifiers.</returns>
-	private IQueryable<int> GetFirstRevisionIdsQuery(Guid UserId)
-	{
-		IQueryable<Guid> EditedArticleIds = GetContributionRevisions(UserId).Select(r => r.CanonicalArticleId);
-
-		return Context.ArticleRevisions
-			.Where(r => EditedArticleIds.Contains(r.CanonicalArticleId))
+	/// <param name="Revisions">The revisions to group, already narrowed to the articles of interest.</param>
+	/// <returns>A composable query of article identifiers with their first revision time.</returns>
+	private static IQueryable<ArticleFirstRevision> GetFirstRevisionDatesQuery(IQueryable<ArticleRevision> Revisions)
+		=> Revisions
 			.GroupBy(r => r.CanonicalArticleId)
-			.Select(g => g.Min(r => r.Id));
+			.Select(g => new ArticleFirstRevision { CanonicalArticleId = g.Key, FirstDate = g.Min(r => r.DateCreated) });
+
+	/// <summary>
+	/// An article identifier paired with the time its first surviving revision was saved.
+	/// </summary>
+	private sealed class ArticleFirstRevision
+	{
+		/// <summary>
+		/// Gets the canonical article identifier.
+		/// </summary>
+		public Guid CanonicalArticleId { get; init; }
+
+		/// <summary>
+		/// Gets the timestamp of the article's earliest surviving revision.
+		/// </summary>
+		public DateTimeOffset FirstDate { get; init; }
 	}
 
 	/// <summary>
-	/// Finds the most recent revision or talk post time. Ordering by the autoincrement key follows insertion order and
-	/// uses the CreatedByUserId indexes, avoiding a sort on the text timestamp.
+	/// Finds the most recent revision or talk post time. Timestamps are normalized UTC text, so ordering them as
+	/// strings is chronological; identifiers are not guaranteed to follow time for imported or backfilled rows.
 	/// </summary>
 	/// <param name="UserId">The profile owner.</param>
 	/// <param name="CancellationToken">A cancellation token.</param>
@@ -284,14 +303,14 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 	{
 		DateTimeOffset? LastEdit = await Context.ArticleRevisions
 			.Where(r => r.CreatedByUserId == UserId)
-			.OrderByDescending(r => r.Id)
+			.OrderByDescending(r => r.DateCreated)
 			.Select(r => (DateTimeOffset?)r.DateCreated)
 			.FirstOrDefaultAsync(CancellationToken);
 
 		DateTimeOffset? LastPost = await Context.ArticleTalkSubjectPosts
 			.Where(p => p.CreatedByUserId == UserId)
 			.Join(Context.ArticleTalkSubjects, p => p.ArticleTalkSubjectId, s => s.Id, (p, s) => p)
-			.OrderByDescending(p => p.Id)
+			.OrderByDescending(p => p.DateCreated)
 			.Select(p => (DateTimeOffset?)p.DateCreated)
 			.FirstOrDefaultAsync(CancellationToken);
 
@@ -338,10 +357,11 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 
 		var Posts = await Context.ArticleTalkSubjectPosts
 			.Where(p => p.CreatedByUserId == UserId)
-			.OrderByDescending(p => p.Id)
-			.Join(Context.ArticleTalkSubjects, p => p.ArticleTalkSubjectId, s => s.Id, (p, s) => new { p.DateCreated, s.Subject, SubjectSlug = s.UrlSlug, s.CanonicalArticleId })
+			.Join(Context.ArticleTalkSubjects, p => p.ArticleTalkSubjectId, s => s.Id, (p, s) => new { p.Id, p.DateCreated, s.Subject, SubjectSlug = s.UrlSlug, s.CanonicalArticleId })
 			.Join(Context.ArticleRevisions.Where(r => r.IsCurrent), x => x.CanonicalArticleId, r => r.CanonicalArticleId,
-				(x, r) => new { x.DateCreated, x.Subject, x.SubjectSlug, r.Title, r.UrlSlug, r.Type })
+				(x, r) => new { x.Id, x.DateCreated, x.Subject, x.SubjectSlug, r.Title, r.UrlSlug, r.Type })
+			.OrderByDescending(x => x.DateCreated)
+			.ThenByDescending(x => x.Id)
 			.Take(RecentActivityCount)
 			.ToListAsync(CancellationToken);
 

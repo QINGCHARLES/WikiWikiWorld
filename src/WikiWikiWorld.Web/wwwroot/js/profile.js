@@ -1,3 +1,17 @@
+// Profile tabs: on narrow screens the tab strip scrolls sideways, so bring the current tab into view. Only the strip's
+// own scroll position changes; scrollIntoView would also scroll the page when the strip is below the fold.
+(function ()
+{
+	const TabList = document.querySelector(".profile-tabs ul");
+	const CurrentTab = TabList?.querySelector("[aria-current='page']");
+	if (!(TabList instanceof HTMLElement) || !(CurrentTab instanceof HTMLElement) || TabList.scrollWidth <= TabList.clientWidth)
+	{
+		return;
+	}
+
+	TabList.scrollLeft = CurrentTab.offsetLeft - ((TabList.clientWidth - CurrentTab.offsetWidth) / 2);
+})();
+
 // Profile share button: opens the native share sheet where the browser has one and copies the profile link
 // otherwise. The button ships hidden, so without JavaScript (or without either API) it never appears.
 (function ()

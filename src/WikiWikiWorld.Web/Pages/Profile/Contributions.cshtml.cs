@@ -1,82 +1,69 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Specifications;
-using WikiWikiWorld.Data.Extensions;
-
 namespace WikiWikiWorld.Web.Pages.Profile;
 
 /// <summary>
-/// Page model for displaying a user's contributions (edits).
+/// The contributions tab at <c>/@user/contributions</c>: the activity calendar and a paged, month-grouped list of the
+/// user's revisions, newest first.
 /// </summary>
-/// <param name="Context">The database context.</param>
-/// <param name="UserManager">The user manager.</param>
+/// <param name="ProfileService">Loads the profile header, calendar, and revisions.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 public sealed class ContributionsModel(
-    WikiWikiWorldDbContext Context,
-    UserManager<User> UserManager,
-    SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+	ProfileService ProfileService,
+	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
-    /// <summary>
-    /// Gets or sets the username to view contributions for.
-    /// </summary>
-    [BindProperty(SupportsGet = true)]
-    public string Username { get; set; } = string.Empty;
+	/// <summary>
+	/// The number of revisions per page.
+	/// </summary>
+	public const int PageSize = 50;
 
-    /// <summary>
-    /// Gets or sets the path to the user's profile picture.
-    /// </summary>
-    public string? ProfilePicPath { get; set; }
+	/// <summary>
+	/// Gets or sets the user name from the route.
+	/// </summary>
+	[BindProperty(SupportsGet = true)]
+	public string Username { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets or sets the date the user joined.
-    /// </summary>
-    public DateTimeOffset DateJoined { get; set; }
+	/// <summary>
+	/// Gets or sets the requested one-based page from the <c>PageNumber</c> query value; values below 1 show the first page.
+	/// </summary>
+	[BindProperty(SupportsGet = true)]
+	public int PageNumber { get; set; } = 1;
 
-    /// <summary>
-    /// Gets or sets the list of article revisions contributed by the user.
-    /// </summary>
-    public IReadOnlyList<ArticleRevision> Contributions { get; set; } = [];
+	/// <summary>
+	/// Gets the shared header data; set by <see cref="OnGetAsync"/> before the page renders.
+	/// </summary>
+	public ProfileHeader Header { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets or sets a value indicating whether the current user is viewing their own profile.
-    /// </summary>
-    public bool IsViewingOwnProfile { get; set; }
+	/// <summary>
+	/// Gets the activity calendar; set by <see cref="OnGetAsync"/> before the page renders.
+	/// </summary>
+	public ProfileActivityCalendar Calendar { get; private set; } = null!;
 
-    /// <summary>
-    /// Handles the GET request to view user contributions.
-    /// </summary>
-    /// <returns>The page or NotFound.</returns>
-    public async Task<IActionResult> OnGetAsync()
-    {
-        if (string.IsNullOrWhiteSpace(Username))
-        {
-            return NotFound();
-        }
+	/// <summary>
+	/// Gets the page of revisions being shown; set by <see cref="OnGetAsync"/> before the page renders.
+	/// </summary>
+	public ProfileContributionPage Contributions { get; private set; } = null!;
 
-        User? TargetUser = await UserManager.FindByNameAsync(Username);
-        if (TargetUser is null)
-        {
-            return NotFound();
-        }
+	/// <summary>
+	/// Loads the profile header, calendar, and requested page of revisions.
+	/// </summary>
+	/// <param name="CancellationToken">The request-aborted token.</param>
+	/// <returns>The page, or 404 when no user has the requested name.</returns>
+	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
+	{
+		ProfileHeader? LoadedHeader = await ProfileService.GetHeaderAsync(Username, User, SiteId, CancellationToken);
+		if (LoadedHeader is null)
+		{
+			return NotFound();
+		}
 
-        DateJoined = TargetUser.DateCreated;
-        
-        if (TargetUser.ProfilePicGuid.HasValue)
-        {
-            ProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{TargetUser.ProfilePicGuid}.png");
-        }
+		Header = LoadedHeader;
+		Calendar = await ProfileService.GetCalendarAsync(Header.UserId, CancellationToken);
+		Contributions = await ProfileService.GetContributionsAsync(Header.UserId, PageNumber, PageSize, CancellationToken);
 
-        // Check if viewing own profile
-        User? CurrentUser = await UserManager.GetUserAsync(User);
-        IsViewingOwnProfile = CurrentUser?.Id == TargetUser.Id;
+		MetaDescription = $"Edit history of {Header.UserName}: {Header.Stats.EditCount.ToString("N0", CultureInfo.InvariantCulture)} edits across {Header.Stats.ArticlesEditedCount.ToString("N0", CultureInfo.InvariantCulture)} articles.";
 
-        ArticleRevisionsByUserIdSpec Spec = new(TargetUser.Id);
-        Contributions = await Context.ArticleRevisions.WithSpecification(Spec).ToListAsync();
+		// Deep history pages add nothing for search engines beyond the first page.
+		AllowSearchEngineIndexingOfPage = Contributions.PageNumber == 1 && Header.Stats.EditCount > 0;
 
-        return Page();
-    }
+		return Page();
+	}
 }
-
