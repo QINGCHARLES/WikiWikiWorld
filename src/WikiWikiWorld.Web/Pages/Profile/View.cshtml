@@ -1,134 +1,216 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.ViewModel
 @{
-    ViewData["Title"] = $"{Model.Username}'s Profile";
+	ProfileHeader Header = Model.Header;
+	ProfileOverview Overview = Model.Overview;
+	ViewData["Title"] = $"{Header.UserName} · Profile";
+	DateTimeOffset Now = DateTimeOffset.UtcNow;
+	List<ProfileBadge> EarnedBadges = [.. Overview.Badges.Where(b => b.IsEarned)];
+	List<ProfileBadge> LockedBadges = [.. Overview.Badges.Where(b => !b.IsEarned)];
+	string EditArticleUrl = Header.HasProfileArticle
+		? $"{Header.ArticlePath}/edit"
+		: $"/Article/CreateEdit?UrlSlug={Uri.EscapeDataString(Header.ArticlePath.TrimStart('/'))}";
+
+	static string KindLabel(ProfileActivityKind Kind) => Kind switch
+	{
+		ProfileActivityKind.Created => "Created",
+		ProfileActivityKind.Discussed => "Discussed",
+		_ => "Edited"
+	};
 }
 
-<div class="profile-container">
-    <div class="profile-header">
-        <div class="avatar">
-            @if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
-            {
-                <img src="@Model.ProfilePicPath" alt="@Model.Username" />
-            }
-            else
-            {
-                <span class="avatar-initials">@Model.Username?[0].ToString().ToUpperInvariant()</span>
-            }
-        </div>
-        <div class="profile-info">
-            <h1>@Model.Username</h1>
-            <p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
-        </div>
-    </div>
+<div class="profile">
+	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Header, ProfileTab.Overview)" />
 
-    <div class="profile-nav">
-        <a href="/@@@Model.Username/profile" class="nav-link active">Profile</a>
-        <a href="/@@@Model.Username/contributions" class="nav-link">Contributions</a>
-        @if (Model.IsViewingOwnProfile)
-        {
-            <a href="/@@@Model.Username/messages" class="nav-link">Messages</a>
-            <a href="/@@@Model.Username/bookmarks" class="nav-link">Bookmarks</a>
-        }
-    </div>
+	<div class="profile-body">
+		<div class="profile-main">
+			<partial name="_ProfileCalendar" model="Overview.Calendar" />
 
-    <div class="profile-actions">
-        @if (Model.IsAuthenticated && !Model.IsViewingOwnProfile)
-        {
-            <a href="/@@@Model.Username/message/new" class="button button-primary">Send Message</a>
-        }
-        @if (Model.HasHomePage)
-        {
-            <a href="/@@@Model.Username" class="button @(Model.IsViewingOwnProfile ? "button-primary" : "button-secondary")">Visit Home Page</a>
-        }
-        else if (Model.IsViewingOwnProfile)
-        {
-            <div class="alert alert-info">
-                <p>You haven't created your home page yet.</p>
-                <a href="/Article/CreateEdit?UrlSlug=@@@Model.Username" class="button button-primary">Create Home Page</a>
-            </div>
-        }
-        else
-        {
-            <p class="text-muted">This user has not created a home page yet.</p>
-        }
-    </div>
+			<section class="profile-article-section" aria-labelledby="profile-article-title">
+				<header class="profile-section-head">
+					<h2 class="profile-section-title" id="profile-article-title">Profile article</h2>
+					@if (Header.IsProfileArticleWritten)
+					{
+						<a class="profile-section-link" href="@Header.ArticlePath">Open as article <span aria-hidden="true">→</span></a>
+					}
+				</header>
+
+				@if (Model.ProfileArticleHtml is not null)
+				{
+					if (Header.IsOwner)
+					{
+						<div class="profile-owner-note">
+							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+								<path d="m15 5 4 4"></path>
+							</svg>
+							<p>This is <strong>your profile article</strong>, the first thing readers see here. Its <code>{{Subtitle}}</code> becomes your masthead epigraph and its <code>{{ShortDescription}}</code> your one-line bio.</p>
+							<a href="@EditArticleUrl" class="profile-owner-note-link" rel="nofollow">Edit</a>
+						</div>
+					}
+
+					<article class="profile-article" data-ignore="true">
+						@Html.Raw(Model.ProfileArticleHtml)
+					</article>
+				}
+				else
+				{
+					<div class="profile-empty">
+						<span class="profile-empty-mark" aria-hidden="true">¶</span>
+						@if (Header.IsOwner)
+						{
+							<p class="profile-empty-title">Write your profile article</p>
+							<p>Introduce yourself: your collection, the eras and titles you know best, and what you are working on. It uses the same wiki syntax as every article; add <code>{{Subtitle}}</code> for a masthead epigraph and <code>{{ShortDescription}}</code> for a one-line bio.</p>
+							<a href="@EditArticleUrl" class="button profile-action-accent" rel="nofollow">Start writing</a>
+						}
+						else
+						{
+							<p class="profile-empty-title">No profile article yet</p>
+							<p>@Header.UserName hasn't written a profile article. Their contributions tell the story so far.</p>
+						}
+					</div>
+				}
+			</section>
+		</div>
+
+		<div class="profile-aside">
+			<section class="profile-card profile-badges" aria-labelledby="profile-badges-title">
+				<header class="profile-card-head">
+					<h2 class="profile-card-title" id="profile-badges-title">Badges</h2>
+					<p class="profile-card-note">@EarnedBadges.Count of @Overview.Badges.Count</p>
+				</header>
+
+				@if (EarnedBadges.Count > 0)
+				{
+					<ul class="profile-badge-grid">
+						@foreach (ProfileBadge Badge in EarnedBadges)
+						{
+							<li class="profile-badge" data-tier="@Badge.Tier.ToString().ToLowerInvariant()" title="@Badge.Description">
+								<span class="profile-badge-medal" aria-hidden="true">@Badge.Glyph</span>
+								<span class="profile-badge-name">@Badge.Name</span>
+								<span class="visually-hidden">: @Badge.Description</span>
+							</li>
+						}
+					</ul>
+				}
+				else
+				{
+					<p class="profile-card-empty">No badges yet. The first arrives with the first edit.</p>
+				}
+
+				@if (LockedBadges.Count > 0)
+				{
+					<details class="profile-badges-locked" open="@(EarnedBadges.Count == 0)">
+						<summary>
+							@LockedBadges.Count still to earn
+							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+						</summary>
+						<ul class="profile-badge-grid">
+							@foreach (ProfileBadge Badge in LockedBadges)
+							{
+								<li class="profile-badge" data-locked="true" title="@Badge.Description">
+									<span class="profile-badge-medal" aria-hidden="true">@Badge.Glyph</span>
+									<span class="profile-badge-name">@Badge.Name</span>
+									<progress class="profile-badge-progress" max="@Badge.Target" value="@Math.Min(Badge.Progress, Badge.Target)" aria-label="@Badge.Name progress: @Badge.Progress.ToString("N0", CultureInfo.CurrentCulture) of @Badge.Target.ToString("N0", CultureInfo.CurrentCulture)"></progress>
+									<span class="profile-badge-count" aria-hidden="true">@Badge.Progress.ToString("N0", CultureInfo.CurrentCulture)/@Badge.Target.ToString("N0", CultureInfo.CurrentCulture)</span>
+									<span class="visually-hidden">: @Badge.Description</span>
+								</li>
+							}
+						</ul>
+					</details>
+				}
+			</section>
+
+			<section class="profile-card" aria-labelledby="profile-focus-title">
+				<header class="profile-card-head">
+					<h2 class="profile-card-title" id="profile-focus-title">Focus areas</h2>
+					@if (Overview.CategoryCount > 0)
+					{
+						<p class="profile-card-note">@Overview.CategoryCount @(Overview.CategoryCount == 1 ? "category" : "categories")</p>
+					}
+				</header>
+				@if (Overview.FocusAreas.Count > 0)
+				{
+					<ul class="profile-focus">
+						@for (int i = 0; i < Overview.FocusAreas.Count; i++)
+						{
+							ProfileFocusArea Area = Overview.FocusAreas[i];
+							<li>
+								<a class="profile-focus-pill" data-hue="@(i % 6)" href="/category:@Area.CategorySlug" title="@Area.ArticleCount @(Area.ArticleCount == 1 ? "article" : "articles") edited">
+									@Area.Label
+									<span class="profile-focus-count">@Area.ArticleCount.ToString("N0", CultureInfo.CurrentCulture)</span>
+								</a>
+							</li>
+						}
+					</ul>
+				}
+				else
+				{
+					<p class="profile-card-empty">Categories appear here once the articles @(Header.IsOwner ? "you edit" : $"{Header.UserName} edits") are categorised.</p>
+				}
+			</section>
+
+			<section class="profile-card" aria-labelledby="profile-activity-title">
+				<header class="profile-card-head">
+					<h2 class="profile-card-title" id="profile-activity-title">Recent activity</h2>
+				</header>
+				@if (Overview.RecentActivity.Count > 0)
+				{
+					<ol class="profile-activity">
+						@foreach (ProfileActivityItem Item in Overview.RecentActivity)
+						{
+							<li data-kind="@Item.Kind.ToString().ToLowerInvariant()">
+								<p class="profile-activity-line">
+									<span class="profile-activity-verb">@KindLabel(Item.Kind)</span>
+									<a href="@Item.Path">@Item.Title</a>
+								</p>
+								<p class="profile-activity-meta">
+									<time datetime="@Item.Date.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.Date, Now)</time>
+									@if (!string.IsNullOrWhiteSpace(Item.Summary))
+									{
+										<span class="profile-activity-summary">@(Item.Kind == ProfileActivityKind.Discussed ? $"on {Item.Summary}" : Item.Summary)</span>
+									}
+								</p>
+							</li>
+						}
+					</ol>
+					<a class="profile-card-link" href="/@@@Header.UserName/contributions">All contributions <span aria-hidden="true">→</span></a>
+				}
+				else
+				{
+					<p class="profile-card-empty">Nothing yet. Edits and talk posts will appear here.</p>
+				}
+			</section>
+
+			@* Reputation has no storage or scoring yet: this card previews the planned module without inventing a number. *@
+			<section class="profile-card profile-preview" aria-labelledby="profile-reputation-title">
+				<header class="profile-card-head">
+					<h2 class="profile-card-title" id="profile-reputation-title">Reputation</h2>
+					<p class="profile-soon">Coming soon</p>
+				</header>
+				<svg class="profile-preview-spark" viewBox="0 0 240 56" preserveAspectRatio="none" aria-hidden="true">
+					<path d="M0 50 C 20 48, 30 44, 48 42 S 80 30, 100 34 S 130 22, 150 20 S 190 14, 205 9 S 230 6, 240 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"></path>
+				</svg>
+				<p class="profile-preview-copy">Reputation will grow as readers cite, thank and review your work, and unlock moderation tools along the way.</p>
+			</section>
+
+			@if (Header.IsOwner)
+			{
+				@* Owner-only preview of watchlist alerts, which need watchlists first. *@
+				<section class="profile-card profile-card-ink" aria-labelledby="profile-alerts-title">
+					<header class="profile-card-head">
+						<p class="profile-card-title">Heads up</p>
+						<p class="profile-soon">Preview</p>
+					</header>
+					<h2 class="profile-ink-title" id="profile-alerts-title">Watchlist alerts</h2>
+					<p class="profile-ink-copy">Watch the articles you care about and you'll hear here when they're edited, discussed or nominated for a feature.</p>
+					<p class="profile-ink-cta">Arriving with watchlists</p>
+				</section>
+			}
+		</div>
+	</div>
 </div>
 
-<style>
-    .profile-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: var(--color-surface);
-        border-radius: 1rem;
-        border: 1px solid var(--color-border);
-    }
-
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .profile-header > .avatar {
-        --avatar-size: 7.5rem;
-    }
-
-    .profile-info h1 {
-        margin: 0;
-        font-size: 2.5rem;
-        color: var(--color-title);
-    }
-
-    .profile-joined {
-        margin-top: 0.5rem;
-        color: var(--color-muted);
-    }
-
-    .profile-nav {
-        display: flex;
-        gap: 1rem;
-        border-bottom: 1px solid var(--color-border);
-        margin-bottom: 2rem;
-    }
-
-    .nav-link {
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        color: var(--color-muted);
-        font-weight: 600;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-    }
-
-    .nav-link:hover {
-        color: var(--color-foreground);
-    }
-
-    .nav-link.active {
-        color: var(--color-primary);
-        border-bottom-color: var(--color-primary);
-    }
-
-    .profile-actions {
-        border-top: 1px solid var(--color-border);
-        padding-top: 2rem;
-    }
-
-    .alert {
-        background: var(--color-surface-alt);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid var(--color-border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .alert p {
-        margin: 0;
-    }
-</style>
+@section Scripts {
+	<script src="~/js/profile.js" asp-append-version="true" defer></script>
+}

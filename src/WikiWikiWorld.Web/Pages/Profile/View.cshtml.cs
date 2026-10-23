@@ -1,91 +1,65 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Extensions;
-using WikiWikiWorld.Data.Specifications;
-
 namespace WikiWikiWorld.Web.Pages.Profile;
 
 /// <summary>
-/// Page model for viewing a user's profile.
+/// The profile overview at <c>/@user/profile</c>: the shared masthead, the user's profile article, their activity
+/// calendar, badges, focus areas, and recent activity.
 /// </summary>
-/// <param name="Context">The database context.</param>
-/// <param name="UserManager">The user manager.</param>
+/// <param name="ProfileService">Loads the profile header and overview data.</param>
+/// <param name="ArticleRenderer">Renders the user's profile article with the full wiki pipeline.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 public sealed class ViewModel(
-    WikiWikiWorldDbContext Context,
-    UserManager<User> UserManager,
-    SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+	ProfileService ProfileService,
+	IArticleRenderer ArticleRenderer,
+	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
-    /// <summary>
-    /// Gets or sets the username of the profile to view.
-    /// </summary>
-    [BindProperty(SupportsGet = true)]
-    public string Username { get; set; } = string.Empty;
+	/// <summary>
+	/// Gets or sets the user name from the route.
+	/// </summary>
+	[BindProperty(SupportsGet = true)]
+	public string Username { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Gets or sets the path to the user's profile picture.
-    /// </summary>
-    public string? ProfilePicPath { get; set; }
+	/// <summary>
+	/// Gets the shared header data; set by <see cref="OnGetAsync"/> before the page renders.
+	/// </summary>
+	public ProfileHeader Header { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets or sets the date the user joined.
-    /// </summary>
-    public DateTimeOffset DateJoined { get; set; }
+	/// <summary>
+	/// Gets the overview data; set by <see cref="OnGetAsync"/> before the page renders.
+	/// </summary>
+	public ProfileOverview Overview { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets or sets a value indicating whether the user has a home page article.
-    /// </summary>
-    public bool HasHomePage { get; set; }
+	/// <summary>
+	/// Gets the rendered profile article HTML, or <see langword="null"/> when the user has not written one.
+	/// </summary>
+	public string? ProfileArticleHtml { get; private set; }
 
-    /// <summary>
-    /// Gets or sets a value indicating whether the current user is viewing their own profile.
-    /// </summary>
-    public bool IsViewingOwnProfile { get; set; }
+	/// <summary>
+	/// Loads the profile and renders the profile article.
+	/// </summary>
+	/// <param name="CancellationToken">The request-aborted token.</param>
+	/// <returns>The page, or 404 when no user has the requested name.</returns>
+	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
+	{
+		ProfileHeader? LoadedHeader = await ProfileService.GetHeaderAsync(Username, User, SiteId, CancellationToken);
+		if (LoadedHeader is null)
+		{
+			return NotFound();
+		}
 
-    /// <summary>
-    /// Gets or sets a value indicating whether the current visitor is authenticated.
-    /// </summary>
-    public bool IsAuthenticated { get; set; }
+		Header = LoadedHeader;
+		Overview = await ProfileService.GetOverviewAsync(Header, CancellationToken);
 
-    /// <summary>
-    /// Handles the GET request to view the user profile.
-    /// </summary>
-    /// <returns>The page or NotFound.</returns>
-    public async Task<IActionResult> OnGetAsync()
-    {
-        if (string.IsNullOrWhiteSpace(Username))
-        {
-            return NotFound();
-        }
+		if (Overview.ProfileArticle is { } ProfileArticle)
+		{
+			RenderedArticle Rendered = await ArticleRenderer.RenderAsync(ProfileArticle, SiteId, Culture, $"{Header.ArticlePath}/edit", CancellationToken);
+			ProfileArticleHtml = Rendered.Html;
+		}
 
-        User? TargetUser = await UserManager.FindByNameAsync(Username);
-        if (TargetUser is null)
-        {
-            return NotFound();
-        }
+		MetaDescription = Header.Summary ?? $"{Header.UserName}'s contributor profile: {Header.Stats.EditCount.ToString("N0", CultureInfo.InvariantCulture)} edits, {Header.Stats.ArticlesStartedCount.ToString("N0", CultureInfo.InvariantCulture)} articles started.";
 
-        DateJoined = TargetUser.DateCreated;
-        
-        if (TargetUser.ProfilePicGuid.HasValue)
-        {
-            ProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{TargetUser.ProfilePicGuid}.png");
-        }
+		// Accounts with no edits and no profile article are thin pages; keep them out of search indexes.
+		AllowSearchEngineIndexingOfPage = Header.Stats.EditCount > 0 || Header.IsProfileArticleWritten;
 
-        // Check if user has a home page article
-        string HomePageSlug = $"@{Username}";
-        ArticleRevisionsBySlugSpec Spec = new(HomePageSlug, IsCurrent: true);
-        ArticleRevision? Article = await Context.ArticleRevisions.WithSpecification(Spec).FirstOrDefaultAsync();
-        
-        HasHomePage = Article is not null;
-
-        // Check if viewing own profile
-        IsAuthenticated = User.Identity?.IsAuthenticated ?? false;
-        User? CurrentUser = IsAuthenticated ? await UserManager.GetUserAsync(User) : null;
-        IsViewingOwnProfile = CurrentUser?.Id == TargetUser.Id;
-
-        return Page();
-    }
+		return Page();
+	}
 }
