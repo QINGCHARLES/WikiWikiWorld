@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
@@ -12,12 +10,12 @@ namespace WikiWikiWorld.Web.Pages.Profile;
 /// Page model for viewing a user's messages (inbox and sent).
 /// </summary>
 /// <param name="Context">The database context.</param>
-/// <param name="UserManager">The user manager.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
+/// <param name="ProfileService">Loads the shared profile header.</param>
 public sealed class MessagesModel(
 	WikiWikiWorldDbContext Context,
-	UserManager<User> UserManager,
-	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+	SiteResolverService SiteResolverService,
+	ProfileService ProfileService) : BasePageModel(SiteResolverService)
 {
 	/// <summary>
 	/// Gets or sets the username to view messages for.
@@ -32,19 +30,9 @@ public sealed class MessagesModel(
 	public string Tab { get; set; } = "inbox";
 
 	/// <summary>
-	/// Gets or sets the path to the user's profile picture.
+	/// Gets the shared profile header; set by <see cref="OnGetAsync"/> before the page renders.
 	/// </summary>
-	public string? ProfilePicPath { get; set; }
-
-	/// <summary>
-	/// Gets or sets the date the user joined.
-	/// </summary>
-	public DateTimeOffset DateJoined { get; set; }
-
-	/// <summary>
-	/// Gets or sets a value indicating whether the current user is viewing their own profile.
-	/// </summary>
-	public bool IsViewingOwnProfile { get; set; }
+	public ProfileHeader Header { get; private set; } = null!;
 
 	/// <summary>
 	/// Gets or sets the canonical article ID for the user's profile/inbox.
@@ -82,41 +70,34 @@ public sealed class MessagesModel(
 	public Dictionary<Guid, string> RecipientUsernames { get; set; } = [];
 
 	/// <summary>
-	/// Handles the GET request to view messages.
+	/// Handles the GET request to view messages. Only the signed-in owner may read their messages.
 	/// </summary>
-	/// <returns>The page or NotFound/Forbid.</returns>
-	public async Task<IActionResult> OnGetAsync()
+	/// <param name="CancellationToken">The request-aborted token.</param>
+	/// <returns>The page, 404 for an unknown user, a login challenge for anonymous visitors, or Forbid for other users.</returns>
+	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
 	{
-		if (string.IsNullOrWhiteSpace(Username))
+		ProfileHeader? LoadedHeader = await ProfileService.GetHeaderAsync(Username, User, SiteId, CancellationToken);
+		if (LoadedHeader is null)
 		{
 			return NotFound();
 		}
 
-		User? TargetUser = await UserManager.FindByNameAsync(Username);
-		if (TargetUser is null)
+		if (!LoadedHeader.IsViewerAuthenticated)
 		{
-			return NotFound();
+			return Challenge();
 		}
-
-		DateJoined = TargetUser.DateCreated;
-
-		if (TargetUser.ProfilePicGuid.HasValue)
-		{
-			ProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{TargetUser.ProfilePicGuid}.png");
-		}
-
-		// Check if viewing own profile
-		User? CurrentUser = await UserManager.GetUserAsync(User);
-		IsViewingOwnProfile = CurrentUser?.Id == TargetUser.Id;
 
 		// Only allow viewing own messages
-		if (!IsViewingOwnProfile)
+		if (!LoadedHeader.IsOwner)
 		{
 			return Forbid();
 		}
 
+		Header = LoadedHeader;
+		AllowSearchEngineIndexingOfPage = false;
+
 		// Get user's article to find inbox messages
-		string UserSlug = $"@{Username}";
+		string UserSlug = $"@{Header.UserName}";
 		ArticleRevisionsBySlugSpec ArticleSpec = new(UserSlug, IsCurrent: true);
 		ArticleRevision? UserArticle = await Context.ArticleRevisions.WithSpecification(ArticleSpec).FirstOrDefaultAsync();
 
@@ -131,7 +112,7 @@ public sealed class MessagesModel(
 		}
 
 		// Get sent messages (messages FROM this user)
-		ArticleTalkSubjectsByCreatorSpec SentSpec = new(TargetUser.Id);
+		ArticleTalkSubjectsByCreatorSpec SentSpec = new(Header.UserId);
 		SentMessages = await Context.ArticleTalkSubjects.WithSpecification(SentSpec).ToListAsync();
 		SentCount = SentMessages.Count;
 

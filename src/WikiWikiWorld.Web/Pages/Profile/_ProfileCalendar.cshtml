@@ -1,0 +1,66 @@
+@model ProfileActivityCalendar
+@{
+	string FirstDayText = Model.FirstDay.ToString("d MMMM yyyy", CultureInfo.CurrentCulture);
+	string LastDayText = Model.LastDay.ToString("d MMMM yyyy", CultureInfo.CurrentCulture);
+	string Summary = $"{Model.TotalCount.ToString("N0", CultureInfo.CurrentCulture)} {(Model.TotalCount == 1 ? "edit" : "edits")} on {Model.ActiveDayCount.ToString("N0", CultureInfo.CurrentCulture)} {(Model.ActiveDayCount == 1 ? "day" : "days")} between {FirstDayText} and {LastDayText}.";
+
+	static string DayCount(int Days) => Days == 1 ? "1 day" : $"{Days.ToString("N0", CultureInfo.CurrentCulture)} days";
+}
+<section class="profile-card profile-calendar" aria-labelledby="profile-calendar-title">
+	<header class="profile-card-head">
+		<h2 class="profile-card-title" id="profile-calendar-title">Activity</h2>
+		<p class="profile-card-note">Past 12 months</p>
+	</header>
+
+	<dl class="profile-calendar-stats">
+		<div>
+			<dt>Edits</dt>
+			<dd>@Model.TotalCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
+		</div>
+		<div>
+			<dt>Active days</dt>
+			<dd>@Model.ActiveDayCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
+		</div>
+		<div>
+			<dt>Best streak</dt>
+			<dd>@DayCount(Model.LongestStreakDays)</dd>
+		</div>
+		<div>
+			<dt>Current streak</dt>
+			<dd>@DayCount(Model.CurrentStreakDays)</dd>
+		</div>
+	</dl>
+
+	@* Weeks are written newest first into a row-reverse scroller: they display oldest to newest, and on narrow
+	   screens the scroller opens on the most recent weeks with older ones a swipe away. No JavaScript. *@
+	<div class="profile-calendar-scroll" role="img" aria-label="@Summary">
+		@for (int w = Model.Weeks.Count - 1; w >= 0; w--)
+		{
+			ProfileActivityWeek Week = Model.Weeks[w];
+			<div class="profile-calendar-week">
+				<span class="profile-calendar-month">@(Week.MonthStart?.ToString("MMM", CultureInfo.CurrentCulture))</span>
+				@foreach (ProfileActivityDay Day in Week.Days)
+				{
+					if (Day.IsFuture)
+					{
+						<span class="profile-calendar-day" data-future="true"></span>
+					}
+					else
+					{
+						<span class="profile-calendar-day" data-level="@Day.Level" title="@(Day.Count == 0 ? "No edits" : Day.Count == 1 ? "1 edit" : $"{Day.Count.ToString("N0", CultureInfo.CurrentCulture)} edits") · @Day.Date.ToString("ddd d MMM yyyy", CultureInfo.CurrentCulture)"></span>
+					}
+				}
+			</div>
+		}
+	</div>
+
+	<p class="profile-calendar-legend" aria-hidden="true">
+		<span>Less</span>
+		<span class="profile-calendar-day" data-level="0"></span>
+		<span class="profile-calendar-day" data-level="1"></span>
+		<span class="profile-calendar-day" data-level="2"></span>
+		<span class="profile-calendar-day" data-level="3"></span>
+		<span class="profile-calendar-day" data-level="4"></span>
+		<span>More</span>
+	</p>
+</section>

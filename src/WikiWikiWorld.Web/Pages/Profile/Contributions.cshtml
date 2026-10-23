@@ -1,159 +1,87 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.ContributionsModel
-@using WikiWikiWorld.Web.Helpers
 @{
-    ViewData["Title"] = $"{Model.Username}'s Contributions";
+	ProfileHeader Header = Model.Header;
+	ProfileContributionPage Contributions = Model.Contributions;
+	ViewData["Title"] = $"{Header.UserName} · Contributions";
+	DateTimeOffset Now = DateTimeOffset.UtcNow;
+	string BasePath = $"/@{Header.UserName}/contributions";
+	int FirstNumber = ((Contributions.PageNumber - 1) * ContributionsModel.PageSize) + 1;
 }
 
-<div class="profile-container">
-    <div class="profile-header">
-        <div class="avatar">
-            @if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
-            {
-                <img src="@Model.ProfilePicPath" alt="@Model.Username" />
-            }
-            else
-            {
-                <span class="avatar-initials">@Model.Username?[0].ToString().ToUpperInvariant()</span>
-            }
-        </div>
-        <div class="profile-info">
-            <h1>@Model.Username</h1>
-            <p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
-        </div>
-    </div>
+<div class="profile">
+	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Header, ProfileTab.Contributions)" />
 
-    <div class="profile-nav">
-        <a href="/@@@Model.Username/profile" class="nav-link">Profile</a>
-        <a href="/@@@Model.Username/contributions" class="nav-link active">Contributions</a>
-        @if (Model.IsViewingOwnProfile)
-        {
-            <a href="/@@@Model.Username/messages" class="nav-link">Messages</a>
-            <a href="/@@@Model.Username/bookmarks" class="nav-link">Bookmarks</a>
-        }
-    </div>
+	<div class="profile-stack">
+		<partial name="_ProfileCalendar" model="Model.Calendar" />
 
-    <div class="contributions-list">
-        <h2>Contributions</h2>
-        @if (Model.Contributions.Count > 0)
-        {
-            <ul class="revision-list">
-                @foreach (var Revision in Model.Contributions)
-                {
-                    <li class="revision-item">
-                        <div class="revision-meta">
-                            <span class="revision-date">@Revision.DateCreated.ToString("MMM dd, yyyy HH:mm")</span>
-                            <span class="revision-type">@Revision.Type</span>
-                        </div>
-                        <div class="revision-content">
-                            <a href="@ArticleUrlHelper.BuildRevisionPath(Revision, Revision.DateCreated.ToString("yyyyMMddHHmmss"))" class="revision-title">@Revision.Title</a>
-                            <p class="revision-reason">@Revision.RevisionReason</p>
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-        else
-        {
-            <p class="text-muted">No contributions found.</p>
-        }
-    </div>
+		<section class="profile-card" aria-labelledby="profile-history-title">
+			<header class="profile-card-head">
+				<h2 class="profile-card-title" id="profile-history-title">Edit history</h2>
+				@if (Contributions.Items.Count > 0)
+				{
+					<p class="profile-card-note">
+						@FirstNumber.ToString("N0", CultureInfo.CurrentCulture)–@((FirstNumber + Contributions.Items.Count - 1).ToString("N0", CultureInfo.CurrentCulture)) of @Header.Stats.EditCount.ToString("N0", CultureInfo.CurrentCulture)
+					</p>
+				}
+			</header>
+
+			@if (Contributions.Items.Count == 0)
+			{
+				<p class="profile-card-empty">
+					@if (Contributions.PageNumber > 1)
+					{
+						<text>There are no older edits. <a href="@BasePath">Back to the newest</a>.</text>
+					}
+					else
+					{
+						<text>@(Header.IsOwner ? "You haven't" : $"{Header.UserName} hasn't") edited any articles yet.</text>
+					}
+				</p>
+			}
+			else
+			{
+				@foreach (IGrouping<(int Year, int Month), ProfileActivityItem> Month in Contributions.Items.GroupBy(i => (i.Date.UtcDateTime.Year, i.Date.UtcDateTime.Month)))
+				{
+					DateTime MonthStart = new(Month.Key.Year, Month.Key.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+					<h3 class="profile-month">@MonthStart.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</h3>
+					<ol class="profile-list">
+						@foreach (ProfileActivityItem Item in Month)
+						{
+							<li class="profile-list-row">
+								<span class="profile-kind" data-kind="@Item.Kind.ToString().ToLowerInvariant()">@(Item.Kind == ProfileActivityKind.Created ? "Created" : "Edited")</span>
+								<div class="profile-list-main">
+									<a class="profile-list-title" href="@Item.Path" rel="nofollow">@Item.Title</a>
+									@if (!string.IsNullOrWhiteSpace(Item.Summary))
+									{
+										<p class="profile-list-meta">@Item.Summary</p>
+									}
+								</div>
+								<time class="profile-list-time" datetime="@Item.Date.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@Item.Date.UtcDateTime.ToString("f", CultureInfo.CurrentCulture) UTC">@ProfileFormatting.ToRelativeTime(Item.Date, Now)</time>
+							</li>
+						}
+					</ol>
+				}
+			}
+
+			@if (Contributions.PageNumber > 1 || Contributions.HasNextPage)
+			{
+				<nav class="profile-pager" aria-label="Edit history pages">
+					@if (Contributions.PageNumber > 1)
+					{
+						<a href="@(Contributions.PageNumber == 2 ? BasePath : $"{BasePath}?PageNumber={(Contributions.PageNumber - 1).ToString(CultureInfo.InvariantCulture)}")" rel="prev"><span aria-hidden="true">←</span> Newer</a>
+					}
+					<span class="profile-pager-current">Page @Contributions.PageNumber.ToString("N0", CultureInfo.CurrentCulture)</span>
+					@if (Contributions.HasNextPage)
+					{
+						<a href="@BasePath?PageNumber=@((Contributions.PageNumber + 1).ToString(CultureInfo.InvariantCulture))" rel="next">Older <span aria-hidden="true">→</span></a>
+					}
+				</nav>
+			}
+		</section>
+	</div>
 </div>
 
-<style>
-    .profile-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: var(--color-surface);
-        border-radius: 1rem;
-        border: 1px solid var(--color-border);
-    }
-
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .profile-header > .avatar {
-        --avatar-size: 5rem;
-    }
-
-    .profile-info h1 {
-        margin: 0;
-        font-size: 2rem;
-        color: var(--color-title);
-    }
-
-    .profile-joined {
-        margin-top: 0.25rem;
-        color: var(--color-muted);
-    }
-
-    .profile-nav {
-        display: flex;
-        gap: 1rem;
-        border-bottom: 1px solid var(--color-border);
-        margin-bottom: 2rem;
-    }
-
-    .nav-link {
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        color: var(--color-muted);
-        font-weight: 600;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-    }
-
-    .nav-link:hover {
-        color: var(--color-foreground);
-    }
-
-    .nav-link.active {
-        color: var(--color-primary);
-        border-bottom-color: var(--color-primary);
-    }
-
-    .revision-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .revision-item {
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--color-border);
-    }
-
-    .revision-item:last-child {
-        border-bottom: none;
-    }
-
-    .revision-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.875rem;
-        color: var(--color-muted);
-        margin-bottom: 0.25rem;
-    }
-
-    .revision-title {
-        font-weight: 600;
-        text-decoration: none;
-        color: var(--color-primary);
-        font-size: 1.125rem;
-    }
-
-    .revision-title:hover {
-        text-decoration: underline;
-    }
-
-    .revision-reason {
-        margin: 0.25rem 0 0;
-        color: var(--color-foreground);
-        font-style: italic;
-    }
-</style>
+@section Scripts {
+	<script src="~/js/profile.js" asp-append-version="true" defer></script>
+}

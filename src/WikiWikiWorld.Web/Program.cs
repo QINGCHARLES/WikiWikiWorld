@@ -145,6 +145,7 @@ Builder.Services.AddScoped<SiteResolverService>();
 Builder.Services.AddScoped<ISiteContextService, SiteContextService>();
 Builder.Services.AddScoped<ArticleRevisionService>();
 Builder.Services.AddScoped<BookmarkService>();
+Builder.Services.AddScoped<ProfileService>();
 Builder.Services.AddScoped<IArticleRenderer, ArticleRenderer>();
 Builder.Services.AddScoped<FileUploadStorageService>();
 Builder.Services.AddScoped<FileMigrationService>();

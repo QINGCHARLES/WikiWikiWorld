@@ -75,6 +75,14 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	}
 
 	/// <summary>
+	/// Returns the placeholder text written into a user page created automatically, so callers such as the profile
+	/// can tell an untouched page from one the user has written.
+	/// </summary>
+	/// <param name="UserName">The user name the page belongs to.</param>
+	/// <returns>The default user page Markdown.</returns>
+	public static string GetDefaultUserArticleText(string? UserName) => $"Welcome to {UserName}'s page.";
+
+	/// <summary>
 	/// Gets the user's <c>@username</c> article — their home page (which also hosts their messages) — creating
 	/// a placeholder revision if one does not already exist. Idempotent: an existing current revision is returned unchanged.
 	/// </summary>
@@ -111,7 +119,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 			DisplayTitle = $"User: {User.UserName}",
 			UrlSlug = UserSlug,
 			Type = ArticleType.User,
-			Text = $"Welcome to {User.UserName}'s page.",
+			Text = GetDefaultUserArticleText(User.UserName),
 			RevisionReason = "User page created automatically.",
 			CreatedByUserId = User.Id,
 			DateCreated = DateTimeOffset.UtcNow,

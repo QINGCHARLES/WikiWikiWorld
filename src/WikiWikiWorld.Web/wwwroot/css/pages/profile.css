@@ -1,0 +1,1366 @@
+/* Profile - contributor masthead, profile tabs, overview cards, activity calendar and badges.
+   Layouts are intrinsic (flex wrapping, auto-fit grids, clamp()); there are no width breakpoints. */
+
+.profile {
+	--profile-inline-size: min(100vw, 76rem);
+	--profile-ink: oklch(21% 0.012 255);
+	--profile-ink-soft: oklch(30% 0.012 255);
+	--profile-paper: oklch(98.6% 0.006 85);
+	--profile-cream: oklch(95.5% 0.028 88);
+	--profile-lime: oklch(90% 0.2 125);
+	--profile-lime-deep: oklch(80% 0.2 128);
+	--profile-rule: oklch(90.5% 0.008 85);
+	--profile-quiet: oklch(52% 0.01 260);
+	--profile-radius: clamp(1rem, 0.8rem + 0.8vw, 1.5rem);
+	--profile-card-radius: 1rem;
+	--profile-pad: clamp(1rem, 0.75rem + 1.2vw, 1.4rem);
+	--profile-shadow: 0 1px 0 rgb(20 20 30 / 0.03), 0 0.75rem 2rem -1.25rem rgb(20 20 30 / 0.22);
+	--profile-label: 700 0.68rem/1.2 var(--font-family-wide-grotesque);
+	--profile-avatar: clamp(6rem, 4.5rem + 5vw, 9.5rem);
+	--profile-cover-pad: clamp(1.25rem, 0.75rem + 2.6vw, 3rem);
+
+	/* Breaks out of main's 65ch reading column, centred, like the home category strip. */
+	box-sizing: border-box;
+	inline-size: var(--profile-inline-size);
+	margin-inline: calc((100% - var(--profile-inline-size)) / 2);
+	padding-inline: var(--grid-gutter);
+	padding-block-end: var(--space-xl);
+	font-family: var(--font-family-san-serif);
+	color: var(--color-foreground);
+
+	& *,
+	& *::before,
+	& *::after {
+		box-sizing: border-box;
+	}
+
+	& :focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 3px;
+	}
+
+	/* The site sets every paragraph in the serif; profile chrome inherits its container's face instead. :where()
+	   keeps this at single-class weight so component rules later in the file still choose their own face. */
+	& :where(p) {
+		font-family: inherit;
+	}
+
+	& code {
+		font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.05em 0.35em;
+		border-radius: 0.3em;
+		background: oklch(94% 0.01 85);
+	}
+}
+
+/* Figures use the wide grotesque: the Lyon web cuts carry only old-style numerals, where a zero reads as "o". */
+.profile-coverlines dd,
+.profile-calendar-stats dd {
+	font-family: var(--font-family-wide-grotesque);
+	font-weight: 800;
+	font-stretch: 112%;
+	letter-spacing: -0.02em;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Shared small-caps label used by cover lines, card titles and stats. */
+.profile-kicker,
+.profile-coverlines dt,
+.profile-card-title,
+.profile-calendar-stats dt,
+.profile-soon {
+	font: var(--profile-label);
+	font-stretch: 125%;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+/* ---- Masthead cover ---- */
+
+.profile-masthead {
+	margin-block-start: var(--space-s);
+}
+
+.profile-cover {
+	position: relative;
+	isolation: isolate;
+	overflow: clip;
+	display: flex;
+	flex-direction: column;
+	gap: clamp(1rem, 0.5rem + 2vw, 2rem);
+	min-block-size: clamp(15rem, 11rem + 14vw, 23rem);
+	padding: var(--profile-cover-pad);
+	/* Leaves room for the avatar, which overlaps the cover's lower edge by half its size. */
+	padding-block-end: calc(var(--profile-avatar) * 0.5 + 1rem);
+	border-radius: var(--profile-radius);
+	color: var(--profile-cream);
+	background:
+		radial-gradient(110% 85% at 88% -10%, oklch(62% 0.17 145 / 0.55), transparent 62%),
+		radial-gradient(70% 70% at -5% 110%, oklch(90% 0.2 125 / 0.22), transparent 58%),
+		radial-gradient(50% 60% at 55% 120%, oklch(55% 0.12 250 / 0.35), transparent 70%),
+		linear-gradient(155deg, var(--profile-ink-soft), var(--profile-ink) 55%, oklch(16% 0.01 255));
+	box-shadow: 0 1.5rem 3rem -1.75rem rgb(10 12 20 / 0.6);
+
+	/* Film grain from an inline SVG turbulence filter; no image request. */
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		opacity: 0.22;
+		mix-blend-mode: overlay;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+
+	/* Hairline print rules top and bottom, like a cover's folio lines. */
+	&::after {
+		content: "";
+		position: absolute;
+		inset-inline: var(--profile-cover-pad);
+		inset-block: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
+		z-index: -1;
+		border-block: 1px solid oklch(95% 0.03 88 / 0.14);
+		pointer-events: none;
+	}
+}
+
+.profile-kicker {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 0;
+	margin: 0;
+	color: oklch(95% 0.03 88 / 0.72);
+
+	& span + span::before {
+		content: "·";
+		margin-inline: 0.7em;
+		color: var(--profile-lime);
+	}
+}
+
+.profile-cover-title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--space-s) var(--space-l);
+}
+
+.profile-volume {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.35em;
+	margin: 0;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	line-height: 0.8;
+	letter-spacing: -0.035em;
+}
+
+.profile-volume-label {
+	padding-block-start: 0.45em;
+	font: var(--profile-label);
+	font-size: clamp(0.75rem, 0.6rem + 0.5vw, 1rem);
+	font-stretch: 125%;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--profile-lime);
+}
+
+.profile-volume-number {
+	font-size: clamp(4.5rem, 2.5rem + 9vw, 10.5rem);
+	background: linear-gradient(180deg, var(--profile-cream) 40%, oklch(86% 0.06 95));
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+}
+
+.profile-epigraph {
+	flex: 0 1 22rem;
+	margin: 0;
+	padding-inline-start: 1rem;
+	border-inline-start: 2px solid var(--profile-lime);
+
+	& p {
+		margin: 0;
+		font-family: var(--font-family-serif);
+		font-style: italic;
+		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.4rem);
+		line-height: 1.35;
+		color: var(--profile-cream);
+		text-wrap: balance;
+
+		&::before { content: "\201C"; }
+		&::after { content: "\201D"; }
+	}
+}
+
+.profile-cover-foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--space-s) var(--space-m);
+	margin-block-start: auto;
+}
+
+.profile-coverlines {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs) clamp(1.25rem, 0.75rem + 2vw, 2.75rem);
+	margin: 0;
+
+	& div {
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 0.3rem;
+	}
+
+	& dt {
+		color: oklch(95% 0.03 88 / 0.6);
+	}
+
+	& dd {
+		margin: 0;
+		font-size: clamp(1.35rem, 1.05rem + 1.1vw, 2rem);
+		line-height: 1;
+	}
+}
+
+/* A newsstand barcode: irregular bars from layered gradients, and the edit count as the issue number. */
+.profile-barcode {
+	display: grid;
+	margin-inline-start: auto;
+	justify-items: center;
+	gap: 0.2rem;
+	padding: 0.45rem 0.55rem 0.3rem;
+	border-radius: 0.35rem;
+	background: var(--profile-paper);
+	color: var(--profile-ink);
+}
+
+.profile-barcode-bars {
+	inline-size: 5.5rem;
+	block-size: 1.9rem;
+	background:
+		repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 3px, currentColor 3px 5px, transparent 5px 6px, currentColor 6px 7px, transparent 7px 10px),
+		repeating-linear-gradient(90deg, transparent 0 11px, currentColor 11px 13px, transparent 13px 17px);
+}
+
+.profile-barcode-number {
+	font: 600 0.62rem/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+	letter-spacing: 0.12em;
+}
+
+/* ---- Identity bar ---- */
+
+.profile-identity {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--space-s) var(--space-m);
+	padding-inline: clamp(0.5rem, 0.25rem + 2vw, 2.5rem);
+}
+
+.profile-avatar {
+	--avatar-size: var(--profile-avatar);
+
+	margin-block-start: calc(var(--avatar-size) * -0.5);
+	position: relative;
+	box-shadow: 0 0.9rem 2rem -0.5rem rgb(10 12 20 / 0.35);
+	background: var(--profile-ink);
+
+	& .avatar-initials {
+		font-family: 'Lyon Custom Headings', Georgia, serif;
+		font-weight: 900;
+		text-transform: none;
+		color: var(--profile-cream);
+		background:
+			radial-gradient(90% 90% at 25% 15%, oklch(62% 0.17 145), transparent 70%),
+			linear-gradient(160deg, oklch(42% 0.1 200), var(--profile-ink));
+	}
+}
+
+.profile-identity-text {
+	flex: 1 1 18rem;
+	min-inline-size: 0;
+	padding-block-start: var(--space-s);
+}
+
+/* Overrides the site's centred, upper-case, extruded article title. */
+.profile .profile-name {
+	margin: 0;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: clamp(2.1rem, 1.5rem + 2.6vw, 3.6rem);
+	line-height: 1;
+	letter-spacing: -0.025em;
+	text-transform: none;
+	text-align: start;
+	color: var(--profile-ink);
+	filter: none;
+	overflow-wrap: anywhere;
+}
+
+.profile-facts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.45rem 0.9rem;
+	margin: 0.7rem 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.9rem;
+	color: var(--profile-quiet);
+
+	& time {
+		color: var(--color-foreground);
+		font-weight: 500;
+	}
+}
+
+.profile-rank,
+.profile-role {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	padding: 0.25em 0.75em;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.profile-rank {
+	background: var(--profile-ink);
+	color: var(--profile-lime);
+
+	&::before {
+		content: "";
+		inline-size: 0.45em;
+		block-size: 0.45em;
+		border-radius: 50%;
+		background: currentColor;
+	}
+}
+
+.profile-role {
+	background: oklch(93% 0.05 145);
+	color: oklch(38% 0.1 145);
+}
+
+.profile-summary {
+	max-inline-size: 60ch;
+	margin: 0.75rem 0 0;
+	font-family: var(--font-family-serif);
+	font-size: 1.05rem;
+	line-height: 1.5;
+	color: oklch(35% 0.01 260);
+}
+
+.profile-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	padding-block-end: 0.25rem;
+
+	& .button {
+		--button-padding: 0.65em 1.15em;
+		--button-border-width: 1.5px;
+		--button-gap: 0.5em;
+		--button-font-size: 0.9rem;
+		--button-icon-size: 1rem;
+
+		font-family: var(--font-family-san-serif);
+		letter-spacing: 0;
+		white-space: nowrap;
+	}
+
+	& .button[data-button-variant="ghost"] {
+		--button-color: var(--profile-ink);
+		--button-border-color: var(--profile-rule);
+		--button-hover-bg: var(--profile-ink);
+		--button-hover-color: var(--profile-cream);
+		background: #fff;
+	}
+}
+
+.profile .profile-action-accent {
+	--button-bg: var(--profile-lime);
+	--button-color: var(--profile-ink);
+	--button-border-color: var(--profile-lime);
+	--button-hover-bg: var(--profile-lime-deep);
+	--button-hover-color: var(--profile-ink);
+	--button-outline-color: var(--profile-ink);
+}
+
+/* ---- Tabs ---- */
+
+.profile-tabs {
+	margin-block-start: var(--space-m);
+	border-block-end: 1px solid var(--profile-rule);
+
+	& ul {
+		position: relative;
+		display: flex;
+		gap: clamp(0.75rem, 0.25rem + 2vw, 2rem);
+		margin: 0;
+		padding: 0 clamp(0.5rem, 0.25rem + 2vw, 2.5rem);
+		list-style: none;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+		/* Fades the trailing edge so a strip wider than the screen reads as scrollable. */
+		mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+	}
+
+	& li {
+		flex: none;
+	}
+
+	& a,
+	& .profile-tab-soon {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+		padding-block: 0.95rem 0.85rem;
+		border-block-end: 2px solid transparent;
+		margin-block-end: -1px;
+		color: var(--profile-quiet);
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-decoration: none;
+		white-space: nowrap;
+		transition: color 0.15s ease, border-color 0.15s ease;
+	}
+
+	& a:hover {
+		color: var(--color-foreground);
+	}
+
+	& a[aria-current="page"] {
+		color: var(--profile-ink);
+		border-block-end-color: var(--profile-ink);
+	}
+
+	& .profile-tab-soon {
+		opacity: 0.55;
+		cursor: default;
+	}
+
+	& svg {
+		flex: none;
+	}
+}
+
+.profile-tab-count {
+	padding: 0.15em 0.55em;
+	border-radius: 999px;
+	background: oklch(94.5% 0.008 85);
+	color: var(--profile-quiet);
+	font-size: 0.72rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+
+	[aria-current="page"] > & {
+		background: var(--profile-ink);
+		color: var(--profile-lime);
+	}
+}
+
+/* ---- Body layout: main column and an aside that wraps beneath it when space runs out ---- */
+
+.profile-body {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--space-l) clamp(1.5rem, 0.5rem + 3vw, 3.5rem);
+	padding-block-start: var(--space-l);
+}
+
+/* minmax(0, 1fr) tracks stop the calendar's 53 weeks from widening the column past its share. */
+.profile-main {
+	flex: 999 1 34rem;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-l);
+	min-inline-size: 0;
+}
+
+.profile-aside {
+	flex: 1 1 19rem;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-s);
+	min-inline-size: 0;
+}
+
+/* ---- Cards ---- */
+
+.profile-card {
+	padding: var(--profile-pad);
+	border: 1px solid var(--profile-rule);
+	border-radius: var(--profile-card-radius);
+	background: #fff;
+	box-shadow: var(--profile-shadow);
+}
+
+.profile-card-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-block-end: 0.95rem;
+}
+
+.profile .profile-card-title {
+	margin: 0;
+	color: var(--profile-quiet);
+	filter: none;
+	text-align: start;
+}
+
+.profile-card-note {
+	margin: 0;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--profile-quiet);
+	font-variant-numeric: tabular-nums;
+}
+
+.profile-card-empty {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	color: var(--profile-quiet);
+}
+
+.profile-card-link {
+	display: inline-flex;
+	gap: 0.4em;
+	margin-block-start: 0.9rem;
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--profile-ink);
+	text-decoration: none;
+
+	&:hover {
+		color: var(--color-hyperlinks);
+		text-decoration: underline;
+		text-decoration-color: var(--color-primary);
+	}
+}
+
+.profile-soon {
+	margin: 0;
+	padding: 0.35em 0.7em;
+	border-radius: 999px;
+	border: 1px dashed currentColor;
+	color: var(--profile-quiet);
+	font-size: 0.6rem;
+	letter-spacing: 0.12em;
+}
+
+/* ---- Activity calendar ---- */
+
+.profile-calendar {
+	--cal-gap: 3px;
+	--cal-cell-min: 0.6rem;
+	--cal-cell-max: 1.15rem;
+}
+
+.profile-calendar-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+	gap: 0.75rem;
+	margin: 0 0 1.1rem;
+
+	& div {
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 0.35rem;
+		padding: 0.8rem 0.9rem;
+		border-radius: 0.75rem;
+		background: var(--profile-paper);
+		border: 1px solid oklch(93% 0.008 85);
+	}
+
+	& dt {
+		color: var(--profile-quiet);
+	}
+
+	& dd {
+		margin: 0;
+		font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.7rem);
+		line-height: 1;
+		color: var(--profile-ink);
+	}
+}
+
+/* row-reverse starts the scroller at its right edge, so the newest weeks show first on narrow screens. */
+.profile-calendar-scroll {
+	display: flex;
+	flex-direction: row-reverse;
+	gap: var(--cal-gap);
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	padding-block-end: 0.35rem;
+	scrollbar-width: thin;
+}
+
+/* Weeks share the width equally between a legible minimum (below which the row scrolls) and a maximum. A flex
+   column, unlike a grid row, lets each day's aspect-ratio set its height. */
+.profile-calendar-week {
+	flex: 1 1 0;
+	min-inline-size: var(--cal-cell-min);
+	max-inline-size: var(--cal-cell-max);
+	display: flex;
+	flex-direction: column;
+	gap: var(--cal-gap);
+}
+
+.profile-calendar-month {
+	block-size: 1.1rem;
+	font-size: 0.68rem;
+	font-weight: 600;
+	line-height: 1;
+	color: var(--profile-quiet);
+	white-space: nowrap;
+}
+
+.profile-calendar-day {
+	display: block;
+	aspect-ratio: 1;
+	border-radius: 28%;
+	background: oklch(94.5% 0.006 145);
+
+	&[data-level="1"] { background: oklch(88% 0.075 145); }
+	&[data-level="2"] { background: oklch(79% 0.14 145); }
+	&[data-level="3"] { background: oklch(67% 0.17 145); }
+	&[data-level="4"] { background: oklch(50% 0.14 147); }
+	&[data-future] { visibility: hidden; }
+}
+
+.profile-calendar-legend {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 4px;
+	margin: 0.6rem 0 0;
+	font-size: 0.72rem;
+	color: var(--profile-quiet);
+
+	& .profile-calendar-day {
+		inline-size: 0.75rem;
+	}
+
+	& span:first-child { margin-inline-end: 0.3rem; }
+	& span:last-child { margin-inline-start: 0.3rem; }
+}
+
+/* ---- Profile article ---- */
+
+.profile-section-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	padding-block-end: 0.75rem;
+	margin-block-end: var(--space-s);
+	border-block-end: 1px solid var(--profile-rule);
+}
+
+.profile .profile-section-title {
+	margin: 0;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: clamp(1.5rem, 1.25rem + 1vw, 2.1rem);
+	letter-spacing: -0.015em;
+	color: var(--profile-ink);
+}
+
+.profile-section-link {
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--profile-quiet);
+	text-decoration: none;
+
+	&:hover {
+		color: var(--color-hyperlinks);
+	}
+}
+
+.profile-owner-note {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	margin-block-end: var(--space-s);
+	padding: 0.8rem 1rem;
+	border-radius: 0.85rem;
+	background: oklch(97% 0.04 120);
+	border: 1px solid oklch(90% 0.09 122);
+	color: oklch(32% 0.05 130);
+	font-size: 0.9rem;
+	line-height: 1.45;
+
+	& svg {
+		flex: none;
+	}
+
+	& p {
+		flex: 1;
+		margin: 0;
+		font-family: var(--font-family-san-serif);
+	}
+
+	& code {
+		background: oklch(92% 0.07 122);
+	}
+}
+
+.profile-owner-note-link {
+	flex: none;
+	padding: 0.45em 1em;
+	border-radius: 999px;
+	background: var(--profile-ink);
+	color: var(--profile-lime);
+	font-weight: 700;
+	text-decoration: none;
+
+	&:hover {
+		background: oklch(30% 0.02 255);
+	}
+}
+
+/* The article renders with the site's article styles; asides float inside this column instead of pulling into the
+   page margin, and stack once the column is narrow. */
+.profile-article {
+	--aside-outset: 0px;
+
+	container: profile-article / inline-size;
+	max-inline-size: 68ch;
+	font-family: var(--font-family-serif);
+	font-size: var(--step-0);
+	line-height: 1.55;
+
+	& > :first-child {
+		margin-block-start: 0;
+	}
+
+	& aside {
+		margin-inline-end: 0;
+	}
+}
+
+@container profile-article (inline-size < 36rem) {
+	.profile-article aside {
+		float: none;
+		max-inline-size: none;
+		margin-inline: 0;
+	}
+}
+
+.profile-empty {
+	display: grid;
+	justify-items: start;
+	gap: 0.6rem;
+	padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+	border: 1px dashed oklch(84% 0.01 85);
+	border-radius: var(--profile-card-radius);
+	background:
+		radial-gradient(60% 80% at 100% 0%, oklch(96% 0.05 120), transparent 70%),
+		var(--profile-paper);
+
+	& p {
+		max-inline-size: 58ch;
+		margin: 0;
+		font-family: var(--font-family-san-serif);
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: oklch(38% 0.01 260);
+	}
+
+	& .button {
+		--button-padding: 0.65em 1.2em;
+		--button-border-width: 1.5px;
+		--button-font-size: 0.9rem;
+
+		margin-block-start: 0.4rem;
+		font-family: var(--font-family-san-serif);
+	}
+}
+
+.profile-empty-mark {
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: 2.5rem;
+	line-height: 1;
+	color: var(--color-primary);
+}
+
+.profile .profile-empty-title {
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: 1.35rem;
+	color: var(--profile-ink);
+}
+
+/* ---- Badges: typographic medallions ---- */
+
+.profile-badge-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(4.9rem, 1fr));
+	gap: 0.9rem 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.profile-badge {
+	--medal-face: oklch(72% 0.09 60);
+	--medal-rim: oklch(58% 0.1 50);
+	--medal-ink: oklch(98% 0.02 80);
+
+	display: grid;
+	justify-items: center;
+	align-content: start;
+	gap: 0.4rem;
+	text-align: center;
+
+	&[data-tier="silver"] {
+		--medal-face: oklch(86% 0.01 250);
+		--medal-rim: oklch(68% 0.015 250);
+		--medal-ink: oklch(30% 0.01 250);
+	}
+
+	&[data-tier="gold"] {
+		--medal-face: oklch(84% 0.13 88);
+		--medal-rim: oklch(66% 0.13 75);
+		--medal-ink: oklch(30% 0.05 70);
+	}
+
+	&[data-tier="ink"] {
+		--medal-face: var(--profile-ink);
+		--medal-rim: var(--profile-lime);
+		--medal-ink: var(--profile-lime);
+	}
+
+	&[data-locked] {
+		--medal-face: oklch(97% 0.004 85);
+		--medal-rim: oklch(86% 0.006 85);
+		--medal-ink: oklch(70% 0.006 260);
+	}
+}
+
+.profile-badge-medal {
+	display: grid;
+	place-items: center;
+	inline-size: 3.1rem;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	font-family: var(--font-family-wide-grotesque);
+	font-weight: 800;
+	font-stretch: 112%;
+	font-size: 1.2rem;
+	line-height: 1;
+	color: var(--medal-ink);
+	background:
+		radial-gradient(circle at 32% 25%, rgb(255 255 255 / 0.55), transparent 45%),
+		var(--medal-face);
+	box-shadow:
+		inset 0 0 0 2px var(--medal-rim),
+		inset 0 0 0 4px rgb(255 255 255 / 0.35),
+		0 0.35rem 0.8rem -0.35rem rgb(20 20 30 / 0.45);
+
+	[data-locked] > & {
+		background: var(--medal-face);
+		box-shadow: inset 0 0 0 1.5px var(--medal-rim);
+		border: 1.5px dashed var(--medal-rim);
+	}
+}
+
+.profile-badge-name {
+	hyphens: auto;
+	font-size: 0.72rem;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--profile-ink);
+
+	[data-locked] > & {
+		color: var(--profile-quiet);
+	}
+}
+
+.profile-badge-progress {
+	inline-size: 2.8rem;
+	block-size: 0.25rem;
+	border: 0;
+	border-radius: 999px;
+	overflow: hidden;
+	appearance: none;
+	background: oklch(92% 0.006 85);
+	color: var(--color-primary);
+
+	&::-webkit-progress-bar { background: oklch(92% 0.006 85); }
+	&::-webkit-progress-value { background: var(--color-primary); border-radius: 999px; }
+	&::-moz-progress-bar { background: var(--color-primary); border-radius: 999px; }
+}
+
+.profile-badge-count {
+	font-size: 0.66rem;
+	color: var(--profile-quiet);
+	font-variant-numeric: tabular-nums;
+}
+
+.profile-badges-locked {
+	margin-block-start: 1rem;
+	padding-block-start: 0.8rem;
+	border-block-start: 1px solid var(--profile-rule);
+
+	& summary {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		margin-block-end: 0.2rem;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--profile-quiet);
+		list-style: none;
+		cursor: pointer;
+
+		&::-webkit-details-marker { display: none; }
+		&:hover { color: var(--color-foreground); }
+	}
+
+	& svg {
+		transition: rotate 0.2s ease;
+	}
+
+	&[open] svg {
+		rotate: 180deg;
+	}
+
+	&[open] summary {
+		margin-block-end: 0.9rem;
+	}
+}
+
+/* ---- Focus areas ---- */
+
+.profile-focus {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.45rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.profile-focus-pill {
+	--pill-hue: 145;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.4em 0.5em 0.4em 0.8em;
+	border-radius: 999px;
+	background: oklch(95.5% 0.04 var(--pill-hue));
+	color: oklch(36% 0.1 var(--pill-hue));
+	font-size: 0.82rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color 0.15s ease;
+
+	&:hover {
+		background: oklch(91% 0.07 var(--pill-hue));
+	}
+
+	&[data-hue="1"] { --pill-hue: 60; }
+	&[data-hue="2"] { --pill-hue: 255; }
+	&[data-hue="3"] { --pill-hue: 320; }
+	&[data-hue="4"] { --pill-hue: 110; }
+	&[data-hue="5"] { --pill-hue: 25; }
+}
+
+.profile-focus-count {
+	min-inline-size: 1.6em;
+	padding: 0.1em 0.45em;
+	border-radius: 999px;
+	background: rgb(255 255 255 / 0.75);
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---- Recent activity ---- */
+
+.profile-activity {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	& li {
+		--dot: var(--color-primary);
+
+		position: relative;
+		padding-inline-start: 1.15rem;
+		padding-block: 0.65rem;
+
+		&:first-child { padding-block-start: 0; }
+		&:not(:last-child) { border-block-end: 1px solid oklch(94% 0.006 85); }
+
+		&::before {
+			content: "";
+			position: absolute;
+			inset-inline-start: 0;
+			inset-block-start: calc(0.65rem + 0.45em);
+			inline-size: 0.5rem;
+			aspect-ratio: 1;
+			border-radius: 50%;
+			background: var(--dot);
+		}
+
+		&:first-child::before { inset-block-start: 0.45em; }
+		&[data-kind="created"] { --dot: oklch(65% 0.2 260); }
+		&[data-kind="discussed"] { --dot: oklch(70% 0.16 55); }
+	}
+
+	& p {
+		margin: 0;
+		font-family: var(--font-family-san-serif);
+	}
+}
+
+.profile-activity-line {
+	font-size: 0.9rem;
+	line-height: 1.35;
+
+	& a {
+		color: var(--profile-ink);
+		font-weight: 700;
+		text-decoration: none;
+		overflow-wrap: anywhere;
+
+		&:hover {
+			color: var(--color-hyperlinks);
+			text-decoration: underline;
+			text-decoration-color: var(--color-primary);
+		}
+	}
+}
+
+.profile-activity-verb {
+	color: var(--profile-quiet);
+}
+
+.profile-activity-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 0.5rem;
+	margin-block-start: 0.2rem !important;
+	font-size: 0.78rem;
+	color: var(--profile-quiet);
+}
+
+.profile-activity-summary {
+	font-style: italic;
+	overflow-wrap: anywhere;
+
+	&::before {
+		content: "·";
+		margin-inline-end: 0.5rem;
+		font-style: normal;
+	}
+}
+
+/* ---- Sub-pages: contributions, bookmarks and messages ---- */
+
+.profile-stack {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-m);
+	padding-block-start: var(--space-l);
+}
+
+.profile-card-head-wrap {
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.profile-card-button {
+	--button-padding: 0.55em 1em;
+	--button-border-width: 1.5px;
+	--button-font-size: 0.85rem;
+
+	font-family: var(--font-family-san-serif);
+	letter-spacing: 0;
+}
+
+.profile-segments {
+	display: inline-flex;
+	gap: 0.25rem;
+	margin-inline-end: auto;
+	padding: 0.25rem;
+	border-radius: 999px;
+	background: oklch(96% 0.006 85);
+
+	& a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45em;
+		padding: 0.4em 0.9em;
+		border-radius: 999px;
+		color: var(--profile-quiet);
+		font-size: 0.85rem;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	& a:hover {
+		color: var(--color-foreground);
+	}
+
+	& a[aria-current="page"] {
+		background: #fff;
+		color: var(--profile-ink);
+		box-shadow: 0 1px 3px rgb(20 20 30 / 0.12);
+	}
+}
+
+.profile .profile-month {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 1;
+	margin: 1.25rem 0 0.25rem;
+	padding-block: 0.4rem;
+	background: #fff;
+	font: var(--profile-label);
+	font-stretch: 125%;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--profile-ink);
+	text-align: start;
+	filter: none;
+
+	&:first-of-type {
+		margin-block-start: 0;
+	}
+}
+
+.profile-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.profile-list-row {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 0.35rem 0.85rem;
+	padding-block: 0.8rem;
+
+	&:not(:last-child) {
+		border-block-end: 1px solid oklch(94.5% 0.006 85);
+	}
+}
+
+.profile-list-icon {
+	flex: none;
+	display: grid;
+	place-items: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	align-self: center;
+	border-radius: 0.6rem;
+	background: oklch(96% 0.03 135);
+	color: oklch(45% 0.12 145);
+}
+
+.profile-kind {
+	flex: none;
+	min-inline-size: 4.6rem;
+	padding: 0.2em 0.6em;
+	border-radius: 999px;
+	background: oklch(95% 0.04 145);
+	color: oklch(40% 0.11 145);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	text-align: center;
+
+	&[data-kind="created"] {
+		background: oklch(94% 0.04 260);
+		color: oklch(42% 0.15 262);
+	}
+}
+
+.profile-list-main {
+	flex: 1 1 16rem;
+	min-inline-size: 0;
+}
+
+.profile-list-title {
+	color: var(--profile-ink);
+	font-size: 0.98rem;
+	font-weight: 700;
+	text-decoration: none;
+	overflow-wrap: anywhere;
+
+	&:hover {
+		color: var(--color-hyperlinks);
+		text-decoration: underline;
+		text-decoration-color: var(--color-primary);
+	}
+}
+
+.profile-list-meta {
+	margin: 0.2rem 0 0;
+	font-size: 0.85rem;
+	line-height: 1.45;
+	color: var(--profile-quiet);
+	overflow-wrap: anywhere;
+
+	& a {
+		color: inherit;
+		font-weight: 600;
+	}
+}
+
+.profile-list-time {
+	flex: none;
+	margin-inline-start: auto;
+	font-size: 0.8rem;
+	color: var(--profile-quiet);
+	white-space: nowrap;
+}
+
+.profile-list-form {
+	flex: none;
+	margin: 0 0 0 auto;
+}
+
+.profile-list-action {
+	--button-bg: transparent;
+	--button-color: var(--profile-quiet);
+	--button-border-color: var(--profile-rule);
+	--button-hover-bg: oklch(95% 0.05 25);
+	--button-hover-color: oklch(45% 0.17 25);
+	--button-padding: 0.4em 0.9em;
+	--button-border-width: 1px;
+	--button-font-size: 0.8rem;
+	--button-font-weight: 600;
+
+	font-family: var(--font-family-san-serif);
+	letter-spacing: 0;
+
+	&:hover {
+		border-color: oklch(85% 0.08 25);
+	}
+}
+
+.profile-pager {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem 1.25rem;
+	margin-block-start: 1.25rem;
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--profile-rule);
+	font-size: 0.9rem;
+
+	& a {
+		padding: 0.45em 1em;
+		border: 1px solid var(--profile-rule);
+		border-radius: 999px;
+		color: var(--profile-ink);
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	& a:hover {
+		background: var(--profile-ink);
+		border-color: var(--profile-ink);
+		color: var(--profile-cream);
+	}
+}
+
+.profile-pager-current {
+	color: var(--profile-quiet);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---- Previews of planned modules ---- */
+
+.profile-preview {
+	background:
+		repeating-linear-gradient(135deg, transparent 0 10px, oklch(97% 0.004 85) 10px 11px),
+		#fff;
+}
+
+.profile-preview-spark {
+	display: block;
+	inline-size: 100%;
+	block-size: 3rem;
+	color: oklch(80% 0.01 260);
+}
+
+.profile-preview-copy {
+	margin: 0.7rem 0 0;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	color: var(--profile-quiet);
+}
+
+.profile-card-ink {
+	border-color: transparent;
+	color: var(--profile-cream);
+	background:
+		radial-gradient(90% 120% at 100% 0%, oklch(62% 0.17 145 / 0.35), transparent 60%),
+		var(--profile-ink);
+
+	& .profile-card-title,
+	& .profile-soon {
+		color: oklch(95% 0.03 88 / 0.65);
+	}
+}
+
+.profile .profile-ink-title {
+	margin: 0;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: 1.35rem;
+	color: var(--profile-cream);
+	text-align: start;
+}
+
+.profile-ink-copy {
+	margin: 0.5rem 0 1rem;
+	font-family: var(--font-family-serif);
+	font-size: 0.95rem;
+	line-height: 1.5;
+	color: oklch(95% 0.03 88 / 0.8);
+}
+
+.profile-ink-cta {
+	margin: 0;
+	padding: 0.65em 1em;
+	border-radius: 999px;
+	border: 1px dashed oklch(90% 0.2 125 / 0.6);
+	color: var(--profile-lime);
+	font-size: 0.85rem;
+	font-weight: 700;
+	text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.profile-tabs a,
+	.profile-badges-locked svg,
+	.profile-focus-pill {
+		transition: none;
+	}
+}

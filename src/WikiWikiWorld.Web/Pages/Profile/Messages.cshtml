@@ -1,257 +1,84 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.MessagesModel
 @{
-	ViewData["Title"] = $"{Model.Username}'s Messages";
+	ProfileHeader Header = Model.Header;
+	ViewData["Title"] = $"{Header.UserName} · Messages";
+	DateTimeOffset Now = DateTimeOffset.UtcNow;
+	bool IsInbox = Model.Tab != "sent";
+	string BasePath = $"/@{Header.UserName}/messages";
 }
 
-<div class="profile-container">
-	<div class="profile-header">
-		<div class="avatar">
-			@if (!string.IsNullOrWhiteSpace(Model.ProfilePicPath))
+<div class="profile">
+	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Header, ProfileTab.Messages)" />
+
+	<div class="profile-stack">
+		<section class="profile-card" aria-labelledby="profile-messages-title">
+			<header class="profile-card-head profile-card-head-wrap">
+				<h2 class="profile-card-title" id="profile-messages-title">Messages</h2>
+				<nav class="profile-segments" aria-label="Message folders">
+					<a href="@BasePath" aria-current="@(IsInbox ? "page" : null)">Inbox <span class="profile-tab-count">@Model.InboxCount.ToString("N0", CultureInfo.CurrentCulture)</span></a>
+					<a href="@BasePath/sent" aria-current="@(IsInbox ? null : "page")">Sent <span class="profile-tab-count">@Model.SentCount.ToString("N0", CultureInfo.CurrentCulture)</span></a>
+				</nav>
+				<a href="/message/new" class="button profile-action-accent profile-card-button" rel="nofollow">New message</a>
+			</header>
+
+			@if (IsInbox)
 			{
-				<img src="@Model.ProfilePicPath" alt="@Model.Username" />
+				if (Model.InboxMessages.Count > 0)
+				{
+					<ol class="profile-list">
+						@foreach (ArticleTalkSubject Message in Model.InboxMessages)
+						{
+							string SenderName = Model.MessageUsers.TryGetValue(Message.CreatedByUserId, out User? Sender) ? Sender.UserName ?? "Unknown" : "Unknown";
+							<li class="profile-list-row">
+								<span class="profile-list-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 6-10 7L2 6"></path></svg>
+								</span>
+								<div class="profile-list-main">
+									<a class="profile-list-title" href="/@@@Header.UserName/talk/@Message.UrlSlug">@Message.Subject</a>
+									<p class="profile-list-meta">From <a href="/@@@SenderName/profile">@SenderName</a></p>
+								</div>
+								<time class="profile-list-time" datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
+							</li>
+						}
+					</ol>
+				}
+				else
+				{
+					<p class="profile-card-empty">Your inbox is empty. Messages from other contributors will appear here.</p>
+				}
 			}
 			else
 			{
-				<span class="avatar-initials">@Model.Username?[0].ToString().ToUpperInvariant()</span>
+				if (Model.SentMessages.Count > 0)
+				{
+					<ol class="profile-list">
+						@foreach (ArticleTalkSubject Message in Model.SentMessages)
+						{
+							string RecipientName = Model.RecipientUsernames.TryGetValue(Message.CanonicalArticleId, out string? Name) ? Name : "(unknown)";
+							string RecipientUser = RecipientName.TrimStart('@');
+							<li class="profile-list-row">
+								<span class="profile-list-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+								</span>
+								<div class="profile-list-main">
+									<a class="profile-list-title" href="/@@@RecipientUser/talk/@Message.UrlSlug">@Message.Subject</a>
+									<p class="profile-list-meta">To <a href="/@@@RecipientUser/profile">@RecipientUser</a></p>
+								</div>
+								<time class="profile-list-time" datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
+							</li>
+						}
+					</ol>
+				}
+				else
+				{
+					<p class="profile-card-empty">You haven't sent any messages yet.</p>
+				}
 			}
-		</div>
-		<div class="profile-info">
-			<h1>@Model.Username</h1>
-			<p class="profile-joined">Joined @Model.DateJoined.ToString("MMMM yyyy")</p>
-		</div>
-	</div>
-
-	<div class="profile-nav">
-		<a href="/@@@Model.Username/profile" class="nav-link">Profile</a>
-		<a href="/@@@Model.Username/contributions" class="nav-link">Contributions</a>
-		<a href="/@@@Model.Username/messages" class="nav-link active">Messages</a>
-		<a href="/@@@Model.Username/bookmarks" class="nav-link">Bookmarks</a>
-	</div>
-
-	<div class="messages-inbox">
-		<div class="inbox-header">
-			<div class="inbox-tabs">
-				<a href="/@@@Model.Username/messages" class="tab-link @(Model.Tab == "inbox" ? "active" : "")">
-					Inbox <span class="tab-count">@Model.InboxCount</span>
-				</a>
-				<a href="/@@@Model.Username/messages/sent" class="tab-link @(Model.Tab == "sent" ? "active" : "")">
-					Sent <span class="tab-count">@Model.SentCount</span>
-				</a>
-			</div>
-			<a href="/message/new" class="button button-primary">New Message</a>
-		</div>
-
-		@if (Model.Tab == "inbox")
-		{
-			@if (Model.InboxMessages.Count > 0)
-			{
-				<ul class="message-list">
-					@foreach (var Message in Model.InboxMessages)
-					{
-						string SenderName = Model.MessageUsers.TryGetValue(Message.CreatedByUserId, out var Sender) ? Sender.UserName ?? "Unknown" : "Unknown";
-						<li class="message-item">
-							<div class="message-sender">
-								<strong>From: @SenderName</strong>
-							</div>
-							<div class="message-subject">
-								<a href="/@@Model.Username/talk/@Message.UrlSlug">@Message.Subject</a>
-							</div>
-							<div class="message-date">
-								@Message.DateCreated.ToString("MMM dd, yyyy HH:mm")
-							</div>
-						</li>
-					}
-				</ul>
-			}
-			else
-			{
-				<div class="empty-inbox">
-					<p class="text-muted">Your inbox is empty.</p>
-					<p>Messages from other users will appear here.</p>
-				</div>
-			}
-		}
-		else
-		{
-			@if (Model.SentMessages.Count > 0)
-			{
-				<ul class="message-list">
-					@foreach (var Message in Model.SentMessages)
-					{
-						string RecipientName = Model.RecipientUsernames.TryGetValue(Message.CanonicalArticleId, out var RName) ? RName : "(unknown)";
-						<li class="message-item">
-							<div class="message-sender">
-								<strong>To: @RecipientName</strong>
-							</div>
-							<div class="message-subject">
-								<a href="/@@@RecipientName.TrimStart('@')/talk/@Message.UrlSlug">@Message.Subject</a>
-							</div>
-							<div class="message-date">
-								@Message.DateCreated.ToString("MMM dd, yyyy HH:mm")
-							</div>
-						</li>
-					}
-				</ul>
-			}
-			else
-			{
-				<div class="empty-inbox">
-					<p class="text-muted">You haven't sent any messages yet.</p>
-				</div>
-			}
-		}
+		</section>
 	</div>
 </div>
 
-<style>
-	.profile-container {
-		max-width: 800px;
-		margin: 2rem auto;
-		padding: 2rem;
-		background: var(--color-surface);
-		border-radius: 1rem;
-		border: 1px solid var(--color-border);
-	}
-
-	.profile-header {
-		display: flex;
-		align-items: center;
-		gap: 2rem;
-		margin-bottom: 2rem;
-	}
-
-	.profile-header > .avatar {
-		--avatar-size: 7.5rem;
-	}
-
-	.profile-info h1 {
-		margin: 0;
-		font-size: 2.5rem;
-		color: var(--color-title);
-	}
-
-	.profile-joined {
-		margin-top: 0.5rem;
-		color: var(--color-muted);
-	}
-
-	.profile-nav {
-		display: flex;
-		gap: 1rem;
-		border-bottom: 1px solid var(--color-border);
-		margin-bottom: 2rem;
-	}
-
-	.nav-link {
-		padding: 0.5rem 1rem;
-		text-decoration: none;
-		color: var(--color-muted);
-		font-weight: 600;
-		border-bottom: 2px solid transparent;
-		transition: all 0.2s;
-	}
-
-	.nav-link:hover {
-		color: var(--color-foreground);
-	}
-
-	.nav-link.active {
-		color: var(--color-primary);
-		border-bottom-color: var(--color-primary);
-	}
-
-	.inbox-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1.5rem;
-	}
-
-	.inbox-header h2 {
-		margin: 0;
-		color: var(--color-title);
-	}
-
-	.inbox-tabs {
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.tab-link {
-		padding: 0.5rem 1rem;
-		text-decoration: none;
-		color: var(--color-muted);
-		font-weight: 600;
-		background: var(--color-surface-alt);
-		border-radius: 0.5rem;
-		transition: all 0.2s;
-	}
-
-	.tab-link:hover {
-		color: var(--color-foreground);
-		background: var(--color-border);
-	}
-
-	.tab-link.active {
-		color: var(--color-primary);
-		background: rgba(var(--color-primary-rgb), 0.1);
-	}
-
-	.tab-count {
-		display: inline-block;
-		margin-left: 0.25rem;
-		padding: 0.125rem 0.5rem;
-		font-size: 0.75rem;
-		background: var(--color-border);
-		border-radius: 1rem;
-	}
-
-	.message-list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.message-item {
-		display: grid;
-		grid-template-columns: 1fr 2fr auto;
-		gap: 1rem;
-		padding: 1rem;
-		border-bottom: 1px solid var(--color-border);
-		align-items: center;
-	}
-
-	.message-item:hover {
-		background: var(--color-surface-alt);
-	}
-
-	.message-sender {
-		color: var(--color-foreground);
-	}
-
-	.message-subject a {
-		color: var(--color-hyperlinks);
-		text-decoration: none;
-	}
-
-	.message-subject a:hover {
-		text-decoration: underline;
-	}
-
-	.message-date {
-		color: var(--color-muted);
-		font-size: 0.875rem;
-	}
-
-	.empty-inbox {
-		text-align: center;
-		padding: 2rem;
-		background: var(--color-surface-alt);
-		border-radius: 0.5rem;
-	}
-
-	.empty-inbox p {
-		margin: 0.5rem 0;
-	}
-</style>
+@section Scripts {
+	<script src="~/js/profile.js" asp-append-version="true" defer></script>
+}

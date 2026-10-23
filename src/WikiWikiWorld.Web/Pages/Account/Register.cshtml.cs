@@ -57,7 +57,7 @@ public sealed class RegisterModel(
 			return Page();
 		}
 
-		User NewUser = new() { UserName = Input.UserName, Email = Input.Email };
+		User NewUser = new() { UserName = Input.UserName, Email = Input.Email, DateCreated = DateTimeOffset.UtcNow };
 		IdentityResult Result = await UserManager.CreateAsync(NewUser, Input.Password);
 
 		if (Result.Succeeded)
