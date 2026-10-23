@@ -236,11 +236,6 @@ ul.categories a {
     border-radius: 9999px;
 }
 
-.article-actions button.article-action-pill.is-active {
-    background: #f5f3ee;
-    border-color: #cfc9bc;
-}
-
 .article-actions .action-icon {
     width: 1.05em;
     height: 1.05em;
@@ -264,7 +259,7 @@ ul.categories a {
     }
 }
 
-.article-menu {
+.dropdown-menu {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -283,7 +278,7 @@ ul.categories a {
     }
 }
 
-.article-menu .menu-trigger::-webkit-details-marker {
+.dropdown-menu .menu-trigger::-webkit-details-marker {
     display: none;
 }
 
@@ -295,7 +290,7 @@ ul.categories a {
     border-radius: 9999px;
 }
 
-.article-menu .menu-content {
+.dropdown-menu .menu-content {
     display: none;
     position: absolute;
     top: calc(100% + 0.45rem);
@@ -311,7 +306,7 @@ ul.categories a {
     z-index: 100;
 }
 
-.article-menu .menu-content a {
+.dropdown-menu .menu-content a {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -330,20 +325,20 @@ ul.categories a {
     }
 }
 
-.article-menu .menu-content .menu-item-icon {
+.dropdown-menu .menu-content .menu-item-icon {
     width: 1.1em;
     height: 1.1em;
     flex-shrink: 0;
     color: #3a3d42;
 }
 
-.article-menu .menu-content .menu-divider {
+.dropdown-menu .menu-content .menu-divider {
     margin: 0.35rem 0.85rem;
     border: 0;
     border-top: 1px solid #eceae3;
 }
 
-.article-menu .menu-content a.menu-item-danger {
+.dropdown-menu .menu-content a.menu-item-danger {
     color: #c83a2a;
 
     & .menu-item-icon {
@@ -355,16 +350,12 @@ ul.categories a {
     }
 }
 
-.article-menu[open] .menu-content {
+.dropdown-menu[open] .menu-content {
     display: block;
 }
 
-/* Bookmark split button: leading half toggles the default list, chevron opens the list menu. */
-.article-actions .m3-split-button__leading.is-active {
-    background: #f5f3ee;
-    border-color: #cfc9bc;
-}
-
+/* Bookmark split button: leading half toggles the default list, chevron opens the list menu.
+   The saved state is shown by the filled icon and "Bookmarked" label only; the warm tint is kept for hover. */
 .article-actions .m3-split-button__leading:disabled {
     cursor: default;
 }
@@ -425,7 +416,7 @@ ul.categories a {
     overscroll-behavior: contain;
 }
 
-.article-menu .menu-content .menu-item-button {
+.dropdown-menu .menu-content .menu-item-button {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -464,11 +455,11 @@ ul.categories a {
     white-space: nowrap;
 }
 
-.article-menu .menu-content .bookmark-list-check {
+.dropdown-menu .menu-content .bookmark-list-check {
     visibility: hidden;
 }
 
-.article-menu .menu-content .bookmark-list-item.is-checked {
+.dropdown-menu .menu-content .bookmark-list-item.is-checked {
     font-weight: 550;
 
     & .bookmark-list-check {
@@ -479,11 +470,11 @@ ul.categories a {
 /* No press-scale on an open trigger: a transform makes the trigger the containing block of its fixed
    ::before, so pressing the click-away layer would shrink it to the button and the mouseup would land
    outside, cancelling the click that closes the menu. */
-.article-actions .article-menu[open] > .menu-trigger:active {
+.article-actions .dropdown-menu[open] > .menu-trigger:active {
     transform: none;
 }
 
-.article-menu[open] .menu-trigger::before {
+.dropdown-menu[open] .menu-trigger::before {
     content: " ";
     cursor: default;
     display: block;
@@ -496,3 +487,22 @@ ul.categories a {
     background: transparent;
 }
 
+
+/* Shared disclosure triggers retain native keyboard and no-script activation. */
+.dropdown-menu > .menu-trigger {
+    list-style: none;
+    cursor: pointer;
+}
+
+.dropdown-menu > .menu-trigger:focus-visible,
+.dropdown-menu .menu-content a:focus-visible {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dropdown-menu .menu-content a,
+    .dropdown-menu .menu-content .menu-item-button {
+        transition: none;
+    }
+}

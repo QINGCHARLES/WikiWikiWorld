@@ -23,7 +23,7 @@ else
 	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&Saved=true")" asp-antiforgery="true" class="article-action-form m3-split-button article-bookmark-split"
 		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
 		<partial name="_BookmarkToggle" model="Model" />
-		<details class="article-menu m3-split-button__trailing article-bookmark-menu">
+		<details name="site-menu" class="dropdown-menu article-menu m3-split-button__trailing article-bookmark-menu">
 			<partial name="_BookmarkMenuTrigger" model="Model" />
 			<div class="menu-content">
 				<partial name="_BookmarkLists" model="Model" />

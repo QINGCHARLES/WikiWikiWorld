@@ -29,7 +29,7 @@ header li {
     color: var(--color-foreground);
 }
 
-.header a:not(.button, .avatar) {
+.header a:not(.button, .avatar, .menu-content a) {
     color: var(--color-foreground);
     text-align: center;
     text-decoration: none;
@@ -57,11 +57,11 @@ header li {
     transform: scale(0.94);
 }
 
-.header a:not(.button, .avatar):hover {
+.header a:not(.button, .avatar, .menu-content a):hover {
     color: var(--color-muted);
 }
 
-.header a:not(.button, .avatar).active {
+.header a:not(.button, .avatar, .menu-content a).active {
     color: var(--color-muted);
 }
 
@@ -233,4 +233,65 @@ nav.header .header-b a.button[href="/Account/Register"] {
         inline-size: 100%;
         max-inline-size: none;
     }
+}
+
+/* Account menu uses the same panel, rows, dividers and dismissal layer as article menus. */
+.account-menu-trigger {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    border-radius: 9999px;
+}
+
+.account-menu-trigger:hover,
+.account-menu[open] > .account-menu-trigger {
+    background: var(--color-surface);
+}
+
+.account-menu .menu-content {
+    box-sizing: border-box;
+    min-inline-size: 0;
+    inline-size: min(19rem, calc(100vw - 2rem));
+    padding-block: 0.5rem;
+    max-block-size: calc(100dvh - 6rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.account-menu-profile {
+    min-inline-size: 0;
+}
+
+.account-menu-profile small {
+    display: block;
+    margin-block-start: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.8em;
+}
+
+.account-menu .menu-content a {
+    min-block-size: 3.25rem;
+    box-sizing: border-box;
+    padding: 0.8rem 1.15rem;
+    gap: 1rem;
+    font-size: 1rem;
+}
+
+.account-menu .menu-content .menu-item-icon {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    margin-inline: 0.25rem;
+}
+
+.account-menu .account-menu-avatar {
+    --avatar-size: 2rem;
+}
+
+.account-menu-profile small {
+    color: var(--color-muted);
+}
+
+.account-menu .menu-content .menu-divider {
+    margin-inline: 0;
 }
