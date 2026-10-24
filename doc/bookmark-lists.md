@@ -93,4 +93,11 @@ publishing/re-privatizing, no-JavaScript forms and pagination, and undo.
 
 Visibility upgrade applied to development `data/app.db` on 2026-10-24 after a consistent backup at
 `.local/before-bookmark-visibility-20261024T151339Z.db`. All five existing lists and eleven memberships
-were preserved, all lists remained private, and SQLite integrity_check passed. Production is not upgraded.
+were preserved, all lists remained private, and SQLite integrity_check passed.
+
+Production `/opt/wiki/data/app.db` was upgraded on 2026-10-24 before deploying release 4e8b83c, after a
+consistent backup at `/home/deploy/backups/app-before-4e8b83c-20261024T165250Z.db`. The one list and three
+memberships were preserved and stayed private; integrity_check passed. `AddArticleCultureLinkIndexes.sql` was
+applied in the same window. `deploy` cannot write the database (owned by UID 1654), so the scripts ran through a
+throwaway `python:3.14-slim` container as `--user 1654:1654` with no network. The previous application image is
+tagged `rollback-before-4e8b83c` on the host.
