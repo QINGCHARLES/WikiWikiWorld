@@ -79,8 +79,11 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 			&& !string.Equals(ProfileArticleText.Trim(), ArticleRevisionService.GetDefaultUserArticleText(StoredUserName), StringComparison.Ordinal);
 		(string? Tagline, string? Summary) = ReadProfileDirectives(IsProfileArticleWritten ? ProfileArticleText : null);
 		IList<string> Roles = await UserManager.GetRolesAsync(TargetUser);
-		int? BookmarkCount = IsOwner
-			? await Context.Bookmarks.CountAsync(b => b.CreatedByUserId == TargetUser.Id, CancellationToken)
+		bool HasPublicBookmarkLists = await Context.BookmarkLists.AnyAsync(l => l.CreatedByUserId == TargetUser.Id && l.IsPublic, CancellationToken);
+		int? BookmarkCount = IsOwner || HasPublicBookmarkLists
+			? await Context.Bookmarks.CountAsync(b => b.CreatedByUserId == TargetUser.Id &&
+				Context.BookmarkLists.Any(l => l.Id == b.BookmarkListId && (IsOwner || l.IsPublic)) &&
+				Context.ArticleRevisions.Any(r => r.IsCurrent && r.CanonicalArticleId == b.CanonicalArticleId), CancellationToken)
 			: null;
 
 		return new ProfileHeader
@@ -101,6 +104,7 @@ public sealed class ProfileService(WikiWikiWorldDbContext Context, UserManager<U
 			Roles = [.. Roles.Order(StringComparer.OrdinalIgnoreCase)],
 			Stats = Stats,
 			BookmarkCount = BookmarkCount,
+			HasPublicBookmarkLists = HasPublicBookmarkLists,
 			VolumeNumber = DateJoined is { } Joined ? GetWholeYearsBetween(Joined, DateTimeOffset.UtcNow) + 1 : 1,
 			Rank = ProfileBadgeCatalog.GetRank(Stats.EditCount)
 		};

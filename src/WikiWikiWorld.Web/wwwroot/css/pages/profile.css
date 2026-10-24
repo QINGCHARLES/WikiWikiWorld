@@ -4,20 +4,17 @@
 .profile {
 	--profile-inline-size: min(100vw, 76rem);
 	--profile-ink: oklch(21% 0.012 255);
-	--profile-ink-soft: oklch(30% 0.012 255);
 	--profile-paper: oklch(98.6% 0.006 85);
 	--profile-cream: oklch(95.5% 0.028 88);
 	--profile-lime: oklch(90% 0.2 125);
 	--profile-lime-deep: oklch(80% 0.2 128);
 	--profile-rule: oklch(90.5% 0.008 85);
 	--profile-quiet: oklch(52% 0.01 260);
-	--profile-radius: clamp(1rem, 0.8rem + 0.8vw, 1.5rem);
 	--profile-card-radius: 1rem;
 	--profile-pad: clamp(1rem, 0.75rem + 1.2vw, 1.4rem);
 	--profile-shadow: 0 1px 0 rgb(20 20 30 / 0.03), 0 0.75rem 2rem -1.25rem rgb(20 20 30 / 0.22);
 	--profile-label: 700 0.68rem/1.2 var(--font-family-wide-grotesque);
 	--profile-avatar: clamp(6rem, 4.5rem + 5vw, 9.5rem);
-	--profile-cover-pad: clamp(1.25rem, 0.75rem + 2.6vw, 3rem);
 
 	/* Breaks out of main's 65ch reading column, centred, like the home category strip. */
 	box-sizing: border-box;
@@ -55,7 +52,6 @@
 }
 
 /* Figures use the wide grotesque: the Lyon web cuts carry only old-style numerals, where a zero reads as "o". */
-.profile-coverlines dd,
 .profile-calendar-stats dd {
 	font-family: var(--font-family-wide-grotesque);
 	font-weight: 800;
@@ -64,9 +60,7 @@
 	font-variant-numeric: tabular-nums;
 }
 
-/* Shared small-caps label used by cover lines, card titles and stats. */
-.profile-kicker,
-.profile-coverlines dt,
+/* Shared small-caps label used by card titles and stats. */
 .profile-card-title,
 .profile-calendar-stats dt,
 .profile-soon {
@@ -76,181 +70,10 @@
 	text-transform: uppercase;
 }
 
-/* ---- Masthead cover ---- */
+/* ---- Profile header ---- */
 
 .profile-masthead {
 	margin-block-start: var(--space-s);
-}
-
-.profile-cover {
-	position: relative;
-	isolation: isolate;
-	overflow: clip;
-	display: flex;
-	flex-direction: column;
-	gap: clamp(1rem, 0.5rem + 2vw, 2rem);
-	min-block-size: clamp(15rem, 11rem + 14vw, 23rem);
-	padding: var(--profile-cover-pad);
-	/* Leaves room for the avatar, which overlaps the cover's lower edge by half its size. */
-	padding-block-end: calc(var(--profile-avatar) * 0.5 + 1rem);
-	border-radius: var(--profile-radius);
-	color: var(--profile-cream);
-	background:
-		radial-gradient(110% 85% at 88% -10%, oklch(62% 0.17 145 / 0.55), transparent 62%),
-		radial-gradient(70% 70% at -5% 110%, oklch(90% 0.2 125 / 0.22), transparent 58%),
-		radial-gradient(50% 60% at 55% 120%, oklch(55% 0.12 250 / 0.35), transparent 70%),
-		linear-gradient(155deg, var(--profile-ink-soft), var(--profile-ink) 55%, oklch(16% 0.01 255));
-	box-shadow: 0 1.5rem 3rem -1.75rem rgb(10 12 20 / 0.6);
-
-	/* Film grain from an inline SVG turbulence filter; no image request. */
-	&::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		opacity: 0.22;
-		mix-blend-mode: overlay;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-	}
-
-	/* Hairline print rules top and bottom, like a cover's folio lines. */
-	&::after {
-		content: "";
-		position: absolute;
-		inset-inline: var(--profile-cover-pad);
-		inset-block: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
-		z-index: -1;
-		border-block: 1px solid oklch(95% 0.03 88 / 0.14);
-		pointer-events: none;
-	}
-}
-
-.profile-kicker {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.35rem 0;
-	margin: 0;
-	color: oklch(95% 0.03 88 / 0.72);
-
-	& span + span::before {
-		content: "·";
-		margin-inline: 0.7em;
-		color: var(--profile-lime);
-	}
-}
-
-.profile-cover-title {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	justify-content: space-between;
-	gap: var(--space-s) var(--space-l);
-}
-
-.profile-volume {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.35em;
-	margin: 0;
-	font-family: 'Lyon Custom Headings', Georgia, serif;
-	font-weight: 900;
-	line-height: 0.8;
-	letter-spacing: -0.035em;
-}
-
-.profile-volume-label {
-	padding-block-start: 0.45em;
-	font: var(--profile-label);
-	font-size: clamp(0.75rem, 0.6rem + 0.5vw, 1rem);
-	font-stretch: 125%;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
-	color: var(--profile-lime);
-}
-
-.profile-volume-number {
-	font-size: clamp(4.5rem, 2.5rem + 9vw, 10.5rem);
-	background: linear-gradient(180deg, var(--profile-cream) 40%, oklch(86% 0.06 95));
-	-webkit-background-clip: text;
-	background-clip: text;
-	color: transparent;
-}
-
-.profile-epigraph {
-	flex: 0 1 22rem;
-	margin: 0;
-	padding-inline-start: 1rem;
-	border-inline-start: 2px solid var(--profile-lime);
-
-	& p {
-		margin: 0;
-		font-family: var(--font-family-serif);
-		font-style: italic;
-		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.4rem);
-		line-height: 1.35;
-		color: var(--profile-cream);
-		text-wrap: balance;
-
-		&::before { content: "\201C"; }
-		&::after { content: "\201D"; }
-	}
-}
-
-.profile-cover-foot {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	justify-content: space-between;
-	gap: var(--space-s) var(--space-m);
-	margin-block-start: auto;
-}
-
-.profile-coverlines {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-xs) clamp(1.25rem, 0.75rem + 2vw, 2.75rem);
-	margin: 0;
-
-	& div {
-		display: flex;
-		flex-direction: column-reverse;
-		gap: 0.3rem;
-	}
-
-	& dt {
-		color: oklch(95% 0.03 88 / 0.6);
-	}
-
-	& dd {
-		margin: 0;
-		font-size: clamp(1.35rem, 1.05rem + 1.1vw, 2rem);
-		line-height: 1;
-	}
-}
-
-/* A newsstand barcode: irregular bars from layered gradients, and the edit count as the issue number. */
-.profile-barcode {
-	display: grid;
-	margin-inline-start: auto;
-	justify-items: center;
-	gap: 0.2rem;
-	padding: 0.45rem 0.55rem 0.3rem;
-	border-radius: 0.35rem;
-	background: var(--profile-paper);
-	color: var(--profile-ink);
-}
-
-.profile-barcode-bars {
-	inline-size: 5.5rem;
-	block-size: 1.9rem;
-	background:
-		repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 3px, currentColor 3px 5px, transparent 5px 6px, currentColor 6px 7px, transparent 7px 10px),
-		repeating-linear-gradient(90deg, transparent 0 11px, currentColor 11px 13px, transparent 13px 17px);
-}
-
-.profile-barcode-number {
-	font: 600 0.62rem/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-	letter-spacing: 0.12em;
 }
 
 /* ---- Identity bar ---- */
@@ -266,7 +89,6 @@
 .profile-avatar {
 	--avatar-size: var(--profile-avatar);
 
-	margin-block-start: calc(var(--avatar-size) * -0.5);
 	position: relative;
 	box-shadow: 0 0.9rem 2rem -0.5rem rgb(10 12 20 / 0.35);
 	background: var(--profile-ink);
@@ -930,7 +752,6 @@
 		list-style: none;
 		cursor: pointer;
 
-		&::-webkit-details-marker { display: none; }
 		&:hover { color: var(--color-foreground); }
 	}
 
@@ -1363,4 +1184,415 @@
 	.profile-focus-pill {
 		transition: none;
 	}
+}
+
+/* Device preferences use the same card and action styling as the other profile sections. */
+.profile-settings-description,
+.profile-settings-status {
+	margin: 0 0 1rem;
+	font-size: 0.95rem;
+	line-height: 1.5;
+	color: var(--profile-ink);
+}
+
+.profile-settings-status {
+	font-weight: 700;
+}
+
+.profile-settings-form {
+	margin: 0;
+
+	& fieldset {
+		min-inline-size: 0;
+		margin: 0 0 1.25rem;
+		padding: 0;
+		border: 0;
+	}
+
+	& legend {
+		margin-block-end: 0.75rem;
+		color: var(--profile-ink);
+		font-weight: 700;
+	}
+}
+
+.profile-theme-options {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+	gap: 0.75rem;
+
+	& label {
+		display: flex;
+		align-items: start;
+		gap: 0.75rem;
+		padding: 1rem;
+		border: 1px solid var(--profile-rule);
+		border-radius: 0.75rem;
+		color: var(--profile-ink);
+		cursor: pointer;
+	}
+
+	& label:has(input:checked) {
+		border-color: var(--profile-ink);
+		background: var(--profile-cream);
+	}
+
+	& input {
+		flex: none;
+		margin: 0.25rem 0 0;
+		accent-color: var(--profile-ink);
+	}
+
+	& strong,
+	& small {
+		display: block;
+	}
+
+	& small {
+		margin-block-start: 0.25rem;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--profile-quiet);
+	}
+}
+
+/* ---- Bookmarks: list sidebar beside the selected list; it wraps above the list when space runs out ---- */
+.bookmark-navigation-status:empty {
+	display: none;
+}
+
+.bookmark-layout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: start;
+	gap: var(--space-m);
+
+	& form {
+		margin: 0;
+	}
+}
+
+.bookmark-lists {
+	flex: 1 1 15rem;
+
+	& ul {
+		display: grid;
+		gap: 0.15rem;
+		max-block-size: min(60vh, 32rem);
+		margin: 0 calc(var(--profile-pad) * -0.5);
+		padding: 0;
+		overflow-y: auto;
+		list-style: none;
+	}
+
+	& a {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.6rem calc(var(--profile-pad) * 0.5);
+		border-radius: 0.6rem;
+		color: var(--profile-ink);
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	& a:hover {
+		background: var(--profile-paper);
+	}
+
+	& a[aria-current="page"] {
+		background: var(--profile-ink);
+		color: var(--profile-cream);
+
+		& .bookmark-lists-count {
+			color: inherit;
+			opacity: 0.75;
+		}
+	}
+}
+
+.bookmark-lists-name {
+	flex: 1;
+	min-inline-size: 0;
+	overflow-wrap: anywhere;
+}
+
+.bookmark-lists-count {
+	flex: none;
+	font-size: 0.8rem;
+	color: var(--profile-quiet);
+	font-variant-numeric: tabular-nums;
+}
+
+.bookmark-pill {
+	flex: none;
+	padding: 0.15em 0.6em;
+	border-radius: 999px;
+	background: oklch(95% 0.04 145);
+	color: oklch(40% 0.11 145);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+
+	&[data-public="false"] {
+		background: oklch(95% 0.006 85);
+		color: var(--profile-quiet);
+	}
+}
+
+.profile .bookmark-new-button {
+	--button-bg: transparent;
+	--button-color: var(--profile-ink);
+	--button-border-color: var(--profile-rule);
+	--button-hover-bg: var(--profile-lime);
+	--button-hover-color: var(--profile-ink);
+	--button-padding: 0.65em 1em;
+	--button-border-width: 1.5px;
+	--button-font-size: 0.88rem;
+	--button-gap: 0.4em;
+
+	justify-content: center;
+	inline-size: 100%;
+	margin-block-start: 0.75rem;
+	border-style: dashed;
+	font-family: var(--font-family-san-serif);
+	letter-spacing: 0;
+
+	& svg {
+		block-size: 1em;
+	}
+}
+
+.bookmark-main {
+	flex: 999 1 min(100%, 30rem);
+	min-inline-size: 0;
+}
+
+.bookmark-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	justify-content: space-between;
+	gap: 0.75rem 1.5rem;
+	padding-block-end: 1rem;
+	border-block-end: 1px solid var(--profile-rule);
+}
+
+.bookmark-head-text {
+	min-inline-size: 0;
+}
+
+.profile .bookmark-title {
+	margin: 0.35rem 0 0;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem);
+	line-height: 1.1;
+	color: var(--profile-ink);
+	text-align: start;
+	filter: none;
+	overflow-wrap: anywhere;
+
+	&:focus {
+		outline: none;
+	}
+}
+
+.bookmark-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem 0.75rem;
+	margin: 0.6rem 0 0;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--profile-quiet);
+	font-variant-numeric: tabular-nums;
+}
+
+.bookmark-head-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+/* Neutral hover for reversible actions; the shared list action turns red for destructive ones. */
+.profile .bookmark-quiet-action {
+	--button-hover-bg: var(--profile-paper);
+	--button-hover-color: var(--profile-ink);
+
+	&:hover {
+		border-color: var(--profile-ink);
+	}
+}
+
+.profile .bookmark-danger-action {
+	--button-bg: oklch(52% 0.19 25);
+	--button-color: #fff;
+	--button-border-color: var(--button-bg);
+	--button-hover-bg: oklch(44% 0.17 25);
+	--button-hover-color: #fff;
+	--button-outline-color: var(--profile-ink);
+}
+
+.bookmark-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: end;
+	gap: 0.5rem 0.75rem;
+	margin-block-start: 1rem;
+
+	& .profile-segments {
+		margin-inline-end: 0;
+	}
+}
+
+.bookmark-empty {
+	padding-block: 2rem 0.5rem;
+	text-align: center;
+}
+
+.bookmark-notice,
+.bookmark-confirmation {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-block-start: 1rem;
+	padding: 0.85rem 1rem;
+	border-radius: 0.75rem;
+	background: var(--profile-cream);
+	color: var(--profile-ink);
+	font-size: 0.92rem;
+
+	& p {
+		margin: 0;
+	}
+
+	& form {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem;
+	}
+}
+
+.bookmark-confirmation {
+	display: block;
+	border: 1px solid oklch(85% 0.08 25);
+	background: oklch(97.5% 0.02 25);
+
+	& h3 {
+		margin: 0 0 0.4rem;
+		font-family: inherit;
+		font-size: 1rem;
+		text-align: start;
+		filter: none;
+	}
+
+	& p {
+		margin-block-end: 0.85rem;
+		line-height: 1.5;
+	}
+
+	& a {
+		color: var(--profile-ink);
+		font-weight: 600;
+	}
+}
+
+.bookmark-error {
+	margin: 0;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: oklch(48% 0.17 25);
+}
+
+/* New-list dialog: opened by an invoker button, closed by Cancel, Esc or a backdrop click. */
+.bookmark-dialog {
+	inline-size: min(100% - 2rem, 30rem);
+	max-block-size: calc(100% - 2rem);
+	padding: var(--profile-pad);
+	border: 0;
+	border-radius: var(--profile-card-radius);
+	background: #fff;
+	color: var(--profile-ink);
+	box-shadow: 0 1.5rem 4rem -1rem rgb(20 20 30 / 0.45);
+
+	&::backdrop {
+		background: rgb(20 20 30 / 0.45);
+	}
+
+	& form {
+		display: grid;
+		gap: 0.6rem;
+	}
+
+	& label[for] {
+		font-size: 0.85rem;
+		font-weight: 700;
+	}
+
+	& input:not([type="hidden"], [type="radio"]) {
+		min-block-size: 2.75rem;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--profile-rule);
+		border-radius: 0.5rem;
+		font: inherit;
+		color: inherit;
+		background: #fff;
+
+		&[aria-invalid="true"] {
+			border-color: oklch(60% 0.17 25);
+		}
+	}
+
+	& fieldset {
+		min-inline-size: 0;
+		margin: 0.5rem 0 0;
+		padding: 0;
+		border: 0;
+	}
+
+	& legend {
+		margin-block-end: 0.5rem;
+		padding: 0;
+		font-size: 0.85rem;
+		font-weight: 700;
+	}
+
+	& .profile-theme-options {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+
+		& label {
+			padding: 0.75rem;
+			font-size: 0.95rem;
+		}
+	}
+}
+
+.profile .bookmark-dialog-title {
+	margin: 0 0 0.5rem;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: 1.5rem;
+	color: var(--profile-ink);
+	text-align: start;
+	filter: none;
+}
+
+.bookmark-dialog-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: end;
+	gap: 0.5rem;
+	margin-block-start: 0.75rem;
+}
+
+.profile-pager [aria-current="page"] {
+	background: var(--profile-ink);
+	color: var(--profile-cream);
 }

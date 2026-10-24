@@ -150,6 +150,7 @@ Builder.Services.AddScoped<IArticleRenderer, ArticleRenderer>();
 Builder.Services.AddScoped<FileUploadStorageService>();
 Builder.Services.AddScoped<FileMigrationService>();
 Builder.Services.AddScoped<ArticleDomainRedirectService>();
+Builder.Services.AddScoped<ArticleLanguageService>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddTransient<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
@@ -272,6 +273,7 @@ Builder.Services.AddRazorPages(options =>
     options.Conventions.AddPageRoute("/Privacy", "privacy-policy:");
     options.Conventions.AddPageRoute("/Terms", "terms:");
     options.Conventions.AddPageRoute("/Settings/Theme", "settings/theme:");
+    options.Conventions.AddPageRoute("/Settings/Theme", "@{Username}/settings");
     options.Conventions.AddPageRoute("/Article/Firehose", "firehose:");
     options.Conventions.AddPageRoute("/Search", "search:");
     // Note: "create:" is routed by ArticleRouteTransformer, not a page route convention.
@@ -281,12 +283,12 @@ Builder.Services.AddRazorPages(options =>
     options.Conventions.AddPageRoute("/Profile/View", "@{Username}/profile");
     options.Conventions.AddPageRoute("/Profile/Contributions", "@{Username}/contributions");
     options.Conventions.AddPageRoute("/Profile/Messages", "@{Username}/messages/{Tab?}");
-    options.Conventions.AddPageRoute("/Profile/Bookmarks", "@{Username}/bookmarks");
+    options.Conventions.AddPageRoute("/Profile/Bookmarks", "@{Username}/bookmarks/{listid:int?}");
     options.Conventions.AddPageRoute("/Profile/NewMessage", "message/new");
     options.Conventions.AddPageRoute("/Profile/NewMessage", "@{Recipient}/message/new");
 });
 
-// Catch-all article routing (article view, /edit, /history, /talk, /revision, /links, 404:)
+// Catch-all article routing (article view, /edit, /history, /talk, /revision, /links, /languages, 404:)
 Builder.Services.AddSingleton<ArticleRouteTransformer>();
 Builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -461,7 +463,7 @@ App.UseMiddleware<HtmlPrettifyMiddleware>();
 App.MapRazorPages();
 
 // Lowest-precedence catch-all: routes unmatched paths into the article page space
-// (view, /edit, /history, /talk, /revision, /links, 404:). Replaces the old XML catch-all
+// (view, /edit, /history, /talk, /revision, /links, /languages, 404:). Replaces the old XML catch-all
 // rewrite rule; all conventional routes above win automatically.
 App.MapDynamicPageRoute<ArticleRouteTransformer>($"{{**{ArticleRouteTransformer.SlugRouteValueName}}}");
 

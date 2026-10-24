@@ -69,12 +69,12 @@
 				<nav class="profile-pager" aria-label="Edit history pages">
 					@if (Contributions.PageNumber > 1)
 					{
-						<a href="@(Contributions.PageNumber == 2 ? BasePath : $"{BasePath}?PageNumber={(Contributions.PageNumber - 1).ToString(CultureInfo.InvariantCulture)}")" rel="prev"><span aria-hidden="true">←</span> Newer</a>
+						<a href="@(Contributions.PageNumber == 2 ? BasePath : $"{BasePath}?pagenumber={(Contributions.PageNumber - 1).ToString(CultureInfo.InvariantCulture)}")" rel="prev"><span aria-hidden="true">←</span> Newer</a>
 					}
 					<span class="profile-pager-current">Page @Contributions.PageNumber.ToString("N0", CultureInfo.CurrentCulture)</span>
 					@if (Contributions.HasNextPage)
 					{
-						<a href="@BasePath?PageNumber=@((Contributions.PageNumber + 1).ToString(CultureInfo.InvariantCulture))" rel="next">Older <span aria-hidden="true">→</span></a>
+						<a href="@BasePath?pagenumber=@((Contributions.PageNumber + 1).ToString(CultureInfo.InvariantCulture))" rel="next">Older <span aria-hidden="true">→</span></a>
 					}
 				</nav>
 			}

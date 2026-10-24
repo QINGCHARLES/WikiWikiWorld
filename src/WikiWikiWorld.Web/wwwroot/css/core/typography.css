@@ -36,7 +36,7 @@ strong {
 
 h1 {
     font-size: var(--step-6);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-weight: 800;
     letter-spacing: -0.2rem;
     text-transform: uppercase;
@@ -64,7 +64,6 @@ h1 .title-logo__graphic {
     block-size: min(var(--logo-max-block), calc(var(--logo-max-inline) / var(--logo-aspect)));
     aspect-ratio: var(--logo-width, 1) / var(--logo-height, 1);
     background-color: currentColor;
-    -webkit-mask: var(--logo-url) center / contain no-repeat;
     mask: var(--logo-url) center / contain no-repeat;
 }
 
@@ -75,7 +74,6 @@ h1 .title-logo__graphic {
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
     clip-path: inset(50%);
     white-space: nowrap;
     border: 0;

@@ -157,6 +157,8 @@ CREATE TABLE ArticleCultureLinks (
 CREATE INDEX IX_ArticleCultureLinks_CreatedByUserId ON ArticleCultureLinks (CreatedByUserId);
 CREATE INDEX IX_ArticleCultureLinks_DeletedByUserId ON ArticleCultureLinks (DeletedByUserId);
 CREATE INDEX IX_ArticleCultureLinks_SiteId_CanonicalArticleId ON ArticleCultureLinks (SiteId, CanonicalArticleId);
+CREATE INDEX IX_ArticleCultureLinks_GroupId_Active ON ArticleCultureLinks (ArticleCultureLinkGroupId) WHERE DateDeleted IS NULL;
+CREATE UNIQUE INDEX UX_ArticleCultureLinks_SiteId_CanonicalArticleId_Active ON ArticleCultureLinks (SiteId, CanonicalArticleId) WHERE DateDeleted IS NULL;
 
 CREATE TABLE CopyrightStatus (
     Id INTEGER NOT NULL CONSTRAINT PK_CopyrightStatus PRIMARY KEY AUTOINCREMENT,
@@ -248,6 +250,7 @@ CREATE TABLE BookmarkLists (
     SiteId INTEGER NOT NULL,
     Name TEXT NOT NULL,
     IsDefault INTEGER NOT NULL DEFAULT 0,
+    IsPublic INTEGER NOT NULL DEFAULT 0 CHECK (IsPublic IN (0, 1)),
     CreatedByUserId TEXT NOT NULL,
     DateCreated TEXT NOT NULL,
     DateModified TEXT NULL,
@@ -273,6 +276,7 @@ CREATE TABLE Bookmarks (
 ) STRICT;
 
 CREATE INDEX IX_Bookmarks_BookmarkListId ON Bookmarks (BookmarkListId);
+CREATE INDEX IX_Bookmarks_List_Recent_Active ON Bookmarks (BookmarkListId, DateCreated DESC, Id DESC) WHERE DateDeleted IS NULL;
 CREATE INDEX IX_Bookmarks_CreatedByUserId ON Bookmarks (CreatedByUserId);
 CREATE INDEX IX_Bookmarks_SiteId_CanonicalArticleId_CreatedByUserId ON Bookmarks (SiteId, CanonicalArticleId, CreatedByUserId);
 CREATE UNIQUE INDEX UX_Bookmarks_BookmarkListId_CanonicalArticleId_Active

@@ -5,7 +5,7 @@ namespace WikiWikiWorld.Data.Models;
 /// </summary>
 /// <remarks>
 /// Each user has a single list flagged as <see cref="IsDefault"/>, created lazily on first bookmark.
-/// Additional lists are reserved for a future multi-list feature.
+/// Lists are private until their owner explicitly makes them public.
 /// </remarks>
 public sealed record BookmarkList
 {
@@ -28,6 +28,9 @@ public sealed record BookmarkList
 	/// Gets a value indicating whether this is the user's default list.
 	/// </summary>
 	public bool IsDefault { get; init; }
+
+	/// <summary>Gets or sets whether anyone may read this list; existing and new lists default to private.</summary>
+	public bool IsPublic { get; set; }
 
 	/// <summary>
 	/// Gets the user identifier who created (and owns) this list.

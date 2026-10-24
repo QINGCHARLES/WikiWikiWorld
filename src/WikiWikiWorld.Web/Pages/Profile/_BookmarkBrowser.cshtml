@@ -1,0 +1,232 @@
+@model WikiWikiWorld.Web.Pages.Profile.BookmarksModel
+@{
+	BookmarkListSummary? List = Model.SelectedList;
+	BookmarkEntryPage Entries = Model.Entries;
+	DateTimeOffset Now = DateTimeOffset.UtcNow;
+	string? Notice = Model.Notice;
+	string? UndoToken = Model.UndoToken;
+	bool IsOwner = Model.Header.IsOwner;
+	// Owners always get the sidebar because "New list" lives there; visitors only need it to choose between lists.
+	bool ShowLists = IsOwner ? List is not null : Model.Lists.Count > 1;
+	int FirstNumber = ((Entries.PageNumber - 1) * BookmarkService.PageSize) + 1;
+}
+<div id="bookmark-content" class="bookmark-layout" data-url="@Model.CurrentUrl"
+	data-navigation-id="@Context.Request.Headers["X-Bookmark-Navigation"]">
+	@if (ShowLists)
+	{
+		<nav class="profile-card bookmark-lists" aria-labelledby="bookmark-lists-title">
+			<header class="profile-card-head">
+				<h2 class="profile-card-title" id="bookmark-lists-title">Lists</h2>
+				<p class="profile-card-note">@Model.Lists.Count</p>
+			</header>
+			<ul>
+				@foreach (BookmarkListSummary Choice in Model.Lists)
+				{
+					<li>
+						<a href="@Model.ListUrl(Choice)" data-bookmark-navigation="true" aria-current="@(Choice.Id == List?.Id ? "page" : null)">
+							<span class="bookmark-lists-name">@Choice.Name</span>
+							@if (IsOwner && Choice.IsPublic)
+							{
+								<span class="bookmark-pill">Public</span>
+							}
+							<span class="bookmark-lists-count" aria-label="@Choice.Count entries">@Choice.Count</span>
+						</a>
+					</li>
+				}
+			</ul>
+			@if (IsOwner)
+			{
+				<button type="button" class="bookmark-new-button" commandfor="bookmark-new-list" command="show-modal">
+					<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" /></svg>
+					New list
+				</button>
+			}
+		</nav>
+	}
+
+	<section class="profile-card bookmark-main" aria-labelledby="bookmark-title">
+		<header class="bookmark-head">
+			<div class="bookmark-head-text">
+				<p class="profile-card-title">Bookmarks</p>
+				<h2 class="bookmark-title" id="bookmark-title" tabindex="-1">@(List?.Name ?? "Bookmarks")</h2>
+				@if (List is not null)
+				{
+					<p class="bookmark-meta">
+						<span class="bookmark-pill" data-public="@(List.IsPublic ? "true" : "false")">@(List.IsPublic ? "Public" : "Private · Only you")</span>
+						<span id="bookmark-range">
+							@if (Entries.TotalCount > 0)
+							{
+								<text>Showing @FirstNumber–@(FirstNumber + Entries.Items.Count - 1) of @Entries.TotalCount</text>
+							}
+							else
+							{
+								<text>No entries</text>
+							}
+						</span>
+					</p>
+				}
+			</div>
+			@if (IsOwner && List is not null && Model.PendingOperation is null)
+			{
+				<div class="bookmark-head-actions">
+					<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
+						<input type="hidden" name="operation" value="visibility" />
+						<input type="hidden" name="ispublic" value="@(List.IsPublic ? "false" : "true")" />
+						<button type="submit" class="profile-list-action bookmark-quiet-action">@(List.IsPublic ? "Make private" : "Make public…")</button>
+					</form>
+					<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
+						<input type="hidden" name="operation" value="delete" />
+						<button type="submit" class="profile-list-action">@(List.IsDefault ? "Clear list…" : "Delete list…")</button>
+					</form>
+				</div>
+			}
+		</header>
+
+		@if (!string.IsNullOrEmpty(Notice))
+		{
+			<div class="bookmark-notice" role="status">
+				<p>@Notice</p>
+				@if (UndoToken is not null && IsOwner)
+				{
+					<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
+						<input type="hidden" name="operation" value="undo" />
+						<input type="hidden" name="token" value="@UndoToken" />
+						<button type="submit" class="profile-list-action bookmark-quiet-action">Undo</button>
+					</form>
+				}
+			</div>
+		}
+
+		@if (Model.PendingOperation is { } Pending && List is not null)
+		{
+			<div class="bookmark-confirmation" role="region" aria-labelledby="bookmark-confirm-title">
+				<h3 id="bookmark-confirm-title">@(Pending == "visibility" ? "Make this list public?" : List.IsDefault ? "Clear this list?" : "Delete this list?")</h3>
+				@{
+					string EntryCount = Model.AffectedCount == 1 ? "1 entry" : $"{Model.AffectedCount} entries";
+				}
+				<p>
+					@if (Pending == "visibility")
+					{
+						<text>Anyone will be able to view “@List.Name” and its @EntryCount.</text>
+					}
+					else
+					{
+						<text>This removes @EntryCount from “@List.Name”@(List.IsDefault ? "" : " and deletes the list"). Your other lists stay untouched. There is no undo.</text>
+					}
+				</p>
+				<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
+					<input type="hidden" name="operation" value="@Pending" />
+					<input type="hidden" name="confirmed" value="true" />
+					<input type="hidden" name="ispublic" value="true" />
+					<button type="submit" class="profile-card-button @(Pending == "visibility" ? "profile-action-accent" : "bookmark-danger-action")">@(Pending == "visibility" ? "Make public" : List.IsDefault ? "Clear list" : "Delete list")</button>
+					<a href="@Model.CurrentUrl">Cancel</a>
+				</form>
+			</div>
+		}
+
+		@if (List is null)
+		{
+			<p class="profile-card-empty">This contributor has no public bookmark lists.</p>
+		}
+		else
+		{
+			@if (Entries.TotalCount > 1)
+			{
+				<nav class="bookmark-toolbar" aria-label="Sort entries">
+					<span class="profile-card-note">Sort</span>
+					<div class="profile-segments">
+						<a href="@Model.ListUrl(List, "recent")" data-bookmark-navigation="true" aria-current="@(Model.Sort == "recent" ? "page" : null)">Recently saved</a>
+						<a href="@Model.ListUrl(List, "name")" data-bookmark-navigation="true" aria-current="@(Model.Sort == "name" ? "page" : null)">Name A–Z</a>
+					</div>
+				</nav>
+			}
+			@if (Entries.Items.Count == 0)
+			{
+				<p class="profile-card-empty bookmark-empty">@(IsOwner ? "Nothing saved here in this language yet. Use the bookmark button on any article to add it to this list." : "This list has no articles in this language.")</p>
+			}
+			else
+			{
+				<ol class="profile-list">
+					@foreach (BookmarkEntry Item in Entries.Items)
+					{
+						<li class="profile-list-row">
+							<div class="profile-list-main">
+								<a class="profile-list-title" href="@ArticleUrlHelper.BuildArticlePath(Item.UrlSlug, Item.Type)">@Item.Title</a>
+								<p class="profile-list-meta">Saved <time datetime="@Item.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.DateCreated, Now)</time></p>
+							</div>
+							@if (IsOwner)
+							{
+								<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true" class="profile-list-form">
+									<input type="hidden" name="operation" value="remove" />
+									<input type="hidden" name="bookmarkid" value="@Item.Id" />
+									<button type="submit" class="profile-list-action" aria-label="Remove @Item.Title from this list">Remove</button>
+								</form>
+							}
+						</li>
+					}
+				</ol>
+			}
+			@if (Entries.PageCount > 1)
+			{
+				<nav class="profile-pager" aria-label="Bookmark pages">
+					@if (Entries.PageNumber > 1)
+					{
+						<a href="@Model.ListUrl(List, Model.Sort, Entries.PageNumber - 1)" data-bookmark-navigation="true" rel="prev">Previous</a>
+					}
+					@for (int i = 1; i <= Entries.PageCount; i++)
+					{
+						if (i == 1 || i == Entries.PageCount || Math.Abs(i - Entries.PageNumber) <= 2)
+						{
+							<a href="@Model.ListUrl(List, Model.Sort, i)" data-bookmark-navigation="true" aria-current="@(i == Entries.PageNumber ? "page" : null)">@i</a>
+						}
+						else if (i == 2 || i == Entries.PageCount - 1)
+						{
+							<span aria-hidden="true">…</span>
+						}
+					}
+					@if (Entries.PageNumber < Entries.PageCount)
+					{
+						<a href="@Model.ListUrl(List, Model.Sort, Entries.PageNumber + 1)" data-bookmark-navigation="true" rel="next">Next</a>
+					}
+				</nav>
+			}
+		}
+	</section>
+
+	@if (IsOwner && List is not null)
+	{
+		@* Opened by the "New list" invoker button. A failed create re-renders it open; bookmarks.js upgrades that to modal. *@
+		<dialog id="bookmark-new-list" class="bookmark-dialog" aria-labelledby="bookmark-new-list-title" closedby="any" open="@(Model.Error is not null)">
+			<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
+				<input type="hidden" name="operation" value="create" />
+				<h2 class="bookmark-dialog-title" id="bookmark-new-list-title">New list</h2>
+				<label for="bookmark-list-name">Name</label>
+				<input id="bookmark-list-name" name="name" value="@Model.NewListName" required autofocus autocomplete="off"
+					maxlength="@BookmarkService.MaxListNameLength" placeholder="e.g. Ones to read next"
+					aria-invalid="@(Model.Error is not null ? "true" : null)" aria-describedby="@(Model.Error is not null ? "bookmark-list-error" : null)" />
+				@if (Model.Error is not null)
+				{
+					<p class="bookmark-error" id="bookmark-list-error" role="alert">@Model.Error</p>
+				}
+				<fieldset>
+					<legend>Who can see it?</legend>
+					<div class="profile-theme-options">
+						<label>
+							<input type="radio" name="ispublic" value="false" checked="@(!Model.NewListIsPublic)" />
+							<span><strong>Private</strong><small>Only you</small></span>
+						</label>
+						<label>
+							<input type="radio" name="ispublic" value="true" checked="@Model.NewListIsPublic" />
+							<span><strong>Public</strong><small>Anyone with the link or your profile</small></span>
+						</label>
+					</div>
+				</fieldset>
+				<div class="bookmark-dialog-actions">
+					@* Not a submit button: Enter in the name field must create the list, not cancel. *@
+					<button type="button" commandfor="bookmark-new-list" command="close" class="profile-list-action bookmark-quiet-action">Cancel</button>
+					<button type="submit" class="profile-action-accent profile-card-button">Create list</button>
+				</div>
+			</form>
+		</dialog>
+	}
+</div>

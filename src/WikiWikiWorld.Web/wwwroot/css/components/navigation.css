@@ -42,9 +42,6 @@
     list-style: none;
     cursor: pointer;
 
-    &::-webkit-details-marker {
-        display: none;
-    }
 
     &:hover {
         background: var(--uchu-green-1);
@@ -278,9 +275,6 @@ ul.categories a {
     }
 }
 
-.dropdown-menu .menu-trigger::-webkit-details-marker {
-    display: none;
-}
 
 /* M3 Expressive Checked/Open state on trailing menu button */
 .article-actions .m3-split-button__trailing[open] > .menu-trigger {
@@ -464,6 +458,59 @@ ul.categories a {
 
     & .bookmark-list-check {
         visibility: visible;
+    }
+}
+
+/* "New list…" name field, revealed under its toggle row. */
+.bookmark-new-list-field {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.2rem 0.85rem 0.55rem;
+
+    &[hidden] {
+        display: none;
+    }
+
+    & input {
+        flex: 1;
+        min-inline-size: 0;
+        block-size: 2.2rem;
+        padding: 0 0.7rem;
+        border: 1px solid var(--action-border-color, #e2dfd7);
+        border-radius: 0.55rem;
+        background: #ffffff;
+        color: var(--color-foreground);
+        font: inherit;
+        font-size: 0.92em;
+    }
+
+    & input:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 1px;
+    }
+
+    & .bookmark-new-list-create {
+        flex-shrink: 0;
+        block-size: 2.2rem;
+        padding: 0 0.9rem;
+        border: 0;
+        border-radius: 9999px;
+        background: var(--color-foreground);
+        color: #ffffff;
+        font: inherit;
+        font-size: 0.88em;
+        font-weight: 550;
+        cursor: pointer;
+    }
+
+    & .bookmark-new-list-create:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    & .bookmark-new-list-create:disabled {
+        cursor: progress;
+        opacity: 0.7;
     }
 }
 

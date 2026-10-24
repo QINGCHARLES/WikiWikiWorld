@@ -11,8 +11,17 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// single button, whose POST answers with a sign-in prompt.
 /// </param>
 /// <param name="Lists">The signed-in user's lists, default first, with whether each contains the article; empty when signed out.</param>
-public sealed record BookmarkControlModel(string ArticlePath, bool IsSignedIn, IReadOnlyList<BookmarkListMembership> Lists)
+/// <param name="BookmarksPath">The signed-in user's bookmarks page, linked from the menu as "Edit lists"; empty when signed out.</param>
+public sealed record BookmarkControlModel(string ArticlePath, bool IsSignedIn, IReadOnlyList<BookmarkListMembership> Lists, string BookmarksPath = "")
 {
+	/// <summary>
+	/// Builds the bookmarks page path for a user, matching the <c>@{Username}/bookmarks</c> page route.
+	/// </summary>
+	/// <param name="UserName">The user's name; <see langword="null"/> or blank yields an empty path.</param>
+	/// <returns>The local URL of the user's bookmarks page, or an empty string.</returns>
+	public static string BuildBookmarksPath(string? UserName) =>
+		string.IsNullOrWhiteSpace(UserName) ? string.Empty : $"/@{Uri.EscapeDataString(UserName)}/bookmarks";
+
 	/// <summary>
 	/// Gets a value indicating whether the article is in the user's default list, which drives the one-tap button state.
 	/// </summary>

@@ -91,10 +91,6 @@
         list-style: none;
         cursor: pointer;
 
-        &::-webkit-details-marker {
-            display: none;
-        }
-
         &:hover {
             color: var(--color-foreground);
         }

@@ -11,12 +11,29 @@ namespace WikiWikiWorld.Web.Services;
 /// Coordinates bookmark read/write workflows.
 /// </summary>
 /// <param name="Context">The database context.</param>
-public sealed class BookmarkService(WikiWikiWorldDbContext Context)
+public sealed partial class BookmarkService(WikiWikiWorldDbContext Context)
 {
 	/// <summary>
 	/// The display name used when lazily creating a user's default bookmark list.
 	/// </summary>
 	public const string DefaultListName = "Bookmarks";
+
+	/// <summary>
+	/// The longest list name accepted, in characters, after trimming.
+	/// </summary>
+	public const int MaxListNameLength = 60;
+
+	/// <summary>
+	/// The most active lists one user may have on a site, including the default list.
+	/// </summary>
+	public const int MaxListsPerUser = 100;
+
+	/// <summary>
+	/// Serializes list creation so concurrent requests with the same name (double submits, mirrored panes) see each
+	/// other's list and reuse it rather than creating duplicates. Process-wide is enough: the site runs as one instance,
+	/// and creating lists is rare.
+	/// </summary>
+	private static readonly SemaphoreSlim ListCreationGate = new(1, 1);
 
 	/// <summary>
 	/// SQLite's extended result code for a unique constraint or unique index violation (<c>SQLITE_CONSTRAINT_UNIQUE</c>).
@@ -38,9 +55,12 @@ public sealed class BookmarkService(WikiWikiWorldDbContext Context)
 	/// <returns>A task that completes when the default list holds the requested state.</returns>
 	public async Task SetBookmarkAsync(Guid CanonicalArticleId, Guid UserId, int SiteId, bool Saved, CancellationToken CancellationToken)
 	{
-		BookmarkList List = await GetOrCreateDefaultListAsync(UserId, SiteId, CancellationToken);
-
-		await SetInListAsync(List.Id, CanonicalArticleId, UserId, SiteId, Saved, CancellationToken);
+		await ExecuteListTransactionAsync(async Token =>
+		{
+			BookmarkList List = await GetOrCreateDefaultListAsync(UserId, SiteId, Token);
+			await SetInListAsync(List.Id, CanonicalArticleId, UserId, SiteId, Saved, Token);
+			return true;
+		}, CancellationToken);
 	}
 
 	/// <summary>
@@ -58,17 +78,108 @@ public sealed class BookmarkService(WikiWikiWorldDbContext Context)
 	/// </returns>
 	public async Task<bool> SetBookmarkInListAsync(int BookmarkListId, Guid CanonicalArticleId, Guid UserId, int SiteId, bool Saved, CancellationToken CancellationToken)
 	{
-		bool OwnsList = await Context.BookmarkLists
-			.AnyAsync(l => l.Id == BookmarkListId && l.CreatedByUserId == UserId, CancellationToken);
-
-		if (!OwnsList)
+		return await ExecuteListTransactionAsync(async Token =>
 		{
-			return false;
+			bool OwnsList = await Context.BookmarkLists
+				.AnyAsync(l => l.Id == BookmarkListId && l.CreatedByUserId == UserId, Token);
+
+			if (!OwnsList)
+			{
+				return false;
+			}
+
+			await SetInListAsync(BookmarkListId, CanonicalArticleId, UserId, SiteId, Saved, Token);
+			return true;
+		}, CancellationToken);
+	}
+
+	/// <summary>
+	/// Creates a new list holding the article, or saves the article to an existing list with the same name.
+	/// </summary>
+	/// <remarks>
+	/// Reusing a same-named list (compared ignoring case) keeps a double submit, or the same name typed twice, from
+	/// creating duplicates. The default list counts, so naming a list "Bookmarks" saves to the default list.
+	/// </remarks>
+	/// <param name="Name">The list name, already trimmed and between 1 and <see cref="MaxListNameLength"/> characters.</param>
+	/// <param name="CanonicalArticleId">The canonical identifier of the article to put in the list.</param>
+	/// <param name="UserId">The owner's user identifier.</param>
+	/// <param name="SiteId">The current site identifier.</param>
+	/// <param name="CancellationToken">A cancellation token.</param>
+	/// <returns>Whether a list was created, an existing list was used, or the user is at the list limit.</returns>
+	/// <exception cref="ArgumentException"><paramref name="Name"/> is blank or longer than <see cref="MaxListNameLength"/>.</exception>
+	public async Task<BookmarkListCreateResult> CreateListWithBookmarkAsync(string Name, Guid CanonicalArticleId, Guid UserId, int SiteId, CancellationToken CancellationToken)
+	{
+		ArgumentException.ThrowIfNullOrWhiteSpace(Name);
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(Name.Length, MaxListNameLength, nameof(Name));
+
+		await ListCreationGate.WaitAsync(CancellationToken);
+		try
+		{
+			return await ExecuteListTransactionAsync(async Token =>
+			{
+				await GetOrCreateDefaultListAsync(UserId, SiteId, Token);
+				return await CreateListWithBookmarkCoreAsync(Name, CanonicalArticleId, UserId, SiteId, Token);
+			}, CancellationToken);
+		}
+		finally
+		{
+			ListCreationGate.Release();
+		}
+	}
+
+	/// <summary>
+	/// Does the work of <see cref="CreateListWithBookmarkAsync"/> while holding <see cref="ListCreationGate"/>.
+	/// </summary>
+	/// <param name="Name">The validated list name.</param>
+	/// <param name="CanonicalArticleId">The canonical identifier of the article to put in the list.</param>
+	/// <param name="UserId">The owner's user identifier.</param>
+	/// <param name="SiteId">The current site identifier.</param>
+	/// <param name="CancellationToken">A cancellation token.</param>
+	/// <returns>Whether a list was created, an existing list was used, or the user is at the list limit.</returns>
+	private async Task<BookmarkListCreateResult> CreateListWithBookmarkCoreAsync(string Name, Guid CanonicalArticleId, Guid UserId, int SiteId, CancellationToken CancellationToken)
+	{
+		var Existing = await Context.BookmarkLists
+			.AsNoTracking()
+			.Where(l => l.CreatedByUserId == UserId)
+			.Select(l => new { l.Id, l.Name, l.IsDefault })
+			.ToListAsync(CancellationToken);
+
+		var Match = Existing.FirstOrDefault(l => string.Equals(l.Name, Name, StringComparison.OrdinalIgnoreCase));
+		if (Match is not null)
+		{
+			await SetInListAsync(Match.Id, CanonicalArticleId, UserId, SiteId, Saved: true, CancellationToken);
+			return BookmarkListCreateResult.AddedToExisting;
 		}
 
-		await SetInListAsync(BookmarkListId, CanonicalArticleId, UserId, SiteId, Saved, CancellationToken);
+		if (Existing.Count >= MaxListsPerUser)
+		{
+			return BookmarkListCreateResult.LimitReached;
+		}
 
-		return true;
+		DateTimeOffset Now = DateTimeOffset.UtcNow;
+		BookmarkList NewList = new()
+		{
+			SiteId = SiteId,
+			Name = Name,
+			IsDefault = false,
+			CreatedByUserId = UserId,
+			DateCreated = Now,
+			Bookmarks =
+			[
+				new Bookmark
+				{
+					SiteId = SiteId,
+					CanonicalArticleId = CanonicalArticleId,
+					CreatedByUserId = UserId,
+					DateCreated = Now,
+				},
+			],
+		};
+
+		Context.BookmarkLists.Add(NewList);
+		await Context.SaveChangesAsync(CancellationToken);
+
+		return BookmarkListCreateResult.Created;
 	}
 
 	/// <summary>

@@ -5,7 +5,7 @@ namespace WikiWikiWorld.Web.Infrastructure;
 
 /// <summary>
 /// Routes otherwise-unmatched request paths into the article page space: article views,
-/// per-article actions expressed as URL suffixes (/edit, /history, /talk, /revision, /links),
+/// per-article actions expressed as URL suffixes (/edit, /history, /talk, /revision, /links, /languages),
 /// and the 404: namespace. Registered as a dynamic catch-all, so every conventional page,
 /// controller, and static file route takes precedence automatically.
 /// Suffix parsing is greedy so article slugs containing "/" are supported.
@@ -100,6 +100,11 @@ public sealed class ArticleRouteTransformer : DynamicRouteValueTransformer
 		if (TryStripSuffix(Slug, "/links", out string? LinksSlug))
 		{
 			return Page("/Article/Links", new RouteValueDictionary { ["UrlSlug"] = LinksSlug });
+		}
+
+		if (TryStripSuffix(Slug, "/languages", out string? LanguagesSlug))
+		{
+			return Page("/Article/Languages", new RouteValueDictionary { ["UrlSlug"] = LanguagesSlug });
 		}
 
 		// Requests for missing static assets never resolve to an article; fall through so the

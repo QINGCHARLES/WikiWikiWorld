@@ -16,14 +16,19 @@ public enum ProfileTab
 	Contributions,
 
 	/// <summary>
-	/// The owner-only bookmark list at <c>/@user/bookmarks</c>.
+	/// The owner's bookmark lists or publicly visible lists at <c>/@user/bookmarks</c>.
 	/// </summary>
 	Bookmarks,
 
 	/// <summary>
 	/// The owner-only messages inbox at <c>/@user/messages</c>.
 	/// </summary>
-	Messages
+	Messages,
+
+	/// <summary>
+	/// The owner-only preferences at <c>/@user/settings</c>.
+	/// </summary>
+	Settings
 }
 
 /// <summary>
@@ -100,9 +105,12 @@ public sealed record class ProfileHeader
 	public required ProfileStats Stats { get; init; }
 
 	/// <summary>
-	/// Gets the number of saved bookmarks, loaded only for the owner because bookmarks are private; otherwise <see langword="null"/>.
+	/// Gets the number of visible current-article memberships in readable lists; null for visitors without public lists.
 	/// </summary>
 	public int? BookmarkCount { get; init; }
+
+	/// <summary>Gets whether this profile has any public bookmark lists, including empty lists.</summary>
+	public bool HasPublicBookmarkLists { get; init; }
 
 	/// <summary>
 	/// Gets the masthead volume: one plus the number of whole years since the account was created, so a first-year member is volume 1.

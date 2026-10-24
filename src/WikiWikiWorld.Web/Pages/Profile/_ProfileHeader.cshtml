@@ -4,8 +4,6 @@
 	ProfileStats Stats = Header.Stats;
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
 	string Initial = Header.UserName.Length > 0 ? char.ToUpperInvariant(Header.UserName[0]).ToString() : "?";
-	string Volume = ProfileFormatting.ToRomanNumeral(Math.Clamp(Header.VolumeNumber, 1, 3999));
-	int YearsAsMember = Header.VolumeNumber - 1;
 	string EditArticleUrl = Header.HasProfileArticle
 		? $"{Header.ArticlePath}/edit"
 		: $"/Article/CreateEdit?UrlSlug={Uri.EscapeDataString(Header.ArticlePath.TrimStart('/'))}";
@@ -15,56 +13,6 @@
 	string? TabCurrent(ProfileTab Tab) => Tab == Model.ActiveTab ? "page" : null;
 }
 <header class="profile-masthead" aria-labelledby="profile-name">
-	<div class="profile-cover">
-		<p class="profile-kicker">
-			<span>Profile</span>
-			@if (Header.DateJoined is { } Established)
-			{
-				<span>Est. @Established.ToString("yyyy", CultureInfo.InvariantCulture)</span>
-			}
-			<span>@Header.Rank</span>
-		</p>
-
-		<div class="profile-cover-title">
-			<p class="profile-volume" title="Volume @Header.VolumeNumber: year @Header.VolumeNumber as a member">
-				<span class="profile-volume-label">Vol.</span>
-				<span class="profile-volume-number">@Volume</span>
-				<span class="visually-hidden">, @(YearsAsMember == 0 ? "a member for under a year" : YearsAsMember == 1 ? "a member for a year" : $"a member for {YearsAsMember} years")</span>
-			</p>
-			@if (!string.IsNullOrWhiteSpace(Header.Tagline))
-			{
-				<blockquote class="profile-epigraph">
-					<p>@Header.Tagline</p>
-				</blockquote>
-			}
-		</div>
-
-		<div class="profile-cover-foot">
-			<dl class="profile-coverlines">
-				<div>
-					<dt>Edits</dt>
-					<dd>@Stats.EditCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
-				</div>
-				<div>
-					<dt>Articles started</dt>
-					<dd>@Stats.ArticlesStartedCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
-				</div>
-				<div>
-					<dt>Articles edited</dt>
-					<dd>@Stats.ArticlesEditedCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
-				</div>
-				<div>
-					<dt>Talk posts</dt>
-					<dd>@Stats.TalkPostCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
-				</div>
-			</dl>
-			<div class="profile-barcode" aria-hidden="true">
-				<span class="profile-barcode-bars"></span>
-				<span class="profile-barcode-number">No. @Stats.EditCount.ToString("D4", CultureInfo.InvariantCulture)</span>
-			</div>
-		</div>
-	</div>
-
 	<div class="profile-identity">
 		<span class="avatar profile-avatar">
 			@if (!string.IsNullOrWhiteSpace(Header.AvatarPath))
@@ -156,7 +104,7 @@
 				<span class="profile-tab-count">@Stats.EditCount.ToString("N0", CultureInfo.CurrentCulture)</span>
 			</a>
 		</li>
-		@if (Header.IsOwner)
+		@if (Header.IsOwner || Header.HasPublicBookmarkLists)
 		{
 			<li>
 				<a href="/@@@Header.UserName/bookmarks" aria-current="@TabCurrent(ProfileTab.Bookmarks)">
@@ -170,6 +118,9 @@
 					}
 				</a>
 			</li>
+		}
+		@if (Header.IsOwner)
+		{
 			<li>
 				<a href="/@@@Header.UserName/messages" aria-current="@TabCurrent(ProfileTab.Messages)">
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -190,7 +141,7 @@
 				</span>
 			</li>
 			<li>
-				<a href="/settings/theme:">
+				<a href="/@@@Header.UserName/settings" aria-current="@TabCurrent(ProfileTab.Settings)">
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"></path>
 					</svg>

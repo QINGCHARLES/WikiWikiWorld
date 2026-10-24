@@ -1,0 +1,23 @@
+@model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@* "New list…" row: the toggle reveals a name field; Create (or Enter) posts the enclosing form, so the antiforgery token and
+   the typed name travel together. A successful create re-renders this element closed and empty; a validation message
+   leaves it as typed. No "required" on the input: the form is posted for every toggle, and an empty required field would
+   make those posts fail validation. *@
+<div id="article-bookmark-new-list" class="bookmark-new-list">
+	<button type="button" class="menu-item-button bookmark-new-list-toggle" aria-expanded="false" aria-controls="article-bookmark-new-list-field"
+		data-on:click="el.nextElementSibling.hidden = !el.nextElementSibling.hidden; el.setAttribute('aria-expanded', String(!el.nextElementSibling.hidden)); el.nextElementSibling.hidden || el.nextElementSibling.querySelector('input').focus()">
+		<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<path d="M12 5v14M5 12h14"></path>
+		</svg>
+		<span>New list…</span>
+	</button>
+	<div id="article-bookmark-new-list-field" class="bookmark-new-list-field" hidden>
+		<input type="text" name="BookmarkListName" maxlength="@WikiWikiWorld.Web.Services.BookmarkService.MaxListNameLength" placeholder="List name" aria-label="New list name" autocomplete="off"
+			data-on:keydown="evt.key === 'Enter' &amp;&amp; (evt.preventDefault(), el.nextElementSibling.click())" />
+		<button type="button" class="bookmark-new-list-create" disabled
+			data-url="@($"{Model.ArticlePath}?handler=CreateBookmarkList")"
+			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
+			data-on:click="$_bookmarkError = ''; @@post(el.dataset.url, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not create the list. Reload to check your lists before trying again.' })"
+			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not create the list. Reload to check your lists before trying again.'">Create</button>
+	</div>
+</div>

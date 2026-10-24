@@ -7,8 +7,8 @@
 	{
 		string Saved = List.ContainsArticle ? "false" : "true";
 		string Url = List.IsDefault
-			? $"{Model.ArticlePath}?handler=SetBookmark&Saved={Saved}"
-			: $"{Model.ArticlePath}?handler=SetBookmarkList&BookmarkListId={List.BookmarkListId}&Saved={Saved}";
+			? $"{Model.ArticlePath}?handler=SetBookmark&saved={Saved}"
+			: $"{Model.ArticlePath}?handler=SetBookmarkList&bookmarklistid={List.BookmarkListId}&saved={Saved}";
 		<button type="button" class="menu-item-button bookmark-list-item @(List.ContainsArticle ? "is-checked" : "")" role="checkbox" aria-checked="@(List.ContainsArticle ? "true" : "false")" disabled
 			data-url="@Url"
 			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"

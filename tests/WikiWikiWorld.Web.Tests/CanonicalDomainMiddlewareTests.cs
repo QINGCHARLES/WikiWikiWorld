@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Models;
@@ -64,6 +65,40 @@ public sealed class CanonicalDomainMiddlewareTests : IDisposable
 	public void Dispose()
 	{
 		Connection.Dispose();
+	}
+
+	/// <summary>
+	/// Verifies that development loopback URLs redirect before resolving site-aware services,
+	/// preserving the port, mounted path and query string from the incoming request.
+	/// </summary>
+	/// <param name="Host">The IPv4 loopback host, optionally including the development port.</param>
+	/// <param name="ExpectedLocation">The canonical URL with the incoming port preserved.</param>
+	[Theory]
+	[InlineData("127.0.0.1:7126", "https://en.localhost:7126/wiki/some-article?page=2")]
+	[InlineData("127.0.0.1", "https://en.localhost/wiki/some-article?page=2")]
+	public async Task DevelopmentLoopbackRedirectsWithoutDatabase(string Host, string ExpectedLocation)
+	{
+		IConfiguration Configuration = new ConfigurationBuilder()
+			.SetBasePath(AppContext.BaseDirectory)
+			.AddJsonFile("appsettings.Development.json")
+			.Build();
+		DomainRedirectOptions DevelopmentRedirects = new();
+		Configuration.GetSection(DomainRedirectOptions.SectionName).Bind(DevelopmentRedirects);
+		await using ServiceProvider EmptyServices = new ServiceCollection().BuildServiceProvider();
+		DefaultHttpContext Context = CreateHttpContext(Host, EmptyServices);
+		Context.Request.PathBase = "/wiki";
+		bool NextCalled = false;
+		CanonicalDomainMiddleware Middleware = new(_ =>
+		{
+			NextCalled = true;
+			return Task.CompletedTask;
+		}, Options.Create(DevelopmentRedirects), Options.Create(SiteConfig));
+
+		await Middleware.InvokeAsync(Context);
+
+		Assert.Equal(StatusCodes.Status301MovedPermanently, Context.Response.StatusCode);
+		Assert.Equal(ExpectedLocation, Context.Response.Headers.Location.ToString());
+		Assert.False(NextCalled);
 	}
 
 	/// <summary>

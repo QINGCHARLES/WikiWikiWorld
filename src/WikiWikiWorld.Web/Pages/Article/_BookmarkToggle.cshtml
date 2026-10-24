@@ -2,7 +2,7 @@
 @* Leading half of the bookmark split button: one tap saves to or removes from the default list. The URL carries the
    state the user is asking for (the opposite of what is shown), so repeated clicks from stale views settle on it. *@
 <button id="article-bookmark-toggle" type="button" class="m3-split-button__leading article-action-bookmark @(Model.IsBookmarked ? "is-active" : "")" aria-pressed="@(Model.IsBookmarked ? "true" : "false")" disabled
-	data-url="@($"{Model.ArticlePath}?handler=SetBookmark&Saved={(Model.IsBookmarked ? "false" : "true")}")"
+	data-url="@($"{Model.ArticlePath}?handler=SetBookmark&saved={(Model.IsBookmarked ? "false" : "true")}")"
 	data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
 	data-on:click="$_bookmarkError = ''; @@post(el.dataset.url,{contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.' })"
 	data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.'">

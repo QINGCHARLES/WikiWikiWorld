@@ -1,50 +1,17 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.BookmarksModel
 @{
-	ProfileHeader Header = Model.Header;
-	ViewData["Title"] = $"{Header.UserName} · Bookmarks";
-	DateTimeOffset Now = DateTimeOffset.UtcNow;
+	ViewData["Title"] = $"{Model.Header.UserName} · Bookmarks";
 }
-
 <div class="profile">
-	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Header, ProfileTab.Bookmarks)" />
-
-	<div class="profile-stack">
-		<section class="profile-card" aria-labelledby="profile-bookmarks-title">
-			<header class="profile-card-head">
-				<h2 class="profile-card-title" id="profile-bookmarks-title">Bookmarks</h2>
-				<p class="profile-card-note">Only you can see these</p>
-			</header>
-
-			@if (Model.Items.Count > 0)
-			{
-				<ol class="profile-list">
-					@foreach (WikiWikiWorld.Web.Pages.Profile.BookmarksModel.BookmarkListItem Item in Model.Items)
-					{
-						<li class="profile-list-row">
-							<span class="profile-list-icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-							</span>
-							<div class="profile-list-main">
-								<a class="profile-list-title" href="@Item.ArticlePath">@Item.Title</a>
-								<p class="profile-list-meta">Saved <time datetime="@Item.DateBookmarked.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.DateBookmarked, Now)</time></p>
-							</div>
-							<form method="post" asp-page-handler="Remove" asp-route-Username="@Header.UserName" class="profile-list-form">
-								<input type="hidden" name="BookmarkId" value="@Item.BookmarkId" />
-								<button type="submit" class="profile-list-action" aria-label="Remove @Item.Title from bookmarks">Remove</button>
-							</form>
-						</li>
-					}
-				</ol>
-			}
-			else
-			{
-				<p class="profile-card-empty">You haven't bookmarked anything yet. Use the bookmark button on any article to save it here.</p>
-			}
-		</section>
+	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Model.Header, ProfileTab.Bookmarks)" />
+	<div id="bookmark-browser" class="profile-stack"
+		data-on:bookmark-load="@@get(evt.detail.url, {requestCancellation: evt.detail.controller, headers: {'X-Bookmark-Navigation': evt.detail.id}, filterSignals: {include: /^$/}, retry: 'never', retryMaxCount: 0}).then(evt.detail.complete).catch(evt.detail.fail)">
+		<div id="bookmark-navigation-status" role="status" class="bookmark-navigation-status"></div>
+		<partial name="_BookmarkBrowser" model="Model" />
 	</div>
 </div>
-
 @section Scripts {
 	<script src="~/js/profile.js" asp-append-version="true" defer></script>
+	<script type="module" src="~/js/bookmarks.js" asp-append-version="true"></script>
 }

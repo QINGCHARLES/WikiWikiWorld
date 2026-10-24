@@ -1,0 +1,243 @@
+/* Article languages subpage (/{slug}/languages): translation list, add/change/remove forms, merge confirmation. */
+
+.languages-page {
+	max-inline-size: 48rem;
+	margin-inline: auto;
+	padding: var(--space-m) clamp(1rem, 3vw, 2rem) var(--space-xl);
+	color: var(--color-foreground);
+
+	& h1 {
+		margin-block: 0.25rem 0.5rem;
+		font-size: clamp(1.5rem, 2.5vw, 2rem);
+		text-align: start;
+		text-wrap: balance;
+	}
+
+	& h2 {
+		font-size: var(--step-1, 1.25rem);
+		margin-block: 0 0.75rem;
+	}
+}
+
+.languages-breadcrumb {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	font-size: 0.65em;
+	color: var(--color-muted);
+}
+
+.languages-lead,
+.languages-help {
+	color: var(--color-muted);
+	font-size: 0.75em;
+	line-height: 1.5;
+}
+
+.languages-status,
+.languages-error {
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--color-border);
+	background: var(--color-surface);
+	margin-block: var(--space-s);
+}
+
+.languages-status {
+	border-inline-start: 4px solid var(--color-primary);
+}
+
+.languages-error {
+	border-inline-start: 4px solid var(--color-danger, oklch(60% 0.2 25));
+}
+
+.languages-list {
+	list-style: none;
+	padding: 0;
+	margin-block: var(--space-m) var(--space-s);
+	border-block-start: 1px solid var(--color-border);
+}
+
+.languages-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: start;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	padding-block: 0.9rem;
+	border-block-end: 1px solid var(--color-border);
+}
+
+.languages-row-main {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25rem 0.6rem;
+	flex: 1 1 18rem;
+	min-inline-size: 0;
+}
+
+.languages-name {
+	font-weight: 700;
+}
+
+.languages-code {
+	font-size: 0.6em;
+	color: var(--color-muted);
+}
+
+.languages-title {
+	flex-basis: 100%;
+	color: var(--color-hyperlinks);
+	overflow-wrap: anywhere;
+}
+
+.languages-row-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: start;
+	gap: 0.5rem;
+
+	/* Shrink only the controls, so the Change form's label and input keep their own sizes. */
+	& summary,
+	& button {
+		font-size: 0.7em;
+	}
+}
+
+.languages-change {
+	& > summary {
+		display: inline-block;
+		cursor: pointer;
+		padding: 0.45em 0.9em;
+		border: 1px solid var(--color-border);
+		border-radius: 9999px;
+		font-weight: 700;
+		list-style: none;
+	}
+
+	&[open] {
+		flex-basis: 100%;
+		order: 1;
+
+		& > summary { margin-block-end: 0.6rem; }
+	}
+
+	& > form {
+		display: grid;
+		gap: 0.5rem;
+		justify-items: start;
+	}
+}
+
+.languages-field {
+	display: grid;
+	gap: 0.3rem;
+	inline-size: 100%;
+
+	& > label {
+		font-size: 0.7em;
+		font-weight: 600;
+		color: var(--color-muted);
+	}
+
+	& > input,
+	& > select {
+		font: inherit;
+		color: var(--color-foreground);
+		background: var(--color-background);
+		border: 1px solid var(--color-border);
+		border-radius: 0.5rem;
+		padding: 0.55rem 0.75rem;
+		inline-size: 100%;
+		box-sizing: border-box;
+	}
+
+	& > input:focus-visible,
+	& > select:focus-visible {
+		outline: 2px solid var(--color-hyperlinks);
+		outline-offset: 1px;
+	}
+}
+
+.languages-add {
+	margin-block-start: var(--space-l);
+	padding: var(--space-s) var(--space-m);
+	border: 1px solid var(--color-border);
+	border-radius: 0.75rem;
+	background: var(--color-surface-alt);
+}
+
+.languages-add-form {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+	gap: 0.75rem 1rem;
+	align-items: end;
+
+	& > .languages-help {
+		grid-column: 1 / -1;
+		margin: 0;
+	}
+
+	& > button {
+		justify-self: start;
+	}
+}
+
+.languages-merge {
+	margin-block: var(--space-m);
+	padding: var(--space-s) var(--space-m);
+	border: 2px solid var(--color-primary);
+	border-radius: 0.75rem;
+	background: var(--color-surface-alt);
+}
+
+.languages-merge-list {
+	padding-inline-start: 1.25rem;
+	line-height: 1.7;
+
+	& a { margin-inline-start: 0.4rem; }
+}
+
+.languages-clash {
+	margin-block: var(--space-s);
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-background);
+
+	& > legend {
+		font-weight: 700;
+		padding-inline: 0.35rem;
+	}
+}
+
+.languages-clash-option {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem;
+	padding-block: 0.3rem;
+}
+
+.languages-clash-view {
+	font-size: 0.7em;
+	color: var(--color-hyperlinks);
+}
+
+.languages-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+.languages-leave {
+	margin-block-start: var(--space-s);
+	font-size: 0.7em;
+}
+
+.languages-back {
+	margin-block-start: var(--space-l);
+	font-size: 0.75em;
+}

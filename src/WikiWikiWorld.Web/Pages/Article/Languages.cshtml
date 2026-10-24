@@ -1,0 +1,210 @@
+@page
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<User> SignInManager
+@model WikiWikiWorld.Web.Pages.Article.LanguagesModel
+@{
+	ViewData["Title"] = $"{Model.CurrentArticle?.Title} — Other languages";
+	bool IsSignedIn = SignInManager.IsSignedIn(User);
+	ArticleLanguageResult? Merge = Model.MergePreview;
+}
+
+<div class="languages-page">
+	<header class="languages-header">
+		<nav class="languages-breadcrumb" aria-label="Breadcrumb">
+			<a href="@Model.CanonicalArticlePath">@Model.CurrentArticle?.Title</a>
+			<span aria-hidden="true">›</span>
+			<span>Languages</span>
+		</nav>
+		<h1>Other languages</h1>
+		<p class="languages-lead">
+			@if (Model.Languages.Count == 0)
+			{
+				<text>“@Model.CurrentArticle?.Title” isn't linked to any other language yet.</text>
+			}
+			else
+			{
+				<text>“@Model.CurrentArticle?.Title” is also available in @Model.Languages.Count @(Model.Languages.Count == 1 ? "other language" : "other languages").</text>
+			}
+		</p>
+	</header>
+
+	@if (!string.IsNullOrEmpty(Model.StatusMessage))
+	{
+		<p class="languages-status" role="status">@Model.StatusMessage</p>
+	}
+
+	@if (Model.ErrorMessage is not null && Model.ErrorChangeCulture is null)
+	{
+		<p class="languages-error" role="alert">@Model.ErrorMessage</p>
+	}
+
+	@if (Merge is not null)
+	{
+		HashSet<Guid> ChoiceArticleIds = [.. Merge.Clashes
+			.Where(Clash => Clash.ForcedKeepArticleId is null)
+			.SelectMany(Clash => new[] { Clash.CurrentGroupArticle.CanonicalArticleId, Clash.OtherGroupArticle.CanonicalArticleId })];
+		List<ArticleLanguageEntry> ForcedDrops = [.. Merge.Clashes
+			.Where(Clash => Clash.ForcedKeepArticleId is not null)
+			.Select(Clash => Clash.ForcedKeepArticleId == Clash.CurrentGroupArticle.CanonicalArticleId ? Clash.OtherGroupArticle : Clash.CurrentGroupArticle)];
+		HashSet<Guid> ForcedDropIds = [.. ForcedDrops.Select(Entry => Entry.CanonicalArticleId)];
+		List<ArticleLanguageEntry> Joined = [.. Merge.MergeMembers
+			.Where(Entry => !ChoiceArticleIds.Contains(Entry.CanonicalArticleId) && !ForcedDropIds.Contains(Entry.CanonicalArticleId))
+			.OrderBy(Entry => SiteCultureHelper.GetDisplayName(Entry.Culture), StringComparer.CurrentCultureIgnoreCase)];
+
+		<section class="languages-merge" aria-labelledby="languages-merge-heading">
+			<h2 id="languages-merge-heading">@(Merge.JoinsTwoGroups ? "Merge two language groups?" : "Replace a linked article?")</h2>
+			<p>@Merge.Message</p>
+			<p>After linking, this article and all of these will list each other as translations:</p>
+			<ul class="languages-merge-list">
+				@foreach (ArticleLanguageEntry Entry in Joined)
+				{
+					<li>
+						<span class="languages-name" lang="@Entry.Culture" dir="auto">@SiteCultureHelper.GetDisplayName(Entry.Culture)</span>
+						<a href="@Model.BuildArticleUrl(Entry)" hreflang="@Entry.Culture" lang="@Entry.Culture" dir="auto">@Entry.Title</a>
+					</li>
+				}
+			</ul>
+
+			@if (ForcedDrops.Count > 0)
+			{
+				<p>These will be unlinked, because one of the two articles you are linking takes their language's place:</p>
+				<ul class="languages-merge-list">
+					@foreach (ArticleLanguageEntry Entry in ForcedDrops)
+					{
+						<li>
+							<span class="languages-name" lang="@Entry.Culture" dir="auto">@SiteCultureHelper.GetDisplayName(Entry.Culture)</span>
+							<a href="@Model.BuildArticleUrl(Entry)" hreflang="@Entry.Culture" lang="@Entry.Culture" dir="auto">@Entry.Title</a>
+						</li>
+					}
+				</ul>
+			}
+
+			<form method="post" action="@($"{Model.LanguagesPath}?handler=Link")" asp-antiforgery="true">
+				<input type="hidden" name="TargetCulture" value="@Model.PostedCulture" />
+				<input type="hidden" name="TargetSlug" value="@Model.PostedSlug" />
+				<input type="hidden" name="ConfirmMerge" value="true" />
+
+				@foreach (ArticleLanguageClash Clash in Merge.Clashes.Where(Clash => Clash.ForcedKeepArticleId is null))
+				{
+					string LanguageName = SiteCultureHelper.GetDisplayName(Clash.Culture);
+					<fieldset class="languages-clash">
+						<legend>Both groups have a <span lang="@Clash.Culture" dir="auto">@LanguageName</span> article. Keep which?</legend>
+						@foreach ((ArticleLanguageEntry Entry, string GroupLabel) in new[] { (Clash.CurrentGroupArticle, "already linked here"), (Clash.OtherGroupArticle, "from the other group") })
+						{
+							string InputId = $"keep-{Clash.Culture}-{Entry.CanonicalArticleId}";
+							<div class="languages-clash-option">
+								<input type="radio" id="@InputId" name="Keep[@Clash.Culture]" value="@Entry.CanonicalArticleId" required />
+								<label for="@InputId"><span lang="@Entry.Culture" dir="auto">@Entry.Title</span> <span class="languages-code">(@GroupLabel)</span></label>
+								<a href="@Model.BuildArticleUrl(Entry)" target="_blank" rel="noopener" class="languages-clash-view">View</a>
+							</div>
+						}
+						<p class="languages-help">The other one is unlinked from every language. You can link it again later.</p>
+					</fieldset>
+				}
+
+				<div class="languages-actions">
+					<button type="submit" data-button-variant="primary">@(Merge.JoinsTwoGroups ? "Confirm merge" : "Confirm and link")</button>
+					<a class="button" data-button-variant="ghost" href="@Model.LanguagesPath">Cancel</a>
+				</div>
+			</form>
+		</section>
+	}
+
+	@if (Model.Languages.Count > 0)
+	{
+		<ul class="languages-list">
+			@foreach (ArticleLanguageEntry Entry in Model.Languages)
+			{
+				string LanguageName = SiteCultureHelper.GetDisplayName(Entry.Culture);
+				bool HasChangeError = Model.ErrorMessage is not null && Entry.Culture.Equals(Model.ErrorChangeCulture, StringComparison.OrdinalIgnoreCase);
+				string ChangeInputId = $"change-{Entry.Culture}";
+				<li class="languages-row">
+					<div class="languages-row-main">
+						<span class="languages-name" lang="@Entry.Culture" dir="auto">@LanguageName</span>
+						<span class="languages-code">@Entry.Culture</span>
+						<a class="languages-title" href="@Model.BuildArticleUrl(Entry)" hreflang="@Entry.Culture" lang="@Entry.Culture" dir="auto">@Entry.Title</a>
+					</div>
+					@if (IsSignedIn)
+					{
+						<div class="languages-row-actions">
+							<details class="languages-change" open="@HasChangeError">
+								<summary>Change</summary>
+								<form method="post" action="@($"{Model.LanguagesPath}?handler=Change")" asp-antiforgery="true">
+									<input type="hidden" name="TargetCulture" value="@Entry.Culture" />
+									<div class="languages-field">
+										<label for="@ChangeInputId">Replacement <span lang="@Entry.Culture" dir="auto">@LanguageName</span> article</label>
+										<input type="text" id="@ChangeInputId" name="TargetSlug" required autocomplete="off" spellcheck="false"
+										       value="@(HasChangeError ? Model.PostedSlug : string.Empty)" aria-describedby="@(HasChangeError ? $"{ChangeInputId}-error" : null)" />
+									</div>
+									@if (HasChangeError)
+									{
+										<p class="languages-error" id="@($"{ChangeInputId}-error")" role="alert">@Model.ErrorMessage</p>
+									}
+									<button type="submit">Change</button>
+								</form>
+							</details>
+							<form method="post" action="@($"{Model.LanguagesPath}?handler=Remove")" asp-antiforgery="true">
+								<input type="hidden" name="RemoveArticleId" value="@Entry.CanonicalArticleId" />
+								<button type="submit" data-button-variant="ghost">Remove link</button>
+							</form>
+						</div>
+					}
+				</li>
+			}
+		</ul>
+
+		@if (IsSignedIn)
+		{
+			<p class="languages-help">
+				Links are shared by every language in the group: a change here also changes what the other languages' pages list.
+			</p>
+		}
+	}
+
+	@if (Merge is null)
+	{
+		<section class="languages-add" aria-labelledby="languages-add-heading">
+			<h2 id="languages-add-heading">Add a language</h2>
+			@if (!IsSignedIn)
+			{
+				<p><a class="button" href="@($"/login:?returnurl={Uri.EscapeDataString(Model.LanguagesPath)}")">Sign in</a> to link this article to another language.</p>
+			}
+			else if (Model.AvailableCultures.Count == 0)
+			{
+				<p>This article is linked in every language this site has.</p>
+			}
+			else
+			{
+				<form method="post" action="@($"{Model.LanguagesPath}?handler=Link")" asp-antiforgery="true" class="languages-add-form">
+					<div class="languages-field">
+						<label for="languages-add-culture">Language</label>
+						<select id="languages-add-culture" name="TargetCulture" required>
+							<option value="">Choose…</option>
+							@foreach (string Code in Model.AvailableCultures)
+							{
+								<option value="@Code" lang="@Code" selected="@Code.Equals(Model.PostedCulture, StringComparison.OrdinalIgnoreCase)">@SiteCultureHelper.GetDisplayName(Code) (@Code)</option>
+							}
+						</select>
+					</div>
+					<div class="languages-field">
+						<label for="languages-add-slug">Article in that language</label>
+						<input type="text" id="languages-add-slug" name="TargetSlug" required autocomplete="off" spellcheck="false"
+						       value="@(Model.ErrorChangeCulture is null ? Model.PostedSlug : string.Empty)" aria-describedby="languages-add-help" />
+					</div>
+					<p class="languages-help" id="languages-add-help">Enter its slug, such as <code>gq-japan</code>, or paste its address.</p>
+					<button type="submit">Link</button>
+				</form>
+			}
+		</section>
+
+		@if (IsSignedIn && Model.Languages.Count > 0)
+		{
+			<form method="post" action="@($"{Model.LanguagesPath}?handler=Remove")" asp-antiforgery="true" class="languages-leave">
+				<input type="hidden" name="RemoveArticleId" value="@Model.CurrentArticle!.CanonicalArticleId" />
+				<button type="submit" data-button-variant="ghost">Unlink this article from all languages</button>
+			</form>
+		}
+	}
+
+	<p class="languages-back"><a href="@Model.CanonicalArticlePath">← Back to article</a></p>
+</div>

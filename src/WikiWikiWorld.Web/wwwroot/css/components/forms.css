@@ -32,7 +32,7 @@
     }
 
     & > input::placeholder { font-size: var(--step-0); opacity: 0; }
-    & > select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 3rem; }
+    & > select { appearance: none; cursor: pointer; padding-inline-end: 3rem; }
 
     & > .md-icon {
         position: absolute;

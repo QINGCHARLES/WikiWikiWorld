@@ -2,7 +2,7 @@
 @if (!Model.IsSignedIn)
 {
 	@* Anonymous visitors: a single button whose POST answers with a sign-in prompt. *@
-	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&Saved=true")" asp-antiforgery="true" class="article-action-form"
+	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&saved=true")" asp-antiforgery="true" class="article-action-form"
 		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
 		<button type="button" class="article-action-pill article-action-bookmark" aria-pressed="false" disabled
 			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
@@ -20,7 +20,7 @@ else
 {
 	@* Signed-in users: the leading half toggles the default list; the chevron opens a checkable menu of all lists.
 	   Responses patch the toggle, trigger and list elements by id, so the open <details> stays open between toggles. *@
-	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&Saved=true")" asp-antiforgery="true" class="article-action-form m3-split-button article-bookmark-split"
+	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&saved=true")" asp-antiforgery="true" class="article-action-form m3-split-button article-bookmark-split"
 		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
 		<partial name="_BookmarkToggle" model="Model" />
 		<details name="site-menu" class="dropdown-menu article-menu m3-split-button__trailing article-bookmark-menu">
@@ -28,13 +28,14 @@ else
 			<div class="menu-content">
 				<partial name="_BookmarkLists" model="Model" />
 				<hr class="menu-divider" />
-				@* Placeholder: creating lists is a later piece of work, so this item intentionally does nothing yet. *@
-				<button type="button" class="menu-item-button bookmark-new-list">
+				<partial name="_BookmarkNewList" model="Model" />
+				<a href="@Model.BookmarksPath">
 					<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-						<path d="M12 5v14M5 12h14"></path>
+						<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+						<path d="m15 5 4 4"></path>
 					</svg>
-					<span>New list…</span>
-				</button>
+					<span>Edit lists</span>
+				</a>
 			</div>
 		</details>
 		<partial name="_BookmarkStatus" model="@(string.Empty)" />

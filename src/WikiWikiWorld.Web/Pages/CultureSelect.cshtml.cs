@@ -27,94 +27,20 @@ namespace WikiWikiWorld.Web.Pages
 		/// </summary>
 		public void OnGet()
 		{
-			string CurrentHost = Request.Host.Host;
 			SiteInfo CurrentSite = SiteConfiguration.Sites.First(Site => Site.SiteId == SiteId);
-			string RootDomain = GetRootDomain(CurrentSite, CurrentHost);
-			int? Port = Request.Host.Port;
-			string Scheme = Request.Scheme;
+			string RootDomain = SiteCultureHelper.GetRootDomain(CurrentSite, Request.Host.Host);
 
 			CultureLinks = [.. CurrentSite.Domains
 				.Where(Domain => Domain.EndsWith($".{RootDomain}", StringComparison.OrdinalIgnoreCase))
 				.Select(Domain =>
 				{
 					string CultureCode = Domain[..^(RootDomain.Length + 1)];
-					string Host = Port.HasValue
-						? $"{CultureCode}.{RootDomain}:{Port.Value}"
-						: $"{CultureCode}.{RootDomain}";
-
 					return new CultureLink(
 						CultureCode,
-						GetCultureDisplayName(CultureCode),
-						$"{Scheme}://{Host}");
+						SiteCultureHelper.GetDisplayName(CultureCode),
+						SiteCultureHelper.BuildCultureOrigin(CurrentSite, RootDomain, Request.Scheme, Request.Host.Port, CultureCode));
 				})
 				.OrderBy(Link => Link.DisplayName, StringComparer.OrdinalIgnoreCase)];
-		}
-
-		/// <summary>
-		/// Gets the root domain for the current site and request host.
-		/// </summary>
-		/// <param name="CurrentSite">The current site configuration.</param>
-		/// <param name="CurrentHost">The current request host name.</param>
-		/// <returns>The root domain for the current request.</returns>
-		/// <exception cref="InvalidOperationException">Thrown when a root domain cannot be determined.</exception>
-		private static string GetRootDomain(SiteInfo CurrentSite, string CurrentHost)
-		{
-			string? RootDomain = CurrentSite.Domains
-				.Where(Domain => CurrentHost.Equals(Domain, StringComparison.OrdinalIgnoreCase))
-				.OrderBy(Domain => Domain.Length)
-				.FirstOrDefault();
-
-			if (RootDomain is not null)
-			{
-				return RootDomain;
-			}
-
-			RootDomain = CurrentSite.Domains
-				.Where(Domain => CurrentHost.EndsWith($".{Domain}", StringComparison.OrdinalIgnoreCase))
-				.OrderBy(Domain => Domain.Length)
-				.FirstOrDefault();
-
-			if (RootDomain is not null)
-			{
-				return RootDomain;
-			}
-
-			throw new InvalidOperationException($"Unable to determine the root domain for host '{CurrentHost}'.");
-		}
-
-		/// <summary>
-		/// Gets a display name for the specified culture code, in that culture's own language.
-		/// </summary>
-		/// <param name="CultureCode">The culture code.</param>
-		/// <returns>
-		/// The endonym for the culture (for example "English", "日本語", "العربية"), or the
-		/// culture code itself when no real culture matches it.
-		/// </returns>
-		/// <remarks>
-		/// Requires ICU. On an image built without it (any <c>*-chiseled</c> family that is not
-		/// <c>-extra</c>, which sets <c>DOTNET_SYSTEM_GLOBALIZATION_INVARIANT</c>) the lookup
-		/// throws and every language falls back to its bare code.
-		/// </remarks>
-		private static string GetCultureDisplayName(string CultureCode)
-		{
-			try
-			{
-				CultureInfo Culture = CultureInfo.GetCultureInfo(CultureCode);
-
-				// Well-formed but unrecognised tags such as "xx-test" resolve to a synthesised
-				// culture rather than throwing, whose name reads worse than the raw code.
-				if (Culture.CultureTypes.HasFlag(CultureTypes.UserCustomCulture)
-					|| string.IsNullOrWhiteSpace(Culture.NativeName))
-				{
-					return CultureCode;
-				}
-
-				return Culture.NativeName;
-			}
-			catch (CultureNotFoundException)
-			{
-				return CultureCode;
-			}
 		}
 	}
 

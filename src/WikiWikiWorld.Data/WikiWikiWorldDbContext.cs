@@ -219,6 +219,12 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId });
+			b.HasIndex(e => e.ArticleCultureLinkGroupId, "IX_ArticleCultureLinks_GroupId_Active")
+				.HasFilter("DateDeleted IS NULL");
+			// An article belongs to at most one active language group.
+			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId }, "UX_ArticleCultureLinks_SiteId_CanonicalArticleId_Active")
+				.IsUnique()
+				.HasFilter("DateDeleted IS NULL");
 		});
 
 		Builder.Entity<DownloadUrl>(b =>
@@ -263,6 +269,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		Builder.Entity<BookmarkList>(b =>
 		{
 			b.HasKey(e => e.Id);
+			b.Property(e => e.IsPublic).HasDefaultValue(false);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.CreatedByUserId });
@@ -275,6 +282,10 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		Builder.Entity<Bookmark>(b =>
 		{
 			b.HasKey(e => e.Id);
+			b.HasIndex(e => new { e.BookmarkListId, e.CanonicalArticleId }, "UX_Bookmarks_BookmarkListId_CanonicalArticleId_Active")
+				.IsUnique().HasFilter("DateDeleted IS NULL");
+			b.HasIndex(e => new { e.BookmarkListId, e.DateCreated, e.Id }, "IX_Bookmarks_List_Recent_Active")
+				.IsDescending(false, true, true).HasFilter("DateDeleted IS NULL");
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
 			b.HasIndex(e => new { e.SiteId, e.CanonicalArticleId, e.CreatedByUserId });

@@ -361,7 +361,7 @@ public sealed class ViewModel(
             if (CurrentUserForBookmark is not null)
             {
                 IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(RevisionToRender.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
-                BookmarkControl = new(DisplayedArticlePath, IsSignedIn: true, Lists);
+                BookmarkControl = new(DisplayedArticlePath, IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUserForBookmark.UserName));
             }
         }
 
@@ -467,6 +467,42 @@ public sealed class ViewModel(
     }
 
     /// <summary>
+    /// Creates a bookmark list from the menu's "New list" field, with the current article already in it.
+    /// </summary>
+    /// <param name="BookmarkListName">The name typed into the field, posted with the bookmark form.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>
+    /// Razor partials that refresh the menu (showing the new list ticked) and reset the field; a status message, leaving
+    /// the typed name in place, when the name is blank or too long or the user is at the list limit.
+    /// </returns>
+    public async Task<IActionResult> OnPostCreateBookmarkListAsync([FromForm] string? BookmarkListName, CancellationToken CancellationToken)
+    {
+        (IActionResult? Rejection, User? CurrentUser, ArticleRevision? Current) = await ResolveBookmarkRequestAsync(CancellationToken);
+        if (Rejection is not null || CurrentUser is null || Current is null)
+        {
+            return Rejection ?? NotFound();
+        }
+
+        string Name = (BookmarkListName ?? string.Empty).Trim();
+        if (Name.Length == 0)
+        {
+            return Partial("_BookmarkStatus", "Enter a name for the list.");
+        }
+        if (Name.Length > BookmarkService.MaxListNameLength)
+        {
+            return Partial("_BookmarkStatus", $"List names can be up to {BookmarkService.MaxListNameLength} characters.");
+        }
+
+        BookmarkListCreateResult Result = await BookmarkService.CreateListWithBookmarkAsync(Name, Current.CanonicalArticleId, CurrentUser.Id, SiteId, CancellationToken);
+        if (Result is BookmarkListCreateResult.LimitReached)
+        {
+            return Partial("_BookmarkStatus", $"You can have up to {BookmarkService.MaxListsPerUser} lists.");
+        }
+
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
+    }
+
+    /// <summary>
     /// Validates a bookmark POST and loads the acting user and the current revision of the requested article.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
@@ -517,7 +553,7 @@ public sealed class ViewModel(
     {
         IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(Current.CanonicalArticleId, CurrentUser.Id, CancellationToken);
 
-        return Partial("_BookmarkState", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), IsSignedIn: true, Lists));
+        return Partial("_BookmarkState", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUser.UserName)));
     }
 
     /// <summary>

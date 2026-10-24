@@ -110,10 +110,6 @@ article aside.issue-credits {
     cursor: pointer;
     border-radius: 2px;
 
-    &::-webkit-details-marker {
-        display: none;
-    }
-
     &::after {
         content: "";
         flex: none;

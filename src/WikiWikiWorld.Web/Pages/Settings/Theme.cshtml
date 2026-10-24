@@ -1,32 +1,55 @@
 @page
 @model WikiWikiWorld.Web.Pages.Settings.ThemeModel
 @{
-	ViewData["Title"] = "Theme";
+	ViewData["Title"] = Model.Header is { } Header ? $"{Header.UserName} · Settings" : "Theme settings";
 	string Current = (ViewData["PreferredTheme"] as string) ?? "system";
 }
 
-<h1>Theme</h1>
-<p>Choose how Magazedia should look on this device. Your selection stores a cookie so we remember it next time.</p>
+<div class="profile">
+	@if (Model.Header is { } ProfileHeader)
+	{
+		<partial name="/Pages/Profile/_ProfileHeader.cshtml" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(ProfileHeader, ProfileTab.Settings)" />
+	}
+	else
+	{
+		<h1>Theme settings</h1>
+	}
 
-<form method="post" asp-antiforgery="true">
-	<fieldset>
-		<legend>Choose Theme</legend>
+	<div class="profile-stack">
+		<section class="profile-card" aria-labelledby="profile-settings-title">
+			<header class="profile-card-head">
+				<h2 class="profile-card-title" id="profile-settings-title">Appearance</h2>
+				<p class="profile-card-note">On this device</p>
+			</header>
+			<p class="profile-settings-description" id="theme-description">Choose how the site looks on this device. Your preference is remembered in this browser.</p>
+			@if (TempData["ThemeSaved"] is true)
+			{
+				<p class="profile-settings-status" role="status">Theme saved.</p>
+			}
+			<form method="post" asp-antiforgery="true" class="profile-settings-form">
+				<fieldset aria-describedby="theme-description">
+					<legend>Theme</legend>
+					<div class="profile-theme-options">
+						<label for="theme-system">
+							<input id="theme-system" type="radio" name="Theme" value="system" checked="@(Current == "system")" />
+							<span><strong>System</strong><small>Follow your device’s appearance.</small></span>
+						</label>
+						<label for="theme-light">
+							<input id="theme-light" type="radio" name="Theme" value="light" checked="@(Current == "light")" />
+							<span><strong>Light</strong><small>A bright background for reading.</small></span>
+						</label>
+						<label for="theme-dark">
+							<input id="theme-dark" type="radio" name="Theme" value="dark" checked="@(Current == "dark")" />
+							<span><strong>Dark</strong><small>A darker background for low light.</small></span>
+						</label>
+					</div>
+				</fieldset>
+				<button type="submit" class="profile-action-accent">Save theme</button>
+			</form>
+		</section>
+	</div>
+</div>
 
-		<label for="theme-system">
-			<input id="theme-system" type="radio" name="Theme" value="system" @(Current == "system" ? "checked" : string.Empty) />
-			System (follow device)
-		</label>
-
-		<label for="theme-light">
-			<input id="theme-light" type="radio" name="Theme" value="light" @(Current == "light" ? "checked" : string.Empty) />
-			Light
-		</label>
-
-		<label for="theme-dark">
-			<input id="theme-dark" type="radio" name="Theme" value="dark" @(Current == "dark" ? "checked" : string.Empty) />
-			Dark
-		</label>
-
-		<button type="submit">Save</button>
-	</fieldset>
-</form>
+@section Scripts {
+	<script src="~/js/profile.js" asp-append-version="true" defer></script>
+}

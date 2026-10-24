@@ -130,7 +130,6 @@ figure:has(.hero-image) + hgroup > .eyebrow {
     border: 1px solid rgb(0 0 0 / 0.1);
     border-radius: 9999px;
     backdrop-filter: blur(0.7rem) saturate(120%);
-    -webkit-backdrop-filter: blur(0.7rem) saturate(120%);
 }
 
 .eyebrow + h1 {
