@@ -7,6 +7,7 @@ Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
   python scripts/wiki_api.py status prod
   python scripts/wiki_api.py request prod GET api/article/gq-hype
   python scripts/wiki_api.py request prod PUT api/article/gq-hype --json body.json
+  python scripts/wiki_api.py request prod POST api/file/some-file-slug --file File=pic.webp --form Culture=en
 """
 
 import argparse
@@ -14,12 +15,14 @@ import base64
 from datetime import datetime, timezone
 import getpass
 import json
+import mimetypes
 import os
 from pathlib import Path
 import ssl
 import sys
 import urllib.error
 import urllib.request
+import uuid
 
 RepositoryRoot = Path(__file__).resolve().parent.parent
 TokenDirectory = RepositoryRoot / ".local" / "tokens"
@@ -31,6 +34,9 @@ BaseUrls = {"dev": f"https://localhost:{DevPort}", "prod": "https://en.magazedia
 # connect to localhost and name the English site in the Host header instead.
 HostHeaders = {"dev": f"en.localhost:{DevPort}"}
 NameClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+# Windows' registry-backed MIME table often lacks these image types; the upload API checks the declared type.
+mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("image/avif", ".avif")
 
 
 def Send(Environment: str, Method: str, Path_: str, Body: bytes | None, Headers: dict[str, str]) -> tuple[int, str]:
@@ -107,8 +113,32 @@ def ShowStatus(Environment: str) -> int:
     return 0
 
 
-def CallApi(Environment: str, Method: str, Path_: str, JsonFile: Path | None) -> int:
-    """Call an API path with the saved bearer token and print the status and response body."""
+def BuildMultipart(Fields: list[str], Files: list[str]) -> tuple[bytes, str]:
+    """Encode KEY=VALUE form fields and FIELD=PATH file parts as multipart/form-data.
+
+    Returns the body and its Content-Type header (which carries the boundary).
+    """
+    Boundary = f"----wiki-api-{uuid.uuid4().hex}"
+    Parts: list[bytes] = []
+    for Field in Fields:
+        Name, Value = Field.split("=", 1)
+        Parts.append(f'--{Boundary}\r\nContent-Disposition: form-data; name="{Name}"\r\n\r\n{Value}\r\n'.encode())
+    for FilePart in Files:
+        Name, FilePath = FilePart.split("=", 1)
+        Upload = Path(FilePath)
+        ContentType = mimetypes.guess_type(Upload.name)[0] or "application/octet-stream"
+        Parts.append(f'--{Boundary}\r\nContent-Disposition: form-data; name="{Name}"; filename="{Upload.name}"\r\n'
+                     f"Content-Type: {ContentType}\r\n\r\n".encode() + Upload.read_bytes() + b"\r\n")
+    Parts.append(f"--{Boundary}--\r\n".encode())
+    return b"".join(Parts), f"multipart/form-data; boundary={Boundary}"
+
+
+def CallApi(Environment: str, Method: str, Path_: str, JsonFile: Path | None,
+            Fields: list[str], Files: list[str]) -> int:
+    """Call an API path with the saved bearer token and print the status and response body.
+
+    The body is either a JSON file or multipart form fields and files, not both.
+    """
     if not TokenFile(Environment).exists():
         print(f"No {Environment} token. Run: python scripts/wiki_api.py token {Environment}", file=sys.stderr)
         return 1
@@ -124,6 +154,8 @@ def CallApi(Environment: str, Method: str, Path_: str, JsonFile: Path | None) ->
     if JsonFile is not None:
         Body = JsonFile.read_bytes()
         Headers["Content-Type"] = "application/json"
+    elif Fields or Files:
+        Body, Headers["Content-Type"] = BuildMultipart(Fields, Files)
     Status, Text = Send(Environment, Method.upper(), Path_, Body, Headers)
     print(Status)
     print(Text)
@@ -132,6 +164,8 @@ def CallApi(Environment: str, Method: str, Path_: str, JsonFile: Path | None) ->
 
 def Main() -> int:
     """Parse the subcommand and run it."""
+    # Article text is UTF-8; without this, Windows writes redirected output in the ANSI code page.
+    sys.stdout.reconfigure(encoding="utf-8")
     Parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     Commands = Parser.add_subparsers(dest="command", required=True)
 
@@ -146,14 +180,19 @@ def Main() -> int:
     RequestCommand.add_argument("environment", choices=BaseUrls)
     RequestCommand.add_argument("method")
     RequestCommand.add_argument("path", help="for example api/article/gq-hype")
-    RequestCommand.add_argument("--json", type=Path, help="file holding the JSON request body")
+    Body = RequestCommand.add_mutually_exclusive_group()
+    Body.add_argument("--json", type=Path, help="file holding the JSON request body")
+    Body.add_argument("--form", action="append", default=[], metavar="KEY=VALUE", help="multipart form field (repeatable)")
+    RequestCommand.add_argument("--file", action="append", default=[], metavar="FIELD=PATH", help="multipart file part (repeatable)")
 
     Arguments = Parser.parse_args()
     if Arguments.command == "token":
         return GetToken(Arguments.environment, Arguments.user)
     if Arguments.command == "status":
         return ShowStatus(Arguments.environment)
-    return CallApi(Arguments.environment, Arguments.method, Arguments.path, Arguments.json)
+    if Arguments.json and Arguments.file:
+        Parser.error("--json cannot be combined with --file")
+    return CallApi(Arguments.environment, Arguments.method, Arguments.path, Arguments.json, Arguments.form, Arguments.file)
 
 
 if __name__ == "__main__":
