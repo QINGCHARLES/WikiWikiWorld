@@ -20,8 +20,8 @@
 
 ## API tokens
 
-- `POST /api/auth/token` exchanges a username and password for a 24-hour JWT; there is no revocation short of rotating the signing secret. `scripts/wiki_api.py` gets, stores and uses tokens under `.local/tokens/` (Git-ignored) without printing them: `token dev` uses DevvyTheBot, `token prod --user MaggieThebot` prompts a person for the password, `status` shows user and expiry, `request ENV METHOD api/...` calls the API. Write paths without a leading slash (Git Bash rewrites `/api/...`). `WIKI_API_DEV_PORT=7127` targets the preview instance.
-- Agents use the production token file but never type production passwords or paste tokens; a person runs `token prod`. Production edits by agents go through the `MaggieThebot` account so they are attributable and revertible.
+- `POST /api/auth/token` exchanges a username and password for a 24-hour JWT; there is no revocation short of rotating the signing secret. `scripts/wiki_api.py` gets, stores and uses tokens under `.local/tokens/` (Git-ignored) without printing them: `token dev` uses DevvyTheBot, `token prod --user MaggieTheBot` prompts a person for the password, `status` shows user and expiry, `request ENV METHOD api/...` calls the API. Write paths without a leading slash (Git Bash rewrites `/api/...`). `WIKI_API_DEV_PORT=7127` targets the preview instance.
+- Agents use the production token file but never type production passwords or paste tokens; a person runs `token prod`. Production edits by agents go through the `MaggieTheBot` account so they are attributable and revertible.
 - The production signing secret lives only on the host in `/home/deploy/secrets/wikiwikiworld.env` (`JwtSettings__Secret=…`, mode 600) and reaches the container through `--env-file` in `deploy/update.sh`. It is not in any tracked file; the app refuses to start without it. The value previously committed in `appsettings.Production.json` is public and must never be reused. Losing the file only invalidates tokens: generate a new value with `openssl rand -base64 48`.
 
 ## URL query-string conventions
