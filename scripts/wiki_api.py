@@ -3,7 +3,7 @@
 Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
 
   python scripts/wiki_api.py token dev                      # DevvyTheBot, from .local/DevvyTheBot.json
-  python scripts/wiki_api.py token prod --user MagazediaBot # asks YOU for the password
+  python scripts/wiki_api.py token prod --user MaggieThebot # asks YOU for the password
   python scripts/wiki_api.py status prod
   python scripts/wiki_api.py request prod GET api/article/gq-hype
   python scripts/wiki_api.py request prod PUT api/article/gq-hype --json body.json
