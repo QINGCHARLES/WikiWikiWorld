@@ -48,6 +48,12 @@ h1 {
     line-height: 1.0;
 }
 
+/* Display titles wrap at spaces and generated slash opportunities, never inside words. */
+h1.display-title {
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
 h1 .title-logo {
     display: flex;
     justify-content: center;

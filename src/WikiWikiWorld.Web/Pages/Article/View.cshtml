@@ -29,7 +29,7 @@
 	{
 		<p class="eyebrow">@Model.EyebrowLabel</p>
 	}
-	<h1 data-ignore="true">@Html.Raw(Model.DisplayTitleHtml)</h1>
+	<h1 class="display-title" data-ignore="true">@Html.Raw(Model.DisplayTitleHtml)</h1>
 	@if (!string.IsNullOrWhiteSpace(Model.SubtitleText))
 	{
 		<p class="subtitle">@Model.SubtitleText</p>

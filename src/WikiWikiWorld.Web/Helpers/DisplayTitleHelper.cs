@@ -45,6 +45,7 @@ public static partial class DisplayTitleHelper
 	/// Renders a display title as safe HTML for an <c>&lt;h1&gt;</c> heading, resolving any
 	/// <c>[[FallbackText|#|file-slug]]</c> tokens against current file articles in the database.
 	/// Unresolved file slugs gracefully fall back to the HTML-encoded <c>FallbackText</c>.
+	/// Visible text gains optional line breaks after slashes without changing stored titles or logo URLs.
 	/// </summary>
 	/// <param name="DisplayTitle">The optional display title containing markup or line breaks.</param>
 	/// <param name="FallbackTitle">The canonical article title used when <paramref name="DisplayTitle"/> is empty.</param>
@@ -184,17 +185,17 @@ public static partial class DisplayTitleHelper
 	}
 
 	/// <summary>
-	/// Renders a line that may contain text and/or inline <c>[[FallbackText|#|file-slug]]</c> tokens.
+	/// Renders text with optional slash breaks and resolves inline <c>[[FallbackText|#|file-slug]]</c> tokens.
 	/// </summary>
 	/// <param name="Line">The raw line text.</param>
 	/// <param name="ResolvedLogos">The dictionary of resolved logo files keyed by normalized slug.</param>
-	/// <returns>The HTML-encoded line with any resolved logos or fallback text.</returns>
+	/// <returns>Safe HTML with optional text breaks and any resolved logos or fallback text.</returns>
 	private static string RenderLineWithInlineTokens(string Line, Dictionary<string, ResolvedLogoFile> ResolvedLogos)
 	{
 		MatchCollection Matches = LogoTokenRegex().Matches(Line);
 		if (Matches.Count == 0)
 		{
-			return WebUtility.HtmlEncode(Line);
+			return RenderText(Line);
 		}
 
 		StringBuilder LineBuilder = new();
@@ -204,7 +205,7 @@ public static partial class DisplayTitleHelper
 		{
 			if (TokenMatch.Index > LastIndex)
 			{
-				LineBuilder.Append(WebUtility.HtmlEncode(Line[LastIndex..TokenMatch.Index]));
+				LineBuilder.Append(RenderText(Line[LastIndex..TokenMatch.Index]));
 			}
 
 			string FallbackText = TokenMatch.Groups["fallback"].Value.Trim();
@@ -219,7 +220,7 @@ public static partial class DisplayTitleHelper
 			}
 			else
 			{
-				LineBuilder.Append(WebUtility.HtmlEncode(FallbackText));
+				LineBuilder.Append(RenderText(FallbackText));
 			}
 
 			LastIndex = TokenMatch.Index + TokenMatch.Length;
@@ -227,11 +228,18 @@ public static partial class DisplayTitleHelper
 
 		if (LastIndex < Line.Length)
 		{
-			LineBuilder.Append(WebUtility.HtmlEncode(Line[LastIndex..]));
+			LineBuilder.Append(RenderText(Line[LastIndex..]));
 		}
 
 		return LineBuilder.ToString();
 	}
+
+	/// <summary>
+	/// Encodes authored text before adding optional breaks after slashes, keeping words intact.
+	/// </summary>
+	/// <param name="Text">Visible title text, excluding generated logo markup and attributes.</param>
+	/// <returns>HTML-encoded text with a <c>&lt;wbr&gt;</c> after each slash.</returns>
+	private static string RenderText(string Text) => WebUtility.HtmlEncode(Text).Replace("/", "/<wbr>", StringComparison.Ordinal);
 
 	/// <summary>
 	/// Builds the accessible HTML markup for a resolved title logo graphic.
