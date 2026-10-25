@@ -327,6 +327,36 @@ Other values are ignored and the default applies.
 * **First Resolved Image Wins:** The first valid, resolved header image becomes the page hero. If the referenced file cannot be found, no hero image is rendered.
 * **Uploads:** To upload a new image to use as a header, visit the [Media Uploader](/wiki:upload).
 
+## Choosing a header image
+
+### Source
+
+1. **Use imagery from the issue itself.** Where possible, the header image should come from the publication issue the article describes. A photograph or illustration commissioned for that issue is also suitable, including outtakes and promotional material from the same shoot.
+2. **For articles about a whole publication,** choose an image from a representative or notable issue, not one from an unrelated source.
+3. **Avoid repeating the front cover.** The cover already appears in the article's cover carousel, and repeating it as the header adds nothing new. A clean copy of the cover image, without the masthead or coverlines, is acceptable when the cover is especially significant or no suitable alternative exists.
+4. **Do not use advertising.** Images must not be taken from advertisements that appear in the publication, even when they are visually striking.
+5. **Record where the image came from.** The file article should carry a `{{Source}}` naming the issue and, where known, the photographer or illustrator.
+
+### Text in the image
+
+6. **Avoid editorial text.** Where possible, the image should not include the issue's own text: headlines, coverlines, captions, page numbers or the masthead.
+7. **Text within the scene is acceptable.** Lettering that is part of the photographed scene, such as signs, product branding or clothing, may remain.
+8. **Light retouching is permitted to remove editorial text.** Conventional or AI-assisted editing tools may be used sparingly for this. Edits must not add, alter or reinterpret the subject matter.
+9. **Note any edits.** If an image has been retouched, say so in the file article's revision reason or source note, so readers and editors know it differs from the printed page.
+
+### Fit and framing
+
+10. **Prefer landscape images.** On wide screens the header is roughly twice as wide as it is tall, so portrait images lose most of their height.
+11. **Keep the subject out of the lower third.** The bottom half of the header fades out, and the article title sits over it. Faces and key detail belong in the upper or middle part of the frame. Use `Focus=center` or `Focus=bottom` when that isn't possible.
+12. **Check the crop at several widths.** Look at the page at phone, laptop and wide desktop sizes before saving. Phones trim the sides; wide screens trim the bottom.
+13. **Avoid busy compositions and collages.** A single clear subject reads best behind the title.
+
+### Quality
+
+14. **Upload the highest resolution available.** Use the original file rather than a resized or recompressed copy; the site handles resizing and optimization for readers. Avoid low-resolution scans, visible upscaling, moiré patterns and heavy compression artifacts.
+15. **No watermarks, borders or overlays** from other websites, scanners or archives.
+16. **Preserve the original look.** Don't apply filters, color grading or stylization beyond what's needed to correct a poor scan.
+
 ## Example
 
 ```markdown
