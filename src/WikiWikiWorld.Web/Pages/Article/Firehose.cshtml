@@ -1,90 +1,98 @@
 @page
 @model WikiWikiWorld.Web.Pages.Article.FirehoseModel
-@using WikiWikiWorld.Web.Helpers
+@using WikiWikiWorld.Web.Pages.Article
 @{
-	ViewData["Title"] = "Recent Article Revisions";
+	ViewData["Title"] = "Firehose — Recent changes";
+	int Peak = Math.Max(1, Model.Activity.Hours.Max());
+	string UpdatesUrl = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(Model.FeedUrl(),
+		new Dictionary<string, string?> { ["handler"] = "Updates", ["after"] = Model.Activity.LatestId.ToString() });
 }
-
-<figure>
-	<h1>Firehose</h1>
-</figure>
-
-<article>
-	<p>Recent changes to the wiki.</p>
-
-	@if (!Model.RecentRevisions.Any())
-	{
-		<p>No recent revisions found.</p>
-	}
-	else
-	{
-		<div class="card card-wide">
-			<table>
-				<thead>
-					<tr>
-						<th>Title</th>
-						<th>Edited By</th>
-						<th>Revision Date</th>
-						<th>Reason</th>
-					</tr>
-				</thead>
-				<tbody id="firehose-rows">
-					<partial name="_FirehoseRows" model="new WikiWikiWorld.Web.Pages.Article.FirehoseRowsViewModel(Model.RecentRevisions, Model.Users)" />
-				</tbody>
-			</table>
-		</div>
-
-		@* Only offer "Load more" when the first page filled up, i.e. there may be more. *@
-		@if (Model.RecentRevisions.Count >= WikiWikiWorld.Web.Pages.Article.FirehoseModel.InitialCount)
-		{
-			<p class="firehose-load-more">
-				<button id="firehose-load-more" type="button" class="button"
-						data-url="@Url.Page("Firehose", "Rows")"
-						data-skip="@WikiWikiWorld.Web.Pages.Article.FirehoseModel.InitialCount"
-						data-page-size="@WikiWikiWorld.Web.Pages.Article.FirehoseModel.LoadMoreCount">
-					Load @WikiWikiWorld.Web.Pages.Article.FirehoseModel.LoadMoreCount more
-				</button>
-			</p>
-		}
-	}
-</article>
-
-@section Scripts {
-	<script>
-		(() => {
-			const Button = document.getElementById("firehose-load-more");
-			if (!Button) { return; }
-
-			const Rows = document.getElementById("firehose-rows");
-			const PageSize = Number(Button.dataset.pageSize);
-
-			Button.addEventListener("click", async () => {
-				Button.disabled = true;
-
-				try {
-					const Skip = Number(Button.dataset.skip);
-					const Response = await fetch(`${Button.dataset.url}&skip=${Skip}`);
-
-					if (!Response.ok) { return; }
-
-					const Holder = document.createElement("tbody");
-					Holder.innerHTML = (await Response.text()).trim();
-					const Added = Holder.children.length;
-
-					while (Holder.firstChild) {
-						Rows.appendChild(Holder.firstChild);
-					}
-
-					Button.dataset.skip = Skip + Added;
-
-					// A short page means we've reached the end.
-					if (Added < PageSize) {
-						Button.closest(".firehose-load-more").remove();
-					}
-				} finally {
-					Button.disabled = false;
+<div class="firehose" data-updates-url="@UpdatesUrl">
+	<div class="fh-breadcrumb"><a href="/">Magazedia</a><span>/</span>Community<span>/</span>Recent changes</div>
+	<header class="fh-heading">
+		<div><p class="fh-kicker">THE ENCYCLOPEDIA, IN THE MAKING</p><h1>Firehose<span aria-hidden="true">.</span></h1></div>
+		<p class="fh-intro">Every edit leaves a mark.<br />Follow the people building the magazine archive, one page at a time.</p>
+	</header>
+	<div class="fh-overview">
+		<div class="fh-scope"><span class="fh-dot" aria-hidden="true"></span><strong>@Model.Language edition</strong><span>Last 24 hours · selected filters</span></div>
+		<dl class="fh-totals">
+			<div><dt>Changes</dt><dd>@Model.Activity.Changes.ToString("N0")</dd></div>
+			<div><dt>Contributors</dt><dd>@Model.Activity.Editors.ToString("N0")</dd></div>
+			<div><dt>Pages edited</dt><dd>@Model.Activity.Pages.ToString("N0")</dd></div>
+		</dl>
+	</div>
+	<div class="fh-layout">
+		<section class="fh-stream" aria-label="Revision feed">
+			<div class="fh-feed-top"><h2>The latest changes</h2><label class="fh-live" hidden><input type="checkbox" id="fh-live" /> Auto-update</label></div>
+			<nav class="fh-tabs" aria-label="Article type">
+				@foreach ((string Value, string Label) in new (string, string)[] { ("", "All changes"), ("Article", "Articles"), ("File", "Files"), ("Category", "Categories"), ("User", "User pages"), ("Info", "Info") })
+				{
+					<a href="@Model.FeedUrl(SelectedType: Value)" aria-current="@(string.Equals(Model.Type ?? "", Value, StringComparison.OrdinalIgnoreCase) ? "page" : null)">@Label</a>
 				}
-			});
-		})();
-	</script>
+			</nav>
+			<form method="get" action="/firehose:" class="fh-filters">
+				<input type="hidden" name="type" value="@Model.Type" />
+				<label class="fh-search"><span class="visually-hidden">Find a page title</span><input type="search" name="q" value="@Model.Search" placeholder="Find a page…" /></label>
+				<label><span class="visually-hidden">Contributor name</span><input name="editor" value="@Model.Editor" placeholder="Contributor" aria-label="Contributor name" /></label>
+				<label><span class="visually-hidden">Time period</span><select name="period" aria-label="Time period">
+					<option value="all" selected="@(Model.Period is null or "all")">Any time</option>
+					<option value="day" selected="@(Model.Period == "day")">Last 24 hours</option>
+					<option value="week" selected="@(Model.Period == "week")">Last 7 days</option>
+				</select></label>
+				<button type="submit">Apply</button>
+			</form>
+			<div class="fh-update-status" role="status" aria-live="polite" hidden></div>
+			<a class="fh-new" href="@Model.FeedUrl()" hidden></a>
+			@if (Model.Before is not null)
+			{
+				<div class="fh-older-note">Browsing earlier changes <a href="@Model.FeedUrl()">Back to latest ↑</a></div>
+			}
+			@if (Model.Feed.Entries.Count == 0)
+			{
+				<div class="fh-empty"><h3>Nothing in this stream. Yet.</h3><p>No revisions match these filters. Try a wider time range or another page title.</p><a href="/firehose:">Show all changes →</a></div>
+			}
+			else
+			{
+				<partial name="_FirehoseRows" model="Model" />
+				<nav class="fh-pagination" aria-label="Feed pagination">
+					<span>@Model.Feed.Entries.Count changes · newest first</span>
+					@if (Model.Feed.HasMore)
+					{
+						<a href="@Model.FeedUrl(Model.Feed.Entries[^1])">Earlier changes <span aria-hidden="true">↓</span></a>
+					}
+					else { <span>You’re all caught up.</span> }
+				</nav>
+			}
+		</section>
+		<aside class="fh-aside" aria-label="Activity context">
+			<section class="fh-pulse">
+				<div class="fh-section-label"><h2>The pulse</h2><span>24 HOURS</span></div>
+				<p class="fh-pulse-number">@Model.Activity.Changes.ToString("N0")<span>changes</span></p>
+				<div class="fh-chart" role="img" aria-label="@($"{Model.Activity.Changes} changes in the last 24 hours. Hourly counts, oldest first: {string.Join(", ", Model.Activity.Hours)}.")">
+					@for (int i = 0; i < Model.Activity.Hours.Count; i++)
+					{
+						<div class="fh-bar-track"><span style="--bar-height: @((100.0 * Model.Activity.Hours[i] / Peak).ToString("0.##", CultureInfo.InvariantCulture))%" title="@(Model.Now.AddHours(i - 24).ToString("HH:mm")) UTC: @Model.Activity.Hours[i] changes"></span></div>
+					}
+				</div>
+				<div class="fh-chart-axis"><span>24h ago</span><span>12h</span><span>Now</span></div>
+				<p class="fh-note">@(Model.Activity.Changes == 0 ? "A quiet day in this stream. The archive is here whenever inspiration strikes." : "Small corrections. New discoveries. A better archive with every contribution.")</p>
+			</section>
+			<section class="fh-popular">
+				<div class="fh-section-label"><h2>In the spotlight</h2><span>7 DAYS</span></div>
+				<p class="fh-caption">Most edited pages in this stream</p>
+				<ol>
+					@foreach (FirehosePopularPage Page in Model.Activity.Popular)
+					{
+						<li><a href="@ArticleUrlHelper.BuildArticlePath(Page.UrlSlug, Page.Type)">@Page.Title</a><span>@Page.Count @(Page.Count == 1 ? "edit" : "edits")</span></li>
+					}
+				</ol>
+				@if (Model.Activity.Popular.Count == 0) { <p class="fh-note">No matching edits this week.</p> }
+			</section>
+			<section class="fh-about"><span class="fh-asterisk" aria-hidden="true">✳</span><h2>An archive<br />built together.</h2><p>A missing date. A forgotten cover. A story worth saving. Every contribution adds something.</p><a href="/create:">Start a page ↗</a></section>
+			<p class="fh-footnote">Article revisions · @Model.Language<br />Dates grouped in UTC. Updated @Model.Now.ToString("HH:mm") UTC.</p>
+		</aside>
+	</div>
+</div>
+@section Scripts {
+	<script src="~/js/firehose.js" asp-append-version="true" defer></script>
 }

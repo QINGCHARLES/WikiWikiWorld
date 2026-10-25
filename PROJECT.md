@@ -12,6 +12,18 @@
 - **Loopback IP URLs:** Development redirects `127.0.0.1` to `en.localhost`, preserving the scheme, port, path, and query. Use the named URL directly for HTTPS certificate validation.
 - **Note:** These credentials are blocked from production; use only for local/dev testing. Before entering credentials, ensure that you are using the correct server. Before entering credentials, clear the input fields on the login page to avoid any issues.
 
+## Database maintenance
+
+- Use `deploy/db-update.sh` for host-side schema updates and deliberate data repairs. See [the command, SQL assertion contract, permissions, backups and recovery procedure](doc/database-maintenance.md).
+- Prepare and test SQL on disposable data first. Follow production authorization already given; obtain approval only when production changes are not authorized. On failure, diagnose rather than improvising permissions or another execution method. Report the backup location, scripts applied and verification results.
+- Schema ownership remains manual SQL. Use application services/API for content edits that require revision creation and category indexing.
+
+## API tokens
+
+- `POST /api/auth/token` exchanges a username and password for a 24-hour JWT; there is no revocation short of rotating the signing secret. `scripts/wiki_api.py` gets, stores and uses tokens under `.local/tokens/` (Git-ignored) without printing them: `token dev` uses DevvyTheBot, `token prod --user MagazediaBot` prompts a person for the password, `status` shows user and expiry, `request ENV METHOD api/...` calls the API. Write paths without a leading slash (Git Bash rewrites `/api/...`). `WIKI_API_DEV_PORT=7127` targets the preview instance.
+- Agents use the production token file but never type production passwords or paste tokens; a person runs `token prod`. Production edits by agents go through the `MagazediaBot` account so they are attributable and revertible.
+- The production signing secret lives only on the host in `/home/deploy/secrets/wikiwikiworld.env` (`JwtSettings__Secret=…`, mode 600) and reaches the container through `--env-file` in `deploy/update.sh`. It is not in any tracked file; the app refuses to start without it. The value previously committed in `appsettings.Production.json` is public and must never be reused. Losing the file only invalidates tokens: generate a new value with `openssl rand -base64 48`.
+
 ## URL query-string conventions
 
 - All application-owned query-string parameter names must be lowercase, including generated links, GET forms, redirects, and browser-history updates (for example `?sort=name&pagenumber=3`). This applies to URL parameter names, not C# member names; parameter values retain their required meaning and casing. Preserve externally required integration contracts.
@@ -21,11 +33,17 @@
 
 - The site must stay very lightweight, especially in JavaScript. Prefer plain HTML and CSS. Use JavaScript judiciously to extend small interactions that need it, such as saving a bookmark in place. Keep native controls (including category disclosures) native.
 - Datastar is approved for incremental enhancements, not a broad frontend rewrite. Keep state and rendering on the server using Razor partials; use client signals only for transient interaction state. No frontend build step or additional .NET SDK package is required.
-- Datastar v1.0.4 is pinned and self-hosted at `wwwroot/js/vendor/datastar-1.0.4.js`, loaded by article views and the bookmarks-page module. Preserve its adjacent license and provenance notes. Do not load a moving CDN version at runtime.
+- Datastar v1.0.4 is pinned and self-hosted at `wwwroot/js/vendor/datastar-1.0.4.js` and loaded once, site-wide, by `_Layout.cshtml` (decided 2026-10-24 so every page can use small enhancements; about 13 KB gzip, cached per release). Pages and modules must not load or import it again. Preserve its adjacent license and provenance notes. Do not load a moving CDN version at runtime.
 - Bookmarking posts the native form's antiforgery token and patches a Razor partial. The button stays disabled without JavaScript, never navigates, and is disabled while saving. Toggle requests must not automatically retry (both `retry: 'never'` and `retryMaxCount: 0` are required by this pinned version's network-error behavior). An ambiguous failure asks the reader to reload before retrying.
 - `HtmlPrettifyMiddleware` bypasses Datastar requests: fragment responses must not acquire full-document wrappers.
-- Datastar expressions belong only in trusted application templates. Wiki-authored title/body HTML is inside `data-ignore="true"` boundaries. Never interpolate authored text into executable expressions.
+- Datastar expressions belong only in trusted application templates. Never interpolate authored text into executable expressions. Because Datastar runs on every page, **any HTML produced by the article Markdown pipeline or `DisplayTitleHelper.RenderHtmlAsync` must sit inside a `data-ignore="true"` boundary**: the article pipeline's generic-attributes syntax (`{data-on:...}`) would otherwise become a live expression. Current boundaries: the article body and title (`Article/View`), the profile article (`Profile/View`), the Links title (`Article/Links`) and the search suggestion fragment. Razor-encoded text and talk posts (no generic attributes) are safe.
 - Verify changes in a modern Chromium browser with JavaScript both enabled and disabled, including anonymous and authenticated requests, persistence after reload, network failures, antiforgery rejection, and an unchanged article URL. Other browser support has not yet been formally defined.
+
+## Search
+
+- `Services/ArticleSearchService.cs` serves the `/Search` page and the header typeahead (`/Search?handler=suggestions&q=`, partial `Pages/Shared/_SearchSuggestions.cshtml`, keyboard behaviour in `js/search-dropdown.js`, styles in `css/layout/header.css`). Title matches rank exact, prefix, word start, then substring; within a rank articles precede categories, files and info pages, then shorter titles. Body matches follow (typeahead: 3+ characters, only when the query appears in visible prose). User pages are excluded. `/api/search` is unchanged and unranked.
+- Matching is SQLite `LIKE` with escaped `%`, `_` and `\`; case-insensitivity covers ASCII letters only. No search index exists; at the current size a scan is fast. FTS5 is the upgrade path if search becomes slow.
+- Without JavaScript the header form submits to `/Search?q=`. The typeahead fetches through Datastar (180 ms debounce, superseded requests cancelled, no retries).
 
 ## 🎨 CSS & Responsive Design
 - **Header paper texture:** Approved preset (2026-10-21): folds 0.0, wrinkles 0.3, crumples 0.3, drops 0.0. CMYK was rejected and removed. A single static shader specializes disabled folds, drops and roughness stripes as compile-time constants; original images are preserved. See [settings, verification and reversal instructions](doc/header-paper-texture.md). The pinned self-hosted shader loads only for enabled headers.

@@ -1,30 +1,33 @@
-@using WikiWikiWorld.Web.Helpers
-@model WikiWikiWorld.Web.Pages.Article.FirehoseRowsViewModel
-
-@foreach (WikiWikiWorld.Data.Models.ArticleRevision Revision in Model.Revisions)
+@model WikiWikiWorld.Web.Pages.Article.FirehoseModel
+@using WikiWikiWorld.Web.Pages.Article
+@foreach (IGrouping<DateTime, FirehoseEntry> Day in Model.Feed.Entries.GroupBy(r => r.DateCreated.UtcDateTime.Date))
 {
-	string RevisionTimestamp = Revision.DateCreated.ToString("yyyyMMddHHmmssfffffff");
-
-	<tr>
-		<td>
-			<a href="@ArticleUrlHelper.BuildArticlePath(Revision)">@Revision.Title</a>
-		</td>
-
-		<td>
-			@if (Model.Users.TryGetValue(Revision.CreatedByUserId, out WikiWikiWorld.Data.Models.User? User))
-			{
-				<a href="/@@@User.UserName">@User.UserName</a>
-			}
-			else
-			{
-				<span>Unknown</span>
-			}
-		</td>
-		<td>
-			<a href="@ArticleUrlHelper.BuildRevisionPath(Revision, RevisionTimestamp)">
-				@Revision.DateCreated.ToString("dd MMM yyyy HH:mm")
-			</a>
-		</td>
-		<td>@Revision.RevisionReason</td>
-	</tr>
+	string DayLabel = Day.Key == Model.Now.UtcDateTime.Date ? "Today" : Day.Key == Model.Now.UtcDateTime.Date.AddDays(-1) ? "Yesterday" : Day.Key.ToString("dddd", CultureInfo.InvariantCulture);
+	<div class="fh-day"><h3>@DayLabel <span>@Day.Key.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</span></h3><span>@Day.Count() on this page</span></div>
+	<ol class="fh-entries">
+		@foreach (FirehoseEntry Entry in Day)
+		{
+			Model.Feed.Contributors.TryGetValue(Entry.UserId, out FirehoseContributor? Contributor);
+			string Name = Contributor?.UserName ?? "Unknown contributor";
+			string Path = ArticleUrlHelper.BuildArticlePath(Entry.UrlSlug, Entry.Type);
+			string RevisionPath = ArticleUrlHelper.BuildRelativePath(Entry.UrlSlug, Entry.Type, $"revision/{Entry.DateCreated.UtcDateTime.ToString("yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture)}");
+			<li class="fh-entry">
+				<div class="fh-time"><time datetime="@Entry.DateCreated.ToUniversalTime().ToString("O")" title="@Entry.DateCreated.UtcDateTime.ToString("dd MMM yyyy HH:mm:ss 'UTC'")">@Entry.DateCreated.UtcDateTime.ToString("HH:mm")</time><span>@ArticleHistoryModel.GetRelativeTime(Entry.DateCreated)</span></div>
+				<div class="fh-entry-main"><span class="fh-type" data-type="@Entry.Type">@Entry.Type</span><h4><a href="@Path">@Entry.Title</a></h4><p>@(string.IsNullOrWhiteSpace(Entry.Reason) ? "No edit summary supplied." : Entry.Reason)</p>
+					<div class="fh-entry-bottom">
+						@if (Contributor?.UserName is not null)
+						{
+							<a class="fh-person" href="@($"/@{Uri.EscapeDataString(Name)}/profile")">
+								@if (Contributor.Portrait is Guid Portrait) { <img src="/sitefiles/@Model.SiteId/profilepics/@(Portrait).png" width="20" height="20" alt="" loading="lazy" /> }
+								else { <span class="fh-initial" aria-hidden="true">@Name[..1].ToUpperInvariant()</span> }
+								@Name
+							</a>
+						}
+						else { <span>@Name</span> }
+						<div class="fh-entry-links"><a href="@RevisionPath">View revision ↗</a><a href="@ArticleUrlHelper.BuildRelativePath(Entry.UrlSlug, Entry.Type, "history")">History</a></div>
+					</div>
+				</div>
+			</li>
+		}
+	</ol>
 }

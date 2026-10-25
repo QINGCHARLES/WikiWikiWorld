@@ -62,6 +62,13 @@ Mounts        /opt/wiki/certs -> /app/certs   (rw)
 Two mounts only. The image also exposes `8080/tcp`, which is unused — the .NET 8+
 default port, harmless because nothing publishes it.
 
+### Database maintenance command
+
+Use the repository's `deploy/db-update.sh` for reviewed database updates as UID
+1654. See [database maintenance](database-maintenance.md) for staging, checks,
+backup locations and failure handling. This replaces improvised write containers;
+it does not change the scheduled backup or application deployment procedure.
+
 ### Verified filesystem
 
 | Path | Contents | Owner |
@@ -254,22 +261,13 @@ Package advisories that had been blocking the build were cleared on 2026-08-29 �
 [§4a](#4a-package-advisories-cleared-2026-08-29). `dotnet build WikiWikiWorld.slnx`
 succeeds with 0 warnings and 0 errors, audit enabled.
 
-### Live `/home/deploy/update.sh`
+### `/home/deploy/update.sh`
 
-Unchanged except for the log limits added on 2026-08-29:
-
-```bash
-docker run -d \
-  --name wikiwikiworld \
-  --restart unless-stopped \
-  --log-opt max-size=10m \
-  --log-opt max-file=3 \
-  -p 80:80 \
-  -p 443:443 \
-  -v /opt/wiki/certs:/app/certs \
-  -v /opt/wiki/data:/app/data \
-  $IMAGE
-```
+The script is versioned as [`deploy/update.sh`](../deploy/update.sh); copy it to the host
+after changing it. It stops with the old container still running if the secrets file is
+missing or incomplete, runs under `set -euo pipefail`, passes the secrets with
+`--env-file`, and accepts an optional image reference (for example a previous image ID)
+to run instead of pulling `:latest`, which also serves as rollback.
 
 Before this the `json-file` driver had no cap, so the log grew unbounded for the life of
 the container — with the app logging every EF Core SQL statement at `Information`.
@@ -281,10 +279,8 @@ the container — with the app logging every EF Core SQL statement at `Informati
 
 Still worth doing, not yet done:
 
-- **`set -euo pipefail`.** A failed `docker pull` currently still runs `stop`/`rm` and
-  then fails to start anything — turning a no-op into an outage.
-- **Accept a tag argument** (`TAG="${1:-latest}"`) so the script doubles as rollback.
-  Requires publishing SHA tags: `-p:ContainerImageTags='"latest;<sha>"'`.
+- **Publish SHA tags** (`-p:ContainerImageTags='"latest;<sha>"'`) so rollback can name
+  a release rather than a local image ID.
 - **`docker image prune -f`** so superseded images do not accumulate.
 
 ### 4a. Package advisories, cleared 2026-08-29
@@ -342,9 +338,14 @@ dotnet list package --vulnerable --include-transitive
   from a pre-container deployment and does nothing under Docker. Harmless; removable.
 - **`ContentDeliveryNetworkSettings.BaseUrl`** (`https://static.magazedia.com`) is
   configured but referenced by no code.
-- **`JwtSettings.Secret` is committed** in `appsettings.Production.json` and therefore
-  baked into every image layer pushed to GHCR. Rotating it means editing the file,
-  rebuilding, and redeploying — and the old value stays in git history.
+- **`JwtSettings.Secret` was committed** in `appsettings.Production.json` in this public
+  repository, so anyone could sign API tokens for any user (confirmed against production
+  on 2026-10-25, and rotated the same day; a token signed with the old value is now
+  rejected). It now lives only in `/home/deploy/secrets/wikiwikiworld.env` (mode 600,
+  directory 700, owned by `deploy`) as `JwtSettings__Secret=…`, passed with `--env-file`.
+  The old value stays in git history and older images; never reuse it. On a rebuild,
+  recreate the file with a fresh `openssl rand -base64 48` value; existing tokens simply
+  stop working. See PROJECT.md "API tokens".
 - **Stale leftovers**, safe to remove: empty `/home/deploy/certs` and `/home/deploy/data`
   (owned `1654:1654`), `letsencrypt_backup.tar.gz`, `wikiwikiworld-build/`.
 

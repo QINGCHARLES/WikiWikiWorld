@@ -1,5 +1,3 @@
-import "./vendor/datastar-1.0.4.js";
-
 const Browser = document.getElementById("bookmark-browser");
 const Status = document.getElementById("bookmark-navigation-status");
 let Pending = null;

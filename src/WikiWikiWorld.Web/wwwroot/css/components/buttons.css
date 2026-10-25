@@ -1,10 +1,5 @@
 /* Buttons - Button and link-button styling with variants */
 
-a.button svg
-{
-	block-size: 1cap;
-}
-
 a.button, button
 {
 	--button-padding: 0.7em 1.2em;

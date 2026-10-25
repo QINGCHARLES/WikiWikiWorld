@@ -3,3 +3,5 @@
 # inside template-literal strings, so core.autocrlf rewriting them to CRLF on checkout would change
 # program behaviour, not just formatting.
 src/WikiWikiWorld.Web/wwwroot/js/vendor/** -text
+deploy/*.sh text eol=lf
+deploy/*.py text eol=lf

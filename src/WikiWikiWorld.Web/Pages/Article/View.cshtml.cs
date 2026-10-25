@@ -73,7 +73,8 @@ public sealed class ViewModel(
     public string DisplayTitleHtml { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Gets the single-line plain-text display title (with any logo markup stripped to fallback text).
+    /// Gets the displayed revision's canonical title for the browser title and image alternative text,
+    /// preserving punctuation independently of the optional formatted display heading.
     /// </summary>
     public string PlainTextTitle { get; private set; } = string.Empty;
 
@@ -221,7 +222,8 @@ public sealed class ViewModel(
         && !R.Text.Contains("{{DownloadsBox ", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Handles the GET request to view the article.
+    /// Loads the requested article revision, using its canonical title for plain-text metadata
+    /// and its optional display title for the formatted heading.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
     /// <returns>The page or result.</returns>
@@ -332,7 +334,7 @@ public sealed class ViewModel(
         }
 
         ArticleRevision RevisionToRender = DisplayedRevision ?? throw new InvalidOperationException("Displayed revision was not loaded.");
-        PlainTextTitle = DisplayTitleHelper.ToPlainText(RevisionToRender.DisplayTitle, RevisionToRender.Title);
+        PlainTextTitle = RevisionToRender.Title;
         DisplayTitleHtml = await DisplayTitleHelper.RenderHtmlAsync(
             RevisionToRender.DisplayTitle,
             RevisionToRender.Title,

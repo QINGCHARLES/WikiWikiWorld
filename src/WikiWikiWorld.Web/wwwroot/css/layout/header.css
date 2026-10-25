@@ -29,7 +29,7 @@ header li {
     color: var(--color-foreground);
 }
 
-.header a:not(.button, .avatar, .menu-content a) {
+.header a:not(.button, .avatar, .menu-content a, .search-suggestions a) {
     color: var(--color-foreground);
     text-align: center;
     text-decoration: none;
@@ -206,6 +206,115 @@ nav.header .header-b a.button[href="/Account/Register"] {
     color: var(--color-foreground);
     font-family: var(--font-family-san-serif);
     font-size: 0.95rem;
+}
+
+/* Typeahead panel: Datastar patches #search-suggestions; search-dropdown.js adds data-dismissed on Escape or
+   short input. Hidden whenever focus leaves the form, which also closes it on an outside click. */
+.search-form {
+    position: relative;
+}
+
+.search-suggestions {
+    position: absolute;
+    inset-block-start: calc(100% + 0.45rem);
+    inset-inline: 0;
+    z-index: 100;
+    box-sizing: border-box;
+    max-block-size: calc(100dvh - 6rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 0.4rem 0;
+    border-radius: 0.9rem;
+    border: 1px solid #e6e4dd;
+    background-color: var(--color-background);
+    box-shadow:
+        0 10px 28px rgb(0 0 0 / 0.12),
+        0 2px 6px rgb(0 0 0 / 0.06);
+    font-family: var(--font-family-san-serif);
+}
+
+.search-form:not(:focus-within) .search-suggestions,
+.search-form[data-dismissed] .search-suggestions {
+    display: none;
+}
+
+.search-suggestion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 0.75rem;
+    padding: 0.55rem 1rem;
+    border-inline-start: 3px solid transparent;
+    color: var(--color-foreground);
+    text-decoration: none;
+    line-height: 1.3;
+
+    &:hover,
+    &[aria-selected="true"] {
+        background-color: #f5f3ee;
+    }
+
+    &[aria-selected="true"] {
+        border-inline-start-color: var(--color-primary);
+    }
+}
+
+.search-suggestion-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.search-suggestion-type {
+    padding: 0.1rem 0.45rem;
+    border-radius: 9999px;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.search-suggestion-snippet {
+    grid-column: 1 / -1;
+    margin-block-start: 0.15rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+}
+
+.search-suggestions mark {
+    padding-inline: 0.05em;
+    border-radius: 2px;
+    background: color-mix(in oklch, var(--color-primary) 30%, transparent);
+    color: inherit;
+    font-weight: 650;
+}
+
+.search-suggestions-empty {
+    margin: 0;
+    padding: 0.55rem 1rem 0.65rem;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+}
+
+.search-suggestions-all {
+    display: block;
+    margin-block-start: 0.35rem;
+    padding: 0.65rem 1rem;
+    border-block-start: 1px solid #eceae3;
+    color: var(--color-foreground);
+    font-size: 0.85rem;
+    text-decoration: none;
+
+    &:hover {
+        background-color: #f5f3ee;
+    }
 }
 
 @media (max-width: 48rem) {

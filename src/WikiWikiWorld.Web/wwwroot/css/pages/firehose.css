@@ -1,0 +1,95 @@
+/* Firehose keeps the editorial identity of the archive, with compact working rows. */
+main:has(.firehose) { max-inline-size: 88rem; }
+.firehose { --fh-ink: var(--color-title); --fh-rule: color-mix(in srgb, var(--color-foreground) 13%, transparent); padding-block: 2rem 5rem; color: var(--color-foreground); font: 0.875rem/1.5 var(--font-family-san-serif); }
+.firehose :is(h1,h2,h3,h4,p,ol,dl,dd) { margin: 0; }
+.firehose a { text-decoration: none; color: inherit; }
+.firehose a:hover { color: var(--color-hyperlinks); }
+.firehose :is(a,button,input,select):focus-visible { outline: 2px solid var(--color-hyperlinks); outline-offset: 4px; }
+.fh-breadcrumb { display: flex; gap: .8rem; color: var(--color-muted); font-size: .75rem; margin-block-end: 2.3rem; }
+.fh-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1.5rem 4rem; padding-block-end: 2.2rem; }
+.fh-kicker { font-size: .68rem; font-weight: 650; letter-spacing: .14em; }
+.firehose h1 { font-family: 'Lyon Custom Headings', Georgia, serif; font-size: clamp(4rem, 9vw, 7.5rem); font-weight: 900; line-height: 1.05; letter-spacing: -.055em; color: var(--fh-ink); text-transform: none; }
+.firehose h1 span { color: var(--color-primary); }
+.fh-intro { max-inline-size: 25rem; font: 1.15rem/1.6 var(--font-family-serif); color: var(--color-muted); padding-block-end: .5rem; }
+.fh-overview { border-block: 1px solid var(--fh-rule); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem 3rem; padding-block: 1.3rem; }
+.fh-scope { display: grid; grid-template-columns: .6rem auto; align-items: center; gap: .25rem .7rem; }
+.fh-scope > span:last-child { grid-column: 2; font-size: .75rem; color: var(--color-muted); }
+.fh-dot { inline-size: .5rem; block-size: .5rem; background: var(--color-primary); border-radius: 50%; }
+.fh-totals { display: flex; gap: clamp(1.5rem, 4vw, 4rem); }
+.fh-totals div { display: flex; flex-direction: column-reverse; }
+.fh-totals dt { font-size: .72rem; color: var(--color-muted); }
+.fh-totals dd { font: 550 1.8rem/1.2 var(--font-family-san-serif); font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.fh-layout { display: flex; flex-wrap: wrap; gap: 3rem; padding-block-start: 2.7rem; align-items: start; }
+.fh-stream { flex: 1 1 40rem; min-inline-size: 0; }
+.fh-aside { flex: 1 1 16rem; min-inline-size: 0; display: grid; gap: 2.2rem; }
+.fh-feed-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-block-end: 1.4rem; }
+.fh-feed-top h2 { font: 900 1.65rem/1.2 'Lyon Custom Headings', Georgia, serif; letter-spacing: -.025em; }
+.fh-live { display: flex; align-items: center; gap: .5rem; font-size: .75rem; cursor: pointer; }
+.fh-live input { accent-color: var(--color-hyperlinks); inline-size: 1rem; block-size: 1rem; }
+.firehose [hidden] { display: none !important; }
+.fh-tabs { display: flex; gap: 1.4rem; overflow-x: auto; border-block-end: 1px solid var(--fh-rule); scrollbar-width: thin; }
+.fh-tabs a { white-space: nowrap; padding-block: .6rem .8rem; font-size: .8rem; color: var(--color-muted); border-block-end: 2px solid transparent; }
+.fh-tabs a[aria-current] { color: var(--fh-ink); font-weight: 650; border-color: var(--fh-ink); }
+.fh-filters { display: flex; flex-wrap: wrap; gap: .5rem; padding-block: 1rem; }
+.fh-filters label { flex: 1 1 7rem; min-inline-size: 0; }
+.fh-filters .fh-search { flex: 2 1 10rem; }
+.fh-filters :is(input:not([type=hidden]),select,button) { inline-size: 100%; min-block-size: 2.65rem; border: 1px solid var(--fh-rule); border-radius: .4rem; background: var(--color-background); color: inherit; padding: .5rem .7rem; font: inherit; font-size: .78rem; box-sizing: border-box; box-shadow: none; }
+.fh-filters button { inline-size: auto; background: var(--fh-ink); color: var(--color-background); cursor: pointer; }
+.fh-day { display: flex; align-items: baseline; justify-content: space-between; gap: .7rem; padding: .65rem .8rem; background: var(--color-surface-alt); border-block: 1px solid var(--fh-rule); margin-block-start: .5rem; }
+.fh-day h3 { font: 650 .78rem var(--font-family-san-serif); }
+.fh-day h3 span { margin-inline-start: .5rem; font-weight: 400; }
+.fh-day > span { font-size: .65rem; color: var(--color-muted); white-space: nowrap; }
+.fh-entries { list-style: none; padding: 0; }
+.fh-entry { display: grid; grid-template-columns: clamp(3.2rem, 7vw, 5rem) minmax(0, 1fr); gap: .7rem; border-block-end: 1px solid var(--fh-rule); padding: 1.15rem .3rem; }
+.fh-time { padding-block-start: .2rem; font-variant-numeric: tabular-nums; }
+.fh-time time { font-size: .78rem; }
+.fh-time > span { display: block; font-size: .62rem; color: var(--color-muted); margin-block-start: .2rem; }
+.fh-type { color: var(--color-muted); font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; }
+.fh-type::before { content: ''; display: inline-block; inline-size: .35rem; block-size: .35rem; border: 1px solid currentColor; margin-inline-end: .4rem; }
+.fh-entry h4 { font: 650 .95rem/1.4 var(--font-family-san-serif); margin-block: .2rem .25rem; overflow-wrap: anywhere; }
+.fh-entry-main > p { color: var(--color-muted); font: .85rem/1.5 var(--font-family-serif); overflow-wrap: anywhere; }
+.fh-entry-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .65rem 1rem; margin-block-start: .65rem; font-size: .7rem; }
+.fh-person { display: inline-flex; align-items: center; gap: .4rem; overflow-wrap: anywhere; }
+.fh-person img, .fh-initial { border-radius: 50%; inline-size: 1.25rem; block-size: 1.25rem; object-fit: cover; flex-shrink: 0; }
+.fh-initial { display: inline-grid; place-items: center; background: var(--color-surface); font-size: .6rem; font-weight: 700; }
+.fh-entry-links { display: flex; gap: 1rem; color: var(--color-muted); }
+.fh-pagination { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-block: 1.5rem; font-size: .75rem; color: var(--color-muted); }
+.fh-pagination a { font-weight: 650; color: var(--fh-ink); }
+.fh-section-label { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.fh-section-label h2 { font: 900 1.25rem 'Lyon Custom Headings', Georgia, serif; }
+.fh-section-label > span { color: var(--color-muted); font-size: .6rem; letter-spacing: .1em; }
+.fh-pulse { padding-block-end: 1.7rem; border-block-end: 1px solid var(--fh-rule); }
+.fh-pulse-number { font: 500 3.6rem/1.2 var(--font-family-san-serif); letter-spacing: -.065em; margin-block: 1.2rem .8rem !important; }
+.fh-pulse-number > span { font: .75rem var(--font-family-san-serif); letter-spacing: 0; margin-inline-start: .6rem; color: var(--color-muted); }
+.fh-chart { display: flex; gap: 3px; block-size: 5.5rem; align-items: end; border-block-end: 1px solid var(--fh-rule); }
+.fh-bar-track { flex: 1; block-size: 100%; display: flex; align-items: end; }
+.fh-bar-track span { inline-size: 100%; block-size: var(--bar-height); background: var(--color-primary); border-radius: 2px 2px 0 0; }
+.fh-chart-axis { display: flex; justify-content: space-between; font-size: .65rem; color: var(--color-muted); margin-block-start: .5rem; }
+.fh-note { font: .85rem/1.6 var(--font-family-serif); color: var(--color-muted); margin-block-start: 1rem !important; }
+.fh-caption { font-size: .72rem; color: var(--color-muted); margin-block-start: .4rem !important; }
+.fh-popular ol { list-style: none; counter-reset: popular; padding: .5rem 0 0; }
+.fh-popular li { counter-increment: popular; display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); gap: .2rem .6rem; padding-block: .8rem; border-block-end: 1px solid var(--fh-rule); }
+.fh-popular li::before { content: counter(popular, decimal-leading-zero); grid-row: span 2; color: var(--color-muted); font-size: .7rem; padding-block-start: .1rem; }
+.fh-popular li a { font-weight: 600; font-size: .8rem; overflow-wrap: anywhere; }
+.fh-popular li > span { grid-column: 2; font-size: .65rem; color: var(--color-muted); }
+.fh-about { background: var(--color-surface-alt); border-radius: .5rem; padding: 1.5rem; }
+.fh-asterisk { display: block; font-size: 2.7rem; line-height: 1; color: var(--color-hyperlinks); margin-block-end: 1rem; }
+.fh-about h2 { font: 900 1.7rem/1.15 'Lyon Custom Headings', Georgia, serif; letter-spacing: -.025em; }
+.fh-about p { font: .9rem/1.6 var(--font-family-serif); margin-block: .8rem 1.2rem; }
+.fh-about a { font-size: .75rem; font-weight: 650; }
+.fh-footnote { font-size: .65rem; line-height: 1.7; color: var(--color-muted); }
+.fh-empty { padding: 3rem 1rem; }
+.fh-empty h3 { font: 900 1.7rem 'Lyon Custom Headings', Georgia, serif; }
+.fh-empty p { margin-block: .8rem 1.2rem; color: var(--color-muted); }
+.fh-new { display: block; background: var(--color-surface); padding: .8rem; margin-block: .4rem; text-align: center; font-weight: 600; }
+.fh-update-status { font-size: .7rem; color: var(--color-muted); padding-block: .3rem; }
+.fh-older-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding-block: .6rem; color: var(--color-muted); font-size: .75rem; }
+/* Keep the feed above the fold and override the article-only display treatment. */
+.firehose h1 { filter: none; }
+.fh-breadcrumb { margin-block-end: 1.5rem; }
+.fh-heading { padding-block-end: 1.6rem; }
+.fh-overview { padding-block: 1rem; }
+.fh-layout { padding-block-start: 1.8rem; gap: 2.5rem; }
+.fh-stream { flex: 3 1 40rem; }
+.fh-aside { flex: 1 1 15rem; }
+.firehose .fh-filters button { inline-size: auto; background: var(--fh-ink); color: var(--color-background); flex: 0 0 auto; }

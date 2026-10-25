@@ -48,6 +48,10 @@ or reuses a same-named list. Names are trimmed, 1–60 characters, and compared 
 
 Schema ownership remains manual SQL, not startup migrations or EnsureCreated.
 
+Use the standard [database maintenance command](database-maintenance.md) on the
+host to perform the backup, apply the SQL and run explicit verification assertions.
+The steps below describe this migration's preconditions and expected results.
+
 The database operator must apply `src/WikiWikiWorld.Data/SqliteScripts/AddBookmarkListVisibility.sql`
 once to an existing database before deploying the code that reads IsPublic:
 

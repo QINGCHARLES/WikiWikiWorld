@@ -1,0 +1,45 @@
+@model WikiWikiWorld.Web.Pages.SearchModel
+@* Header typeahead fragment. Datastar patches it by id; titles and snippets are authored text, so the whole
+   fragment sits inside a data-ignore boundary. It renders hidden and empty for queries under two characters. *@
+@{
+	string Query = Model.Q?.Trim() ?? string.Empty;
+	bool HasQuery = Query.Length >= ArticleSearchService.MinSuggestionQueryLength;
+	int OptionIndex = 0;
+}
+<div id="search-suggestions" class="search-suggestions" data-ignore="true" hidden="@(!HasQuery)">
+	@if (HasQuery)
+	{
+		@if (Model.SearchResults.Count > 0)
+		{
+			<div id="search-suggestions-list" class="search-suggestions-list" role="listbox" aria-label="Search suggestions">
+				@foreach (ArticleSearchResult Result in Model.SearchResults)
+				{
+					string? TypeLabel = Result.Type switch
+					{
+						ArticleType.Category => "Category",
+						ArticleType.File => "File",
+						ArticleType.Info => "Info",
+						_ => null
+					};
+					<a id="search-suggestion-@OptionIndex" class="search-suggestion" role="option" aria-selected="false" tabindex="-1" href="@Result.Path">
+						<span class="search-suggestion-title">@Html.Raw(Model.HighlightTerm(Result.Title))</span>
+						@if (TypeLabel is not null)
+						{
+							<span class="search-suggestion-type">@TypeLabel</span>
+						}
+						@if (!string.IsNullOrWhiteSpace(Result.Snippet))
+						{
+							<span class="search-suggestion-snippet">@Html.Raw(Model.HighlightTerm(Result.Snippet))</span>
+						}
+					</a>
+					OptionIndex++;
+				}
+			</div>
+		}
+		else
+		{
+			<p class="search-suggestions-empty">No articles found for “@Query”.</p>
+		}
+		<a class="search-suggestions-all" href="/Search?q=@Uri.EscapeDataString(Query)" tabindex="-1">Search all articles for “<strong>@Query</strong>”</a>
+	}
+</div>

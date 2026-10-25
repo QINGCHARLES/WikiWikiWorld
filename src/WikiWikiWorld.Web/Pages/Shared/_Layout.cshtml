@@ -72,7 +72,10 @@
 				<button class="search-submit" type="submit" aria-label="Search articles">
 					<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16.5 16.5 4 4" /></svg>
 				</button>
-				<input type="search" name="q" aria-label="Search articles" enterkeyhint="search" />
+				<input id="header-search-input" type="search" name="q" aria-label="Search articles" enterkeyhint="search" autocomplete="off"
+					data-on:input__debounce.180ms="el.value.trim().length >= 2 &amp;&amp; @@get('/Search?handler=suggestions&amp;q=' + encodeURIComponent(el.value.trim()), {filterSignals: {include: /^$/}, retry: 'never', retryMaxCount: 0})" />
+				<div id="search-suggestions" class="search-suggestions" data-ignore="true" hidden></div>
+				<span id="search-suggestions-status" class="visually-hidden" role="status"></span>
 			</form>
 			<div class="header-b">
 				@if (SignInManager.IsSignedIn(User))
@@ -246,7 +249,9 @@
 		</nav>
 	</footer>
 
+	<script type="module" src="~/js/vendor/datastar-1.0.4.js" asp-append-version="true"></script>
 	<script src="~/js/dropdown-menu.js" asp-append-version="true"></script>
+	<script src="~/js/search-dropdown.js" asp-append-version="true"></script>
 	<script src="~/js/carousel.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

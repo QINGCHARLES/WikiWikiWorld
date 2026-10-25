@@ -38,6 +38,7 @@ public sealed class SiteStylesheetCatalog
 		"pages/account.css",
 		"pages/profile.css",
 		"pages/languages.css",
+		"pages/firehose.css",
 	];
 
 	private readonly IReadOnlyList<string> SharedPaths = Array.AsReadOnly(RelativePaths.Select(Path => $"~/css/{Path}").ToArray());

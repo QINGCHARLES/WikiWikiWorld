@@ -18,10 +18,10 @@ else
 {
     <p>Found @Model.SearchResults.Count result(s) for "<strong>@Model.Q</strong>":</p>
     <ul class="search-results">
-        @foreach (var result in Model.SearchResults)
+        @foreach (ArticleSearchResult result in Model.SearchResults)
         {
             <li class="search-result-item">
-                <a href="/@result.UrlSlug">@Html.Raw(Model.HighlightTerm(result.Title))</a>
+                <a href="@result.Path">@Html.Raw(Model.HighlightTerm(result.Title))</a>
                 @if (!result.IsTitleMatch && !string.IsNullOrWhiteSpace(result.Snippet))
                 {
                     <p class="search-snippet">@Html.Raw(Model.HighlightTerm(result.Snippet))</p>
