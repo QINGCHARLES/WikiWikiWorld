@@ -305,6 +305,20 @@ or explicitly using the `file:` namespace prefix:
 {{HeaderImage file:slug-of-file-article}}
 ```
 
+## Focus
+
+The hero frame is wider than most photos on large screens, so part of the image is cropped. By default the top stays in view and the bottom is cut. Add `Focus` to keep a different part in view:
+
+```markdown
+{{HeaderImage file:slug-of-file-article |#| Focus=center}}
+```
+
+* `top` (default): keeps the top edge; crops from the bottom.
+* `center` (or `centre`): keeps the middle; crops top and bottom equally.
+* `bottom`: keeps the bottom edge; crops from the top.
+
+Other values are ignored and the default applies.
+
 ## Rules and Resolution
 
 * **Target Article:** The slug must correspond to an existing `File` article (`ArticleType.File`) that has an active canonical file revision.

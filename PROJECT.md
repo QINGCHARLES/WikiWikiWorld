@@ -112,7 +112,7 @@ Custom Markdig extensions live in [src/WikiWikiWorld.Web/MarkDigExtensions](src/
 - **`{{ShortDescription One-line description}}`** — Short description used for SEO/meta tags. First occurrence wins. Metadata key: `ShortDescription`.
 - **`{{Eyebrow TYPE}}`** — Label shown above the title. `TYPE` is case-insensitive and must be `MAGAZINE`, `MAGAZINEISSUE`, or `MAGAZINEFRANCHISE`. Unknown types are silently consumed. Metadata key: `Eyebrow`.
 - **`{{Source Description |#| https://url}}`** — Cites the origin of a file/image. Three variants: text only (`{{Source Original print scan}}`), URL only (`{{Source https://example.com/file.jpg}}`), or text + URL via the `|#|` separator. First occurrence wins. Metadata keys: `SourceText`, `SourceUrl`.
-- **`{{HeaderImage slug-of-file-article}}`** or **`{{HeaderImage file:slug}}`** — Sets the page hero image by referencing a file article. `EnrichAsync` batch-resolves the slug → file URL via EF and stores it in metadata key `HeaderImage`. The first resolved image wins.
+- **`{{HeaderImage slug-of-file-article}}`** or **`{{HeaderImage file:slug}}`** — Sets the page hero image by referencing a file article. `EnrichAsync` batch-resolves the slug → file URL via EF and stores it in metadata key `HeaderImage`. The first resolved image wins. Optional **`|#| Focus=top|center|centre|bottom`** sets which part stays in view when the hero frame crops the image vertically (default `top`; unknown values are ignored). It is stored as `HeaderImageFocus`, emitted as `data-focus` on `img.hero-image`, applied by `object-position` in `components/media.css`, and mirrored as the paper-texture shader's `u_originY` in `js/header-paper-texture.js` so both layers crop identically.
 
 #### Article-structure blocks (emit visible HTML)
 

@@ -63,6 +63,15 @@ figure:has(.hero-image) {
     object-position: top;
 }
 
+/* {{HeaderImage … |#| Focus=center|bottom}} keeps a lower part of the image in view when the frame crops it. */
+.hero-image[data-focus="center"] {
+    object-position: center;
+}
+
+.hero-image[data-focus="bottom"] {
+    object-position: bottom;
+}
+
 /* Optional paper shader shares the image's crop, fade and parallax; original stays underneath. */
 .hero-paper-texture {
     position: absolute;

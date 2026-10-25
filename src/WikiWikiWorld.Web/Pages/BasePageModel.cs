@@ -45,6 +45,11 @@ public abstract class BasePageModel : PageModel
 	public string? HeaderImage { get; set; }
 
 	/// <summary>
+	/// Gets or sets the header image's vertical focus ("top", "center" or "bottom"); <see langword="null"/> keeps the default top framing.
+	/// </summary>
+	public string? HeaderImageFocus { get; set; }
+
+	/// <summary>
 	/// Gets a value indicating whether the page can execute on a culture-selector root domain without a content culture.
 	/// </summary>
 	protected virtual bool AllowsCultureSelectorRootDomain => false;

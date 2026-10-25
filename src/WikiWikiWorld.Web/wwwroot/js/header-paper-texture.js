@@ -30,7 +30,9 @@ async function ApplyPaperTexture(HeaderImage) {
         HeaderImage.after(Surface);
 
         // Paper's demo material settings, with the requested folds, wrinkles, crumples and drops.
-        // Cover, unit scale and top origin preserve the site's existing image framing.
+        // Cover, unit scale and a vertical origin matching the image's data-focus (top unless set)
+        // reproduce the CSS object-fit/object-position framing underneath.
+        const OriginY = { center: 0.5, bottom: 1 }[HeaderImage.dataset.focus] ?? 0;
         Mount = new ShaderMount(Surface, PaperShader, {
             u_image: HeaderImage, u_isImage: true, u_noiseTexture: Noise,
             u_colorBack: [211 / 255, 210 / 255, 171 / 255, 1],
@@ -42,7 +44,7 @@ async function ApplyPaperTexture(HeaderImage) {
             u_wrinkles: 0.3, u_wrinkleSize: 0.65,
             u_crumples: 0.3, u_crumpleCount: 6,
             u_fit: 2, u_scale: 1, u_rotation: 0,
-            u_offsetX: 0, u_offsetY: 0, u_originX: 0.5, u_originY: 0,
+            u_offsetX: 0, u_offsetY: 0, u_originX: 0.5, u_originY: OriginY,
             u_worldWidth: 0, u_worldHeight: 0
         }, undefined, 0, 0, 1, 1920 * 1080);
 

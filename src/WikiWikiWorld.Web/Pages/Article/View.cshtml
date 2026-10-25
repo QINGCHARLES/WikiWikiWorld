@@ -21,7 +21,7 @@
 <figure>
 	@if(!string.IsNullOrWhiteSpace(Model.HeaderImage))
 	{
-		<img src="@Model.HeaderImage" alt="..." class="hero-image" />
+		<img src="@Model.HeaderImage" alt="..." class="hero-image" data-focus="@Model.HeaderImageFocus" />
 	}
 </figure>
 <hgroup>

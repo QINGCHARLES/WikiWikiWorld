@@ -21,6 +21,12 @@ public sealed class HeaderImageBlock(BlockParser Parser) : LeafBlock(Parser)
 	/// </summary>
 	public required string UrlSlug { get; init; }
 
+	/// <summary>
+	/// Gets or initializes the normalized vertical focus ("top", "center" or "bottom") from the optional
+	/// <c>Focus=</c> property, or <see langword="null"/> when absent or unrecognised (the hero then stays top-aligned).
+	/// </summary>
+	public string? Focus { get; init; }
+
 	// Stored here during Enrichment; retrieved by the Renderer (debug) 
 	// or the PageModel (via Document.SetData)
 	/// <summary>
@@ -65,11 +71,22 @@ public sealed class HeaderImageBlockParser : BlockParser
 			return BlockState.None;
 		}
 
-		string UrlSlug = Slice.Text.Substring(Slice.Start, EndPos - Slice.Start).Trim();
+		// The first segment is the file slug; any further "|#|" segments are Key=Value properties.
+		string[] Segments = Slice.Text[Slice.Start..EndPos].Split("|#|", StringSplitOptions.TrimEntries);
+		string? Focus = null;
+		foreach (string Segment in Segments.Skip(1))
+		{
+			int EqualsIndex = Segment.IndexOf('=');
+			if (EqualsIndex > 0 && Segment[..EqualsIndex].Trim().Equals("Focus", StringComparison.OrdinalIgnoreCase))
+			{
+				Focus = NormalizeFocus(Segment[(EqualsIndex + 1)..]);
+			}
+		}
 
 		HeaderImageBlock Block = new(this)
 		{
-			UrlSlug = UrlSlug,
+			UrlSlug = Segments[0],
+			Focus = Focus,
 			Column = Processor.Column,
 			Span = new SourceSpan(Processor.LineIndex, Processor.LineIndex)
 		};
@@ -79,6 +96,19 @@ public sealed class HeaderImageBlockParser : BlockParser
 
 		return BlockState.BreakDiscard;
 	}
+
+	/// <summary>
+	/// Maps an author's focus value to the token the view and stylesheet understand, accepting the British "centre".
+	/// </summary>
+	/// <param name="Value">The raw <c>Focus=</c> value.</param>
+	/// <returns>"top", "center" or "bottom"; <see langword="null"/> for anything else, so the default framing applies.</returns>
+	private static string? NormalizeFocus(string Value) => Value.Trim().ToLowerInvariant() switch
+	{
+		"top" => "top",
+		"center" or "centre" => "center",
+		"bottom" => "bottom",
+		_ => null
+	};
 }
 
 /// <summary>
@@ -109,6 +139,11 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 	/// The key used to store the resolved header image URL in the document metadata.
 	/// </summary>
 	public const string DocumentKey = "HeaderImage";
+
+	/// <summary>
+	/// The key used to store the chosen header image's vertical focus in the document metadata, when one was given.
+	/// </summary>
+	public const string FocusDocumentKey = "HeaderImageFocus";
 
 	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
@@ -187,6 +222,7 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 		Dictionary<Guid, (int Id, string Filename)> FileLookup = Files.ToDictionary(f => f.CanonicalFileId, f => (f.Id, f.Filename));
 
 		string? FirstFoundHeaderImage = null;
+		string? FirstFoundHeaderFocus = null;
 
 		// 6. Update Blocks & Document
 		foreach (HeaderImageBlock Block in HeaderBlocks)
@@ -207,8 +243,12 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 				// Update block for debug renderer
 				Block.ResolvedUrl = Url;
 
-				// Capture the first valid image for the page hero
-				FirstFoundHeaderImage ??= Url;
+				// Capture the first valid image for the page hero, with that same block's focus
+				if (FirstFoundHeaderImage is null)
+				{
+					FirstFoundHeaderImage = Url;
+					FirstFoundHeaderFocus = Block.Focus;
+				}
 			}
 		}
 
@@ -216,6 +256,10 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 		if (FirstFoundHeaderImage is not null)
 		{
 			Document.SetData(DocumentKey, FirstFoundHeaderImage);
+			if (FirstFoundHeaderFocus is not null)
+			{
+				Document.SetData(FocusDocumentKey, FirstFoundHeaderFocus);
+			}
 		}
 	}
 }

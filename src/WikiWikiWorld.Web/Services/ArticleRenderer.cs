@@ -55,6 +55,11 @@ public sealed record class RenderedArticle
 	public string? HeaderImage { get; init; }
 
 	/// <summary>
+	/// Gets the header image's vertical focus ("top", "center" or "bottom"), or <see langword="null"/> for the default top framing.
+	/// </summary>
+	public string? HeaderImageFocus { get; init; }
+
+	/// <summary>
 	/// Gets the resolved meta description, if present.
 	/// </summary>
 	public string? MetaDescription { get; init; }
@@ -130,6 +135,7 @@ public sealed class ArticleRenderer(
 			Html = CleanupAndStyleArticle(RenderHtml(Document, Pipeline)),
 			Categories = Categories,
 			HeaderImage = Document.GetData(HeaderImageExtension.DocumentKey) as string,
+			HeaderImageFocus = Document.GetData(HeaderImageExtension.FocusDocumentKey) as string,
 			MetaDescription = Document.GetData(ShortDescriptionExtension.DocumentKey) as string,
 			EyebrowLabel = Document.GetData(EyebrowExtension.DocumentKey) as string,
 			SubtitleText = Document.GetData(SubtitleExtension.DocumentKey) as string,

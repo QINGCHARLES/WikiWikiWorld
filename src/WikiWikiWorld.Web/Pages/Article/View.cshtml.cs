@@ -348,6 +348,7 @@ public sealed class ViewModel(
         ArticleRevisionHtml = RenderedArticle.Html;
         Categories = RenderedArticle.Categories;
         HeaderImage = RenderedArticle.HeaderImage;
+        HeaderImageFocus = RenderedArticle.HeaderImageFocus;
         MetaDescription = RenderedArticle.MetaDescription ?? string.Empty;
         EyebrowLabel = RenderedArticle.EyebrowLabel;
         SubtitleText = RenderedArticle.SubtitleText;
