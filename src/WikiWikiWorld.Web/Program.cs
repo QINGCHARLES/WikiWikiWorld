@@ -8,9 +8,11 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using WikiWikiWorld.Web;
 using WikiWikiWorld.Web.Configuration;
+using WikiWikiWorld.Web.Controllers.Api;
 using WikiWikiWorld.Web.Infrastructure;
 using SixLabors.ImageSharp.Web.DependencyInjection;
 
@@ -238,13 +240,27 @@ Builder.Services.AddAuthentication(options =>
     };
     options.Events = new JwtBearerEvents
     {
-        OnTokenValidated = Context =>
+        // Tokens can last up to a year, so each request re-checks the account: it must still exist, not be
+        // deleted, and carry the security stamp the token was issued with. Changing the stamp (a password
+        // change, or UserManager.UpdateSecurityStampAsync) revokes every token for that account.
+        OnTokenValidated = async Context =>
         {
             if (DevelopmentAccountPolicy.IsBlocked(Builder.Environment.EnvironmentName, Context.Principal?.Identity?.Name))
             {
                 Context.Fail("Invalid credentials.");
+                return;
             }
-            return Task.CompletedTask;
+
+            string? UserId = Context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string? TokenStamp = Context.Principal?.FindFirst(AuthApiController.SecurityStampClaimType)?.Value;
+            UserManager<User> UserManager = Context.HttpContext.RequestServices.GetRequiredService<UserManager<User>>();
+            User? TokenUser = UserId is null ? null : await UserManager.FindByIdAsync(UserId);
+
+            if (TokenUser is null || TokenUser.DateDeleted is not null || string.IsNullOrEmpty(TokenStamp)
+                || !string.Equals(TokenStamp, await UserManager.GetSecurityStampAsync(TokenUser), StringComparison.Ordinal))
+            {
+                Context.Fail("Invalid credentials.");
+            }
         }
     };
 });

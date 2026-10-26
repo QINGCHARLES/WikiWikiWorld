@@ -3,7 +3,7 @@
 Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
 
   python scripts/wiki_api.py token dev                      # DevvyTheBot, from .local/DevvyTheBot.json
-  python scripts/wiki_api.py token prod --user MaggieTheBot # asks YOU for the password
+  python scripts/wiki_api.py token prod --user MaggieTheBot # asks YOU for the password; lasts 180 days (--days N)
   python scripts/wiki_api.py status prod
   python scripts/wiki_api.py request prod GET api/article/gq-hype
   python scripts/wiki_api.py request prod PUT api/article/gq-hype --json body.json
@@ -70,12 +70,13 @@ def Describe(Token: str) -> str:
     return f"user {Claims.get(NameClaim, '?')}, expires {Expires:%Y-%m-%d %H:%M} UTC ({State})"
 
 
-def GetToken(Environment: str, UserName: str | None) -> int:
+def GetToken(Environment: str, UserName: str | None, Days: int | None) -> int:
     """Exchange a username and password for a token and save it.
 
     Dev uses the DevvyTheBot test credentials file. Prod prompts the person at the
     keyboard for the password and refuses to read it from a pipe, so it can only be
-    typed by a human in an interactive terminal.
+    typed by a human in an interactive terminal. Days asks for a longer lifetime
+    (the server allows up to 365); without it the server issues a 24-hour token.
     """
     if Environment == "dev":
         Credentials = json.loads(DevCredentialsFile.read_text(encoding="utf-8"))
@@ -89,8 +90,10 @@ def GetToken(Environment: str, UserName: str | None) -> int:
             return 2
         Password = getpass.getpass(f"Password for {UserName} on {BaseUrls[Environment]}: ")
 
-    Status, Text = Send(Environment, "POST", "/api/auth/token",
-                        json.dumps({"Username": UserName, "Password": Password}).encode(),
+    Login = {"Username": UserName, "Password": Password}
+    if Days is not None:
+        Login["ExpiresInDays"] = Days
+    Status, Text = Send(Environment, "POST", "/api/auth/token", json.dumps(Login).encode(),
                         {"Content-Type": "application/json"})
     if Status != 200:
         print(f"Token request failed: {Status} {Text}", file=sys.stderr)
@@ -172,6 +175,7 @@ def Main() -> int:
     TokenCommand = Commands.add_parser("token", help="get and save a token")
     TokenCommand.add_argument("environment", choices=BaseUrls)
     TokenCommand.add_argument("--user", help="account name (required for prod)")
+    TokenCommand.add_argument("--days", type=int, help="token lifetime in days, 1-365 (default: 180 for prod, 1 for dev)")
 
     StatusCommand = Commands.add_parser("status", help="show the saved token's user and expiry")
     StatusCommand.add_argument("environment", choices=BaseUrls)
@@ -187,7 +191,8 @@ def Main() -> int:
 
     Arguments = Parser.parse_args()
     if Arguments.command == "token":
-        return GetToken(Arguments.environment, Arguments.user)
+        Days = Arguments.days if Arguments.days is not None else (180 if Arguments.environment == "prod" else None)
+        return GetToken(Arguments.environment, Arguments.user, Days)
     if Arguments.command == "status":
         return ShowStatus(Arguments.environment)
     if Arguments.json and Arguments.file:
