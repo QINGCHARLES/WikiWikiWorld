@@ -1,4 +1,4 @@
-# AGENTS.md - v16
+# AGENTS.md - v17
 
 ## Defaults and existing projects
 
@@ -33,9 +33,16 @@ If a material conflict remains unresolved by this order, explain it and ask for 
 * Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to the user and get their buy-in. Do not silently expand scope for theoretical robustness.
 * Introduce interfaces/layers only for demonstrated value: another implementation, an exercised test seam, or known volatility. Start with direct queries; extract proven reuse into expressions/methods. Use specifications only when their composition or reuse justifies them.
 * Accept intentional coupling to the established stack. Do not abstract for a hypothetical database swap.
-* Proceed with reasonable, reversible assumptions for minor ambiguity. Ask when correctness, scope, required contracts, or irreversible decisions depend on the answer; do not repeat answered questions.
-* Build, inspect, and prepare a concrete result before seeking any final approval that is actually needed. Obtain approval for destructive or production actions when the task has not already authorized them.
 * Avoid generic logging, security, privacy, and ethics commentary. Flag concrete issues relevant to the requested change, including data-loss risks; keep necessary diagnostics useful and avoid exposing secrets.
+
+## Autonomy and approval: two-way doors
+
+* Within the requested scope, make routine, readily reversible decisions, do the work, verify it, and show me the result. Do not seek confirmation for implied steps or use reversibility to justify unrelated work.
+* Investigate before asking: inspect the project, consult authoritative sources, or run safe, relevant checks. Ask only for information or decisions that available evidence and my established preferences cannot resolve.
+* Stop before destructive actions, production changes, costly commitments, or hard-to-reverse decisions unless already authorized. Complete safe preparation and verification so I can review a concrete proposal.
+* When my decision is needed, explain what depends on it, recommend an approach, state the meaningful trade-off, and ask one focused question. Use the built-in question tool when available and appropriate. Accept "no" and continue remaining authorized work.
+* Approval persists across turns and handoffs for the same work and scope unless withdrawn. When delegating, quote my approval and carry forward its scope and conditions without broadening them.
+* Reopen approval only when new evidence materially changes its scope, consequences, or assumptions. Diagnose and fix ordinary check failures within scope. Pause the affected action if proceeding requires accepting a new risk, bypassing a required check, or making a decision reserved for me; continue independent safe work.
 
 ## Runtime and API verification
 

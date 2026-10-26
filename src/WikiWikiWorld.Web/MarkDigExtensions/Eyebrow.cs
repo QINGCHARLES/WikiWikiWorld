@@ -19,8 +19,35 @@ public enum EyebrowType
 	/// <summary>A specific magazine issue.</summary>
 	MagazineIssue,
 
-	/// <summary>A magazine franchise (series of publications).</summary>
-	MagazineFranchise
+	/// <summary>A franchise spanning related publications or media.</summary>
+	Franchise,
+
+	/// <summary>An independently produced zine publication.</summary>
+	Zine,
+
+	/// <summary>A scholarly, professional, or literary journal.</summary>
+	Journal,
+
+	/// <summary>A person associated with publications or their creation.</summary>
+	Person,
+
+	/// <summary>A company or organization that publishes publications.</summary>
+	Publisher,
+
+	/// <summary>An association, institution, or other organization.</summary>
+	Organization,
+
+	/// <summary>A specific issue of a zine publication.</summary>
+	ZineIssue,
+
+	/// <summary>A specific issue of a scholarly, professional, or literary journal.</summary>
+	JournalIssue,
+
+	/// <summary>A newsletter publication distributed to its subscribers or members.</summary>
+	Newsletter,
+
+	/// <summary>A specific issue of a newsletter publication.</summary>
+	NewsletterIssue
 }
 
 /// <summary>
@@ -41,7 +68,16 @@ public sealed class EyebrowExtension : IMarkdownExtension
 	{
 		[EyebrowType.Magazine] = "Magazine",
 		[EyebrowType.MagazineIssue] = "Magazine Issue",
-		[EyebrowType.MagazineFranchise] = "Magazine Franchise"
+		[EyebrowType.Franchise] = "Franchise",
+		[EyebrowType.Zine] = "Zine",
+		[EyebrowType.Journal] = "Journal",
+		[EyebrowType.Person] = "Person",
+		[EyebrowType.Publisher] = "Publisher",
+		[EyebrowType.Organization] = "Organization",
+		[EyebrowType.ZineIssue] = "Zine Issue",
+		[EyebrowType.JournalIssue] = "Journal Issue",
+		[EyebrowType.Newsletter] = "Newsletter",
+		[EyebrowType.NewsletterIssue] = "Newsletter Issue"
 	}.ToFrozenDictionary();
 
 	/// <inheritdoc/>
@@ -65,12 +101,12 @@ public sealed class EyebrowExtension : IMarkdownExtension
 
 	/// <summary>
 	/// Extracts the eyebrow type from the parsed document and stores the display label in metadata.
-	/// Only the first <see cref="EyebrowBlock"/> is used; duplicates are silently ignored.
+	/// Only the first valid <see cref="EyebrowBlock"/> is used; unknown types and duplicates are ignored.
 	/// </summary>
 	/// <param name="Document">The parsed markdown document.</param>
 	public static void Enrich(MarkdownDocument Document)
 	{
-		EyebrowBlock? Block = Document.Descendants<EyebrowBlock>().FirstOrDefault();
+		EyebrowBlock? Block = Document.Descendants<EyebrowBlock>().FirstOrDefault(x => !x.IsMalformed);
 		if (Block is not null && DisplayLabels.TryGetValue(Block.Type, out string? Label))
 		{
 			Document.SetData(DocumentKey, Label);
@@ -80,8 +116,7 @@ public sealed class EyebrowExtension : IMarkdownExtension
 
 /// <summary>
 /// Parses the <c>{{Eyebrow TYPE}}</c> block syntax.
-/// Returns <see cref="BlockState.None"/> for unrecognised type values, causing the raw text
-/// to be silently consumed with no output.
+/// Consumes unrecognised type values as malformed blocks with no output or label.
 /// </summary>
 public sealed class EyebrowBlockParser : BlockParser
 {
@@ -96,7 +131,16 @@ public sealed class EyebrowBlockParser : BlockParser
 		{
 			["MAGAZINE"] = EyebrowType.Magazine,
 			["MAGAZINEISSUE"] = EyebrowType.MagazineIssue,
-			["MAGAZINEFRANCHISE"] = EyebrowType.MagazineFranchise
+			["FRANCHISE"] = EyebrowType.Franchise,
+			["ZINE"] = EyebrowType.Zine,
+			["ZINEISSUE"] = EyebrowType.ZineIssue,
+			["JOURNAL"] = EyebrowType.Journal,
+			["JOURNALISSUE"] = EyebrowType.JournalIssue,
+			["NEWSLETTER"] = EyebrowType.Newsletter,
+			["NEWSLETTERISSUE"] = EyebrowType.NewsletterIssue,
+			["PERSON"] = EyebrowType.Person,
+			["PUBLISHER"] = EyebrowType.Publisher,
+			["ORGANIZATION"] = EyebrowType.Organization
 		}.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
 	/// <summary>

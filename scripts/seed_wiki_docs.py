@@ -130,7 +130,7 @@ Explore the dedicated documentation for each extension:
 ### Header & Metadata Directives
 Directives placed near the top of an article to define page metadata and headings:
 
-* [**Eyebrow Label** `{{Eyebrow}}`](/wiki:eyebrow) — Displays a classification badge above the title (`MAGAZINE`, `MAGAZINEISSUE`, `MAGAZINEFRANCHISE`).
+* [**Eyebrow Label** `{{Eyebrow}}`](/wiki:eyebrow) — Displays a classification badge above the title (`MAGAZINE`, `MAGAZINEISSUE`, `FRANCHISE`, `ZINE`, `ZINEISSUE`, `JOURNAL`, `JOURNALISSUE`, `NEWSLETTER`, `NEWSLETTERISSUE`, `PERSON`, `PUBLISHER`, `ORGANIZATION`).
 * [**Subtitle** `{{Subtitle}}`](/wiki:subtitle) — Adds an explanatory subtitle beneath the main title heading.
 * [**Short Description** `{{ShortDescription}}`](/wiki:short-description) — Summary snippet used for search engines and social cards.
 * [**Header Hero Image** `{{HeaderImage}}`](/wiki:header-image) — Sets the full-width hero header image referencing a file article.
@@ -199,7 +199,18 @@ The `TYPE` parameter is case-insensitive and must match one of the following rec
 | :--- | :--- | :--- |
 | `MAGAZINE` | **Magazine** | Used for publication brand or series articles. |
 | `MAGAZINEISSUE` | **Magazine Issue** | Used for specific individual issues (e.g. Month/Year). |
-| `MAGAZINEFRANCHISE` | **Magazine Franchise** | Used for broad media franchises spanning multiple publications. |
+| `FRANCHISE` | **Franchise** | Used for franchises spanning related publications or media. |
+| `ZINE` | **Zine** | Used for independently produced zine publications. |
+| `ZINEISSUE` | **Zine Issue** | Used for individual zine issues. |
+| `JOURNAL` | **Journal** | Used for scholarly, professional, or literary journals. |
+| `JOURNALISSUE` | **Journal Issue** | Used for individual journal issues. |
+| `NEWSLETTER` | **Newsletter** | Used for newsletter publications distributed to subscribers or members. |
+| `NEWSLETTERISSUE` | **Newsletter Issue** | Used for individual newsletter issues. |
+| `PERSON` | **Person** | Used for people associated with publications or their creation. |
+| `PUBLISHER` | **Publisher** | Used for companies or organizations that publish publications. |
+| `ORGANIZATION` | **Organization** | Used for associations, institutions, and other organizations. |
+
+`MAGAZINEFRANCHISE` is no longer supported. Use `FRANCHISE` instead.
 
 ## Behavior and Rules
 
@@ -587,6 +598,20 @@ Source=Archive{{Citation title=Archive Quarterly |#| year=1993}}
 Custom notes share the article's numbering and backlinks in rendered fact order. Standard `[^label]` notes and reference links also work with definitions elsewhere in the article; standard notes retain their separate Markdig list. Citations join the article bibliography.
 
 Only outer `|#|` tokens split facts, so notes and citations can contain their own properties. Put literal delimiter text inside an inline code span or escape its punctuation with backslashes. Unclosed infoboxes remain visible as escaped source.
+
+## Citing Facts
+
+Cite where each fact came from, such as the print edition cover for a cover price or barcode. Identical citations merge into one bibliography entry with a back-link for every use, so repeat the same citation on each fact it supports:
+
+```markdown
+{{PublicationIssueInfobox
+CoverDate=Fall/Winter 2014 |#|
+CoverPrice=$12.99 (US){{Citation title=GQ Style (USA), Fall/Winter 2014: print edition front cover |#| publisher=Condé Nast |#| year=2014}} |#|
+UPC=0 75490 08758 9{{Citation title=GQ Style (USA), Fall/Winter 2014: print edition front cover |#| publisher=Condé Nast |#| year=2014}}
+}}
+```
+
+Add a `{{Citations}}` block to the article so the bibliography is rendered.
 
 ## Interactive Cover Carousel
 

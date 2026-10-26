@@ -107,12 +107,21 @@ Selects a fixed article-type label displayed above the title.
 | --- | --- |
 | `MAGAZINE` | Magazine |
 | `MAGAZINEISSUE` | Magazine Issue |
-| `MAGAZINEFRANCHISE` | Magazine Franchise |
+| `FRANCHISE` | Franchise |
+| `ZINE` | Zine |
+| `ZINEISSUE` | Zine Issue |
+| `JOURNAL` | Journal |
+| `JOURNALISSUE` | Journal Issue |
+| `NEWSLETTER` | Newsletter |
+| `NEWSLETTERISSUE` | Newsletter Issue |
+| `PERSON` | Person |
+| `PUBLISHER` | Publisher |
+| `ORGANIZATION` | Organization |
 
 - Values are case-insensitive.
 - Metadata key: `Eyebrow`.
 - The first valid block is used.
-- Only the three values above are supported. An unknown value is consumed rather than displayed as source text and must be corrected by the author.
+- Only the values above are supported. An unknown value is consumed rather than displayed as source text and must be corrected by the author. Replace removed `MAGAZINEFRANCHISE` values with `FRANCHISE`.
 
 ### `Source`
 
