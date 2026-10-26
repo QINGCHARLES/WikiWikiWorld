@@ -26,7 +26,7 @@ Custom `{{...}}` directives are available only in the full article pipeline. Tal
 | `Key=Value` | Assigns a named property |
 | `file:slug` | Refers to a file article; accepted only where documented |
 
-Directive names are case-sensitive. Named properties are generally case-insensitive. Unless a directive explicitly supports Markdown in a value, treat its values as plain text. The delimiter strings `|#|`, `|~|`, and `}}` cannot be escaped inside directive values.
+Directive names are case-sensitive. Named properties are generally case-insensitive. Unless a directive explicitly supports Markdown in a value, treat its values as plain text. Delimiter escaping is directive-specific: infobox values support nested directives, backslash-escaped punctuation, and literal delimiters inside inline code; other structured directives retain their documented delimiter restrictions.
 
 ## Custom directive index
 
@@ -371,7 +371,7 @@ ISSN=1059-1028
 | Property | Required | Features |
 | --- | --- | --- |
 | `CoverImage` | No | Legacy property; ignored by the infobox renderer |
-| Any other `Key=Value` | No | Repeatable fact rendered as a `<dt>`/`<dd>` pair |
+| Any other `Key=Value` | No | Repeatable fact rendered as a `<dt>`/`<dd>` pair; values support inline Markdown |
 
 Friendly display labels are defined for these canonical keys:
 
@@ -389,7 +389,22 @@ Friendly display labels are defined for these canonical keys:
 - Keys are collected case-insensitively, but use the canonical casing above to receive the friendly label.
 - Unknown keys are displayed verbatim and are therefore supported as additional facts.
 - Repeated non-image properties render as repeated definition rows.
+- Values support `*italic*`, `**bold**`, combined emphasis, links (including reference links), and inline code through the article's normal Markdown pipeline. Labels remain plain text. Headings, lists, and other block layouts are not parsed inside values; raw HTML follows the article pipeline's disabled-HTML policy.
+- Custom `{{Footnote ...}}` notes in values share numbering, the `{{Footnotes}}` list, and backlinks with the surrounding article, in rendered fact order. Standard `[^label]` notes also work with definitions elsewhere in the article and retain their separate Markdig footnote list. Citations in values join the article's `{{Citations}}` bibliography.
+- Only outer `|#|` tokens separate infobox properties. Nested footnotes and citations may contain their own properties. Place literal `}}`, `{{`, or `|#|` inside a Markdown code span, or escape their punctuation with backslashes. Incomplete infoboxes remain visible as escaped source.
 - Covers must be moved into a separate `{{CoverCarousel}}` block, with `|~|` between cover entries. Existing article text is not automatically migrated.
+
+```markdown
+{{PublicationIssueInfobox
+CoverDate=*January* **1993**{{Footnote Released in **December 1992**.}} |#|
+Editor=[Jane Smith](/jane-smith) |#|
+Source=Archive{{Citation title=Archive Quarterly |#| year=1993}}
+}}
+
+{{Footnotes}}
+
+{{Citations}}
+```
 
 ### `CoverGrid`
 

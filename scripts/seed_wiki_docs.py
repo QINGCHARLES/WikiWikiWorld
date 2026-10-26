@@ -568,6 +568,26 @@ The following canonical keys automatically receive human-friendly display labels
 
 Any additional `Key=Value` pair is accepted and rendered as a definition row in the infobox, allowing custom facts such as `Editor=John Doe` or `Circulation=120,000`.
 
+## Formatting and Notes
+
+Values support inline Markdown: `*italic*`, `**bold**`, combined emphasis, links, and inline code. Property labels remain plain text. Use ordinary article content for headings, lists, and other block layouts.
+
+```markdown
+{{PublicationIssueInfobox
+CoverDate=*January* **1993**{{Footnote Released in **December 1992**.}} |#|
+Editor=[Jane Smith](/jane-smith) |#|
+Source=Archive{{Citation title=Archive Quarterly |#| year=1993}}
+}}
+
+{{Footnotes}}
+
+{{Citations}}
+```
+
+Custom notes share the article's numbering and backlinks in rendered fact order. Standard `[^label]` notes and reference links also work with definitions elsewhere in the article; standard notes retain their separate Markdig list. Citations join the article bibliography.
+
+Only outer `|#|` tokens split facts, so notes and citations can contain their own properties. Put literal delimiter text inside an inline code span or escape its punctuation with backslashes. Unclosed infoboxes remain visible as escaped source.
+
 ## Interactive Cover Carousel
 
 Place cover images in a separate `{{CoverCarousel CoverImage=file:front-cover |~| CoverImage=file:back-cover}}` block. Legacy `CoverImage` properties in an infobox are ignored; existing article text is not automatically migrated.

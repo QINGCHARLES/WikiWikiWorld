@@ -15,7 +15,7 @@ public static class ArticleCoverReference
 		?? ExtractFromDirective(Text, "{{PublicationIssueInfobox", false);
 
 	/// <summary>
-	/// Reads structured cover properties, respecting carousel item boundaries and duplicate-key behavior.
+	/// Reads cover properties, respecting nested infobox notes, carousel items, and duplicate-key behavior.
 	/// </summary>
 	/// <param name="Text">The article markdown.</param>
 	/// <param name="Marker">The opening directive marker.</param>
@@ -26,13 +26,15 @@ public static class ArticleCoverReference
 		int Start = Text.IndexOf(Marker, StringComparison.OrdinalIgnoreCase);
 		if (Start < 0) return null;
 		Start += Marker.Length;
-		int End = Text.IndexOf("}}", Start, StringComparison.Ordinal);
+		int End = DirectiveSyntax.FindClosingDelimiter(Text, Start);
 		if (End < 0) return null;
 
-		foreach (string Item in Text[Start..End].Split("|~|", StringSplitOptions.RemoveEmptyEntries))
+		string Payload = Text[Start..End];
+		string[] Items = IsCarousel ? Payload.Split("|~|", StringSplitOptions.RemoveEmptyEntries) : [Payload];
+		foreach (string Item in Items)
 		{
 			string? Slug = null;
-			foreach (string Property in Item.Split("|#|", StringSplitOptions.RemoveEmptyEntries))
+			foreach (string Property in DirectiveSyntax.SplitProperties(Item))
 			{
 				int EqualsIndex = Property.IndexOf('=');
 				if (EqualsIndex < 0 || !Property[..EqualsIndex].Trim().Equals("CoverImage", StringComparison.OrdinalIgnoreCase))

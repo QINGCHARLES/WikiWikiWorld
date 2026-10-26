@@ -68,7 +68,7 @@ public sealed class FootnoteParser : InlineParser
 		if (!Slice.Match(MarkerStart)) return false;
 
 		Slice.Start += MarkerStart.Length;
-		int EndPos = Slice.Text.IndexOf(MarkerEnd, Slice.Start, StringComparison.Ordinal);
+		int EndPos = DirectiveSyntax.FindClosingDelimiter(Slice.Text, Slice.Start);
 		
 		if (EndPos == -1)
 		{
