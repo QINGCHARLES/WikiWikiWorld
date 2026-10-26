@@ -4,11 +4,6 @@ using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
-using System.Text;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Specifications;
-using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
@@ -35,7 +30,7 @@ public class CoverGridBlock(BlockParser Parser) : LeafBlock(Parser)
     public List<(string ImageUrl, string Title, string UrlSlug)> CachedCoverImages { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets the culture code for linking.
+	/// Records the culture supplied during enrichment; article links use the current host's culture.
     /// </summary>
     public string Culture { get; set; } = "en";
 }
@@ -122,16 +117,15 @@ public class CoverGridRenderer : HtmlObjectRenderer<CoverGridBlock>
         }
 
         // Render the grid of cover images
-        RenderCoverGrid(Renderer, Block.CachedCoverImages, Block.Culture);
+		RenderCoverGrid(Renderer, Block.CachedCoverImages);
     }
 
     /// <summary>
-    /// Renders the cover grid HTML with provided cover image data.
+	/// Renders cover links as root-relative article paths, preserving the current culture subdomain.
     /// </summary>
     /// <param name="Renderer">The HTML renderer.</param>
     /// <param name="CoverImages">The list of cover images with URL, title, and slug.</param>
-    /// <param name="Culture">The culture code for linking.</param>
-    private void RenderCoverGrid(HtmlRenderer Renderer, List<(string ImageUrl, string Title, string UrlSlug)> CoverImages, string Culture)
+	private static void RenderCoverGrid(HtmlRenderer Renderer, List<(string ImageUrl, string Title, string UrlSlug)> CoverImages)
     {
         // Start the grid container
         Renderer.Write("<div class=\"cover-grid\">");
@@ -140,7 +134,7 @@ public class CoverGridRenderer : HtmlObjectRenderer<CoverGridBlock>
         foreach ((string ImageUrl, string Title, string UrlSlug) in CoverImages)
         {
             Renderer.Write("<div class=\"cover-item\">");
-            Renderer.Write($"<a href=\"/{Culture}/{UrlSlug}\">");
+			Renderer.Write($"<a href=\"/{UrlSlug}\">");
             Renderer.Write($"<img src=\"{ImageUrl}\" alt=\"{Title}\" title=\"{Title}\" />");
             Renderer.Write($"<div class=\"cover-title\">{Title}</div>");
             Renderer.Write("</a>");
