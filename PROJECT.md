@@ -107,6 +107,8 @@ Custom Markdig extensions live in [src/WikiWikiWorld.Web/MarkDigExtensions](src/
 
 Citation text encoding and shared Markdown attribute/destination restrictions were deployed to production on 2026-11-07 as `release-20261107T152847Z-5262c63e96af`; no schema migration or content rewrite was needed. See [verification, immutable image and rollback](doc/markdown-rendering-security.md#production-operation-2026-11-07). The earlier Windows development process requires a rebuild/restart to run these changes.
 
+The short-content renderer was renamed to `RenderUserContentMarkdown`, with matching `GetUserContentPipeline` / `BuildUserContentPipeline` names, and deployed on 2026-11-07 as `release-20261107T181946Z-892b002c3811`. Rendering behavior is unchanged; bookmark notes remain planned. This release also includes the previously applied download-note repair scripts and fresh-schema corrections; it requires no further database update. See [release verification and rollback](doc/markdown-rendering-security.md#shared-user-content-renderer-release-2026-11-07).
+
 ### Shared Syntax Conventions
 
 | Token | Meaning |
