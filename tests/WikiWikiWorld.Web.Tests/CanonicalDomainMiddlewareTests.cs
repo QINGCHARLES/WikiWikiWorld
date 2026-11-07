@@ -74,8 +74,10 @@ public sealed class CanonicalDomainMiddlewareTests : IDisposable
 	/// <param name="Host">The IPv4 loopback host, optionally including the development port.</param>
 	/// <param name="ExpectedLocation">The canonical URL with the incoming port preserved.</param>
 	[Theory]
-	[InlineData("127.0.0.1:7126", "https://en.localhost:7126/wiki/some-article?page=2")]
-	[InlineData("127.0.0.1", "https://en.localhost/wiki/some-article?page=2")]
+	[InlineData("127.0.0.1:7126", "https://en.magazedia.com.localhost:7126/wiki/some-article?page=2")]
+	[InlineData("127.0.0.1", "https://en.magazedia.com.localhost/wiki/some-article?page=2")]
+	[InlineData("localhost:7126", "https://en.magazedia.com.localhost:7126/wiki/some-article?page=2")]
+	[InlineData("en.localhost:7126", "https://en.magazedia.com.localhost:7126/wiki/some-article?page=2")]
 	public async Task DevelopmentLoopbackRedirectsWithoutDatabase(string Host, string ExpectedLocation)
 	{
 		IConfiguration Configuration = new ConfigurationBuilder()
@@ -84,6 +86,8 @@ public sealed class CanonicalDomainMiddlewareTests : IDisposable
 			.Build();
 		DomainRedirectOptions DevelopmentRedirects = new();
 		Configuration.GetSection(DomainRedirectOptions.SectionName).Bind(DevelopmentRedirects);
+		SiteConfiguration DevelopmentSites = new();
+		Configuration.GetSection("SiteConfiguration").Bind(DevelopmentSites);
 		await using ServiceProvider EmptyServices = new ServiceCollection().BuildServiceProvider();
 		DefaultHttpContext Context = CreateHttpContext(Host, EmptyServices);
 		Context.Request.PathBase = "/wiki";
@@ -92,7 +96,7 @@ public sealed class CanonicalDomainMiddlewareTests : IDisposable
 		{
 			NextCalled = true;
 			return Task.CompletedTask;
-		}, Options.Create(DevelopmentRedirects), Options.Create(SiteConfig));
+		}, Options.Create(DevelopmentRedirects), Options.Create(DevelopmentSites));
 
 		await Middleware.InvokeAsync(Context);
 

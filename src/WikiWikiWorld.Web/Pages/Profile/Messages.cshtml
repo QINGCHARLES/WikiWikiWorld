@@ -1,84 +1,56 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.MessagesModel
 @{
-	ProfileHeader Header = Model.Header;
-	ViewData["Title"] = $"{Header.UserName} · Messages";
+	ViewData["Title"] = $"{Model.Header.UserName} · Messages";
+	string BasePath = $"/@{Model.Header.UserName}/messages";
+	string FolderPath = Model.Tab == "sent" ? $"{BasePath}/sent" : BasePath;
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
-	bool IsInbox = Model.Tab != "sent";
-	string BasePath = $"/@{Header.UserName}/messages";
 }
-
 <div class="profile">
-	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Header, ProfileTab.Messages)" />
-
-	<div class="profile-stack">
-		<section class="profile-card" aria-labelledby="profile-messages-title">
-			<header class="profile-card-head profile-card-head-wrap">
-				<h2 class="profile-card-title" id="profile-messages-title">Messages</h2>
-				<nav class="profile-segments" aria-label="Message folders">
-					<a href="@BasePath" aria-current="@(IsInbox ? "page" : null)">Inbox <span class="profile-tab-count">@Model.InboxCount.ToString("N0", CultureInfo.CurrentCulture)</span></a>
-					<a href="@BasePath/sent" aria-current="@(IsInbox ? null : "page")">Sent <span class="profile-tab-count">@Model.SentCount.ToString("N0", CultureInfo.CurrentCulture)</span></a>
-				</nav>
-				<a href="/message/new" class="button profile-action-accent profile-card-button" rel="nofollow">New message</a>
-			</header>
-
-			@if (IsInbox)
-			{
-				if (Model.InboxMessages.Count > 0)
+	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Model.Header, ProfileTab.Messages)" />
+	<section class="profile-card" aria-labelledby="messages-title">
+		<h2 id="messages-title" class="profile-card-title">Private messages</h2>
+		<nav aria-label="Message folders">
+			<a href="@BasePath" aria-current="@(Model.Tab == "inbox" ? "page" : null)">Inbox</a> ·
+			<a href="@BasePath/sent" aria-current="@(Model.Tab == "sent" ? "page" : null)">Started by you</a> ·
+			<a href="/message/new">New conversation</a>
+		</nav>
+		<p class="profile-card-note">Only participants can open a conversation. Public user-page discussions are separate.</p>
+		@if (Model.Folder.Items.Count == 0)
+		{
+			<p class="profile-card-empty">No conversations in this folder.</p>
+		}
+		else
+		{
+			<ul class="profile-list">
+				@foreach (PrivateConversationItem Conversation in Model.Folder.Items)
 				{
-					<ol class="profile-list">
-						@foreach (ArticleTalkSubject Message in Model.InboxMessages)
-						{
-							string SenderName = Model.MessageUsers.TryGetValue(Message.CreatedByUserId, out User? Sender) ? Sender.UserName ?? "Unknown" : "Unknown";
-							<li class="profile-list-row">
-								<span class="profile-list-icon" aria-hidden="true">
-									<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 6-10 7L2 6"></path></svg>
-								</span>
-								<div class="profile-list-main">
-									<a class="profile-list-title" href="/@@@Header.UserName/talk/@Message.UrlSlug">@Message.Subject</a>
-									<p class="profile-list-meta">From <a href="/@@@SenderName/profile">@SenderName</a></p>
-								</div>
-								<time class="profile-list-time" datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
-							</li>
-						}
-					</ol>
+					<li class="profile-list-row">
+						<div class="profile-list-main">
+							<a class="profile-list-title" href="/message/@Conversation.Id.ToString("D")">@Conversation.Subject</a>
+							<p class="profile-list-meta">Started by @Conversation.CreatorName</p>
+						</div>
+						<time class="profile-list-time" datetime="@Conversation.LastMessageDate.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Conversation.LastMessageDate, Now)</time>
+					</li>
 				}
-				else
+			</ul>
+		}
+		@if (Model.Folder.PageCount > 1)
+		{
+			<nav class="profile-pager" aria-label="Message folder pages">
+				@if (Model.Folder.PageNumber > 1)
 				{
-					<p class="profile-card-empty">Your inbox is empty. Messages from other contributors will appear here.</p>
+					<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber - 1)" rel="prev">Previous</a>
 				}
-			}
-			else
-			{
-				if (Model.SentMessages.Count > 0)
+				<span>Page @Model.Folder.PageNumber of @Model.Folder.PageCount</span>
+				@if (Model.Folder.PageNumber < Model.Folder.PageCount)
 				{
-					<ol class="profile-list">
-						@foreach (ArticleTalkSubject Message in Model.SentMessages)
-						{
-							string RecipientName = Model.RecipientUsernames.TryGetValue(Message.CanonicalArticleId, out string? Name) ? Name : "(unknown)";
-							string RecipientUser = RecipientName.TrimStart('@');
-							<li class="profile-list-row">
-								<span class="profile-list-icon" aria-hidden="true">
-									<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-								</span>
-								<div class="profile-list-main">
-									<a class="profile-list-title" href="/@@@RecipientUser/talk/@Message.UrlSlug">@Message.Subject</a>
-									<p class="profile-list-meta">To <a href="/@@@RecipientUser/profile">@RecipientUser</a></p>
-								</div>
-								<time class="profile-list-time" datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
-							</li>
-						}
-					</ol>
+					<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber + 1)" rel="next">Next</a>
 				}
-				else
-				{
-					<p class="profile-card-empty">You haven't sent any messages yet.</p>
-				}
-			}
-		</section>
-	</div>
+			</nav>
+		}
+	</section>
 </div>
-
 @section Scripts {
 	<script src="~/js/profile.js" asp-append-version="true" defer></script>
 }

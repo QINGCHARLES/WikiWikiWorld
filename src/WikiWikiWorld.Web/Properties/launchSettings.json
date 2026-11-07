@@ -5,7 +5,7 @@
 			"commandName": "Project",
 			"dotnetRunMessages": true,
 			"launchBrowser": true,
-			"applicationUrl": "http://en.localhost:5097",
+			"applicationUrl": "http://en.magazedia.com.localhost:5097",
 			"environmentVariables": {
 				"ASPNETCORE_ENVIRONMENT": "Development"
 			}
@@ -14,7 +14,7 @@
 			"commandName": "Project",
 			"dotnetRunMessages": true,
 			"launchBrowser": true,
-			"applicationUrl": "https://en.localhost:7126;http://en.localhost:5097",
+			"applicationUrl": "https://en.magazedia.com.localhost:7126;http://en.magazedia.com.localhost:5097",
 			"environmentVariables": {
 				"ASPNETCORE_ENVIRONMENT": "Development"
 			}

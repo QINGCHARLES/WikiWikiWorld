@@ -92,7 +92,6 @@ public sealed class PublicationIssueInfoboxBlockParser : BlockParser
 
 		foreach (KeyValuePair<string, List<string>> Property in Block.Properties)
 		{
-			if (Property.Key.Equals("CoverImage", StringComparison.OrdinalIgnoreCase)) continue;
 			foreach (string Value in Property.Value)
 			{
 				Block.Add(new PublicationIssueFactBlock(Property.Key, Value) { Line = Block.Line, Column = Block.Column });

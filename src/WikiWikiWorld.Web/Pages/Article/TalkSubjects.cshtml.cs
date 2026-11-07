@@ -116,7 +116,6 @@ public sealed class TalkSubjectsModel(
 			CanonicalArticleId = Article!.CanonicalArticleId,
 			Subject = Input.Subject.Trim(),
 			UrlSlug = SubjectSlug,
-			HasBeenEdited = false,
 			CreatedByUserId = CurrentUser.Id,
 			DateCreated = Now,
 		};

@@ -24,7 +24,7 @@
 }
 
 /* A contents-page masthead word, set big in the wide grotesque rather than as a tiny label. */
-.issue-contents .issue-contents-heading {
+.issue-contents > h2 {
     margin: 0 0 var(--space-m);
     font-family: var(--font-family-wide-grotesque);
     font-stretch: 125%;
@@ -35,7 +35,7 @@
     text-transform: uppercase;
 }
 
-.issue-contents-groups {
+.issue-contents > div {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
     gap: var(--space-l) var(--space-l);
@@ -58,13 +58,13 @@
 /* Titled groups take two rows of the outer grid, label then list, and subgrid them, so groups
    side by side share both rows. Labels sit at the bottom of the shared label row, which starts
    every list in a row at the same height however many lines the labels wrap to. */
-.issue-contents-group:has(> .issue-contents-group-title) {
+.issue-contents-group:has(> h3) {
     grid-row: span 2;
     grid-template-rows: subgrid;
     row-gap: var(--space-xs);
 }
 
-.issue-contents .issue-contents-group-title {
+.issue-contents-group > h3 {
     grid-row: 1;
     grid-column: 2;
     align-self: end;
@@ -79,7 +79,7 @@
     color: var(--color-muted);
 }
 
-.issue-contents .issue-contents-entries {
+.issue-contents-group > ol {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
@@ -93,7 +93,7 @@
 
 /* Rows pack to the top: an entry stretched to match a taller neighbour must not spread its title,
    description and credit across the extra height. */
-.issue-contents-entry {
+.issue-contents ol > li {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
@@ -103,17 +103,17 @@
 
 /* Featured sections lay their entries out side by side when there is room, so each entry keeps
    its own figure column instead of sharing the group's. */
-.issue-contents .issue-contents-featured .issue-contents-entries {
+.issue-contents-featured > ol {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
     gap: var(--space-m) var(--space-m);
 }
 
-.issue-contents .issue-contents-featured .issue-contents-entry {
+.issue-contents-featured > ol > li {
     grid-column: auto;
     grid-template-columns: max-content minmax(0, 1fr);
 }
 
-.issue-contents .issue-contents-featured .issue-contents-group-title {
+.issue-contents-featured > h3 {
     grid-column: 1 / -1;
 }
 
@@ -122,17 +122,17 @@
 .issue-contents .issue-contents-featured:has(.issue-contents-pages) {
     --contents-featured-figures: 6rem;
 
-    & .issue-contents-entry {
+    & > ol > li {
         grid-template-columns: minmax(var(--contents-featured-figures), max-content) minmax(0, 1fr);
     }
 
-    & .issue-contents-group-title {
+    & > h3 {
         padding-inline-start: var(--contents-featured-figures);
     }
 }
 
 /* The heading wrapper dissolves so the title and page label become grid items of the entry. */
-.issue-contents-entry-heading {
+.issue-contents li > header {
     display: contents;
 }
 
@@ -161,7 +161,7 @@
     }
 }
 
-.issue-contents .issue-contents-title {
+.issue-contents li > header > :is(h3, h4) {
     grid-column: 2;
     margin: 0;
     font-family: var(--font-family-serif);
@@ -176,7 +176,7 @@
     font-size: 1.6rem;
 }
 
-.issue-contents .issue-contents-featured .issue-contents-title {
+.issue-contents-featured li > header > :is(h3, h4) {
     font-family: 'Lyon Custom Headings', Georgia, serif;
     font-size: clamp(1.3rem, 1.2rem + 0.5vw, 1.6rem);
     font-weight: 900;

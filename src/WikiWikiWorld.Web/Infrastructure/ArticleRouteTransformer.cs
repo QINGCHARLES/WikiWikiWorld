@@ -26,7 +26,7 @@ public sealed class ArticleRouteTransformer : DynamicRouteValueTransformer
 	private static readonly HashSet<string> StaticAssetExtensions = new(StringComparer.OrdinalIgnoreCase)
 	{
 		".jpg", ".jpeg", ".gif", ".png", ".webp", ".avif", ".heic", ".svg",
-		".css", ".js", ".ico", ".txt", ".webmanifest",
+		".css", ".js", ".mjs", ".wasm", ".ico", ".txt", ".webmanifest",
 		".woff", ".woff2", ".ttf", ".otf", ".eot"
 	};
 

@@ -34,7 +34,7 @@ public sealed class IssueContentsTests
 		Assert.Equal(3, Document.QuerySelectorAll(".issue-contents-group").Length);
 		Assert.Single(Document.QuerySelectorAll(".issue-contents-featured"));
 		Assert.Equal(["Wild at Heart", "American Anthem", "Bare Essentials", "Last Look"],
-			Document.QuerySelectorAll("h4.issue-contents-title").Select(x => x.TextContent));
+			Document.QuerySelectorAll(".issue-contents li h4").Select(x => x.TextContent));
 		Assert.Equal("Photographs by Steven Meisel", Document.QuerySelector(".issue-contents-credit")!.TextContent);
 		Assert.Equal(["p. 120–143", "p. iv"], Document.QuerySelectorAll(".issue-contents-pages").Select(x => x.TextContent));
 		Assert.Equal(2, Document.QuerySelectorAll(".issue-contents-description").Length);
@@ -48,8 +48,8 @@ public sealed class IssueContentsTests
 	{
 		IDocument Document = new HtmlParser().ParseDocument(Markdown.ToHtml(
 			"{{IssueContents title=One |~| TITLE=One |~| Group=Later |#| featured=TRUE |~| Title=Two}}", Factory.GetPipeline()));
-		Assert.Equal(2, Document.QuerySelectorAll("h3.issue-contents-title").Length);
-		Assert.Single(Document.QuerySelectorAll(".issue-contents-group-title"));
+		Assert.Equal(2, Document.QuerySelectorAll(".issue-contents li h3").Length);
+		Assert.Single(Document.QuerySelectorAll(".issue-contents-group > h3"));
 		Assert.Equal(2, Document.QuerySelectorAll(".issue-contents-featured").Length);
 		Assert.Empty(Document.QuerySelectorAll(".issue-contents-description, .issue-contents-credit, .issue-contents-pages"));
 	}
@@ -61,7 +61,7 @@ public sealed class IssueContentsTests
 		IDocument Document = new HtmlParser().ParseDocument(Markdown.ToHtml(
 			"{{IssueContents Group=<b>Group</b> |~| Title=[Link](https://example.com) |#| Description=<script>alert(1)</script> |#| Credit=A=B & C |#| Pages=<img src=x onerror=alert(1)>}}", Factory.GetPipeline()));
 		Assert.Empty(Document.QuerySelectorAll("a, script, b, img"));
-		Assert.Equal("[Link](https://example.com)", Document.QuerySelector(".issue-contents-title")!.TextContent);
+		Assert.Equal("[Link](https://example.com)", Document.QuerySelector(".issue-contents li :is(h3, h4)")!.TextContent);
 		Assert.Equal("<script>alert(1)</script>", Document.QuerySelector(".issue-contents-description")!.TextContent);
 		Assert.Equal("A=B & C", Document.QuerySelector(".issue-contents-credit")!.TextContent);
 	}

@@ -35,15 +35,15 @@ public sealed class IssueCreditsTests
 			Following paragraph.
 			""";
 		IDocument Document = new HtmlParser().ParseDocument(Markdown.ToHtml(Source, Factory.GetPipeline()));
-		Assert.Single(Document.QuerySelectorAll("section.issue-credits-group-featured"));
+		Assert.Single(Document.QuerySelectorAll(".issue-credits > section.issue-credits-group-featured"));
 		IHtmlCollection<IElement> Details = Document.QuerySelectorAll("details");
 		Assert.Equal(2, Details.Length);
 		Assert.False(Details[0].HasAttribute("open"));
 		Assert.True(Details[1].HasAttribute("open"));
 		Assert.All(Details, d => Assert.Equal("SUMMARY", d.FirstElementChild!.TagName));
-		Assert.Equal("/anna-wintour", Document.QuerySelector(".issue-credits-name a")!.GetAttribute("href"));
-		Assert.Equal(5, Document.QuerySelectorAll(".issue-credits-name").Length);
-		Assert.Equal("Steven Meisel", Document.QuerySelector(".issue-credits-name strong")!.TextContent);
+		Assert.Equal("/anna-wintour", Document.QuerySelector(".issue-credits li a")!.GetAttribute("href"));
+		Assert.Equal(5, Document.QuerySelectorAll(".issue-credits li").Length);
+		Assert.Equal("Steven Meisel", Document.QuerySelector(".issue-credits li strong")!.TextContent);
 		Assert.Equal("Following paragraph.", Document.QuerySelector("body > p")!.TextContent);
 	}
 

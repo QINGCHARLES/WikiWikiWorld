@@ -122,6 +122,7 @@ CREATE INDEX IX_ArticleCategoryMemberships_CategorySlug_ArticleRevisionId
 CREATE TABLE FileRevisions (
     Id INTEGER NOT NULL CONSTRAINT PK_FileRevisions PRIMARY KEY AUTOINCREMENT,
     CanonicalFileId TEXT NOT NULL,
+    StagingUploadId TEXT NULL,
     IsCurrent INTEGER NOT NULL,
     Type TEXT NOT NULL,
     Filename TEXT NOT NULL,
@@ -139,6 +140,7 @@ CREATE TABLE FileRevisions (
 ) STRICT;
 
 CREATE INDEX IX_FileRevisions_CanonicalFileId_DateCreated ON FileRevisions (CanonicalFileId, DateCreated DESC);
+CREATE UNIQUE INDEX UX_FileRevisions_StagingUploadId ON FileRevisions (StagingUploadId) WHERE StagingUploadId IS NOT NULL;
 CREATE INDEX IX_FileRevisions_CreatedByUserId ON FileRevisions (CreatedByUserId);
 
 CREATE TABLE ArticleCultureLinks (
@@ -214,10 +216,8 @@ CREATE TABLE ArticleTalkSubjects (
     CanonicalArticleId TEXT NOT NULL,
     Subject TEXT NOT NULL,
     UrlSlug TEXT NOT NULL,
-    HasBeenEdited INTEGER NOT NULL,
     CreatedByUserId TEXT NOT NULL,
     DateCreated TEXT NOT NULL,
-    DateModified TEXT NULL,
     DateDeleted TEXT NULL,
     CONSTRAINT FK_ArticleTalkSubjects_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
 ) STRICT;
@@ -244,6 +244,41 @@ CREATE INDEX IX_ArticleTalkSubjectPosts_ArticleTalkSubjectId ON ArticleTalkSubje
 CREATE INDEX IX_ArticleTalkSubjectPosts_CreatedByUserId ON ArticleTalkSubjectPosts (CreatedByUserId);
 CREATE INDEX IX_ArticleTalkSubjectPosts_ParentTalkSubjectPostId ON ArticleTalkSubjectPosts (ParentTalkSubjectPostId);
 CREATE INDEX IX_ArticleTalkSubjectPosts_SubjectId_ParentId_Active ON ArticleTalkSubjectPosts (ArticleTalkSubjectId, ParentTalkSubjectPostId);
+
+CREATE TABLE PrivateConversations (
+    Id TEXT NOT NULL CONSTRAINT PK_PrivateConversations PRIMARY KEY,
+    SiteId INTEGER NOT NULL,
+    Culture TEXT NOT NULL,
+    Subject TEXT NOT NULL,
+    CreatedByUserId TEXT NOT NULL,
+    DateCreated TEXT NOT NULL,
+    CONSTRAINT FK_PrivateConversations_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE RESTRICT
+) STRICT;
+
+CREATE INDEX IX_PrivateConversations_CreatedByUserId ON PrivateConversations (CreatedByUserId);
+
+CREATE TABLE PrivateConversationParticipants (
+    ConversationId TEXT NOT NULL,
+    UserId TEXT NOT NULL,
+    CONSTRAINT PK_PrivateConversationParticipants PRIMARY KEY (ConversationId, UserId),
+    CONSTRAINT FK_PrivateConversationParticipants_PrivateConversations_ConversationId FOREIGN KEY (ConversationId) REFERENCES PrivateConversations (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_PrivateConversationParticipants_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE RESTRICT
+) STRICT;
+
+CREATE INDEX IX_PrivateConversationParticipants_UserId_ConversationId ON PrivateConversationParticipants (UserId, ConversationId);
+
+CREATE TABLE PrivateMessages (
+    Id INTEGER NOT NULL CONSTRAINT PK_PrivateMessages PRIMARY KEY AUTOINCREMENT,
+    ConversationId TEXT NOT NULL,
+    AuthorUserId TEXT NOT NULL,
+    Text TEXT NOT NULL,
+    DateCreated TEXT NOT NULL,
+    CONSTRAINT FK_PrivateMessages_PrivateConversations_ConversationId FOREIGN KEY (ConversationId) REFERENCES PrivateConversations (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_PrivateMessages_PrivateConversationParticipants_ConversationId_AuthorUserId FOREIGN KEY (ConversationId, AuthorUserId) REFERENCES PrivateConversationParticipants (ConversationId, UserId) ON DELETE RESTRICT
+) STRICT;
+
+CREATE INDEX IX_PrivateMessages_ConversationId_Id ON PrivateMessages (ConversationId, Id);
+CREATE INDEX IX_PrivateMessages_ConversationId_AuthorUserId ON PrivateMessages (ConversationId, AuthorUserId);
 
 CREATE TABLE BookmarkLists (
     Id INTEGER NOT NULL CONSTRAINT PK_BookmarkLists PRIMARY KEY AUTOINCREMENT,

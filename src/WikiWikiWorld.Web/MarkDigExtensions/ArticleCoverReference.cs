@@ -5,32 +5,29 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 /// </summary>
 public static class ArticleCoverReference
 {
-	/// <summary>
-	/// Reads the first carousel cover, falling back to legacy infobox metadata for existing articles.
-	/// </summary>
-	/// <param name="Text">The article markdown.</param>
-	/// <returns>The file article slug, or null when neither directive supplies a cover.</returns>
-	public static string? Extract(string Text) =>
-		ExtractFromDirective(Text, "{{CoverCarousel", true)
-		?? ExtractFromDirective(Text, "{{PublicationIssueInfobox", false);
+	private const string MarkerStart = "{{CoverCarousel";
 
 	/// <summary>
-	/// Reads cover properties, respecting nested infobox notes, carousel items, and duplicate-key behavior.
+	/// Reads the primary cover slug from the first <c>{{CoverCarousel}}</c> directive in the article.
 	/// </summary>
 	/// <param name="Text">The article markdown.</param>
-	/// <param name="Marker">The opening directive marker.</param>
-	/// <param name="IsCarousel">Whether the last nonempty cover property within each item wins.</param>
-	/// <returns>The first usable cover slug without its optional file prefix, or null.</returns>
-	private static string? ExtractFromDirective(string Text, string Marker, bool IsCarousel)
+	/// <returns>The file article slug without its optional <c>file:</c> prefix, or <see langword="null"/> when no cover is present.</returns>
+	public static string? Extract(string Text)
 	{
-		int Start = Text.IndexOf(Marker, StringComparison.OrdinalIgnoreCase);
+		int Start = Text.IndexOf(MarkerStart, StringComparison.OrdinalIgnoreCase);
 		if (Start < 0) return null;
-		Start += Marker.Length;
+		Start += MarkerStart.Length;
+		if (Start < Text.Length && !char.IsWhiteSpace(Text[Start]) &&
+			!Text.AsSpan(Start).StartsWith("}}", StringComparison.Ordinal))
+		{
+			return null;
+		}
+
 		int End = DirectiveSyntax.FindClosingDelimiter(Text, Start);
 		if (End < 0) return null;
 
 		string Payload = Text[Start..End];
-		string[] Items = IsCarousel ? Payload.Split("|~|", StringSplitOptions.RemoveEmptyEntries) : [Payload];
+		string[] Items = Payload.Split("|~|", StringSplitOptions.RemoveEmptyEntries);
 		foreach (string Item in Items)
 		{
 			string? Slug = null;
@@ -48,7 +45,6 @@ public static class ArticleCoverReference
 					Value = Value["file:".Length..];
 				}
 				if (Value.Length == 0) continue;
-				if (!IsCarousel) return Value;
 				Slug = Value;
 			}
 			if (Slug is not null) return Slug;

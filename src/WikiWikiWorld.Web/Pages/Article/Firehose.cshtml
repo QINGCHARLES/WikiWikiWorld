@@ -8,10 +8,10 @@
 		new Dictionary<string, string?> { ["handler"] = "Updates", ["after"] = Model.Activity.LatestId.ToString() });
 }
 <div class="firehose" data-updates-url="@UpdatesUrl">
-	<div class="fh-breadcrumb"><a href="/">Magazedia</a><span>/</span>Community<span>/</span>Recent changes</div>
+	<div class="fh-breadcrumb"><a href="/">@Model.SiteName</a><span>/</span>Community<span>/</span>Recent changes</div>
 	<header class="fh-heading">
 		<div><p class="fh-kicker">THE ENCYCLOPEDIA, IN THE MAKING</p><h1>Firehose<span aria-hidden="true">.</span></h1></div>
-		<p class="fh-intro">Every edit leaves a mark.<br />Follow the people building the magazine archive, one page at a time.</p>
+		<p class="fh-intro">Every edit leaves a mark.<br />Follow the people building the encyclopedia, one page at a time.</p>
 	</header>
 	<div class="fh-overview">
 		<div class="fh-scope"><span class="fh-dot" aria-hidden="true"></span><strong>@Model.Language edition</strong><span>Last 24 hours · selected filters</span></div>

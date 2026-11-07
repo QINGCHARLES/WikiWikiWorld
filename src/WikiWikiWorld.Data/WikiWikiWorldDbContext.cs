@@ -113,6 +113,15 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	/// </summary>
 	public DbSet<ArticleTalkSubjectPost> ArticleTalkSubjectPosts { get; set; } = null!;
 
+	/// <summary>Gets private conversations; callers must additionally enforce participant membership.</summary>
+	public DbSet<PrivateConversation> PrivateConversations { get; set; } = null!;
+
+	/// <summary>Gets the explicit account memberships that grant conversation access.</summary>
+	public DbSet<PrivateConversationParticipant> PrivateConversationParticipants { get; set; } = null!;
+
+	/// <summary>Gets private message bodies; only participant-authorized services may expose them.</summary>
+	public DbSet<PrivateMessage> PrivateMessages { get; set; } = null!;
+
 	/// <summary>
 	/// Gets or sets the bookmark lists.
 	/// </summary>
@@ -209,6 +218,8 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		Builder.Entity<FileRevision>(b =>
 		{
 			b.HasKey(e => e.Id);
+			b.HasIndex(e => e.StagingUploadId, "UX_FileRevisions_StagingUploadId")
+				.IsUnique().HasFilter("StagingUploadId IS NOT NULL");
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasIndex(e => new { e.CanonicalFileId, e.DateCreated });
 		});
@@ -264,6 +275,37 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasKey(e => e.Id);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasIndex(e => new { e.ArticleTalkSubjectId, e.ParentTalkSubjectPostId });
+		});
+
+		Builder.Entity<PrivateConversation>(b =>
+		{
+			b.HasKey(e => e.Id);
+			b.Property(e => e.Subject).HasMaxLength(200);
+			b.HasOne<User>().WithMany().HasForeignKey(e => e.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);
+			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
+		});
+
+		Builder.Entity<PrivateConversationParticipant>(b =>
+		{
+			b.HasKey(e => new { e.ConversationId, e.UserId });
+			b.HasIndex(e => new { e.UserId, e.ConversationId });
+			b.HasOne(e => e.Conversation).WithMany(e => e.Participants).HasForeignKey(e => e.ConversationId).OnDelete(DeleteBehavior.Cascade);
+			b.HasOne<User>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.Conversation.SiteId == _currentSiteId);
+			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Conversation.Culture == _currentCulture);
+		});
+
+		Builder.Entity<PrivateMessage>(b =>
+		{
+			b.HasKey(e => e.Id);
+			b.Property(e => e.Text).HasMaxLength(10000);
+			b.HasIndex(e => new { e.ConversationId, e.Id });
+			b.HasIndex(e => new { e.ConversationId, e.AuthorUserId });
+			b.HasOne(e => e.Conversation).WithMany(e => e.Messages).HasForeignKey(e => e.ConversationId).OnDelete(DeleteBehavior.Cascade);
+			b.HasOne<PrivateConversationParticipant>().WithMany().HasForeignKey(e => new { e.ConversationId, e.AuthorUserId }).OnDelete(DeleteBehavior.Restrict);
+			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.Conversation.SiteId == _currentSiteId);
+			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Conversation.Culture == _currentCulture);
 		});
 
 		Builder.Entity<BookmarkList>(b =>

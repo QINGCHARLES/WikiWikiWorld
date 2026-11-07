@@ -8,7 +8,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Magazedia</title>
+    <title>@Model.SiteName</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -50,7 +50,7 @@
     </style>
 </head>
 <body>
-    <h1>Magazedia</h1>
+    <h1>@Model.SiteName</h1>
     <nav class="languages">
         @foreach (WikiWikiWorld.Web.Pages.CultureLink CultureLink in Model.CultureLinks)
         {

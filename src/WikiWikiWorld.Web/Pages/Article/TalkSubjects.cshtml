@@ -19,6 +19,7 @@
 					<span>Talk</span>
 				</nav>
 				<h1>Discussion: @Model.Article?.Title</h1>
+				<p>This discussion is public. Use <a href="/message/new">private messages</a> for a private conversation.</p>
 				<p class="talk-page-tag">@Model.Subjects.Count @(Model.Subjects.Count == 1 ? "subject" : "subjects")</p>
 			</header>
 

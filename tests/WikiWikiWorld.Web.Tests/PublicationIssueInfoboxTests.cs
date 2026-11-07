@@ -131,14 +131,13 @@ public sealed class PublicationIssueInfoboxTests
 		Assert.DoesNotContain("fnref:?", Html);
 	}
 
-	/// <summary>Retains grouping, repeated values, empty fields, and ignored legacy image metadata.</summary>
+	/// <summary>Retains grouping, repeated values, and empty fields.</summary>
 	[Fact]
 	public void PreservesExistingFactBehavior()
 	{
-		string Html = Render("{{PublicationIssueInfobox Editor=*Alice* |#| CoverDate=1993 |#| editor=**Bob** |#| CoverImage=file:ignored{{Footnote Ignored.}} |#| Empty=}}");
+		string Html = Render("{{PublicationIssueInfobox Editor=*Alice* |#| CoverDate=1993 |#| editor=**Bob** |#| Empty=}}");
 		Assert.Contains("<dt>Editor</dt><dd><em>Alice</em></dd><dt>Editor</dt><dd><strong>Bob</strong></dd><dt>Cover Date</dt>", Html);
 		Assert.Contains("<dt>Empty</dt><dd></dd>", Html);
-		Assert.DoesNotContain("ignored", Html);
 		Assert.DoesNotContain("fnref:", Html);
 	}
 
@@ -163,13 +162,12 @@ public sealed class PublicationIssueInfoboxTests
 		Assert.DoesNotContain("<dd>", Html);
 	}
 
-	/// <summary>Finds legacy covers after nested notes and ignores cover-looking properties inside citations.</summary>
+	/// <summary>Finds carousel covers after nested notes and ignores cover-looking properties inside code spans or citations.</summary>
 	[Fact]
-	public void FindsLegacyCoverAfterNestedValues()
+	public void FindsCarouselCoverAfterNestedValues()
 	{
-		Assert.Equal("front", ArticleCoverReference.Extract("{{PublicationIssueInfobox Editor=Jane{{Footnote See {{Citation title=Archive |#| CoverImage=wrong}}.}} |#| CoverImage=file:front}}"));
-		Assert.Equal("front", ArticleCoverReference.Extract("{{PublicationIssueInfobox Editor=Jane{{Footnote Literal |~| CoverImage=wrong.}} |#| CoverImage=file:front}}"));
-		Assert.Equal("front", ArticleCoverReference.Extract("{{PublicationIssueInfobox Fact=`}} |#| CoverImage=wrong` |#| CoverImage=file:front}}"));
+		Assert.Equal("front", ArticleCoverReference.Extract("{{CoverCarousel Caption=See {{Citation title=Archive |#| CoverImage=wrong}} |#| CoverImage=file:front}}"));
+		Assert.Equal("front", ArticleCoverReference.Extract("{{CoverCarousel Caption=`}} |#| CoverImage=wrong` |#| CoverImage=file:front}}"));
 	}
 
 	/// <summary>Recognizes complete directive names while preserving indented and fenced code examples.</summary>

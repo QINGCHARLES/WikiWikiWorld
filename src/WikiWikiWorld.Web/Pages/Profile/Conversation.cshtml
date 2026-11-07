@@ -1,0 +1,46 @@
+@page
+@model WikiWikiWorld.Web.Pages.Profile.ConversationModel
+@inject IMarkdownPipelineFactory Markdown
+@{
+	ViewData["Title"] = "Private conversation";
+	string ConversationPath = $"/message/{Model.ConversationId:D}";
+	DateTimeOffset Now = DateTimeOffset.UtcNow;
+}
+<div class="profile">
+	<section class="profile-card private-conversation" aria-labelledby="conversation-title">
+		<a href="/@@@Model.ViewerName/messages">Back to messages</a>
+		<h1 id="conversation-title" class="private-conversation-title">@Model.Thread.Subject</h1>
+		<p>Participants: @string.Join(", ", Model.Thread.Participants.Select(p => p.UserName))</p>
+		<p class="profile-card-note">Everyone listed can read and reply. Participants are fixed when the conversation starts.</p>
+		@foreach (PrivateMessageItem Message in Model.Thread.Messages)
+		{
+			<article id="message-@Message.Id" class="profile-card" data-ignore="true">
+				<header>
+					<strong>@Message.AuthorName</strong> ·
+					<time datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
+				</header>
+				<div class="private-message-body">@Html.Raw(Markdown.RenderTalkMarkdown(Message.Text))</div>
+			</article>
+		}
+		@if (Model.Thread.PageCount > 1)
+		{
+			<nav class="profile-pager" aria-label="Conversation pages">
+				@if (Model.Thread.PageNumber > 1)
+				{
+					<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber - 1)" rel="prev">Earlier</a>
+				}
+				<span>Page @Model.Thread.PageNumber of @Model.Thread.PageCount</span>
+				@if (Model.Thread.PageNumber < Model.Thread.PageCount)
+				{
+					<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber + 1)" rel="next">Later</a>
+				}
+			</nav>
+		}
+		<form method="post" action="@ConversationPath" asp-antiforgery="true" class="private-reply">
+			<label asp-for="Input.Text">Reply</label>
+			<textarea asp-for="Input.Text" rows="6" required maxlength="10000" aria-describedby="reply-error"></textarea>
+			<span asp-validation-for="Input.Text" id="reply-error" class="text-danger"></span>
+			<button type="submit" class="button button-primary">Send reply</button>
+		</form>
+	</section>
+</div>

@@ -33,6 +33,11 @@ public sealed class SiteInfo
 	public string SiteName { get; set; } = string.Empty;
 
 	/// <summary>
+	/// Gets or sets the contact email address displayed on the site's privacy policy page.
+	/// </summary>
+	public string? PrivacyContactEmail { get; set; } = null;
+
+	/// <summary>
 	/// Gets or sets the default culture code for the site.
 	/// Required for single-culture sites where the root domain serves content directly.
 	/// Optional for multi-culture sites with <see cref="RootDomainIsCultureSelectorOnly"/> set to true.

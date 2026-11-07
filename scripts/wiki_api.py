@@ -1,4 +1,4 @@
-"""Obtain and use Magazedia API tokens without putting them on the command line or in chat.
+"""Obtain and use WikiWikiWorld API tokens without putting them on the command line or in chat.
 
 Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
 
@@ -6,6 +6,8 @@ Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
   python scripts/wiki_api.py token prod --user MaggieTheBot # asks YOU for the password; lasts 180 days (--days N)
   python scripts/wiki_api.py status prod
   python scripts/wiki_api.py request prod GET api/article/gq-hype
+  python scripts/wiki_api.py request prod --host en.cinepedia.wiki GET api/article/the-matrix
+  python scripts/wiki_api.py request dev --host en.cinepedia.wiki.localhost GET api/article/the-matrix
   python scripts/wiki_api.py request prod PUT api/article/gq-hype --json body.json
   python scripts/wiki_api.py request prod POST api/file/some-file-slug --file File=pic.webp --form Culture=en
 """
@@ -29,21 +31,40 @@ TokenDirectory = RepositoryRoot / ".local" / "tokens"
 DevCredentialsFile = RepositoryRoot / ".local" / "DevvyTheBot.json"
 # WIKI_API_DEV_PORT selects another local instance, such as the 7127 preview server.
 DevPort = os.environ.get("WIKI_API_DEV_PORT", "7126")
-BaseUrls = {"dev": f"https://localhost:{DevPort}", "prod": "https://en.magazedia.com"}
-# The local development certificate covers "localhost" but not "en.localhost", so dev requests
-# connect to localhost and name the English site in the Host header instead.
-HostHeaders = {"dev": f"en.localhost:{DevPort}"}
+DefaultHosts = {
+    "dev": "en.magazedia.com.localhost",
+    "prod": "en.magazedia.com",
+}
 NameClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
 # Windows' registry-backed MIME table often lacks these image types; the upload API checks the declared type.
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("image/avif", ".avif")
 
 
-def Send(Environment: str, Method: str, Path_: str, Body: bytes | None, Headers: dict[str, str]) -> tuple[int, str]:
+def ResolveTarget(Environment: str, HostOverride: str | None) -> tuple[str, str | None]:
+    """Return (BaseUrl, HostHeader) for the given environment and optional --host / WIKI_API_HOST override."""
+    Host = (HostOverride or os.environ.get("WIKI_API_HOST") or DefaultHosts[Environment]).strip()
+    if Environment == "dev":
+        HostWithPort = Host if ":" in Host else f"{Host}:{DevPort}"
+        # Connect via localhost so TLS validation succeeds with either the standard localhost cert
+        # or the multi-SAN dev cert, and route to the target site/culture via the Host header.
+        return f"https://localhost:{DevPort}", HostWithPort
+    return f"https://{Host}", None
+
+
+def Send(
+    Environment: str,
+    Method: str,
+    Path_: str,
+    Body: bytes | None,
+    Headers: dict[str, str],
+    HostOverride: str | None = None,
+) -> tuple[int, str]:
     """Send one HTTPS request to an environment and return the status and response text, including error responses."""
-    if Environment in HostHeaders:
-        Headers = {**Headers, "Host": HostHeaders[Environment]}
-    Request = urllib.request.Request(BaseUrls[Environment] + Path_, data=Body, method=Method, headers=Headers)
+    BaseUrl, HostHeader = ResolveTarget(Environment, HostOverride)
+    if HostHeader is not None:
+        Headers = {**Headers, "Host": HostHeader}
+    Request = urllib.request.Request(BaseUrl + Path_, data=Body, method=Method, headers=Headers)
     try:
         with urllib.request.urlopen(Request, context=ssl.create_default_context(), timeout=60) as Response:
             return Response.status, Response.read().decode("utf-8", "replace")
@@ -70,7 +91,7 @@ def Describe(Token: str) -> str:
     return f"user {Claims.get(NameClaim, '?')}, expires {Expires:%Y-%m-%d %H:%M} UTC ({State})"
 
 
-def GetToken(Environment: str, UserName: str | None, Days: int | None) -> int:
+def GetToken(Environment: str, UserName: str | None, Days: int | None, HostOverride: str | None) -> int:
     """Exchange a username and password for a token and save it.
 
     Dev uses the DevvyTheBot test credentials file. Prod prompts the person at the
@@ -78,6 +99,8 @@ def GetToken(Environment: str, UserName: str | None, Days: int | None) -> int:
     typed by a human in an interactive terminal. Days asks for a longer lifetime
     (the server allows up to 365); without it the server issues a 24-hour token.
     """
+    BaseUrl, HostHeader = ResolveTarget(Environment, HostOverride)
+    TargetLabel = HostHeader or BaseUrl
     if Environment == "dev":
         Credentials = json.loads(DevCredentialsFile.read_text(encoding="utf-8"))
         UserName, Password = Credentials["UserName"], Credentials["Password"]
@@ -88,13 +111,19 @@ def GetToken(Environment: str, UserName: str | None, Days: int | None) -> int:
         if not sys.stdin.isatty():
             print("Production passwords must be typed interactively.", file=sys.stderr)
             return 2
-        Password = getpass.getpass(f"Password for {UserName} on {BaseUrls[Environment]}: ")
+        Password = getpass.getpass(f"Password for {UserName} on {TargetLabel}: ")
 
     Login = {"Username": UserName, "Password": Password}
     if Days is not None:
         Login["ExpiresInDays"] = Days
-    Status, Text = Send(Environment, "POST", "/api/auth/token", json.dumps(Login).encode(),
-                        {"Content-Type": "application/json"})
+    Status, Text = Send(
+        Environment,
+        "POST",
+        "/api/auth/token",
+        json.dumps(Login).encode(),
+        {"Content-Type": "application/json"},
+        HostOverride=HostOverride,
+    )
     if Status != 200:
         print(f"Token request failed: {Status} {Text}", file=sys.stderr)
         return 1
@@ -136,8 +165,15 @@ def BuildMultipart(Fields: list[str], Files: list[str]) -> tuple[bytes, str]:
     return b"".join(Parts), f"multipart/form-data; boundary={Boundary}"
 
 
-def CallApi(Environment: str, Method: str, Path_: str, JsonFile: Path | None,
-            Fields: list[str], Files: list[str]) -> int:
+def CallApi(
+    Environment: str,
+    Method: str,
+    Path_: str,
+    JsonFile: Path | None,
+    Fields: list[str],
+    Files: list[str],
+    HostOverride: str | None,
+) -> int:
     """Call an API path with the saved bearer token and print the status and response body.
 
     The body is either a JSON file or multipart form fields and files, not both.
@@ -159,7 +195,7 @@ def CallApi(Environment: str, Method: str, Path_: str, JsonFile: Path | None,
         Headers["Content-Type"] = "application/json"
     elif Fields or Files:
         Body, Headers["Content-Type"] = BuildMultipart(Fields, Files)
-    Status, Text = Send(Environment, Method.upper(), Path_, Body, Headers)
+    Status, Text = Send(Environment, Method.upper(), Path_, Body, Headers, HostOverride=HostOverride)
     print(Status)
     print(Text)
     return 0 if 200 <= Status < 300 else 1
@@ -170,34 +206,50 @@ def Main() -> int:
     # Article text is UTF-8; without this, Windows writes redirected output in the ANSI code page.
     sys.stdout.reconfigure(encoding="utf-8")
     Parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    Parser.add_argument(
+        "--host",
+        help="target site/culture hostname (for example en.cinepedia.wiki or en.cinepedia.wiki.localhost; "
+             "can also be set via WIKI_API_HOST)",
+    )
     Commands = Parser.add_subparsers(dest="command", required=True)
 
     TokenCommand = Commands.add_parser("token", help="get and save a token")
-    TokenCommand.add_argument("environment", choices=BaseUrls)
+    TokenCommand.add_argument("environment", choices=DefaultHosts)
     TokenCommand.add_argument("--user", help="account name (required for prod)")
     TokenCommand.add_argument("--days", type=int, help="token lifetime in days, 1-365 (default: 180 for prod, 1 for dev)")
+    TokenCommand.add_argument("--host", dest="subcommand_host", help="override target hostname")
 
     StatusCommand = Commands.add_parser("status", help="show the saved token's user and expiry")
-    StatusCommand.add_argument("environment", choices=BaseUrls)
+    StatusCommand.add_argument("environment", choices=DefaultHosts)
 
     RequestCommand = Commands.add_parser("request", help="call the API with the saved token")
-    RequestCommand.add_argument("environment", choices=BaseUrls)
+    RequestCommand.add_argument("environment", choices=DefaultHosts)
     RequestCommand.add_argument("method")
     RequestCommand.add_argument("path", help="for example api/article/gq-hype")
+    RequestCommand.add_argument("--host", dest="subcommand_host", help="override target hostname")
     Body = RequestCommand.add_mutually_exclusive_group()
     Body.add_argument("--json", type=Path, help="file holding the JSON request body")
     Body.add_argument("--form", action="append", default=[], metavar="KEY=VALUE", help="multipart form field (repeatable)")
     RequestCommand.add_argument("--file", action="append", default=[], metavar="FIELD=PATH", help="multipart file part (repeatable)")
 
     Arguments = Parser.parse_args()
+    HostOverride = getattr(Arguments, "subcommand_host", None) or Arguments.host
     if Arguments.command == "token":
         Days = Arguments.days if Arguments.days is not None else (180 if Arguments.environment == "prod" else None)
-        return GetToken(Arguments.environment, Arguments.user, Days)
+        return GetToken(Arguments.environment, Arguments.user, Days, HostOverride)
     if Arguments.command == "status":
         return ShowStatus(Arguments.environment)
     if Arguments.json and Arguments.file:
         Parser.error("--json cannot be combined with --file")
-    return CallApi(Arguments.environment, Arguments.method, Arguments.path, Arguments.json, Arguments.form, Arguments.file)
+    return CallApi(
+        Arguments.environment,
+        Arguments.method,
+        Arguments.path,
+        Arguments.json,
+        Arguments.form,
+        Arguments.file,
+        HostOverride,
+    )
 
 
 if __name__ == "__main__":

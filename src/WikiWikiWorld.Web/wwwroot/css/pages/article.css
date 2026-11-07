@@ -1,4 +1,4 @@
-/* Article - Article page specific styling */
+/* Article prose and reusable article components; loaded site-wide. */
 
 .article-end-mark {
     color: var(--uchu-green-5);
@@ -12,11 +12,11 @@
     font-weight: bold;
 } */
 
-article > p:first-of-type::first-line {
+main > article > p:first-of-type::first-line {
     text-transform: uppercase;
 }
 
-article a:not([class]) {
+article :where(p, li, dt, dd, blockquote) a:not(.button) {
     text-decoration: underline;
     text-underline-offset: .2rem;
     transition: text-underline-offset 0.15s ease, color 0.15s ease;
@@ -209,14 +209,14 @@ aside.infobox > dl > dt:not(:first-of-type) {
     }
 }
 
-aside.downloads-box .file-info {
+aside.downloads-box > div {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     column-gap: 0.75rem;
     align-items: start;
 }
 
-aside.downloads-box .file-icon {
+aside.downloads-box > div > span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -231,7 +231,7 @@ aside.downloads-box .file-icon {
     }
 }
 
-aside.downloads-box .text-content {
+aside.downloads-box > div > div {
     display: flex;
     flex-direction: column;
     gap: 0.32rem;
@@ -299,7 +299,7 @@ article > aside.downloads-box a.button {
     }
 }
 
-.no-downloads {
+aside.downloads-box > p {
     margin: 0;
     font-family: var(--font-family-san-serif);
     font-size: var(--step--1);
@@ -307,17 +307,17 @@ article > aside.downloads-box a.button {
     text-align: center;
 }
 
-article > ul:not([class]) {
+main > article > ul:not(.categories) {
     list-style-type: none;
 }
 
-article > ul:not([class]) > li {
+main > article > ul:not(.categories) > li {
     position: relative;
     padding-left: 1.5em;
     contain: content;
 }
 
-article > ul:not([class]) > li::before {
+main > article > ul:not(.categories) > li::before {
     content: '';
     position: absolute;
     left: 0;
@@ -378,4 +378,42 @@ aside.publication-upload-cta p {
 aside.publication-upload-cta a {
     font-weight: 600;
     margin-left: 0.25rem;
+}
+
+
+.cover-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.cover-grid > a {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.cover-grid > a > figure {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.cover-grid > a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.cover-grid img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    aspect-ratio: 0.7/1;
+}
+
+.cover-grid figcaption {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: clamp(0.75rem, 1vw, 0.9rem);
 }

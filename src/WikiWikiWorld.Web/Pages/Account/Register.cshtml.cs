@@ -63,7 +63,7 @@ public sealed class RegisterModel(
 		if (Result.Succeeded)
 		{
 			// Best-effort: ensure the user's @page (their home page) exists. A failure here must never block
-			// registration — the page is recreated on demand when the profile is viewed or messaged.
+			// registration — the page is recreated on demand when its public article is viewed.
 			await ArticleRevisionService.TryEnsureUserArticleAsync(SiteId, Culture, NewUser, CancellationToken);
 
 			await SignInManager.SignInAsync(NewUser, isPersistent: false);

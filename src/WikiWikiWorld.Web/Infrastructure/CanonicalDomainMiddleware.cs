@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -9,7 +10,8 @@ namespace WikiWikiWorld.Web.Infrastructure;
 /// <summary>
 /// Canonicalizes the request host before routing: strips "www.", applies configured host
 /// mappings (for example, magazedia.wiki to magazedia.com), redirects unknown hosts to a
-/// configured target, and rewrites the root path to the culture selector page for sites
+/// configured target, answers remaining hosts that match no configured site with a standalone
+/// 404 page, and rewrites the root path to the culture selector page for sites
 /// whose root domain only serves culture selection.
 /// </summary>
 public sealed class CanonicalDomainMiddleware
@@ -64,20 +66,24 @@ public sealed class CanonicalDomainMiddleware
 			return;
 		}
 
-		// 2. Host suffix mappings, preserving any subdomain (301)
-		foreach ((string FromDomain, string ToDomain) in RedirectOptions.HostMappings)
+		// 2. Host suffix mappings, preserving any subdomain when the target is not itself under the source domain (301)
+		if (!KnownHosts.Contains(Host))
 		{
-			if (Host.Equals(FromDomain, StringComparison.OrdinalIgnoreCase))
+			foreach ((string FromDomain, string ToDomain) in RedirectOptions.HostMappings)
 			{
-				await RedirectToHostAsync(Context, ToDomain, StatusCodes.Status301MovedPermanently);
-				return;
-			}
+				if (Host.Equals(FromDomain, StringComparison.OrdinalIgnoreCase))
+				{
+					await RedirectToHostAsync(Context, ToDomain, StatusCodes.Status301MovedPermanently);
+					return;
+				}
 
-			if (Host.EndsWith($".{FromDomain}", StringComparison.OrdinalIgnoreCase))
-			{
-				string Subdomain = Host[..^FromDomain.Length];
-				await RedirectToHostAsync(Context, $"{Subdomain}{ToDomain}", StatusCodes.Status301MovedPermanently);
-				return;
+				if (!ToDomain.EndsWith($".{FromDomain}", StringComparison.OrdinalIgnoreCase) &&
+					Host.EndsWith($".{FromDomain}", StringComparison.OrdinalIgnoreCase))
+				{
+					string Subdomain = Host[..^FromDomain.Length];
+					await RedirectToHostAsync(Context, $"{Subdomain}{ToDomain}", StatusCodes.Status301MovedPermanently);
+					return;
+				}
 			}
 		}
 
@@ -100,7 +106,15 @@ public sealed class CanonicalDomainMiddleware
 			return;
 		}
 
-		// 5. Root path on a culture-selector root domain renders the culture selector
+		// 5. Hosts that survive the redirects but match no configured site (for example bogus.localhost in
+		// development) get a self-contained page; continuing would throw when the site-scoped DbContext is built.
+		if (!MatchesConfiguredSite(Host))
+		{
+			await WriteUnknownHostPageAsync(Context, Host);
+			return;
+		}
+
+		// 6. Root path on a culture-selector root domain renders the culture selector
 		if ((!Context.Request.Path.HasValue || Context.Request.Path == "/") &&
 			IsCultureSelectorRootDomain(Host))
 		{
@@ -160,6 +174,75 @@ public sealed class CanonicalDomainMiddleware
 		Context.Response.StatusCode = StatusCode;
 		Context.Response.Headers.Location = Location;
 		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Determines whether the host equals, or is a subdomain of, any configured site domain: the same rule
+	/// <see cref="Services.SiteResolverService"/> uses to find the base domain, so a match here means site
+	/// resolution will not fail for want of a domain.
+	/// </summary>
+	/// <param name="Host">The request host, without port.</param>
+	/// <returns><see langword="true"/> when a configured site serves the host.</returns>
+	private bool MatchesConfiguredSite(string Host)
+	{
+		return SiteConfiguration.Sites
+			.SelectMany(Site => Site.Domains)
+			.Any(Domain => Host.Equals(Domain, StringComparison.OrdinalIgnoreCase) ||
+				Host.EndsWith($".{Domain}", StringComparison.OrdinalIgnoreCase));
+	}
+
+	/// <summary>
+	/// Writes a standalone 404 page explaining that no wiki is configured for the host, linking to each
+	/// configured site's first domain on the current scheme and port. It uses no layout, database or
+	/// site services, because all of those require a resolvable site. The body is non-empty, so the
+	/// status-code re-execution to /NotFound (which would itself need a site) does not run.
+	/// </summary>
+	/// <param name="Context">The HTTP context to respond on.</param>
+	/// <param name="Host">The unmatched request host, shown to the reader.</param>
+	/// <returns>A task that completes when the response has been written.</returns>
+	private Task WriteUnknownHostPageAsync(HttpContext Context, string Host)
+	{
+		HttpRequest Request = Context.Request;
+		string SiteLinks = string.Concat(SiteConfiguration.Sites
+			.Where(Site => Site.Domains.Count > 0)
+			.Select(Site =>
+			{
+				HostString Target = Request.Host.Port is int Port ? new HostString(Site.Domains[0], Port) : new HostString(Site.Domains[0]);
+				string Url = UriHelper.BuildAbsolute(Request.Scheme, Target);
+				return $"<li><a href=\"{WebUtility.HtmlEncode(Url)}\">{WebUtility.HtmlEncode(Site.SiteName)}</a> <span>{WebUtility.HtmlEncode(Target.Value)}</span></li>";
+			}));
+
+		string Html = $$"""
+			<!doctype html>
+			<html lang="en">
+			<head>
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<meta name="robots" content="noindex">
+			<title>No wiki at this address</title>
+			<style>
+			:root { color-scheme: light dark; font-family: system-ui, sans-serif; line-height: 1.5; }
+			body { max-inline-size: 36rem; margin: 15vh auto; padding-inline: 1.5rem; }
+			h1 { font-size: 1.75rem; line-height: 1.2; }
+			code { padding: .1em .35em; border-radius: .3em; background: color-mix(in srgb, currentColor 10%, transparent); }
+			ul { padding: 0; list-style: none; }
+			li { margin-block: .6rem; }
+			a { font-weight: 600; }
+			span { opacity: .65; font-size: .9em; }
+			</style>
+			</head>
+			<body>
+			<h1>No wiki at this address</h1>
+			<p><code>{{WebUtility.HtmlEncode(Host)}}</code> isn’t set up on this server. Try one of these instead:</p>
+			<ul>{{SiteLinks}}</ul>
+			</body>
+			</html>
+			""";
+
+		Context.Response.StatusCode = StatusCodes.Status404NotFound;
+		Context.Response.ContentType = "text/html; charset=utf-8";
+		Context.Response.Headers.CacheControl = "no-store";
+		return Context.Response.WriteAsync(Html, Context.RequestAborted);
 	}
 
 	private bool IsKnownHost(string Host)

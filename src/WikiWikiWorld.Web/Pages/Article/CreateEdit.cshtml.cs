@@ -34,9 +34,8 @@ public sealed class CreateEditModel(
 
     private static readonly HashSet<string> AllowedMimeTypes = ImageValidationHelper.AllowedMimeTypes;
 
-    // Used to determine edit mode - if UrlSlug is provided via query string, we're editing
     /// <summary>
-    /// Gets or sets the URL slug of the article (if editing).
+    /// Gets or sets the requested or submitted slug, including a prefilled slug for a new user page.
     /// </summary>
     [BindProperty(SupportsGet = true)]
     public string? UrlSlug { get; set; }
@@ -89,11 +88,8 @@ public sealed class CreateEditModel(
     public List<ArticleType> AvailableArticleTypes { get; } = [.. Enum.GetValues<ArticleType>()
         .Where(Type => Type != ArticleType.User)];
 
-    // Determines if we're in edit mode based on presence of UrlSlug
-    /// <summary>
-    /// Gets a value indicating whether the page is in edit mode.
-    /// </summary>
-    public bool IsEditMode => !string.IsNullOrWhiteSpace(UrlSlug);
+	/// <summary>Gets whether an existing revision was loaded or submitted for editing; a prefilled creation slug alone is not an edit.</summary>
+	public bool IsEditMode => !string.IsNullOrWhiteSpace(OriginalUrlSlug);
 
     /// <summary>
     /// Gets a value indicating whether the current article can be reverted to a previous revision.
@@ -115,72 +111,48 @@ public sealed class CreateEditModel(
     /// </summary>
     public bool HasExistingFile => ExistingFileRevision is not null;
 
-    /// <summary>
-    /// Handles the GET request to load the form.
-    /// </summary>
-    /// <returns>The page or result.</returns>
-    public async Task<IActionResult> OnGetAsync()
-    {
-        if (!User.Identity?.IsAuthenticated ?? true)
-        {
-            return Challenge();
-        }
+	/// <summary>Loads an existing article for editing or offers creation of the authenticated owner's missing user page.</summary>
+	/// <param name="CancellationToken">Cancels article lookup and edit-state loading.</param>
+	/// <returns>The editor, a canonical redirect, or an authentication/ownership/missing-article response.</returns>
+	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken = default)
+	{
+		if (User.Identity?.IsAuthenticated != true) return Challenge();
+		OriginalUrlSlug = string.Empty;
+		if (string.IsNullOrWhiteSpace(UrlSlug)) return Page();
 
-        string? RequestedUrlSlug = UrlSlug;
+		string RequestedUrlSlug = UrlSlug;
+		UrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
+		ArticleRevisionsBySlugSpec Spec = new(UrlSlug, IsCurrent: true);
+		ArticleRevision? CurrentArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(Spec).FirstOrDefaultAsync(CancellationToken);
+		if (CurrentArticle is null)
+		{
+			if (!UrlSlug.StartsWith('@')) return NotFound("Article not found.");
+			User? CurrentUser = await UserManager.GetUserAsync(User);
+			if (CurrentUser?.UserName is not string UserName) return Challenge();
+			if (!string.Equals(UrlSlug[1..], UserName, StringComparison.OrdinalIgnoreCase)) return Forbid();
 
-        if (!string.IsNullOrWhiteSpace(UrlSlug))
-        {
-            UrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
-        }
+			UrlSlug = $"@{UserName}";
+			ModelState.Remove(nameof(UrlSlug));
+			Title = UrlSlug;
+			DisplayTitle = $"User: {UserName}";
+			SelectedType = ArticleType.User;
+			return Page();
+		}
 
-        // Edit mode: Load existing article data
-        if (IsEditMode)
-        {
-            ArticleRevisionsBySlugSpec Spec = new(UrlSlug!, IsCurrent: true);
-            ArticleRevision? CurrentArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(Spec).FirstOrDefaultAsync();
+		if (ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, CurrentArticle.Type))
+			return RedirectPermanent($"{ArticleUrlHelper.BuildArticlePath(CurrentArticle)}/edit");
 
-            if (CurrentArticle is null)
-            {
-                return NotFound("Article not found.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(RequestedUrlSlug) && ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, CurrentArticle.Type))
-            {
-                return RedirectPermanent($"{ArticleUrlHelper.BuildArticlePath(CurrentArticle)}/edit");
-            }
-
-            // Populate form with existing data
-            OriginalUrlSlug = CurrentArticle.UrlSlug;
-            // Clear ModelState so asp-for renders the property value, not the query string
-            // (which may include the "file:" namespace prefix).
-            ModelState.Remove(nameof(UrlSlug));
-            UrlSlug = CurrentArticle.UrlSlug;
-            Title = CurrentArticle.Title;
-            DisplayTitle = CurrentArticle.DisplayTitle ?? string.Empty;
-            ArticleText = CurrentArticle.Text;
-            SelectedType = CurrentArticle.Type;
-
-            await PopulateEditStateAsync(CurrentArticle.UrlSlug, default);
-        }
-        // Create mode: Form starts blank
-        if (!IsEditMode && !string.IsNullOrWhiteSpace(UrlSlug) && UrlSlug.StartsWith('@'))
-        {
-            // User Home Page Creation Mode
-            string Username = UrlSlug[1..];
-
-            // Verify that the current user matches the requested username
-            if (!string.Equals(User.Identity?.Name, Username, StringComparison.OrdinalIgnoreCase))
-            {
-                return Forbid();
-            }
-
-            Title = UrlSlug;
-            DisplayTitle = $"User: {Username}";
-            SelectedType = ArticleType.User;
-        }
-
-        return Page();
-    }
+		OriginalUrlSlug = CurrentArticle.UrlSlug;
+		// Model binding may have retained a file: prefix; the form edits the database's bare slug.
+		ModelState.Remove(nameof(UrlSlug));
+		UrlSlug = CurrentArticle.UrlSlug;
+		Title = CurrentArticle.Title;
+		DisplayTitle = CurrentArticle.DisplayTitle ?? string.Empty;
+		ArticleText = CurrentArticle.Text;
+		SelectedType = CurrentArticle.Type;
+		await PopulateEditStateAsync(CurrentArticle.UrlSlug, CancellationToken);
+		return Page();
+	}
 
     /// <summary>
     /// Handles the POST request to revert an article to a previous revision.
@@ -218,62 +190,46 @@ public sealed class CreateEditModel(
         catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {
              ErrorMessage = Ex.Message;
-             return await OnGetAsync();
+             return await OnGetAsync(CancellationToken);
         }
     }
 
-    /// <summary>
-    /// Handles the POST request to create or update an article.
-    /// </summary>
-    /// <param name="CancellationToken">The cancellation token.</param>
-    /// <returns>A redirect or page result with errors.</returns>
-    public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
-    {
-        // Validate required fields
-        if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(UrlSlug) || string.IsNullOrWhiteSpace(ArticleText))
-        {
-            ErrorMessage = "All required fields must be filled out.";
-            return Page();
-        }
+	/// <summary>Creates or edits the submitted article, retaining draft values and mode on validation failure.</summary>
+	/// <param name="CancellationToken">Cancels the revision or file workflow.</param>
+	/// <returns>A redirect after saving, the submitted form with errors, or an authentication/ownership refusal.</returns>
+	/// <remarks>User-page requests force the User article type before validation; file attachments cannot change that type.</remarks>
+	public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
+	{
+		if (User.Identity?.IsAuthenticated != true) return Challenge();
+		Guid? CurrentUserId = GetCurrentUserId();
+		if (CurrentUserId is null) return Challenge();
 
-        if (ArticleUrlHelper.IsRestrictedSlug(UrlSlug))
-        {
-            ErrorMessage = "The chosen URL slug conflicts with a reserved system path and cannot be used.";
-            return Page();
-        }
+		if (UrlSlug?.StartsWith('@') == true)
+		{
+			if (!string.Equals(User.Identity?.Name, UrlSlug[1..], StringComparison.OrdinalIgnoreCase)) return Forbid();
+			SelectedType = ArticleType.User;
+			if (UploadedFile is { Length: > 0 })
+			{
+				ErrorMessage = "User home pages cannot have an attached file.";
+				return Page();
+			}
+		}
 
-        // Ensure user is authenticated
-        Guid? CurrentUserId = GetCurrentUserId();
-        if (CurrentUserId is null)
-        {
-            return Challenge();
-        }
+		if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(UrlSlug) || string.IsNullOrWhiteSpace(ArticleText))
+		{
+			ErrorMessage = "All required fields must be filled out.";
+			return Page();
+		}
+		if (ArticleUrlHelper.IsRestrictedSlug(UrlSlug))
+		{
+			ErrorMessage = "The chosen URL slug conflicts with a reserved system path and cannot be used.";
+			return Page();
+		}
 
-        // In POST, determine mode by checking if OriginalUrlSlug was set (edit mode)
-        bool IsEditModePost = !string.IsNullOrWhiteSpace(OriginalUrlSlug);
-
-        // Enforce ArticleType.User for user home pages
-        if (UrlSlug?.StartsWith('@') == true)
-        {
-            string Username = UrlSlug[1..];
-            // Verify that the current user matches the requested username
-            if (!string.Equals(User.Identity?.Name, Username, StringComparison.OrdinalIgnoreCase))
-            {
-                return Forbid();
-            }
-
-            SelectedType = ArticleType.User;
-        }
-
-        if (IsEditModePost)
-        {
-            return await HandleEditAsync(CurrentUserId.Value, CancellationToken);
-        }
-        else
-        {
-            return await HandleCreateAsync(CurrentUserId.Value, CancellationToken);
-        }
-    }
+		return IsEditMode
+			? await HandleEditAsync(CurrentUserId.Value, CancellationToken)
+			: await HandleCreateAsync(CurrentUserId.Value, CancellationToken);
+	}
 
     /// <summary>
     /// Handles the creation of a new article.
@@ -313,7 +269,7 @@ public sealed class CreateEditModel(
             }
             catch (Exception Ex)
             {
-                FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+                await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
                 ErrorMessage = $"Error uploading file: {Ex.Message}";
                 return Page();
             }
@@ -334,7 +290,7 @@ public sealed class CreateEditModel(
 
                 if (ExistingArticleInsideTransaction is not null)
                 {
-                    FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+                    await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
                     throw new InvalidOperationException("An article with this URL slug already exists.");
                 }
 
@@ -344,6 +300,7 @@ public sealed class CreateEditModel(
                     FileRevision NewFile = new()
                     {
                         CanonicalFileId = CanonicalFileId.Value,
+                        StagingUploadId = StagedUpload.StagingUploadId,
                         Type = FileType.Image2D,
                         Filename = StagedUpload.OriginalFileName,
                         MimeType = StagedUpload.ContentType,
@@ -406,13 +363,13 @@ public sealed class CreateEditModel(
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             ErrorMessage = Ex.Message;
             return Page();
         }
         catch (Exception Ex)
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             ErrorMessage = $"Error creating article: {Ex.Message}";
             return Page();
         }
@@ -493,7 +450,7 @@ public sealed class CreateEditModel(
         }
         catch (Exception Ex)
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             ErrorMessage = $"Error uploading file: {Ex.Message}";
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
@@ -514,7 +471,7 @@ public sealed class CreateEditModel(
 
                 if (ArticleToUpdate is null)
                 {
-                    FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+                    await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
                     throw new InvalidOperationException("Article not found.");
                 }
 
@@ -528,7 +485,7 @@ public sealed class CreateEditModel(
 
                     if (ConflictArticle is not null)
                     {
-                        FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+                        await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
                         throw new InvalidOperationException("An article with this URL slug already exists.");
                     }
                 }
@@ -548,6 +505,7 @@ public sealed class CreateEditModel(
                 FileRevision NewFile = new()
                 {
                     CanonicalFileId = TargetCanonicalFileId,
+                    StagingUploadId = StagedUpload.StagingUploadId,
                     Type = FileType.Image2D,
                     Filename = StagedUpload.OriginalFileName,
                     MimeType = StagedUpload.ContentType,
@@ -609,14 +567,14 @@ public sealed class CreateEditModel(
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             ErrorMessage = Ex.Message;
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
         }
         catch (Exception Ex)
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             ErrorMessage = $"Error updating article: {Ex.Message}";
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();

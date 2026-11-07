@@ -85,23 +85,23 @@ public sealed class IssueContentsRenderer : HtmlObjectRenderer<IssueContentsBloc
 			Renderer.Write("<pre class=\"issue-contents-error\">").WriteEscape(Source).WriteLine("</pre>");
 			return;
 		}
-		Renderer.WriteLine("<section class=\"issue-contents\"><h2 class=\"issue-contents-heading\">In This Issue</h2>");
-		Renderer.WriteLine("<div class=\"issue-contents-groups\">");
+		Renderer.WriteLine("<section class=\"issue-contents\"><h2>In This Issue</h2>");
+		Renderer.WriteLine("<div>");
 		foreach (IssueContentsGroup Group in Groups)
 		{
 			Renderer.Write(Group.Featured ? "<div class=\"issue-contents-group issue-contents-featured\">" : "<div class=\"issue-contents-group\">");
 			if (Group.Title is not null)
-				Renderer.Write("<h3 class=\"issue-contents-group-title\">").WriteEscape(Group.Title).WriteLine("</h3>");
-			Renderer.WriteLine("<ol class=\"issue-contents-entries\" role=\"list\">");
+				Renderer.Write("<h3>").WriteEscape(Group.Title).WriteLine("</h3>");
+			Renderer.WriteLine("<ol role=\"list\">");
 			foreach (IssueContentsEntry Entry in Group.Entries)
 			{
 				string Heading = Group.Title is null ? "h3" : "h4";
-				Renderer.Write("<li class=\"issue-contents-entry\"><div class=\"issue-contents-entry-heading\"><")
-					.Write(Heading).Write(" class=\"issue-contents-title\">").WriteEscape(Entry.Title)
+				Renderer.Write("<li><header><")
+					.Write(Heading).Write(">").WriteEscape(Entry.Title)
 					.Write("</").Write(Heading).Write(">");
 				if (Entry.Pages is not null)
 					Renderer.Write("<span class=\"issue-contents-pages\">p. ").WriteEscape(Entry.Pages).Write("</span>");
-				Renderer.WriteLine("</div>");
+				Renderer.WriteLine("</header>");
 				if (Entry.Description is not null)
 					Renderer.Write("<p class=\"issue-contents-description\">").WriteEscape(Entry.Description).WriteLine("</p>");
 				if (Entry.Credit is not null)

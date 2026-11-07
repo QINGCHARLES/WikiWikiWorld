@@ -83,7 +83,7 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	public static string GetDefaultUserArticleText(string? UserName) => $"Welcome to {UserName}'s page.";
 
 	/// <summary>
-	/// Gets the user's <c>@username</c> article — their home page (which also hosts their messages) — creating
+	/// Gets the user's <c>@username</c> article — their public home page and discussion space — creating
 	/// a placeholder revision if one does not already exist. Idempotent: an existing current revision is returned unchanged.
 	/// </summary>
 	/// <remarks>

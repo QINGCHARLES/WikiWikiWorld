@@ -615,7 +615,7 @@ Add a `{{Citations}}` block to the article so the bibliography is rendered.
 
 ## Interactive Cover Carousel
 
-Place cover images in a separate `{{CoverCarousel CoverImage=file:front-cover |~| CoverImage=file:back-cover}}` block. Legacy `CoverImage` properties in an infobox are ignored; existing article text is not automatically migrated.
+Place cover images in a separate `{{CoverCarousel CoverImage=file:front-cover |~| CoverImage=file:back-cover}}` block.
 
 ---
 *Return to the [Formatting Guide](/wiki:formatting).*"""
@@ -680,7 +680,7 @@ wired-issue-5
 ## How It Works
 
 1. **Issue Resolution:** The grid looks up each referenced article.
-2. **Cover Extraction:** It inspects each issue article's `CoverCarousel` to locate its primary `CoverImage`, falling back to legacy infobox metadata.
+2. **Cover Extraction:** It inspects each issue article's `CoverCarousel` to locate its primary `CoverImage`.
 3. **Linked Thumbnail:** Each cover is rendered in a responsive CSS grid, linking directly to the respective issue page (`/{culture}/{issue-slug}`).
 4. **Fallback Handling:** If an issue article is missing a cover image, a default cover placeholder is displayed.
 

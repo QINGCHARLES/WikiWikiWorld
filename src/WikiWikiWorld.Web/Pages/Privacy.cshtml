@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model PrivacyModel
 @{
     ViewData["Title"] = "Privacy Policy";
@@ -11,7 +11,7 @@
 
     <section>
         <h2>Introduction</h2>
-        <p>Welcome to Magazedia. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website.</p>
+        <p>Welcome to @Model.SiteName. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website.</p>
     </section>
 
     <section>
@@ -91,9 +91,12 @@
         <p>We may update this privacy policy from time to time. We will notify you of any significant changes by posting the new policy on this page and updating the "Last updated" date.</p>
     </section>
 
-    <section>
-        <h2>Contact Us</h2>
-        <p>If you have questions about this privacy policy or our practices, please contact us at:</p>
-        <p><a href="mailto:privacy@magazedia.com">privacy@magazedia.com</a></p>
-    </section>
+    @if (!string.IsNullOrWhiteSpace(Model.PrivacyContactEmail))
+    {
+        <section>
+            <h2>Contact Us</h2>
+            <p>If you have questions about this privacy policy or our practices, please contact us at:</p>
+            <p><a href="mailto:@Model.PrivacyContactEmail">@Model.PrivacyContactEmail</a></p>
+        </section>
+    }
 </div>

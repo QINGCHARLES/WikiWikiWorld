@@ -19,6 +19,7 @@ public static class ArticleUrlHelper
 		"account",
 		"article",
 		"profile",
+		"message",
 		"settings",
 		"search",
 		"cultureselect",

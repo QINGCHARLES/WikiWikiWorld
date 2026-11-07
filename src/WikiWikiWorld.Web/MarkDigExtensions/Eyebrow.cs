@@ -47,7 +47,31 @@ public enum EyebrowType
 	Newsletter,
 
 	/// <summary>A specific issue of a newsletter publication.</summary>
-	NewsletterIssue
+	NewsletterIssue,
+
+	/// <summary>A feature-length or theatrical film.</summary>
+	Movie,
+
+	/// <summary>A short film production.</summary>
+	ShortFilm,
+
+	/// <summary>A television, web, or film series.</summary>
+	Series,
+
+	/// <summary>An individual episode of a series.</summary>
+	Episode,
+
+	/// <summary>A film or television production studio.</summary>
+	Studio,
+
+	/// <summary>A film or media distribution company.</summary>
+	Distributor,
+
+	/// <summary>A film festival or media event.</summary>
+	Festival,
+
+	/// <summary>A film or media award or ceremony.</summary>
+	Award
 }
 
 /// <summary>
@@ -77,7 +101,15 @@ public sealed class EyebrowExtension : IMarkdownExtension
 		[EyebrowType.ZineIssue] = "Zine Issue",
 		[EyebrowType.JournalIssue] = "Journal Issue",
 		[EyebrowType.Newsletter] = "Newsletter",
-		[EyebrowType.NewsletterIssue] = "Newsletter Issue"
+		[EyebrowType.NewsletterIssue] = "Newsletter Issue",
+		[EyebrowType.Movie] = "Movie",
+		[EyebrowType.ShortFilm] = "Short Film",
+		[EyebrowType.Series] = "Series",
+		[EyebrowType.Episode] = "Episode",
+		[EyebrowType.Studio] = "Studio",
+		[EyebrowType.Distributor] = "Distributor",
+		[EyebrowType.Festival] = "Festival",
+		[EyebrowType.Award] = "Award"
 	}.ToFrozenDictionary();
 
 	/// <inheritdoc/>
@@ -140,7 +172,15 @@ public sealed class EyebrowBlockParser : BlockParser
 			["NEWSLETTERISSUE"] = EyebrowType.NewsletterIssue,
 			["PERSON"] = EyebrowType.Person,
 			["PUBLISHER"] = EyebrowType.Publisher,
-			["ORGANIZATION"] = EyebrowType.Organization
+			["ORGANIZATION"] = EyebrowType.Organization,
+			["MOVIE"] = EyebrowType.Movie,
+			["SHORTFILM"] = EyebrowType.ShortFilm,
+			["SERIES"] = EyebrowType.Series,
+			["EPISODE"] = EyebrowType.Episode,
+			["STUDIO"] = EyebrowType.Studio,
+			["DISTRIBUTOR"] = EyebrowType.Distributor,
+			["FESTIVAL"] = EyebrowType.Festival,
+			["AWARD"] = EyebrowType.Award
 		}.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
 	/// <summary>

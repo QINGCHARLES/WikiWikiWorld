@@ -1,5 +1,7 @@
 @model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(Context.Request.PathBase, Url.Content("~/icons.svg"));
 	string Label = Model.OtherListCount switch
 	{
 		0 => "Bookmark lists",
@@ -9,9 +11,9 @@
 }
 @* Chevron half of the bookmark split button. The badge counts non-default lists holding the article, since the
    leading half only reflects the default list. *@
-<summary id="article-bookmark-trigger" class="menu-trigger" aria-label="@Label">
-	<svg class="action-icon menu-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-		<path d="m6 9 6 6 6-6"></path>
+<summary id="article-bookmark-trigger" aria-label="@Label">
+	<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+		<use href="@IconSpriteUrl#ChevronDown"></use>
 	</svg>
 	@if (Model.OtherListCount > 0)
 	{

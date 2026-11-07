@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using WikiWikiWorld.Web.Configuration;
 
 namespace WikiWikiWorld.Web.Services;
@@ -23,6 +23,16 @@ public sealed class SiteResolverService
 	}
 
 	/// <summary>
+	/// Gets the site configuration for the specified site ID.
+	/// </summary>
+	/// <param name="SiteId">The site identifier.</param>
+	/// <returns>The matching <see cref="SiteInfo"/>, or <c>null</c> if not found.</returns>
+	public SiteInfo? GetSite(int SiteId)
+	{
+		return SiteConfiguration.Sites.FirstOrDefault(Site => Site.SiteId == SiteId);
+	}
+
+	/// <summary>
 	/// Resolves the site ID and culture from the current request.
 	/// </summary>
 	/// <returns>A tuple containing the site ID and the resolved content culture.</returns>
@@ -44,13 +54,13 @@ public sealed class SiteResolverService
 		}
 
 		SiteInfo? MatchingSite = FindMatchingSite(BaseDomain);
-		if (MatchingSite == null)
+		if (MatchingSite is null)
 		{
 			throw new InvalidOperationException($"Failed to find matching site for domain: {BaseDomain}");
 		}
 
 		string Culture = ExtractCultureFromHost(Host, BaseDomain);
-		
+
 		// If no culture subdomain, try default culture
 		if (string.IsNullOrEmpty(Culture) && !string.IsNullOrEmpty(MatchingSite.DefaultCulture))
 		{
@@ -87,7 +97,7 @@ public sealed class SiteResolverService
 		}
 
 		SiteInfo? MatchingSite = FindMatchingSite(BaseDomain);
-		if (MatchingSite == null)
+		if (MatchingSite is null)
 		{
 			throw new InvalidOperationException($"Failed to find matching site for domain: {BaseDomain}");
 		}
@@ -130,12 +140,6 @@ public sealed class SiteResolverService
 	/// <returns>The base domain, or empty string if not found.</returns>
 	private string GetBaseDomain(string Host)
 	{
-		if (Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-			Host.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase))
-		{
-			return "localhost";
-		}
-
 		foreach (SiteInfo Site in SiteConfiguration.Sites)
 		{
 			foreach (string Domain in Site.Domains)

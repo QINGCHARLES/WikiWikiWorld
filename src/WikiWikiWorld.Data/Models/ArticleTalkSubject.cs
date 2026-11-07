@@ -31,11 +31,6 @@ public sealed record ArticleTalkSubject
     public required string UrlSlug { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether this subject has been edited.
-    /// </summary>
-    public bool HasBeenEdited { get; init; }
-
-    /// <summary>
     /// Gets the user identifier who created this subject.
     /// </summary>
     public Guid CreatedByUserId { get; init; }
@@ -44,11 +39,6 @@ public sealed record ArticleTalkSubject
     /// Gets the date and time when this subject was created.
     /// </summary>
     public DateTimeOffset DateCreated { get; init; }
-
-    /// <summary>
-    /// Gets the date and time when this subject was last modified, if applicable.
-    /// </summary>
-    public DateTimeOffset? DateModified { get; init; }
 
     /// <summary>
     /// Gets the date and time when this subject was deleted, if applicable.

@@ -8,7 +8,10 @@ namespace WikiWikiWorld.Web.Pages;
 /// </summary>
 public abstract class BasePageModel : PageModel
 {
-	private readonly SiteResolverService SiteResolverService;
+	/// <summary>
+	/// Gets the service used to resolve the current site and culture.
+	/// </summary>
+	protected SiteResolverService SiteResolverService { get; }
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="BasePageModel"/> class.
@@ -23,6 +26,11 @@ public abstract class BasePageModel : PageModel
 	/// Gets the current Site ID resolved from the request.
 	/// </summary>
 	public int SiteId { get; private set; }
+
+	/// <summary>
+	/// Gets the display name of the current site resolved from the request.
+	/// </summary>
+	public string SiteName { get; private set; } = string.Empty;
 
 	/// <summary>
 	/// Gets the current Culture resolved from the request.
@@ -62,9 +70,11 @@ public abstract class BasePageModel : PageModel
 		if (AllowsCultureSelectorRootDomain)
 		{
 			(this.SiteId, this.Culture, _) = this.SiteResolverService.ResolveSiteAndCultureWithRootCheck();
+			this.SiteName = this.SiteResolverService.GetSite(this.SiteId)?.SiteName ?? string.Empty;
 			return;
 		}
 
 		(this.SiteId, this.Culture) = this.SiteResolverService.ResolveSiteAndCulture();
+		this.SiteName = this.SiteResolverService.GetSite(this.SiteId)?.SiteName ?? string.Empty;
 	}
 }

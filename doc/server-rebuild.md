@@ -114,6 +114,7 @@ magazedia.wiki         www.magazedia.wiki     en.magazedia.wiki
 ja.magazedia.wiki      ar.magazedia.wiki      xx-test.magazedia.wiki
 fanfare.wiki           www.fanfare.wiki       en.fanfare.wiki
 crtr.world             www.crtr.world         en.crtr.world
+cinepedia.wiki         www.cinepedia.wiki     en.cinepedia.wiki
 ```
 
 Every hostname in `SiteConfiguration.Sites` is covered, plus the `.wiki` redirect
@@ -247,6 +248,8 @@ a routing/filter string (`ef_filter___currentCulture`), never as a formatting cu
 
 ## 4. Deploy
 
+**Latest application release, 2026-11-06 at 20:02 UTC:** `release-20261106T195612Z-8f6705dfc19f` (prepared working tree, including uncommitted changes), published to GHCR alongside `latest` and deployed by digest with the existing update script. [Exact image, checks, schema backup, and retained rollback image](upload-recovery.md#production-application-release-2026-11-06). The additive upload schema was applied separately before this release.
+
 From VS Code, **⚡ FULL RELEASE** chains publish-to-GHCR and the SSH deploy. Manually:
 
 ```bash
@@ -279,8 +282,7 @@ the container — with the app logging every EF Core SQL statement at `Informati
 
 Still worth doing, not yet done:
 
-- **Publish SHA tags** (`-p:ContainerImageTags='"latest;<sha>"'`) so rollback can name
-  a release rather than a local image ID.
+- **Continue publishing immutable release tags** alongside `latest`. The 2026-11-06 release did this explicitly; the default VS Code publish task still only specifies `latest`. Use a unique release identifier when publishing an uncommitted working tree.
 - **`docker image prune -f`** so superseded images do not accumulate.
 
 ### 4a. Package advisories, cleared 2026-08-29
@@ -447,7 +449,7 @@ Reissue command, if it comes to that — the container must already be running t
 challenge from `/opt/wiki/data/.well-known`:
 
 ```bash
-certbot certonly --webroot -w /opt/wiki/data -d magazedia.com -d www.magazedia.com -d en.magazedia.com -d ja.magazedia.com -d ar.magazedia.com -d xx-test.magazedia.com -d magazedia.wiki -d www.magazedia.wiki -d en.magazedia.wiki -d ja.magazedia.wiki -d ar.magazedia.wiki -d xx-test.magazedia.wiki -d fanfare.wiki -d www.fanfare.wiki -d en.fanfare.wiki -d crtr.world -d www.crtr.world -d en.crtr.world --key-type ecdsa --email <ops-email> --agree-tos --no-eff-email
+certbot certonly --cert-name en.magazedia.wiki --expand --webroot -w /opt/wiki/data -d magazedia.com -d www.magazedia.com -d en.magazedia.com -d ja.magazedia.com -d ar.magazedia.com -d xx-test.magazedia.com -d magazedia.wiki -d www.magazedia.wiki -d en.magazedia.wiki -d ja.magazedia.wiki -d ar.magazedia.wiki -d xx-test.magazedia.wiki -d fanfare.wiki -d www.fanfare.wiki -d en.fanfare.wiki -d crtr.world -d www.crtr.world -d en.crtr.world -d cinepedia.wiki -d www.cinepedia.wiki -d en.cinepedia.wiki --key-type ecdsa --email <ops-email> --agree-tos --no-eff-email
 ```
 
 If nothing usable survives, bootstrap with `--standalone` per the pattern doc

@@ -156,6 +156,63 @@ html[data-theme="light"] { color-scheme: light; }
     --radio-gutter: 16px;
 }
 
+/* Liquid glass trial: a surface opts in by pointing the registered tokens below at one of the two
+   light-mode states. Registering them lets a surface glide between states instead of jumping.
+   There is no dark-mode state yet because the site's dark theme is disabled. */
+@property --glass-tint-color { syntax: '<color>'; inherits: true; initial-value: rgb(255 255 255); }
+@property --glass-ink { syntax: '<color>'; inherits: true; initial-value: rgb(0 0 0); }
+@property --glass-tint-thin { syntax: '<number>'; inherits: true; initial-value: 0.06; }
+@property --glass-tint-dense { syntax: '<number>'; inherits: true; initial-value: 0.22; }
+@property --glass-density { syntax: '<number>'; inherits: true; initial-value: 0.5; }
+@property --glass-tint-floor { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --glass-tint-scale { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --glass-hover-boost { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --glass-saturate { syntax: '<number>'; inherits: true; initial-value: 1.8; }
+@property --glass-saturation-kept { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --glass-brightness-shift { syntax: '<number>'; inherits: true; initial-value: 0.06; }
+@property --glass-ink-opacity { syntax: '<number>'; inherits: true; initial-value: 0.86; }
+@property --glass-inner-light { syntax: '<number>'; inherits: true; initial-value: 1; }
+
+:root {
+    --glass-blur: 2px;
+
+    /* Clear glass with dark ink, for light backgrounds. */
+    --glass-clear-tint: rgb(255 255 255);
+    --glass-clear-tint-thin: 0.06;
+    --glass-clear-tint-dense: 0.22;
+    --glass-clear-saturate: 1.8;
+    --glass-clear-brightness-shift: 0.06;
+    --glass-clear-hover-boost: 1.14;
+    --glass-clear-inner-light: 1;
+    --glass-clear-ink: rgb(0 0 0);
+    --glass-clear-ink-opacity: 0.86;
+    --glass-clear-ink-blend: normal; /* multiply changed no pixels when measured: black ink stays black. */
+    --glass-clear-edge:
+        inset 1.5px 1.5px 1px -1px rgb(255 255 255 / 0.95),
+        inset -1.5px -1.5px 1px -1px rgb(255 255 255 / 0.55),
+        inset 0 0 0 0.5px rgb(255 255 255 / 0.3),
+        0 0 0 0.5px rgb(0 0 0 / 0.06),
+        0 6px 24px rgb(0 0 0 / 0.08);
+
+    /* Smoked glass with light ink, for dark backgrounds in light mode. */
+    --glass-smoke-tint: rgb(16 18 22);
+    --glass-smoke-tint-thin: 0.1;
+    --glass-smoke-tint-dense: 0.3;
+    --glass-smoke-saturate: 1.7;
+    --glass-smoke-brightness-shift: -0.15;
+    --glass-smoke-hover-boost: 0.86;
+    --glass-smoke-inner-light: 0.33;
+    --glass-smoke-ink: rgb(255 255 255);
+    --glass-smoke-ink-opacity: 0.94;
+    --glass-smoke-ink-blend: plus-lighter;
+    --glass-smoke-edge:
+        inset 1.5px 1.5px 1px -1px rgb(255 255 255 / 0.35),
+        inset -1.5px -1.5px 1px -1px rgb(255 255 255 / 0),
+        inset 0 0 0 0.5px rgb(255 255 255 / 0),
+        0 0 0 0.5px rgb(0 0 0 / 0.3),
+        0 6px 24px rgb(0 0 0 / 0.12);
+}
+
 /*
 @media (prefers-color-scheme: dark) {
     :root {

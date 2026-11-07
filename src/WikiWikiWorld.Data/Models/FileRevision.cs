@@ -15,6 +15,12 @@ public sealed record FileRevision
     /// Gets the canonical file identifier.
     /// </summary>
     public Guid CanonicalFileId { get; init; }
+	/// <summary>
+	/// Gets the exact staged upload committed with this revision; null identifies pre-upgrade metadata.
+	/// Retained after finalization so recovery and cleanup can recognize the claim independently of revision visibility.
+	/// </summary>
+	[JsonIgnore]
+	public Guid? StagingUploadId { get; init; }
     /// <summary>
     /// Gets or sets a value indicating whether this is the current revision.
     /// </summary>

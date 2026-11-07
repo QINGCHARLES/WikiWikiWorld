@@ -379,8 +379,7 @@ ISSN=1059-1028
 
 | Property | Required | Features |
 | --- | --- | --- |
-| `CoverImage` | No | Legacy property; ignored by the infobox renderer |
-| Any other `Key=Value` | No | Repeatable fact rendered as a `<dt>`/`<dd>` pair; values support inline Markdown |
+| Any `Key=Value` | No | Repeatable fact rendered as a `<dt>`/`<dd>` pair; values support inline Markdown |
 
 Friendly display labels are defined for these canonical keys:
 
@@ -401,7 +400,7 @@ Friendly display labels are defined for these canonical keys:
 - Values support `*italic*`, `**bold**`, combined emphasis, links (including reference links), and inline code through the article's normal Markdown pipeline. Labels remain plain text. Headings, lists, and other block layouts are not parsed inside values; raw HTML follows the article pipeline's disabled-HTML policy.
 - Custom `{{Footnote ...}}` notes in values share numbering, the `{{Footnotes}}` list, and backlinks with the surrounding article, in rendered fact order. Standard `[^label]` notes also work with definitions elsewhere in the article and retain their separate Markdig footnote list. Citations in values join the article's `{{Citations}}` bibliography.
 - Only outer `|#|` tokens separate infobox properties. Nested footnotes and citations may contain their own properties. Place literal `}}`, `{{`, or `|#|` inside a Markdown code span, or escape their punctuation with backslashes. Incomplete infoboxes remain visible as escaped source.
-- Covers must be moved into a separate `{{CoverCarousel}}` block, with `|~|` between cover entries. Existing article text is not automatically migrated.
+- Covers belong in a separate `{{CoverCarousel}}` block, with `|~|` between cover entries.
 
 ```markdown
 {{PublicationIssueInfobox
@@ -431,7 +430,7 @@ wired-issue-3
 | --- | --- | --- |
 | Publication issue article slug | At least one | One slug per non-empty line, in display order |
 
-- Each issue article should contain a `CoverCarousel` with a `CoverImage` property. The grid and homepage prefer the first carousel cover, with a fallback to legacy infobox cover metadata.
+- Each issue article should contain a `CoverCarousel` with a `CoverImage` property. The grid and homepage extract the primary cover from `CoverCarousel`.
 - The grid resolves the issue, its first cover-image slug, the cover article, and the current file revision.
 - Each cover links to `/{culture}/{issue-slug}` and displays the issue title.
 - Missing articles or covers use `cover-missing.png` when the block can otherwise be enriched.

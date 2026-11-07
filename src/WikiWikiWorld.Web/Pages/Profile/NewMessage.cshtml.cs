@@ -1,260 +1,105 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using System.ComponentModel.DataAnnotations;
-using WikiWikiWorld.Data;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Data.Extensions;
-using WikiWikiWorld.Data.Specifications;
-using WikiWikiWorld.Web.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace WikiWikiWorld.Web.Pages.Profile;
 
-/// <summary>
-/// Page model for composing and sending a new message.
-/// </summary>
-/// <param name="Context">The database context.</param>
-/// <param name="UserManager">The user manager.</param>
-/// <param name="ArticleRevisionService">The article revision service.</param>
-/// <param name="SiteResolverService">The site resolver service.</param>
+/// <summary>Composes a private conversation with fixed membership, independently of public user articles.</summary>
+/// <param name="Messaging">Enforces membership and atomically saves conversations.</param>
+/// <param name="UserManager">Resolves the authenticated account and optional recipient.</param>
+/// <param name="Context">Queries recipient suggestions.</param>
+/// <param name="SiteResolverService">Resolves the request's site and culture.</param>
 [Authorize]
-public sealed class NewMessageModel(
-	WikiWikiWorldDbContext Context,
-	UserManager<User> UserManager,
-	ArticleRevisionService ArticleRevisionService,
-	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
+[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+public sealed class NewMessageModel(PrivateMessagingService Messaging, UserManager<User> UserManager,
+	WikiWikiWorldDbContext Context, SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
-	/// <summary>
-	/// Gets or sets the recipient username (from query string).
-	/// </summary>
+	/// <summary>Optional profile-route prefill; submitted recipients remain editable.</summary>
 	[BindProperty(SupportsGet = true)]
 	public string? Recipient { get; set; }
-
-	/// <summary>
-	/// Gets or sets the new message input model.
-	/// </summary>
+	/// <summary>Gets or sets only the conversation fields accepted from the form.</summary>
 	[BindProperty]
-	public required NewMessageInputModel Input { get; set; }
+	public NewMessageInputModel Input { get; set; } = new();
+	/// <summary>Gets the account name displayed beside a successful profile prefill.</summary>
+	public string? RecipientDisplayName { get; private set; }
+	/// <summary>Gets the optional avatar URL for a profile prefill.</summary>
+	public string? RecipientProfilePicPath { get; private set; }
+	/// <summary>Gets whether the initial form has a resolved profile prefill.</summary>
+	public bool HasPresetRecipient { get; private set; }
+	/// <summary>Gets an actionable error without discarding the submitted draft.</summary>
+	public string? ErrorMessage { get; private set; }
 
-	/// <summary>
-	/// Gets or sets the display name of the recipient.
-	/// </summary>
-	public string? RecipientDisplayName { get; set; }
-
-	/// <summary>
-	/// Gets or sets the path to the recipient's profile picture.
-	/// </summary>
-	public string? RecipientProfilePicPath { get; set; }
-
-	/// <summary>
-	/// Gets or sets the error message, if any.
-	/// </summary>
-	public string? ErrorMessage { get; set; }
-
-	/// <summary>
-	/// Gets or sets a value indicating whether a recipient was preset in the query string.
-	/// </summary>
-	public bool HasPresetRecipient { get; set; }
-
-	/// <summary>
-	/// Handles the GET request to display the new message form.
-	/// </summary>
-	/// <returns>The page.</returns>
-	public async Task<IActionResult> OnGetAsync()
+	/// <summary>Loads the composer and optionally prefills a recipient without creating a user article.</summary>
+	/// <param name="CancellationToken">Cancels request work.</param>
+	/// <returns>The form, or an authentication challenge for an unavailable account.</returns>
+	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
 	{
-		// If no recipient is specified, show the compose form with a recipient input
-		if (string.IsNullOrWhiteSpace(Recipient))
+		AllowSearchEngineIndexingOfPage = false;
+		User? Sender = await UserManager.GetUserAsync(User);
+		if (Sender is null) return Challenge();
+		CancellationToken.ThrowIfCancellationRequested();
+		if (!string.IsNullOrWhiteSpace(Recipient))
 		{
-			HasPresetRecipient = false;
-			return Page();
+			User? Account = await UserManager.FindByNameAsync(Recipient.Trim().TrimStart('@'));
+			if (Account is null) ErrorMessage = "That recipient was not found. Choose another account below.";
+			else if (Account.Id != Sender.Id)
+			{
+				HasPresetRecipient = true;
+				RecipientDisplayName = Account.UserName;
+				RecipientProfilePicPath = Account.ProfilePicGuid is Guid Picture ? $"/sitefiles/{SiteId}/profilepics/{Picture}.png" : null;
+				Input.Recipients = Account.UserName ?? string.Empty;
+			}
 		}
-
-		HasPresetRecipient = true;
-
-		User? RecipientUser = await UserManager.FindByNameAsync(Recipient);
-		if (RecipientUser is null)
-		{
-			ErrorMessage = "User not found.";
-			HasPresetRecipient = false;
-			return Page();
-		}
-
-		// Can't message yourself
-		User? CurrentUser = await UserManager.GetUserAsync(User);
-		if (CurrentUser?.Id == RecipientUser.Id)
-		{
-			// Treat as "Compose New" if targeting self
-			HasPresetRecipient = false;
-			Recipient = string.Empty;
-			return Page();
-		}
-
-		RecipientDisplayName = RecipientUser.UserName;
-		if (RecipientUser.ProfilePicGuid.HasValue)
-		{
-			RecipientProfilePicPath = Url.Content($"~/sitefiles/{SiteId}/profilepics/{RecipientUser.ProfilePicGuid}.png");
-		}
-
 		return Page();
 	}
 
-	/// <summary>
-	/// Handles the POST request to send the message.
-	/// </summary>
-	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <returns>A redirect to the sent messages on success, or the page with errors.</returns>
+	/// <summary>Starts a conversation for the authenticated sender, retaining invalid drafts.</summary>
+	/// <param name="CancellationToken">Cancels lookups and persistence.</param>
+	/// <returns>A local conversation redirect after commit, or the form with its validation errors.</returns>
 	public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
 	{
-		User? CurrentUser = await UserManager.GetUserAsync(User);
-		if (CurrentUser is null)
+		AllowSearchEngineIndexingOfPage = false;
+		User? Sender = await UserManager.GetUserAsync(User);
+		if (Sender is null) return Challenge();
+		if (!ModelState.IsValid) return Page();
+		try
 		{
-			return Challenge();
+			Guid Id = await Messaging.CreateAsync(SiteId, Culture, Sender.Id, Input.Recipients, Input.Subject, Input.Message, CancellationToken);
+			return LocalRedirect($"/message/{Id:D}");
 		}
-
-		// Get recipient from query string or input field
-		// If query string (Recipient) is present but is the same as CurrentUser, ignore it (treat as Compose New)
-		string? TargetRecipient = Recipient;
-		if (!string.IsNullOrWhiteSpace(TargetRecipient))
+		catch (ArgumentException Failure)
 		{
-			User? TargetUser = await UserManager.FindByNameAsync(TargetRecipient);
-			if (TargetUser?.Id == CurrentUser.Id)
-			{
-				TargetRecipient = string.Empty;
-			}
-		}
-
-		string RecipientUsername = !string.IsNullOrWhiteSpace(TargetRecipient) 
-			? TargetRecipient 
-			: Input.Recipient ?? string.Empty;
-
-		if (string.IsNullOrWhiteSpace(RecipientUsername))
-		{
-			ErrorMessage = "Please specify a recipient.";
+			ErrorMessage = Failure.Message;
 			return Page();
 		}
-
-		if (!ModelState.IsValid)
-		{
-			return Page();
-		}
-
-		User? RecipientUser = await UserManager.FindByNameAsync(RecipientUsername);
-		if (RecipientUser is null)
-		{
-			ErrorMessage = "User not found.";
-			return Page();
-		}
-
-		if (CurrentUser is null)
-		{
-			return Challenge();
-		}
-
-		// Can't message yourself
-		if (CurrentUser.Id == RecipientUser.Id)
-		{
-			ErrorMessage = "You cannot send a message to yourself.";
-			return Page();
-		}
-
-		IExecutionStrategy Strategy = Context.Database.CreateExecutionStrategy();
-
-		await Strategy.ExecuteAsync(async CT =>
-		{
-			await using IDbContextTransaction Transaction = await Context.Database.BeginTransactionAsync(CT);
-
-			// Get (or create) the recipient's user article to link the talk subject to. Inside this
-			// transaction a failure correctly rolls the whole message back, so the throwing variant is used.
-			ArticleRevision RecipientArticle = await ArticleRevisionService.EnsureUserArticleAsync(SiteId, Culture, RecipientUser, CT);
-
-			string SubjectSlug = SlugHelper.GenerateSlug(Input.Subject);
-			DateTimeOffset CreatedUtc = DateTimeOffset.UtcNow;
-			ArticleTalkSubject NewSubject = new()
-			{
-				SiteId = SiteId,
-				CanonicalArticleId = RecipientArticle.CanonicalArticleId,
-				Subject = Input.Subject,
-				UrlSlug = $"{SubjectSlug}-{CreatedUtc:yyyyMMddHHmmss}",
-				HasBeenEdited = false,
-				CreatedByUserId = CurrentUser.Id,
-				DateCreated = CreatedUtc
-			};
-			Context.ArticleTalkSubjects.Add(NewSubject);
-
-			await Context.SaveChangesAsync(CT);
-
-			ArticleTalkSubjectPost NewPost = new()
-			{
-				ArticleTalkSubjectId = NewSubject.Id,
-				ParentTalkSubjectPostId = null,
-				Text = Input.Message,
-				HasBeenEdited = false,
-				CreatedByUserId = CurrentUser.Id,
-				DateCreated = CreatedUtc
-			};
-			Context.ArticleTalkSubjectPosts.Add(NewPost);
-			await Context.SaveChangesAsync(CT);
-
-			await Transaction.CommitAsync(CT);
-		}, CancellationToken);
-
-		// Redirect to sender's inbox with success message
-		return LocalRedirect($"/@{CurrentUser.UserName}/messages");
 	}
 
-	/// <summary>
-	/// AJAX handler for searching users by username.
-	/// </summary>
-	/// <param name="term">The search term.</param>
-	/// <returns>A JSON list of matching users.</returns>
-	public async Task<IActionResult> OnGetSearchUsersAsync(string term)
+	/// <summary>Suggests up to ten public account names for the final comma-separated recipient token.</summary>
+	/// <param name="term">Typed username fragment.</param>
+	/// <param name="CancellationToken">Cancels the bounded database query.</param>
+	/// <returns>Public name/avatar suggestions for an authenticated account.</returns>
+	public async Task<IActionResult> OnGetSearchUsersAsync(string? term, CancellationToken CancellationToken)
 	{
-		if (string.IsNullOrWhiteSpace(term))
-		{
-			return new JsonResult(Array.Empty<object>());
-		}
-
-		var Users = await Context.Users
-			.Where(u => u.UserName!.ToLower().Contains(term.ToLower()))
-			.OrderBy(u => u.UserName)
-			.Take(10)
-			.Select(u => new 
-			{ 
-				u.UserName, 
-				u.ProfilePicGuid 
-			})
-			.ToListAsync();
-
-		return new JsonResult(Users);
+		if (await UserManager.GetUserAsync(User) is null) return Challenge();
+		if (string.IsNullOrWhiteSpace(term) || term.Length > 256) return new JsonResult(Array.Empty<object>());
+		string Normalized = UserManager.NormalizeName(term.Trim().TrimStart('@'))!;
+		var Matches = await Context.Users.AsNoTracking().Where(u => u.NormalizedUserName != null && u.NormalizedUserName.Contains(Normalized))
+			.OrderBy(u => u.UserName).Take(10).Select(u => new { userName = u.UserName, profilePicGuid = u.ProfilePicGuid }).ToListAsync(CancellationToken);
+		return new JsonResult(Matches);
 	}
 
-	/// <summary>
-	/// Input model for the new message form.
-	/// </summary>
+	/// <summary>Fields that can be submitted when starting a fixed-membership conversation.</summary>
 	public sealed class NewMessageInputModel
 	{
-		/// <summary>
-		/// Gets or sets the recipient username.
-		/// </summary>
-		[Display(Name = "To")]
-		public string? Recipient { get; set; }
-
-		/// <summary>
-		/// Gets or sets the subject of the message.
-		/// </summary>
-		[Required(ErrorMessage = "Subject is required.")]
-		[StringLength(200, ErrorMessage = "Subject must be 200 characters or less.")]
-		[Display(Name = "Subject")]
-		public required string Subject { get; set; }
-
-		/// <summary>
-		/// Gets or sets the body of the message.
-		/// </summary>
-		[Required(ErrorMessage = "Message is required.")]
-		[StringLength(10000, ErrorMessage = "Message must be 10,000 characters or less.")]
-		[Display(Name = "Message")]
-		public required string Message { get; set; }
+		/// <summary>Comma-separated usernames; the sender is included automatically.</summary>
+		[Required, StringLength(2000)]
+		public string Recipients { get; set; } = string.Empty;
+		/// <summary>Plain-text title visible only to participants.</summary>
+		[Required, StringLength(PrivateMessagingService.MaxSubjectLength)]
+		public string Subject { get; set; } = string.Empty;
+		/// <summary>Initial body, rendered with the restricted discussion Markdown pipeline.</summary>
+		[Required, StringLength(PrivateMessagingService.MaxMessageLength)]
+		public string Message { get; set; } = string.Empty;
 	}
 }

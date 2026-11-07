@@ -230,6 +230,7 @@ public class ArticleApiController(
                     FileRevision NewFile = new()
                     {
                         CanonicalFileId = CanonicalFileId.Value,
+                        StagingUploadId = StagedUpload.StagingUploadId,
                         Type = FileType.Image2D,
                         Filename = StagedUpload.OriginalFileName,
                         MimeType = StagedUpload.ContentType,
@@ -293,12 +294,12 @@ public class ArticleApiController(
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             return Conflict(Ex.Message);
         }
         catch (Exception)
         {
-            FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+            await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
             throw;
         }
 

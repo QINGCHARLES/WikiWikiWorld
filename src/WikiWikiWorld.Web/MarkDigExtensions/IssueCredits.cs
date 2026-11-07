@@ -91,7 +91,7 @@ internal sealed record class IssueCreditGroup(string Title, bool Featured, bool 
 }
 
 /// <summary>
-/// Emits semantic credits markup with stable class hooks and native disclosure controls.
+/// Emits credits within a named component scope, using semantic metadata and native disclosure controls.
 /// </summary>
 /// <param name="NamePipeline">The restricted inline-formatting pipeline with the site's external-link policy.</param>
 public sealed class IssueCreditsRenderer(MarkdownPipeline NamePipeline) : HtmlObjectRenderer<IssueCreditsBlock>
@@ -110,27 +110,27 @@ public sealed class IssueCreditsRenderer(MarkdownPipeline NamePipeline) : HtmlOb
 		}
 
 		Renderer.WriteLine("<aside class=\"issue-credits\">");
-		Renderer.WriteLine("<h2 class=\"issue-credits-heading\">Credits</h2>");
+		Renderer.WriteLine("<h2>Credits</h2>");
 		foreach (IssueCreditGroup Group in Groups)
 		{
 			Renderer.Write(Group.Featured
-				? "<section class=\"issue-credits-group issue-credits-group-featured\">"
-				: Group.Open ? "<details class=\"issue-credits-group\" open>" : "<details class=\"issue-credits-group\">");
+				? "<section class=\"issue-credits-group-featured\">"
+				: Group.Open ? "<details open>" : "<details>");
 			string TitleTag = Group.Featured ? "h3" : "summary";
-			Renderer.Write("<").Write(TitleTag).Write(" class=\"issue-credits-title\">")
+			Renderer.Write("<").Write(TitleTag).Write(">")
 				.WriteEscape(Group.Title).Write("</").Write(TitleTag).WriteLine(">");
-			Renderer.WriteLine("<div class=\"issue-credits-body\">");
+			Renderer.WriteLine("<div>");
 			foreach (IssueCreditEntry Entry in Group.Entries)
 			{
 				if (Entry.Role is not null)
 				{
-					Renderer.Write("<dl class=\"issue-credits-entry\"><dt class=\"issue-credits-role\">")
-						.WriteEscape(Entry.Role).Write("</dt><dd class=\"issue-credits-people\">");
+					Renderer.Write("<dl><dt>")
+						.WriteEscape(Entry.Role).Write("</dt><dd>");
 				}
-				Renderer.Write("<ul class=\"issue-credits-names\">");
+				Renderer.Write("<ul>");
 				foreach (string Name in Entry.Names)
 				{
-					Renderer.Write("<li class=\"issue-credits-name\">");
+					Renderer.Write("<li>");
 					MarkdownDocument Document = Markdown.Parse(Name, NamePipeline);
 					foreach (LinkInline Link in Document.Descendants<LinkInline>())
 					{

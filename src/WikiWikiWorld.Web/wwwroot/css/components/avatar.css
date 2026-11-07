@@ -1,6 +1,6 @@
 /* Avatar - User avatar and author list styling */
 
-.author-list {
+.editor-authors > address {
     display: flex;
     align-items: center;
     flex-shrink: 0;
@@ -9,7 +9,7 @@
 }
 
 /* The one avatar design, used everywhere a user is pictured (header, bylines, profiles,
-   history, messages). Markup: .avatar holding either an <img> or a span.avatar-initials.
+   history, messages). Markup: .avatar holding either an <img> or a a plain span.
    Contexts change only --avatar-size; the ring and initials scale with it. */
 .avatar {
     --avatar-size: calc(var(--step--1) * 3.55);
@@ -34,7 +34,7 @@ a.avatar:hover {
 }
 
 /* Recent authors overlap into a stack */
-.author-list .avatar {
+.editor-authors > address .avatar {
     filter: grayscale(100%);
 
     & + .avatar {
@@ -48,7 +48,7 @@ a.avatar:hover {
     object-fit: cover;
 }
 
-.avatar .avatar-initials {
+.avatar > span {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -85,7 +85,8 @@ a.avatar:hover {
     flex-shrink: 0;
 }
 
-.editor-byline {
+.editor-authors > dl {
+    margin: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -94,14 +95,9 @@ a.avatar:hover {
     line-height: 1.2;
 }
 
-.editor-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
 /* Beside the authors, the label lines up with the start of the time. */
-.editor-updated {
+.editor-info > dl {
+    margin: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -111,7 +107,7 @@ a.avatar:hover {
 }
 
 /* With no authors the block sits alone, so the label centres above the time. */
-.editor-info:not(:has(.editor-authors)) .editor-updated {
+.editor-info:not(:has(.editor-authors)) > dl {
     align-items: center;
     text-align: center;
 }
@@ -123,18 +119,18 @@ a.avatar:hover {
    bylines don't wrap on their own; that is roughly viewports under 640px. */
 @container byline (inline-size < 38em) {
     .editor-authors,
-    .editor-status {
+    .editor-info > dl {
         flex-basis: 100%;
         justify-content: center;
     }
 
-    .editor-updated {
+    .editor-info > dl {
         align-items: center;
         text-align: center;
     }
 }
 
-.editor-info .meta-label {
+.editor-info dt {
     font-size: 0.72em;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -143,7 +139,8 @@ a.avatar:hover {
     white-space: nowrap;
 }
 
-.editor-info .meta-value {
+.editor-info dd {
+    margin: 0;
     font-size: 0.95em;
     font-weight: 500;
     letter-spacing: -0.01em;
@@ -152,7 +149,7 @@ a.avatar:hover {
     white-space: nowrap;
 }
 
-.editor-info .author-primary {
+.editor-info dd > a {
     color: var(--color-foreground);
     font-weight: 500;
     text-decoration: none;
@@ -163,7 +160,7 @@ a.avatar:hover {
     }
 }
 
-.editor-info .author-others {
+.editor-info dd > span {
     color: #8c96a6;
     font-weight: 400;
 }

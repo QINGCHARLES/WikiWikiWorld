@@ -7,6 +7,21 @@ Unless otherwise specified, APIs that require authentication must include a vali
 Authorization: Bearer <your_jwt_token>
 ```
 
+### Multi-Site Targeting & `scripts/wiki_api.py`
+
+Because a single WikiWikiWorld deployment serves multiple sites and language editions, every API endpoint resolves its `SiteId` and `Culture` from the request's `Host` header (for example `en.magazedia.com`, `en.cinepedia.wiki`, `en.magazedia.com.localhost:7126`, or `en.cinepedia.wiki.localhost:7126`).
+
+When using `scripts/wiki_api.py`, pass `--host <hostname>` (or set the `WIKI_API_HOST` environment variable) to target a specific site or culture:
+
+```bash
+# Default targets Magazedia (en.magazedia.com in prod, en.magazedia.com.localhost in dev)
+python scripts/wiki_api.py request dev GET api/article/wired
+
+# Target Cinepedia in dev or prod
+python scripts/wiki_api.py request dev --host en.cinepedia.wiki.localhost GET api/article/the-matrix
+python scripts/wiki_api.py request prod --host en.cinepedia.wiki GET api/article/the-matrix
+```
+
 ---
 
 ## Authentication API

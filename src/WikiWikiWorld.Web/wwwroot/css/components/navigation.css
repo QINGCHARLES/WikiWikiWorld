@@ -126,11 +126,11 @@ ul.categories a {
 }
 
 @media (width < 30.5rem) {
-    .article-actions .article-action-bookmark {
+    #article-bookmark > button {
         inline-size: var(--action-height);
         padding: 0;
 
-        & .action-label {
+        & > span {
             position: absolute;
             inline-size: 1px;
             block-size: 1px;
@@ -147,7 +147,7 @@ ul.categories a {
         inline-size: var(--action-height);
         padding: 0;
 
-        & .action-label {
+        & > span {
             position: absolute;
             inline-size: 1px;
             block-size: 1px;
@@ -159,7 +159,7 @@ ul.categories a {
     }
 }
 
-.article-action-form {
+#article-bookmark {
     position: relative;
     margin: 0;
     display: inline-flex;
@@ -183,9 +183,10 @@ ul.categories a {
     white-space: normal;
 }
 
-.article-actions .article-action-pill,
-.article-actions .m3-split-button__leading,
-.article-actions .m3-split-button__trailing > .menu-trigger {
+.article-actions > a,
+:where(#article-bookmark):not(.m3-split-button) > button,
+.article-actions .m3-split-button > :is(a, button),
+.article-actions .m3-split-button > details > summary {
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
@@ -227,13 +228,14 @@ ul.categories a {
     }
 }
 
-.article-actions .article-action-pill {
+.article-actions > a,
+:where(#article-bookmark):not(.m3-split-button) > button {
     gap: 0.48rem;
     padding: 0 1.1rem;
     border-radius: 9999px;
 }
 
-.article-actions .action-icon {
+.article-actions :is(a, button, summary) > svg {
     width: 1.05em;
     height: 1.05em;
     flex-shrink: 0;
@@ -246,7 +248,7 @@ ul.categories a {
     gap: 2px;
 }
 
-.article-actions .m3-split-button__leading {
+.article-actions .m3-split-button > :is(a, button) {
     gap: 0.48rem;
     padding: 0 0.95rem 0 1.1rem;
     border-radius: 9999px 4px 4px 9999px;
@@ -264,7 +266,7 @@ ul.categories a {
     margin: 0;
 }
 
-.article-actions .m3-split-button__trailing > .menu-trigger {
+.article-actions .m3-split-button > details > summary {
     width: calc(var(--action-height) * 1.05);
     padding: 0;
     border-radius: 4px 9999px 9999px 4px;
@@ -277,14 +279,14 @@ ul.categories a {
 
 
 /* M3 Expressive Checked/Open state on trailing menu button */
-.article-actions .m3-split-button__trailing[open] > .menu-trigger {
+.article-actions .m3-split-button > details[open] > summary {
     background: var(--color-foreground);
     border-color: var(--color-foreground);
     color: #ffffff;
     border-radius: 9999px;
 }
 
-.dropdown-menu .menu-content {
+.dropdown-menu > .menu-content {
     display: none;
     position: absolute;
     top: calc(100% + 0.45rem);
@@ -300,7 +302,7 @@ ul.categories a {
     z-index: 100;
 }
 
-.dropdown-menu .menu-content a {
+.dropdown-menu > .menu-content a {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -319,23 +321,23 @@ ul.categories a {
     }
 }
 
-.dropdown-menu .menu-content .menu-item-icon {
+.dropdown-menu > .menu-content :is(a, button) > svg {
     width: 1.1em;
     height: 1.1em;
     flex-shrink: 0;
     color: #3a3d42;
 }
 
-.dropdown-menu .menu-content .menu-divider {
+.dropdown-menu > .menu-content hr {
     margin: 0.35rem 0.85rem;
     border: 0;
     border-top: 1px solid #eceae3;
 }
 
-.dropdown-menu .menu-content a.menu-item-danger {
+.dropdown-menu > .menu-content a.menu-item-danger {
     color: #c83a2a;
 
-    & .menu-item-icon {
+    & > svg {
         color: #c83a2a;
     }
 
@@ -344,40 +346,37 @@ ul.categories a {
     }
 }
 
-.dropdown-menu[open] .menu-content {
+.dropdown-menu[open] > .menu-content {
     display: block;
 }
 
 /* Bookmark split button: leading half toggles the default list, chevron opens the list menu.
    The saved state is shown by the filled icon and "Bookmarked" label only; the warm tint is kept for hover. */
-.article-actions .m3-split-button__leading:disabled {
+.article-actions .m3-split-button > :is(a, button):disabled {
     cursor: default;
 }
 
-.article-bookmark-split {
-    position: relative;
-}
 
 /* Anchor the menu to the whole split button's start edge rather than the chevron's end edge: the bookmark
    button sits first in the row, so a right-anchored menu would run off the left of narrow screens. */
-.article-bookmark-menu {
+#article-bookmark > details {
     position: static;
 }
 
-.article-bookmark-menu .menu-content {
+#article-bookmark > details > .menu-content {
     inset-inline: 0 auto;
     max-inline-size: calc(100vw - 2rem);
 }
 
-.article-bookmark-menu .menu-trigger {
+#article-bookmark > details > summary {
     position: relative;
 }
 
-.article-bookmark-menu .menu-chevron {
+#article-bookmark > details > summary > svg {
     transition: rotate 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.article-bookmark-menu[open] .menu-chevron {
+#article-bookmark > details[open] > summary > svg {
     rotate: 180deg;
 }
 
@@ -398,19 +397,19 @@ ul.categories a {
     text-align: center;
 }
 
-.article-bookmark-menu[open] .bookmark-menu-badge {
+#article-bookmark > details[open] .bookmark-menu-badge {
     background: #ffffff;
     color: var(--color-foreground);
     box-shadow: 0 0 0 1px var(--color-foreground);
 }
 
-.bookmark-lists {
+#article-bookmark-lists {
     max-block-size: min(20rem, 55vh);
     overflow-y: auto;
     overscroll-behavior: contain;
 }
 
-.dropdown-menu .menu-content .menu-item-button {
+.dropdown-menu > .menu-content > div > button {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -442,18 +441,18 @@ ul.categories a {
     }
 }
 
-.bookmark-list-name {
+#article-bookmark-lists > button > span {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.dropdown-menu .menu-content .bookmark-list-check {
+.dropdown-menu > .menu-content .bookmark-list-check {
     visibility: hidden;
 }
 
-.dropdown-menu .menu-content .bookmark-list-item.is-checked {
+#article-bookmark-lists > button[aria-checked="true"] {
     font-weight: 550;
 
     & .bookmark-list-check {
@@ -462,7 +461,7 @@ ul.categories a {
 }
 
 /* "New list…" name field, revealed under its toggle row. */
-.bookmark-new-list-field {
+#article-bookmark-new-list-field {
     display: flex;
     gap: 0.5rem;
     padding: 0.2rem 0.85rem 0.55rem;
@@ -489,7 +488,7 @@ ul.categories a {
         outline-offset: 1px;
     }
 
-    & .bookmark-new-list-create {
+    & > button {
         flex-shrink: 0;
         block-size: 2.2rem;
         padding: 0 0.9rem;
@@ -503,12 +502,12 @@ ul.categories a {
         cursor: pointer;
     }
 
-    & .bookmark-new-list-create:focus-visible {
+    & > button:focus-visible {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
     }
 
-    & .bookmark-new-list-create:disabled {
+    & > button:disabled {
         cursor: progress;
         opacity: 0.7;
     }
@@ -517,11 +516,11 @@ ul.categories a {
 /* No press-scale on an open trigger: a transform makes the trigger the containing block of its fixed
    ::before, so pressing the click-away layer would shrink it to the button and the mouseup would land
    outside, cancelling the click that closes the menu. */
-.article-actions .dropdown-menu[open] > .menu-trigger:active {
+.article-actions .dropdown-menu[open] > summary:active {
     transform: none;
 }
 
-.dropdown-menu[open] .menu-trigger::before {
+.dropdown-menu[open] > summary::before {
     content: " ";
     cursor: default;
     display: block;
@@ -536,20 +535,20 @@ ul.categories a {
 
 
 /* Shared disclosure triggers retain native keyboard and no-script activation. */
-.dropdown-menu > .menu-trigger {
+.dropdown-menu > summary {
     list-style: none;
     cursor: pointer;
 }
 
-.dropdown-menu > .menu-trigger:focus-visible,
-.dropdown-menu .menu-content a:focus-visible {
+.dropdown-menu > summary:focus-visible,
+.dropdown-menu > .menu-content a:focus-visible {
     outline: 2px solid var(--color-foreground);
     outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .dropdown-menu .menu-content a,
-    .dropdown-menu .menu-content .menu-item-button {
+    .dropdown-menu > .menu-content a,
+    .dropdown-menu > .menu-content > div > button {
         transition: none;
     }
 }

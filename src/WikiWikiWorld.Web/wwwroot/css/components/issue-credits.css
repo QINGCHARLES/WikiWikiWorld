@@ -25,7 +25,7 @@ article aside.issue-credits {
 }
 
 /* "CREDITS" label followed by a hairline that runs to the card edge. */
-.issue-credits .issue-credits-heading {
+.issue-credits > h2 {
     display: flex;
     align-items: center;
     gap: 0.8rem;
@@ -46,25 +46,25 @@ article aside.issue-credits {
     }
 }
 
-.issue-credits .issue-credits-group {
+.issue-credits > :is(section, details) {
     border-block-start: 1px solid var(--credits-rule);
 }
 
 /* The heading's own hairline already separates it from the first group. */
-.issue-credits .issue-credits-heading + .issue-credits-group {
+.issue-credits > h2 + :is(section, details) {
     border-block-start: 0;
 }
 
 /* Featured: always visible, styled as a masthead headline rather than a control. */
-.issue-credits .issue-credits-group-featured {
+.issue-credits > .issue-credits-group-featured {
     padding-block: 1.15rem 1.25rem;
 }
 
-.issue-credits .issue-credits-heading + .issue-credits-group-featured {
+.issue-credits > h2 + .issue-credits-group-featured {
     padding-block-start: 0;
 }
 
-.issue-credits .issue-credits-group-featured > .issue-credits-title {
+.issue-credits-group-featured > h3 {
     margin: 0 0 0.5rem;
     font-family: var(--font-family-wide-grotesque);
     font-stretch: 112%;
@@ -76,12 +76,12 @@ article aside.issue-credits {
     color: var(--credits-quiet);
 }
 
-.issue-credits .issue-credits-group-featured .issue-credits-names {
+.issue-credits .issue-credits-group-featured ul {
     flex-direction: column;
     row-gap: 0.2rem;
 }
 
-.issue-credits .issue-credits-group-featured .issue-credits-name {
+.issue-credits .issue-credits-group-featured ul > li {
     font-family: 'Lyon Custom Headings', Georgia, serif;
     font-size: clamp(1.6rem, 1.45rem + 0.6vw, 1.95rem);
     font-weight: 900;
@@ -94,7 +94,7 @@ article aside.issue-credits {
 }
 
 /* Collapsible groups: the summary is the only interactive title. */
-.issue-credits summary.issue-credits-title {
+.issue-credits > details > summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -129,29 +129,29 @@ article aside.issue-credits {
     }
 }
 
-.issue-credits .issue-credits-group[open] > summary.issue-credits-title::after {
+.issue-credits > details[open] > summary::after {
     rotate: 180deg;
     background-color: var(--credits-accent);
 }
 
-.issue-credits .issue-credits-body {
+.issue-credits > :is(section, details) > div {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
 }
 
-.issue-credits details > .issue-credits-body {
+.issue-credits > details > div {
     padding-block: 0.1rem 1.3rem;
 }
 
 /* Narrow cards stack each role above its names. */
-.issue-credits .issue-credits-entry {
+.issue-credits dl {
     display: grid;
     gap: 0.22rem;
     margin: 0;
 }
 
-.issue-credits .issue-credits-role {
+.issue-credits dt {
     font-family: var(--font-family-wide-grotesque);
     font-stretch: 112%;
     font-size: 0.64rem;
@@ -162,11 +162,11 @@ article aside.issue-credits {
     color: var(--credits-quiet);
 }
 
-.issue-credits .issue-credits-people {
+.issue-credits dd {
     margin: 0;
 }
 
-.issue-credits .issue-credits-names {
+.issue-credits ul {
     display: flex;
     flex-wrap: wrap;
     column-gap: 0.45em;
@@ -176,7 +176,7 @@ article aside.issue-credits {
     list-style: none;
 }
 
-.issue-credits .issue-credits-name {
+.issue-credits ul > li {
     min-inline-size: 0;
     font-size: 0.92rem;
     font-weight: 600;
@@ -199,7 +199,7 @@ article aside.issue-credits {
     }
 }
 
-.issue-credits .issue-credits-name a {
+.issue-credits ul > li a {
     color: inherit;
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
@@ -222,17 +222,17 @@ article aside.issue-credits {
 /* Wide cards (for example full-width on small screens) switch to a two-column masthead:
    right-aligned roles facing their names, as in a printed magazine masthead. */
 @container issue-credits (inline-size >= 26rem) {
-    .issue-credits .issue-credits-body:has(> .issue-credits-entry) {
+    .issue-credits > :is(section, details) > div:has(> dl) {
         gap: 0.45rem;
     }
 
-    .issue-credits .issue-credits-entry {
+    .issue-credits dl {
         grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
         column-gap: 1rem;
         align-items: baseline;
     }
 
-    .issue-credits .issue-credits-role {
+    .issue-credits dt {
         text-align: end;
     }
 }
@@ -243,7 +243,7 @@ article aside.issue-credits {
         interpolate-size: allow-keywords;
     }
 
-    .issue-credits .issue-credits-group::details-content {
+    .issue-credits > details::details-content {
         block-size: 0;
         overflow: clip;
         overflow-clip-margin: 0.35rem;
@@ -252,11 +252,11 @@ article aside.issue-credits {
             content-visibility 0.3s allow-discrete;
     }
 
-    .issue-credits .issue-credits-group[open]::details-content {
+    .issue-credits > details[open]::details-content {
         block-size: auto;
     }
 
-    .issue-credits summary.issue-credits-title::after {
+    .issue-credits > details > summary::after {
         transition: rotate 0.25s var(--ease), background-color 0.15s ease;
     }
 }

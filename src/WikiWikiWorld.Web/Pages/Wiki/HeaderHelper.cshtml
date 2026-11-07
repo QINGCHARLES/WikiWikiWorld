@@ -1,0 +1,108 @@
+@page "/wiki:header-helper"
+@model WikiWikiWorld.Web.Pages.Wiki.HeaderHelperModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
+@{
+	ViewData["Title"] = "Header helper";
+}
+<h1>Header helper</h1>
+<p>Frame a picture for @Model.SiteName. Check how it looks on different screens, then download your header.</p>
+<noscript><p>This editor needs JavaScript to process pictures on your device. Enable JavaScript to use it.</p></noscript>
+<div id="HeaderHelper" class="header-helper" data-ignore="true" data-site-name="@Model.SiteName" data-worker-url="@FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, "/js/header-helper-worker.js")">
+	<div class="helper-status">
+		<p id="HelperStatus" role="status">Loading editor…</p>
+		<button id="CancelOperation" type="button" data-button-variant="ghost" hidden>Cancel</button>
+	</div>
+	<div id="HelperError" role="alert" hidden></div>
+	<fieldset id="ImportControls" disabled>
+		<legend><span class="step">1</span> Open a picture</legend>
+		<div class="helper-drop">
+			<label for="SourceFile">Open image</label>
+			<input id="SourceFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,image/gif,image/bmp,.heic,.heif" />
+			<p>Or drop a picture here, or paste a copied picture with Ctrl+V / ⌘V. Up to 50 MiB; large images may exceed your device’s memory.</p>
+		</div>
+		<label for="SourceUrl">Or open an image URL</label>
+		<div class="helper-row"><input id="SourceUrl" type="url" placeholder="https://…" aria-describedby="ImportHelp" /><button id="FetchImage" type="button" data-button-variant="ghost">Open link</button></div>
+		<p id="ImportHelp">Some websites block direct image imports. If your link doesn’t work, download the picture, then choose Open image or drag it here. Your picture is processed in your browser; it won’t be uploaded to the wiki until you choose to upload the finished header.</p>
+	</fieldset>
+	<fieldset id="EditControls" disabled>
+		<legend><span class="step">2</span> Frame your header</legend>
+		<div class="helper-workspace">
+			<div class="helper-editor">
+				<div class="helper-toolbar">
+					<p id="SourceInfo">No picture selected.</p>
+					<div class="helper-row">
+						<button id="ResetCrop" type="button" data-button-variant="ghost">Reset crop</button>
+						<button id="FitImage" type="button" data-button-variant="ghost">Fit</button>
+						<label for="Zoom">Zoom</label><input id="Zoom" type="range" min="1" max="4" step="0.25" value="1" />
+						<label><input id="AspectLock" type="checkbox" /> Lock aspect</label>
+					</div>
+				</div>
+				<div class="helper-viewport" id="EditorViewport" hidden>
+					<div id="EditorSurface" class="helper-surface">
+						<canvas id="SourceCanvas" aria-label="Source picture"></canvas>
+						<div id="CropBox" class="helper-crop" tabindex="0" role="group" aria-label="Move crop with arrow keys; hold Shift for 10 pixels" aria-describedby="CropHelp">
+							@foreach (string Corner in new[] { "NW", "NE", "SW", "SE" })
+							{
+								<button type="button" class="helper-handle" data-corner="@Corner" aria-label="Resize @Corner corner with arrow keys"></button>
+							}
+						</div>
+					</div>
+				</div>
+				<p id="CropHelp">Drag the frame or its corners. Use arrow keys to move or resize; hold Shift for 10 pixels. Double-click the frame to reset. Zoom in and scroll for detail.</p>
+				<div class="helper-numbers">
+					@foreach (string Coordinate in new[] { "X", "Y", "Width", "Height" })
+					{
+						<label>@Coordinate <small>px</small><input id="@($"Crop{Coordinate}")" type="number" min="@(Coordinate is "X" or "Y" ? 0 : 1)" step="1" value="0" /></label>
+					}
+				</div>
+				<div class="helper-field">
+					<label for="SiteFocus">Site focus</label>
+					<select id="SiteFocus" aria-describedby="SiteFocusHelp"><option value="top">Top</option><option value="center">Center</option><option value="bottom">Bottom</option></select>
+					<p id="SiteFocusHelp">Focus changes the way the wiki positions your header, not the downloaded pixels.</p>
+				</div>
+			</div>
+			<section class="helper-preview-panel" aria-labelledby="PreviewHeading">
+				<h2 id="PreviewHeading">Device previews</h2>
+				<div class="helper-previews">
+					@foreach (string Device in new[] { "Phone", "Tablet", "Desktop" })
+					{
+						<figure><canvas id="@($"Preview{Device}")" aria-label="@Device header preview"></canvas><figcaption>@Device</figcaption></figure>
+					}
+				</div>
+				<div class="helper-toggles">
+					<label><input id="ShowFade" type="checkbox" checked /> Fade</label>
+					<label><input id="ShowBar" type="checkbox" checked /> Top bar</label>
+					<label><input id="ShowTitle" type="checkbox" checked /> Title</label>
+					<label><input id="RestScale" type="checkbox" checked /> Resting scale</label>
+					<label><input id="DarkPreview" type="checkbox" /> Dark preview</label>
+				</div>
+				<p>Framing previews use the wiki’s header geometry. Titles and top bars are illustrative; paper texture and scrolling animation are not shown.</p>
+			</section>
+		</div>
+	</fieldset>
+	<fieldset id="ExportControls" disabled>
+		<legend><span class="step">3</span> Download and use</legend>
+		<div class="helper-export">
+			<div class="helper-field">
+				<label for="ArticleSlug">Article slug <small>(required)</small></label>
+				<input id="ArticleSlug" type="text" placeholder="your-article" maxlength="150" required aria-describedby="ArticleSlugHelp ArticleSlugError" />
+				<div id="ArticleSlugError" role="alert" hidden></div>
+				<p id="ArticleSlugHelp">The URL of the article this is the header for, e.g. spider-man or gq-style-usa-summer-2023.</p>
+			</div>
+			<div class="helper-field">
+				<label for="Quality">AVIF quality</label>
+				<div class="helper-row"><input id="Quality" type="range" min="1" max="100" value="65" /><output id="QualityValue" for="Quality">65</output></div>
+				<div id="OutputInfo"></div>
+			</div>
+		</div>
+		<div class="helper-row helper-actions"><button id="ExportImage" type="button" data-button-variant="primary">Download header</button><a id="DownloadImage" hidden>Download didn’t start? Save header</a></div>
+		<div class="helper-field">
+			<label for="WikiText">Wiki markup</label>
+			<div class="helper-markup"><textarea id="WikiText" readonly rows="2"></textarea><button id="CopyMarkup" type="button" data-button-variant="ghost">Copy markup</button></div>
+			<p>Download the finished header, upload it as a <a href="/create:">file article</a>, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically.</p>
+		</div>
+	</fieldset>
+</div>
+@section Scripts {
+	<script type="module" src="~/js/header-helper.js" asp-append-version="true"></script>
+}

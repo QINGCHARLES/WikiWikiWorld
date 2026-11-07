@@ -19,6 +19,14 @@ public sealed class EyebrowTests
 	[InlineData("{{Eyebrow JournalIssue}}", "Journal Issue")]
 	[InlineData("{{Eyebrow newsletter}}", "Newsletter")]
 	[InlineData("{{Eyebrow NEWSLETTERISSUE}}", "Newsletter Issue")]
+	[InlineData("{{Eyebrow MOVIE}}", "Movie")]
+	[InlineData("{{Eyebrow shortfilm}}", "Short Film")]
+	[InlineData("{{Eyebrow SERIES}}", "Series")]
+	[InlineData("{{Eyebrow Episode}}", "Episode")]
+	[InlineData("{{Eyebrow STUDIO}}", "Studio")]
+	[InlineData("{{Eyebrow DISTRIBUTOR}}", "Distributor")]
+	[InlineData("{{Eyebrow FESTIVAL}}", "Festival")]
+	[InlineData("{{Eyebrow AWARD}}", "Award")]
 	public void MetadataUsesFirstSupportedType(string Source, string? ExpectedLabel)
 	{
 		MarkdownPipeline Pipeline = new MarkdownPipelineBuilder().Use(new EyebrowExtension()).Build();

@@ -899,6 +899,43 @@
 
 /* ---- Sub-pages: contributions, bookmarks and messages ---- */
 
+.private-conversation {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-m);
+	overflow-wrap: anywhere;
+
+	& > .private-conversation-title {
+		margin: 0;
+		font: 700 clamp(1.4rem, 1rem + 1vw, 2rem)/1.2 var(--font-family-san-serif);
+		letter-spacing: normal;
+		text-transform: none;
+		text-align: start;
+		filter: none;
+	}
+}
+
+.private-message-body {
+	min-inline-size: 0;
+	overflow-x: auto;
+}
+
+.private-reply {
+	display: grid;
+	gap: 0.5rem;
+
+	& textarea {
+		min-inline-size: 0;
+		padding: 0.75rem;
+		font: inherit;
+		resize: vertical;
+	}
+
+	& button {
+		justify-self: start;
+	}
+}
+
 .profile-stack {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);

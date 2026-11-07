@@ -1,6 +1,6 @@
 /* Header - Navigation bar, logo, search form, and header layout */
 
-header {
+body > header {
     position: relative;
     z-index: 10;
 }
@@ -11,7 +11,7 @@ body:has(.hero-image) > header {
     inset-inline: 0;
 }
 
-header li {
+body > header li {
     display: inline-block;
 }
 
@@ -208,6 +208,139 @@ nav.header .header-b a.button[href="/Account/Register"] {
     font-size: 0.95rem;
 }
 
+/* Liquid glass trial: search-glass.js sets data-glass-ink once it has sampled the hero under the bar, so
+   pages without a hero, readers without JavaScript and ?glass=off all keep the surface above. The focused
+   bar also keeps it: every glass declaration is limited to :not(:focus-within). */
+.search-form[data-glass-ink="dark"] {
+    --glass-tint-color: var(--glass-clear-tint);
+    --glass-tint-thin: var(--glass-clear-tint-thin);
+    --glass-tint-dense: var(--glass-clear-tint-dense);
+    --glass-saturate: var(--glass-clear-saturate);
+    --glass-brightness-shift: var(--glass-clear-brightness-shift);
+    --glass-inner-light: var(--glass-clear-inner-light);
+    --glass-ink: var(--glass-clear-ink);
+    --glass-ink-opacity: var(--glass-clear-ink-opacity);
+    --glass-ink-blend: var(--glass-clear-ink-blend);
+    --glass-edge: var(--glass-clear-edge);
+    --glass-hover-boost-target: var(--glass-clear-hover-boost);
+}
+
+.search-form[data-glass-ink="light"] {
+    --glass-tint-color: var(--glass-smoke-tint);
+    --glass-tint-thin: var(--glass-smoke-tint-thin);
+    --glass-tint-dense: var(--glass-smoke-tint-dense);
+    --glass-saturate: var(--glass-smoke-saturate);
+    --glass-brightness-shift: var(--glass-smoke-brightness-shift);
+    --glass-inner-light: var(--glass-smoke-inner-light);
+    --glass-ink: var(--glass-smoke-ink);
+    --glass-ink-opacity: var(--glass-smoke-ink-opacity);
+    --glass-ink-blend: var(--glass-smoke-ink-blend);
+    --glass-edge: var(--glass-smoke-edge);
+    --glass-hover-boost-target: var(--glass-smoke-hover-boost);
+}
+
+.search-form[data-glass-ink] {
+    /* Below 1 the tint scale also thins the filter's colour lift, leaving only blur, rim and shadow at 0. */
+    --glass-lift: min(1, var(--glass-tint-scale));
+    /* search-glass.js sets the floor so readable ink wins over the density range, including on hover. */
+    --glass-tint-alpha: calc(
+        max(
+            var(--glass-tint-floor),
+            (var(--glass-tint-thin) + (var(--glass-tint-dense) - var(--glass-tint-thin)) * var(--glass-density))
+            * var(--glass-hover-boost))
+        * var(--glass-tint-scale));
+
+    transition:
+        background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
+        --glass-tint-color 0.3s ease, --glass-ink 0.3s ease, --glass-tint-thin 0.3s ease, --glass-tint-dense 0.3s ease,
+        --glass-density 0.3s ease, --glass-tint-floor 0.3s ease, --glass-tint-scale 0.3s ease, --glass-hover-boost 0.18s ease,
+        --glass-saturate 0.3s ease, --glass-saturation-kept 0.3s ease, --glass-brightness-shift 0.3s ease,
+        --glass-ink-opacity 0.3s ease, --glass-inner-light 0.3s ease;
+
+    &:hover {
+        --glass-hover-boost: var(--glass-hover-boost-target);
+    }
+
+    /* The rim and top-left light sit behind the icon and text, inside the bar's own stacking context. */
+    &::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        z-index: -1;
+        border-radius: inherit;
+        pointer-events: none;
+        background: radial-gradient(
+            circle at 0 0,
+            rgb(255 255 255 / calc(0.3 * var(--glass-inner-light))),
+            transparent 55%);
+        box-shadow:
+            inset 0 1px 3px rgb(255 255 255 / calc(0.35 * var(--glass-inner-light))),
+            inset 1px 0 3px rgb(255 255 255 / calc(0.2 * var(--glass-inner-light))),
+            inset 0 -1px 3px rgb(0 0 0 / calc(0.06 * var(--glass-inner-light)));
+        opacity: 0;
+        transition: opacity 0.18s ease;
+    }
+
+    &:not(:focus-within) {
+        background: color-mix(in srgb, var(--glass-tint-color) calc(var(--glass-tint-alpha) * 100%), transparent);
+        /* The lens stays last so the colour steps fold into one pass and the bend stays crisp. */
+        backdrop-filter:
+            blur(var(--glass-blur))
+            saturate(calc(1 + (var(--glass-saturate) * var(--glass-saturation-kept) - 1) * var(--glass-lift)))
+            brightness(calc(1 + var(--glass-brightness-shift) * var(--glass-lift)))
+            var(--glass-lens,);
+        /* The edge shadow replaces the 1px line; the transparent border keeps the bar's size. */
+        border-color: transparent;
+        box-shadow: var(--glass-edge);
+        color: var(--glass-ink);
+
+        &::before {
+            opacity: 1;
+        }
+
+        & .search-submit,
+        & input[type="search"] {
+            color: var(--glass-ink);
+        }
+
+        /* Opaque ink faded as a whole, so overlapping strokes don't darken where they cross. */
+        & .search-submit svg,
+        & input[type="search"] {
+            opacity: var(--glass-ink-opacity);
+            mix-blend-mode: var(--glass-ink-blend);
+        }
+    }
+}
+
+/* Same tint at full opacity for readers who ask for less transparency or use forced colours. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+    .search-form[data-glass-ink]:not(:focus-within) {
+        background: var(--glass-tint-color);
+        backdrop-filter: none;
+        box-shadow: none;
+
+        &::before {
+            display: none;
+        }
+
+        & .search-submit svg,
+        & input[type="search"] {
+            opacity: 1;
+            mix-blend-mode: normal;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .search-form[data-glass-ink] {
+        transition: none;
+
+        &::before {
+            transition: none;
+        }
+    }
+}
+
 /* Typeahead panel: Datastar patches #search-suggestions; search-dropdown.js adds data-dismissed on Escape or
    short input. Hidden whenever focus leaves the form, which also closes it on an outside click. */
 .search-form {
@@ -356,7 +489,7 @@ nav.header .header-b a.button[href="/Account/Register"] {
     background: var(--color-surface);
 }
 
-.account-menu .menu-content {
+.account-menu > .menu-content {
     box-sizing: border-box;
     min-inline-size: 0;
     inline-size: min(19rem, calc(100vw - 2rem));
@@ -378,7 +511,7 @@ nav.header .header-b a.button[href="/Account/Register"] {
     font-size: 0.8em;
 }
 
-.account-menu .menu-content a {
+.account-menu > .menu-content a {
     min-block-size: 3.25rem;
     box-sizing: border-box;
     padding: 0.8rem 1.15rem;
@@ -386,7 +519,7 @@ nav.header .header-b a.button[href="/Account/Register"] {
     font-size: 1rem;
 }
 
-.account-menu .menu-content .menu-item-icon {
+.account-menu > .menu-content a > svg {
     inline-size: 1.5rem;
     block-size: 1.5rem;
     margin-inline: 0.25rem;
@@ -400,6 +533,6 @@ nav.header .header-b a.button[href="/Account/Register"] {
     color: var(--color-muted);
 }
 
-.account-menu .menu-content .menu-divider {
+.account-menu > .menu-content hr {
     margin-inline: 0;
 }

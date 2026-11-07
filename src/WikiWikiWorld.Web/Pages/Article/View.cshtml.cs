@@ -301,7 +301,7 @@ public sealed class ViewModel(
                     User? CurrentUser = await UserManager.GetUserAsync(User);
                     if (CurrentUser is not null && CurrentUser.Id == TargetUser.Id)
                     {
-                        return Redirect($"/Article/CreateEdit?UrlSlug={UrlSlug}");
+                        return Redirect($"/Article/CreateEdit?urlslug={Uri.EscapeDataString(UrlSlug)}");
                     }
 
                     return NotFound();

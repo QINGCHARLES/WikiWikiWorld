@@ -50,7 +50,7 @@
 								<line x1="12" y1="16" x2="12" y2="12"></line>
 								<line x1="12" y1="8" x2="12.01" y2="8"></line>
 							</svg>
-							<span>Creating User Home Page for <strong>@Model.UrlSlug</strong></span>
+							<span>@(Model.IsEditMode ? "Editing" : "Creating") User Home Page for <strong>@Model.UrlSlug</strong></span>
 						</div>
 						<input type="hidden" asp-for="Title" />
 						<input type="hidden" asp-for="UrlSlug" />
@@ -109,7 +109,7 @@
 					</div>
 				}
 
-				@if (!Model.IsEditMode)
+				@if (!Model.IsEditMode && Model.UrlSlug?.StartsWith('@') != true)
 				{
 					<div class="form-group form-group-full">
 						<label for="UploadedFile" class="form-label">
@@ -177,6 +177,7 @@
 						placeholder="Write your article content here using Markdown..."
 						required></textarea>
 					<span class="form-help">Use Markdown formatting for rich text. Embed a video with <code>{{YouTube VIDEO_URL |#| Title=Video title}}</code>.</span>
+					<span class="form-help"><a href="/wiki:header-helper" target="_blank" rel="noopener">Prepare a header image</a> (opens in a new tab).</span>
 				</div>
 			</div>
 

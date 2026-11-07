@@ -72,7 +72,8 @@
 						<select asp-for="InputCulture" id="InputCulture">
 							@if (Model.Sites.Count > 0)
 							{
-								List<string> InitialCultures = DomainRedirectsModel.GetCulturesForSite(Model.Sites[0]);
+								SiteInfo InitialSite = Model.Sites.FirstOrDefault(Site => Site.SiteId == Model.InputSiteId) ?? Model.Sites[0];
+								List<string> InitialCultures = DomainRedirectsModel.GetCulturesForSite(InitialSite);
 								foreach (string CultureCode in InitialCultures)
 								{
 									<option value="@CultureCode" selected="@(CultureCode == Model.InputCulture ? "selected" : null)">@CultureCode</option>
@@ -109,6 +110,8 @@
 						<label for="article-search-input">Search for target article by title or slug...</label>
 						<span class="md-line"></span>
 					</div>
+					<p id="article-picker-status" role="status"></p>
+					<button type="button" id="retry-cultures" class="button" style="display: none;">Retry loading cultures</button>
 					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary, #0066cc);">Searching...</div>
 					<div id="article-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--md-outline-variant, #ddd); border-radius: 6px; display: none;"></div>
 				</div>
@@ -170,148 +173,175 @@
 </article>
 
 <script>
-	document.addEventListener('DOMContentLoaded', function () {
-		var siteSelect = document.getElementById('InputSiteId');
-		var cultureSelect = document.getElementById('InputCulture');
-		var searchInput = document.getElementById('article-search-input');
-		var resultsList = document.getElementById('article-results-list');
-		var spinner = document.getElementById('search-spinner');
-		var canonicalIdInput = document.getElementById('InputCanonicalArticleId');
-		var articleTitleInput = document.getElementById('SelectedArticleTitle');
-		var selectedDisplay = document.getElementById('selected-article-display');
-		var selectedText = document.getElementById('selected-article-text');
-		var selectedGuid = document.getElementById('selected-article-guid');
-		var searchContainer = document.getElementById('article-search-container');
-		var clearBtn = document.getElementById('clear-article-btn');
-		var debounceTimeout = null;
+	document.addEventListener("DOMContentLoaded", function ()
+	{
+		const SiteSelect = document.getElementById("InputSiteId");
+		const CultureSelect = document.getElementById("InputCulture");
+		const SearchInput = document.getElementById("article-search-input");
+		const ResultsList = document.getElementById("article-results-list");
+		const Spinner = document.getElementById("search-spinner");
+		const CanonicalIdInput = document.getElementById("InputCanonicalArticleId");
+		const ArticleTitleInput = document.getElementById("SelectedArticleTitle");
+		const SelectedDisplay = document.getElementById("selected-article-display");
+		const SelectedText = document.getElementById("selected-article-text");
+		const SelectedGuid = document.getElementById("selected-article-guid");
+		const SearchContainer = document.getElementById("article-search-container");
+		const ClearButton = document.getElementById("clear-article-btn");
+		const Status = document.getElementById("article-picker-status");
+		const RetryCultures = document.getElementById("retry-cultures");
+		if (!SiteSelect || !CultureSelect || !SearchInput) return;
+		let CultureRequest = null;
+		let SearchRequest = null;
+		let DebounceTimer = 0;
+		let CulturesReady = Boolean(SiteSelect.value && CultureSelect.value);
+		SearchInput.disabled = !CulturesReady;
 
-		// Update cultures when site changes
-		if (siteSelect) {
-			siteSelect.addEventListener('change', function () {
-				var siteId = siteSelect.value;
-				fetch('?handler=Cultures&siteId=' + encodeURIComponent(siteId))
-					.then(function (res) { return res.json(); })
-					.then(function (cultures) {
-						cultureSelect.innerHTML = '';
-						cultures.forEach(function (c) {
-							var opt = document.createElement('option');
-							opt.value = c;
-							opt.textContent = c;
-							cultureSelect.appendChild(opt);
-						});
-						clearSelection();
-					});
-			});
+		/** Invalidate the search immediately, including a response body already queued for this context. */
+		function CancelSearch()
+		{
+			clearTimeout(DebounceTimer);
+			SearchRequest?.Controller.abort();
+			SearchRequest = null;
+			Spinner.style.display = "none";
+			ResultsList.replaceChildren();
+			ResultsList.style.display = "none";
 		}
 
-		if (cultureSelect) {
-			cultureSelect.addEventListener('change', function () {
-				clearSelection();
-			});
+		/** Remove a target as soon as its site/culture is changed, before any dependent request completes. */
+		function ClearSelection()
+		{
+			CancelSearch();
+			CanonicalIdInput.value = "";
+			ArticleTitleInput.value = "";
+			SelectedText.textContent = "";
+			SelectedGuid.textContent = "";
+			SelectedDisplay.style.display = "none";
+			SearchContainer.style.display = "block";
+			SearchInput.value = "";
 		}
 
-		// Debounced article search
-		if (searchInput) {
-			searchInput.addEventListener('input', function () {
-				clearTimeout(debounceTimeout);
-				var query = searchInput.value.trim();
-
-				if (query.length < 2) {
-					resultsList.style.display = 'none';
-					resultsList.innerHTML = '';
-					return;
+		/** Load only the selected site's cultures, keeping dependent search unavailable until they are ready. */
+		async function LoadCultures()
+		{
+			CultureRequest?.Controller.abort();
+			const Request = { SiteId: SiteSelect.value, Controller: new AbortController() };
+			CultureRequest = Request;
+			CulturesReady = false;
+			ClearSelection();
+			CultureSelect.replaceChildren();
+			CultureSelect.disabled = true;
+			SearchInput.disabled = true;
+			RetryCultures.style.display = "none";
+			Status.textContent = "Loading cultures…";
+			try
+			{
+				const Response = await fetch(`?handler=Cultures&siteid=${encodeURIComponent(Request.SiteId)}`, { signal: Request.Controller.signal });
+				if (!Response.ok) throw new Error("Culture lookup failed.");
+				const Cultures = await Response.json();
+				if (CultureRequest !== Request || SiteSelect.value !== Request.SiteId) return;
+				if (!Array.isArray(Cultures) || Cultures.length === 0) throw new Error("No cultures were returned.");
+				for (const Culture of Cultures)
+				{
+					const Option = document.createElement("option");
+					Option.value = Culture;
+					Option.textContent = Culture;
+					CultureSelect.appendChild(Option);
 				}
-
-				spinner.style.display = 'block';
-
-				debounceTimeout = setTimeout(function () {
-					var siteId = siteSelect ? siteSelect.value : 1;
-					var culture = cultureSelect ? cultureSelect.value : 'en';
-					var url = '?handler=SearchArticles&siteId=' + encodeURIComponent(siteId) +
-						'&culture=' + encodeURIComponent(culture) +
-						'&q=' + encodeURIComponent(query);
-
-					fetch(url)
-						.then(function (res) { return res.json(); })
-						.then(function (items) {
-							spinner.style.display = 'none';
-							resultsList.innerHTML = '';
-
-							if (items.length === 0) {
-								var emptyEl = document.createElement('div');
-								emptyEl.style.padding = '0.75rem 1rem';
-								emptyEl.style.color = '#888';
-								emptyEl.textContent = 'No matching articles found.';
-								resultsList.appendChild(emptyEl);
-								resultsList.style.display = 'block';
-								return;
-							}
-
-							items.forEach(function (item) {
-								var row = document.createElement('div');
-								row.style.padding = '0.6rem 1rem';
-								row.style.cursor = 'pointer';
-								row.style.borderBottom = '1px solid var(--md-outline-variant, #eee)';
-								row.innerHTML = '<strong>' + escapeHtml(item.Title) + '</strong> <small style="color:#666;">(/' + escapeHtml(item.UrlSlug) + ')</small>';
-
-								row.addEventListener('mouseover', function () {
-									row.style.background = 'var(--md-surface-variant, #f5f5f5)';
-								});
-								row.addEventListener('mouseout', function () {
-									row.style.background = 'transparent';
-								});
-
-								row.addEventListener('click', function () {
-									selectArticle(item.CanonicalArticleId, item.Title, item.UrlSlug);
-								});
-
-								resultsList.appendChild(row);
-							});
-
-							resultsList.style.display = 'block';
-						})
-						.catch(function () {
-							spinner.style.display = 'none';
-						});
-				}, 300);
-			});
+				CulturesReady = true;
+				CultureSelect.disabled = false;
+				SearchInput.disabled = false;
+				CultureRequest = null;
+				Status.textContent = "";
+			}
+			catch (Failure)
+			{
+				if (CultureRequest !== Request || SiteSelect.value !== Request.SiteId) return;
+				CultureRequest = null;
+				Status.textContent = "Could not load cultures for this site. Retry loading cultures or choose another site.";
+				RetryCultures.style.display = "inline-flex";
+			}
 		}
 
-		function selectArticle(guid, title, slug) {
-			canonicalIdInput.value = guid;
-			articleTitleInput.value = title;
-			selectedText.textContent = title + ' (/' + slug + ')';
-			selectedGuid.textContent = guid;
-
-			resultsList.style.display = 'none';
-			resultsList.innerHTML = '';
-			searchInput.value = '';
-
-			searchContainer.style.display = 'none';
-			selectedDisplay.style.display = 'flex';
+		/** Check ownership as well as input values; returning to an earlier query must not revive its old request. */
+		function IsCurrentSearch(Request)
+		{
+			return SearchRequest === Request && CulturesReady && SiteSelect.value === Request.SiteId &&
+				CultureSelect.value === Request.Culture && SearchInput.value.trim() === Request.Query;
 		}
 
-		function clearSelection() {
-			canonicalIdInput.value = '';
-			articleTitleInput.value = '';
-			selectedText.textContent = '';
-			selectedGuid.textContent = '';
-
-			selectedDisplay.style.display = 'none';
-			searchContainer.style.display = 'block';
-			if (searchInput) searchInput.value = '';
-			resultsList.style.display = 'none';
-			resultsList.innerHTML = '';
+		/** Commit a target to the existing native form, cancelling any work that could reopen its search view. */
+		function SelectArticle(Item)
+		{
+			CancelSearch();
+			CanonicalIdInput.value = Item.CanonicalArticleId;
+			ArticleTitleInput.value = Item.Title;
+			SelectedText.textContent = `${Item.Title} (/${Item.UrlSlug})`;
+			SelectedGuid.textContent = Item.CanonicalArticleId;
+			SearchInput.value = "";
+			SearchContainer.style.display = "none";
+			SelectedDisplay.style.display = "flex";
+			Status.textContent = "";
 		}
 
-		if (clearBtn) {
-			clearBtn.addEventListener('click', clearSelection);
-		}
-
-		function escapeHtml(str) {
-			var div = document.createElement('div');
-			div.appendChild(document.createTextNode(str));
-			return div.innerHTML;
-		}
+		SiteSelect.addEventListener("change", LoadCultures);
+		RetryCultures.addEventListener("click", LoadCultures);
+		CultureSelect.addEventListener("change", () => { ClearSelection(); Status.textContent = ""; });
+		ClearButton.addEventListener("click", () => { ClearSelection(); Status.textContent = ""; SearchInput.focus(); });
+		SearchInput.addEventListener("input", () =>
+		{
+			CancelSearch();
+			if (!CulturesReady) return;
+			Status.textContent = "";
+			const Query = SearchInput.value.trim();
+			if (Query.length < 2) return;
+			const Request = { SiteId: SiteSelect.value, Culture: CultureSelect.value, Query, Controller: new AbortController() };
+			SearchRequest = Request;
+			Spinner.style.display = "block";
+			DebounceTimer = setTimeout(async () =>
+			{
+				try
+				{
+					const Parameters = new URLSearchParams({ handler: "SearchArticles", siteid: Request.SiteId, culture: Request.Culture, q: Request.Query });
+					const Response = await fetch(`?${Parameters}`, { signal: Request.Controller.signal });
+					if (!Response.ok) throw new Error("Article lookup failed.");
+					const Items = await Response.json();
+					if (!IsCurrentSearch(Request)) return;
+					ResultsList.replaceChildren();
+					if (Items.length === 0)
+					{
+						ResultsList.textContent = "No matching articles found.";
+					}
+					for (const Item of Items)
+					{
+						const Row = document.createElement("button");
+						Row.type = "button";
+						Object.assign(Row.style, { display: "block", padding: "0.6rem 1rem", cursor: "pointer", width: "100%", textAlign: "start", background: "transparent", color: "inherit", font: "inherit", letterSpacing: "normal", border: "0", borderRadius: "0", borderBottom: "1px solid var(--md-outline-variant, #eee)" });
+						const Title = document.createElement("strong");
+						Title.textContent = Item.Title;
+						const Slug = document.createElement("small");
+						Slug.style.color = "#666";
+						Slug.textContent = ` (/${Item.UrlSlug})`;
+						Row.append(Title, Slug);
+						Row.addEventListener("mouseover", () => { Row.style.background = "var(--md-surface-variant, #f5f5f5)"; });
+						Row.addEventListener("mouseout", () => { Row.style.background = "transparent"; });
+						Row.addEventListener("click", () => SelectArticle(Item));
+						ResultsList.appendChild(Row);
+					}
+					ResultsList.style.display = "block";
+				}
+				catch (Failure)
+				{
+					if (IsCurrentSearch(Request)) Status.textContent = "Could not load articles. Type your search again to retry.";
+				}
+				finally
+				{
+					if (IsCurrentSearch(Request))
+					{
+						Spinner.style.display = "none";
+						SearchRequest = null;
+					}
+				}
+			}, 300);
+		});
 	});
 </script>

@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
@@ -46,7 +46,7 @@
 </style>
 
 <figure>
-	<h1>Magazedia</h1>
+	<h1>@Model.SiteName</h1>
 </figure>
 
 <nav class="home-categories" aria-label="Categories">
@@ -89,5 +89,3 @@
 		<a href="/firehose:">View the Firehose</a><br />
 	</p>
 </article>
-
-

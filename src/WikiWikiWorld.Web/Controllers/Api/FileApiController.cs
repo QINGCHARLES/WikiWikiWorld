@@ -122,6 +122,7 @@ public sealed class FileApiController(
 				FileRevision NewFile = new()
 				{
 					CanonicalFileId = CanonicalFileId,
+					StagingUploadId = StagedUpload.StagingUploadId,
 					Type = FileType.Image2D,
 					Filename = StagedUpload.OriginalFileName,
 					MimeType = StagedUpload.ContentType,
@@ -168,7 +169,7 @@ public sealed class FileApiController(
 		}
 		catch (Exception)
 		{
-			FileUploadStorageService.CleanupUncommittedUpload(StagedUpload);
+			await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
 			throw;
 		}
 	}

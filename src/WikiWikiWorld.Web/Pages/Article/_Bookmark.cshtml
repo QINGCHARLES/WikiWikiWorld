@@ -1,17 +1,21 @@
 @model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
+@{
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(Context.Request.PathBase, Url.Content("~/icons.svg"));
+}
 @if (!Model.IsSignedIn)
 {
 	@* Anonymous visitors: a single button whose POST answers with a sign-in prompt. *@
-	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&saved=true")" asp-antiforgery="true" class="article-action-form"
+	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&saved=true")" asp-antiforgery="true"
 		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
-		<button type="button" class="article-action-pill article-action-bookmark" aria-pressed="false" disabled
+		<button type="button" aria-pressed="false" disabled
 			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
 			data-on:click="$_bookmarkError = ''; @@post(el.form.action, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.' })"
 			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.'">
-			<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+			<svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+				<use href="@IconSpriteUrl#Bookmark"></use>
 			</svg>
-			<span class="action-label">Bookmark</span>
+			<span>Bookmark</span>
 		</button>
 		<partial name="_BookmarkStatus" model="@(string.Empty)" />
 	</form>
@@ -20,19 +24,18 @@ else
 {
 	@* Signed-in users: the leading half toggles the default list; the chevron opens a checkable menu of all lists.
 	   Responses patch the toggle, trigger and list elements by id, so the open <details> stays open between toggles. *@
-	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&saved=true")" asp-antiforgery="true" class="article-action-form m3-split-button article-bookmark-split"
+	<form id="article-bookmark" method="post" action="@($"{Model.ArticlePath}?handler=SetBookmark&saved=true")" asp-antiforgery="true" class="m3-split-button"
 		data-signals="{_bookmarkPending: false, _bookmarkError: ''}">
 		<partial name="_BookmarkToggle" model="Model" />
-		<details name="site-menu" class="dropdown-menu article-menu m3-split-button__trailing article-bookmark-menu">
+		<details name="site-menu" class="dropdown-menu">
 			<partial name="_BookmarkMenuTrigger" model="Model" />
 			<div class="menu-content">
 				<partial name="_BookmarkLists" model="Model" />
-				<hr class="menu-divider" />
+				<hr />
 				<partial name="_BookmarkNewList" model="Model" />
 				<a href="@Model.BookmarksPath">
-					<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-						<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-						<path d="m15 5 4 4"></path>
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+						<use href="@IconSpriteUrl#EditLists"></use>
 					</svg>
 					<span>Edit lists</span>
 				</a>

@@ -1,18 +1,18 @@
 /* Footer - Site footer styling */
 
-footer {
+body > footer {
     color: var(--color-primary);
     background-color: var(--color-background-footer);
     font-family: system-ui, sans-serif;
     margin-top: 4rem;
 }
 
-footer a {
+body > footer a {
     color: var(--color-primary);
     text-decoration: none;
 }
 
-footer ul, footer ol {
+body > footer ul, body > footer ol {
     list-style: none;
 }
 
@@ -24,7 +24,7 @@ footer ul, footer ol {
     margin: 0;
 }
 
-footer svg, .nav-item svg {
+body > footer svg, .nav-item svg {
     width: 1.5rem;
     height: 1.5rem;
 }

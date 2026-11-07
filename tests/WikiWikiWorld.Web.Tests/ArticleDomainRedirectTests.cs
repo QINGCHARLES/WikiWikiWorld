@@ -338,6 +338,43 @@ public sealed class ArticleDomainRedirectTests : IDisposable
 		}
 	}
 
+	/// <summary>Ensures a submitted target belongs to the selected site and culture, independently of the browser picker.</summary>
+	/// <param name="SiteId">The submitted target site.</param>
+	/// <param name="Culture">The submitted target culture.</param>
+	/// <param name="ExpectedSuccess">Whether the target matches the article's actual context.</param>
+	/// <returns>A task completing after the redirect result and persisted state are verified.</returns>
+	[Theory]
+	[InlineData(1, "en", true)]
+	[InlineData(1, "ja", false)]
+	[InlineData(2, "en", false)]
+	public async Task CreateRedirectValidatesArticleSiteAndCulture(int SiteId, string Culture, bool ExpectedSuccess)
+	{
+		await using WikiWikiWorldDbContext Context = new(DbOptions);
+		Guid UserId = Guid.NewGuid();
+		Guid CanonicalArticleId = Guid.NewGuid();
+		Context.Users.Add(new User { Id = UserId, UserName = "editor", DateCreated = DateTimeOffset.UtcNow });
+		Context.ArticleRevisions.Add(new ArticleRevision
+		{
+			CanonicalArticleId = CanonicalArticleId,
+			SiteId = 1,
+			Culture = "en",
+			Title = "Target article",
+			UrlSlug = "target",
+			Text = "Content",
+			RevisionReason = "Initial creation",
+			Type = ArticleType.Article,
+			IsCurrent = true,
+			CreatedByUserId = UserId,
+			DateCreated = DateTimeOffset.UtcNow
+		});
+		await Context.SaveChangesAsync();
+		ArticleDomainRedirectService Service = new(Context, MemoryCache, SiteConfigurationOptions, DomainRedirectOptions);
+		(bool Success, string? Error) = await Service.CreateRedirectAsync("target-domain.org", SiteId, Culture, CanonicalArticleId, UserId);
+		Assert.Equal(ExpectedSuccess, Success);
+		Assert.Equal(ExpectedSuccess, await Context.ArticleDomainRedirects.AnyAsync());
+		if (!ExpectedSuccess) Assert.Contains("Selected article could not be found", Error);
+	}
+
 	/// <summary>
 	/// Verifies soft-deleting a domain redirect.
 	/// </summary>

@@ -1,4 +1,4 @@
-# AGENTS.md - v17
+# AGENTS.md - v20
 
 ## Defaults and existing projects
 
@@ -30,6 +30,7 @@ If a material conflict remains unresolved by this order, explain it and ask for 
 * Act as a lead engineer: check the underlying goal, whether the suggested method solves it, whether a standard API or official SDK fits better, and any concrete fragility or maintenance cost.
 * Present a **💡 Recommended Alternative** before implementation when a better approach materially changes my requested method, scope, dependencies, behavior, cost, or architecture. Explain the trade-off and ask which approach to take unless I have already chosen. Decide routine implementation details yourself.
 * Use the minimum complete solution. Touch only what the task requires, preserve unrelated user changes, and clean up artifacts introduced by your work. Do not perform speculative cleanup or migrations.
+* Before implementing, validate material assumptions against current code, configuration, and relevant documentation; treat plans and handoffs as claims to verify. Identify concrete gaps or regression risks and choose proportionate checks. Reuse evidence that remains current; repeat review only when changes, failures, or unresolved concerns justify it. Report material uncertainty and verification limits rather than claiming certainty.
 * Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to the user and get their buy-in. Do not silently expand scope for theoretical robustness.
 * Introduce interfaces/layers only for demonstrated value: another implementation, an exercised test seam, or known volatility. Start with direct queries; extract proven reuse into expressions/methods. Use specifications only when their composition or reuse justifies them.
 * Accept intentional coupling to the established stack. Do not abstract for a hypothetical database swap.
@@ -85,6 +86,8 @@ References when needed: [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/
 * Prefer matching guard helpers, such as `ArgumentNullException.ThrowIfNull(Value)` and `ArgumentException.ThrowIfNullOrWhiteSpace(Text)`. Use explicit argument exceptions when no helper expresses the required contract.
 * Prefer using declarations when method scope is the right lifetime; use an explicit block when resources, locks, or transactions should end earlier. Use `await using` for asynchronous disposal where appropriate.
 * Prefer ranges over equivalent `Substring` calls when clearer. Use spans for suitable parsing/validation and measured hot paths. Async/iterator span locals must obey compiler ref-safety rules and never survive `await`/`yield` suspension. Do not capture spans or store them in ordinary class/struct fields. Use strings or suitable memory types for async signatures/retained buffers; preserve useful string overloads and null behavior.
+* Choose string comparison rules explicitly. Use ordinal comparison and matching comparers for non-linguistic identifiers and tokens, preserving required case sensitivity. Use appropriate culture-aware comparison for linguistic text and user-facing sorting. Avoid allocating uppercase/lowercase copies solely for case-insensitive equality; preserve existing normalization and database-collation contracts.
+* Prefer `[GeneratedRegex]` for supported compile-time-known patterns that would otherwise use runtime compilation or repeated construction. Preserve matching options, culture behavior, and timeouts; check generator limitations before converting existing expressions.
 * Consider `params ReadOnlySpan<T>`, other supported `params` collections, `readonly record struct` value objects, and immutable/frozen collections when justified. Account for boxing, copying, and construction costs rather than assuming a performance improvement.
 * C# 14 null-conditional assignment, supported lambda modifiers, and `nameof` on unbound generics are available when clearer. Use `"\\e"` for ANSI escape characters. Use less common features such as inline arrays, ref constraints, or partial members only for an actual requirement.
 
@@ -121,6 +124,7 @@ Keep `ToHashSet(Comparer)` and `ToDictionary(...)` for required comparers/projec
 * Use `Task.WhenAll` only for independent, concurrency-safe operations with bounded resources. Await sequentially when ordering, limits, or a shared `DbContext` requires it. Prefer `ParallelOptions.MaxDegreeOfParallelism` for `Parallel.ForEachAsync`; use a shared semaphore only for an additional purpose.
 * Use channels for actual producer/consumer needs, with appropriate capacity/completion. Use `PeriodicTimer` for periodic ticks and cancellable `Task.Delay` for delay-after-work or backoff. Avoid `Thread.Sleep` in async/UI flows.
 * Prefer readable `foreach` loops. Change loops, allocation patterns, or data structures for demonstrated performance needs; preserve semantics and measure consequential claims. Do not assume a `for` loop is faster over arrays/spans.
+* For performance work, establish a representative Release-build baseline and profile the bottleneck before editing. Use counters for initial triage, traces when needed, and BenchmarkDotNet for isolated CPU/allocation comparisons. Change one factor at a time; retain optimizations with repeatable, relevant gains. Distinguish startup from steady-state performance and verify consequential gains under deployment-representative conditions.
 
 Reference when needed: [synchronous lock semantics](https://learn.microsoft.com/en-us/dotnet/api/system.threading.lock?view=net-10.0).
 
@@ -176,6 +180,7 @@ References when needed: [context lifetime](https://learn.microsoft.com/en-us/ef/
 * Prefer `TypedResults.ServerSentEvents(...)` for suitable unidirectional updates. Select polling, SSE, or WebSockets according to required behavior.
 * For JSON Patch, prefer `Microsoft.AspNetCore.JsonPatch.SystemTextJson` with a compatible package and endpoint binding. A `PATCH` request does not inherently require JSON Patch. Restrict updates to the intended input surface and apply validation before persistence.
 * Use structured logs and scopes for meaningful operational context when logging is needed. Do not add logging boilerplate to every small method or leave temporary debugging output behind.
+* Prefer `[LoggerMessage]` for frequently executed logging paths when its allocation and formatting savings matter. Guard expensive argument construction with `IsEnabled`; source generation does not prevent argument evaluation.
 
 ## HTTP clients, retries, and idempotency
 
@@ -214,6 +219,15 @@ Reference when needed: [SDK container configuration](https://learn.microsoft.com
 * Prefer OKLCH for perceptually meaningful color adjustments. Display P3 (`color(display-p3 ...)`) is wide-gamut RGB, not perceptually uniform; provide fallbacks when needed. Use `color-scheme` and `light-dark()` when supported, while preserving an explicit user theme choice and appropriate media-query fallbacks.
 * Use typography, fonts, balancing/truncation, and effects deliberately. Apply `content-visibility`, intrinsic sizing, sticky positioning, and scroll containment to actual needs; test visibility, overflow, focus, and reduced motion.
 * Choose useful console diagnostics: named-value objects, `table`, `trace`, `assert`, timing, groups, levels, or `dir`. Use styled output sparingly and remove temporary diagnostics.
+
+### HTML semantics and CSS selectors
+
+* Aim for markup that is as classless as practical: use semantic HTML and short structural selectors within clear page/component boundaries. Prefer elements that express the content's purpose, such as `dl`/`dt`/`dd` for name/value metadata and `time` with `datetime` for timestamps. Avoid classes that merely repeat an element's clear local role, such as a divider class on a menu's `hr`.
+* Preserve explicit purpose where structure alone leaves maintainers guessing. Descriptive classes such as `eyebrow`, `subtitle`, or `byline` can document editorial/domain meaning; retain useful component boundaries and genuine visual variants. An element being uniquely selectable does not make its purpose obvious. Judge removals by the clarity of both the remaining markup and the resulting selector, rather than class count alone.
+* Prefer existing native or correctly applied semantic state as the source of truth for styling: `:checked`, `:disabled`, `details[open]`, `[aria-checked="true"]`, or `[aria-pressed="true"]`, as appropriate. Avoid parallel state classes when these already express the same fact. Use `role`, ARIA attributes, `title`, and other standard attributes only for their defined meaning, never solely as internal documentation or styling hooks.
+* Use `data-*` attributes for application data, configuration, or custom state where no appropriate standard element/attribute exists. They do not add browser or accessibility semantics. Do not mechanically replace descriptive classes with `data-purpose`/`data-role` attributes merely to reduce class count. Use IDs for actual identity needs such as fragment targets, label relationships, or DOM patching; reuse suitable existing IDs without inventing IDs solely for styling.
+* Keep structural selectors readable and scoped so they do not leak into nested components or authored content. Avoid deep chains or fragile positional selectors that reconstruct a purpose better expressed by a name. Do not use the presence or absence of arbitrary classes, such as `:not([class])`, as a proxy for prose or component identity.
+* Before removing a class, check CSS (including shared styles and overrides), scripts, generated markup, tests, and integration contracts, as well as its documentation value. The absence of a CSS consumer does not by itself prove a class is unnecessary. Verify affected appearance and interactions when changing markup or selectors.
 
 ## UX: intentional friction
 

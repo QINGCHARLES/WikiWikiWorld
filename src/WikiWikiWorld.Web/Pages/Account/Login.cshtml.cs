@@ -77,7 +77,7 @@ public sealed class LoginModel(
 		if (Result.Succeeded)
 		{
 			// The user's @page (their home page) is no longer ensured here: it exists from registration and is
-			// otherwise created on demand when the profile is viewed or messaged. Keeping login off this
+			// otherwise created on demand when its public article is viewed. Keeping login off this
 			// write avoids turning a successful sign-in into a 500 if the write were to fail.
 			if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
 				return LocalRedirect(ReturnUrl);

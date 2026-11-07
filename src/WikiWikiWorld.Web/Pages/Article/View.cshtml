@@ -1,6 +1,8 @@
 @page
 @model ViewModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
 	ViewData["Title"] = !string.IsNullOrWhiteSpace(Model.PlainTextTitle) ? Model.PlainTextTitle : "Article Not Found";
 }
 @functions {
@@ -14,9 +16,6 @@
 		};
 	}
 }
-@* <div class="image-wrapper">
-	<img class="topp" src="/sitefiles/test-header.png" />
-</div> *@
 
 <figure>
 	@if(!string.IsNullOrWhiteSpace(Model.HeaderImage))
@@ -36,34 +35,26 @@
 	}
 </hgroup>
 
-@* <h1 class="title">@Model.DisplayedRevision?.Title</h1> *@
-
-
-
-
-@* 			<img class="topp" src="/sitefiles/test-header.png" />
- *@
-
 @if (Model.IsViewingCurrentRevision && Model.Revision is not null)
 {
-	<div class="alert alert-info">
+	<div class="revision-notice">
 		<strong>You are viewing the current revision of this article.</strong><br>
 		To see the canonical URL, visit:
-		<a href="@Model.CurrentArticlePath" class="btn btn-sm btn-primary">Go to Latest Version</a>
+		<a href="@Model.CurrentArticlePath">Go to Latest Version</a>
 	</div>
 }
 
 @if (Model.IsPriorRevision && Model.DisplayedRevision is not null && Model.CurrentRevision is not null)
 {
-	<div class="alert alert-warning">
+	<div class="revision-notice">
 		<strong>You're viewing a prior revision.</strong><br>
 		This revision was published on <strong>@Model.DisplayedRevision.DateCreated.ToString("dd MMMM yyyy HH:mm")</strong>.<br>
 		The current version was published on <strong>@Model.CurrentRevision.DateCreated.ToString("dd MMMM yyyy HH:mm")</strong>.
-		<a href="@Model.CurrentArticlePath" class="btn btn-sm btn-primary">View Current</a>
+		<a href="@Model.CurrentArticlePath">View Current</a>
 
 		@if (Model.HasTitleChanged)
 		{
-			<p class="text-danger">
+			<p>
 				<strong>Note:</strong> The title of this article has changed from
 				"<strong>@Model.DisplayedRevision.Title</strong>" to
 				"<strong>@Model.CurrentRevision.Title</strong>".
@@ -72,11 +63,11 @@
 
 		@if (Model.HasUrlSlugChanged)
 		{
-			<p class="text-danger">
+			<p>
 				<strong>Note:</strong> The URL of this article has changed from
 				"<strong>@Model.DisplayedCanonicalUrlSlug</strong>" to
 				"<strong>@Model.CurrentCanonicalUrlSlug</strong>".<br>
-				<a href="@Model.CurrentArticlePath" class="btn btn-sm btn-secondary">Go to New URL</a>
+				<a href="@Model.CurrentArticlePath">Go to New URL</a>
 			</p>
 		}
 	</div>
@@ -88,16 +79,16 @@ else if(Model.DisplayedRevision is not null)
 		{
 			ArticleAuthor PrimaryAuthor = Model.RecentAuthors[0];
 			<div class="editor-authors">
-				<div class="editor-byline">
-					<span class="meta-label">@(Model.RecentAuthors.Count == 1 ? "Created by" : "Improved by")</span>
-					<span class="meta-value">
-						<a href="/@@@PrimaryAuthor.UserName" class="author-primary">@PrimaryAuthor.UserName</a>@if (Model.RecentAuthors.Count > 1)
+				<dl>
+					<dt>@(Model.RecentAuthors.Count == 1 ? "Created by" : "Improved by")</dt>
+					<dd>
+						<a href="/@@@PrimaryAuthor.UserName">@PrimaryAuthor.UserName</a>@if (Model.RecentAuthors.Count > 1)
 						{
-							<span class="author-others"> &amp; others</span>
+							<span> &amp; others</span>
 						}
-					</span>
-				</div>
-				<address class="author-list">
+					</dd>
+				</dl>
+				<address>
 					@for (int i = 0; i < Model.RecentAuthors.Count; i++)
 					{
 						ArticleAuthor Author = Model.RecentAuthors[i];
@@ -115,7 +106,7 @@ else if(Model.DisplayedRevision is not null)
 							}
 							else
 							{
-								<span class="avatar-initials">@Initial</span>
+								<span>@Initial</span>
 							}
 						</a>
 					}
@@ -132,94 +123,76 @@ else if(Model.DisplayedRevision is not null)
 				RelativeTimeText = char.ToUpperInvariant(RelativeTimeText[0]) + RelativeTimeText[1..];
 			}
 		}
-		<div class="editor-status">
-			<div class="editor-updated">
-				<span class="meta-label">Last Updated</span>
-				<span class="meta-value">@RelativeTimeText</span>
-			</div>
-		</div>
+		<dl>
+			<dt>Last Updated</dt>
+			<dd><time datetime="@Model.DisplayedRevision.DateCreated.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@RelativeTimeText</time></dd>
+		</dl>
 	</div>
 	<div class="article-actions" role="toolbar" aria-label="Article actions">
 		<partial name="_Bookmark" model="Model.BookmarkControl" />
-		<a href="@Model.TalkPath" class="article-action-pill article-action-talk" rel="nofollow">
-			<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-				<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"></path>
-				<path d="M8 10h9M8 14h6"></path>
+		<a href="@Model.TalkPath" class="article-action-talk" rel="nofollow">
+			<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+				<use href="@IconSpriteUrl#Discuss"></use>
 			</svg>
-			<span class="action-label">@Model.TalkLabel</span>
+			<span>@Model.TalkLabel</span>
 		</a>
 		<div class="m3-split-button">
-			<a href="@($"{Model.DisplayedArticlePath}/edit")" rel="nofollow" class="m3-split-button__leading">
-				<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-					<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-					<path d="m15 5 4 4"></path>
-					<path d="M13 21h8"></path>
+			<a href="@($"{Model.DisplayedArticlePath}/edit")" rel="nofollow">
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+					<use href="@IconSpriteUrl#Edit"></use>
 				</svg>
-				<span class="action-label">Edit<span class="action-label-extra"> article</span></span>
+				<span>Edit<span class="action-label-extra"> article</span></span>
 			</a>
-			<details name="site-menu" class="dropdown-menu article-menu m3-split-button__trailing">
-				<summary class="menu-trigger" aria-label="More article actions">
-					<svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-						<circle cx="12" cy="5.5" r="1.75"></circle>
-						<circle cx="12" cy="12" r="1.75"></circle>
-						<circle cx="12" cy="18.5" r="1.75"></circle>
+			<details name="site-menu" class="dropdown-menu">
+				<summary aria-label="More article actions">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+						<use href="@IconSpriteUrl#More"></use>
 					</svg>
 				</summary>
 				<div class="menu-content">
 					@if (Model.DisplayedRevision?.Type == WikiWikiWorld.Data.Models.ArticleType.File)
 					{
 						<a href="@($"{Model.DisplayedArticlePath}/edit#file-upload-section")" rel="nofollow">
-							<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-								<polyline points="17 8 12 3 7 8"></polyline>
-								<line x1="12" y1="3" x2="12" y2="15"></line>
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+								<use href="@IconSpriteUrl#Upload"></use>
 							</svg>
 							<span>Upload new file version</span>
 						</a>
 					}
 					<a href="@($"{Model.DisplayedArticlePath}/history")" rel="nofollow">
-						<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-							<path d="M3 3v5h5"></path>
-							<path d="M12 7v5l3 2"></path>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#History"></use>
 						</svg>
 						<span>View history</span>
 					</a>
 					<a href="#">
-						<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-							<circle cx="12" cy="12" r="3"></circle>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#Watch"></use>
 						</svg>
 						<span>Watch article</span>
 					</a>
 					<a href="@($"{Model.DisplayedArticlePath}/links")" rel="nofollow">
-						<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-							<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#Links"></use>
 						</svg>
 						<span>What links here</span>
 					</a>
 					<a href="@($"{Model.DisplayedArticlePath}/languages")" rel="nofollow">
-						<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<circle cx="12" cy="12" r="10"></circle>
-							<path d="M2 12h20"></path>
-							<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#Languages"></use>
 						</svg>
 						<span>Other languages</span>
 					</a>
 					<a href="#">
-						<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-							<line x1="4" y1="22" x2="4" y2="15"></line>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#Report"></use>
 						</svg>
 						<span>Report article</span>
 					</a>
-					<hr class="menu-divider" />
+					<hr />
 					<a href="#" class="menu-item-danger">
-						<svg class="menu-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M3 6h18"></path>
-							<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-							<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#Delete"></use>
 						</svg>
 						<span>Delete article</span>
 					</a>
@@ -248,6 +221,7 @@ else if(Model.DisplayedRevision is not null)
 		@if (!string.IsNullOrWhiteSpace(Model.HeaderImage))
 		{
 			<script type="module" src="~/js/header-paper-texture.js" asp-append-version="true"></script>
+			<script type="module" src="~/js/search-glass.js" asp-append-version="true"></script>
 		}
 	}
 
@@ -255,45 +229,45 @@ else if(Model.DisplayedRevision is not null)
 	{
 		@if (!string.IsNullOrWhiteSpace(Model.FileImageUrl))
 		{
-			<section class="file-info" id="file-info-panel">
-				<figure class="file-info-figure">
+			<section id="file-info-panel">
+				<figure>
 					<a href="@Model.FileImageUrl">
 						<img src="@Model.FileImageUrl"
 							 alt="@Model.PlainTextTitle"
-							 class="file-info-image"
+
 							 loading="eager" />
 					</a>
 				</figure>
-				<dl class="file-info-metadata">
-					<div class="file-info-row">
+				<dl>
+					<div>
 						<dt>Filename</dt>
 						<dd>@Model.FileOriginalFilename</dd>
 					</div>
-					<div class="file-info-row">
+					<div>
 						<dt>Type</dt>
 						<dd>@Model.FileMimeType</dd>
 					</div>
 					@if (!string.IsNullOrWhiteSpace(Model.FileCodec))
 					{
-						<div class="file-info-row">
+						<div>
 							<dt>Codec</dt>
 							<dd>@Model.FileCodec</dd>
 						</div>
 					}
 					@if (Model.FileWidthPx > 0 && Model.FileHeightPx > 0)
 					{
-						<div class="file-info-row">
+						<div>
 							<dt>Dimensions</dt>
 							<dd>@Model.FileWidthPx &times; @Model.FileHeightPx px</dd>
 						</div>
 					}
-				<div class="file-info-row">
+				<div>
 					<dt>Size</dt>
 					<dd>@FormatFileSize(Model.FileSizeBytes)</dd>
 				</div>
 				@if (!string.IsNullOrWhiteSpace(Model.FileSourceText))
 				{
-					<div class="file-info-row file-info-row--wide">
+					<div class="file-source">
 						<dt>Source</dt>
 						<dd>
 							@if (!string.IsNullOrWhiteSpace(Model.FileSourceUrl) && Model.FileSourceText == Model.FileSourceUrl)
@@ -316,7 +290,7 @@ else if(Model.DisplayedRevision is not null)
 					</div>
 				}
 			</dl>
-			<div class="file-info-actions">
+			<footer>
 				<a href="@Model.FileImageUrl" target="_blank" rel="noopener" class="button" data-button-variant="ghost">
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -336,16 +310,16 @@ else if(Model.DisplayedRevision is not null)
 						<span>Upload New Version</span>
 					</a>
 				}
-			</div>
+			</footer>
 			</section>
 
 			@if (Model.FileRevisionHistory.Count > 0)
 			{
-				<section class="file-history" id="file-history-panel">
-					<div class="file-history-header">
+				<section id="file-history-panel">
+					<header>
 						<div>
-							<h2 class="file-history-title">File History</h2>
-							<p class="file-history-subtitle">
+							<h2>File History</h2>
+							<p>
 								@(Model.FileRevisionHistory.Count == 1
 									? "1 version recorded for this file."
 									: $"{Model.FileRevisionHistory.Count} versions recorded for this file.")
@@ -362,62 +336,60 @@ else if(Model.DisplayedRevision is not null)
 								<span>Upload a new version of this file</span>
 							</a>
 						}
-					</div>
+					</header>
 
-					<div class="file-history-list">
+					<div>
 						@foreach (FileRevisionHistoryItem Rev in Model.FileRevisionHistory)
 						{
-							<article class="file-history-item @(Rev.IsCurrent ? "is-current" : "is-previous")">
-								<a href="@Rev.FileImageUrl" target="_blank" rel="noopener" class="file-history-thumb-link" title="View full resolution for revision @Rev.Id">
+							<article class="file-history-item @(Rev.IsCurrent ? "is-current" : "")">
+								<a href="@Rev.FileImageUrl" target="_blank" rel="noopener" title="View full resolution for revision @Rev.Id">
 									<img src="@Rev.FileImageUrl"
 										 alt="@Model.PlainTextTitle (Revision @Rev.Id)"
-										 class="file-history-thumb"
+
 										 loading="lazy" />
 								</a>
-								<div class="file-history-details">
-									<div class="file-history-item-header">
-										<span class="file-history-badge @(Rev.IsCurrent ? "badge-current" : "badge-previous")">
+								<div>
+									<header>
+										<span class="file-history-badge">
 											@(Rev.IsCurrent ? "Current version" : "Previous version")
 										</span>
-										<span class="file-history-timestamp">
-											<time datetime="@Rev.DateCreated.ToString("o")">@Rev.DateCreated.ToString("dd MMMM yyyy, HH:mm")</time>
-										</span>
+										<time datetime="@Rev.DateCreated.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@Rev.DateCreated.ToString("dd MMMM yyyy, HH:mm")</time>
 										@if (!string.IsNullOrWhiteSpace(Rev.CreatedByUserName))
 										{
 											<span class="file-history-author">
 												by <a href="/@@@Rev.CreatedByUserName">@Rev.CreatedByUserName</a>
 											</span>
 										}
-									</div>
+									</header>
 
-									<div class="file-history-meta-grid">
-										<div class="file-history-stat">
-											<span class="file-history-stat-label">Dimensions</span>
-											<span class="file-history-stat-value">
+									<dl>
+										<div>
+											<dt>Dimensions</dt>
+											<dd>
 												@(Rev.ImageWidthPixels.HasValue && Rev.ImageHeightPixels.HasValue
 													? $"{Rev.ImageWidthPixels.Value} \u00d7 {Rev.ImageHeightPixels.Value} px"
 													: "Unknown")
-											</span>
+											</dd>
 										</div>
-										<div class="file-history-stat">
-											<span class="file-history-stat-label">Codec / Format</span>
-											<span class="file-history-stat-value">@Rev.Codec (@Rev.MimeType)</span>
+										<div>
+											<dt>Codec / Format</dt>
+											<dd>@Rev.Codec (@Rev.MimeType)</dd>
 										</div>
-										<div class="file-history-stat">
-											<span class="file-history-stat-label">File Size</span>
-											<span class="file-history-stat-value">@FormatFileSize(Rev.FileSizeBytes)</span>
+										<div>
+											<dt>File Size</dt>
+											<dd>@FormatFileSize(Rev.FileSizeBytes)</dd>
 										</div>
-										<div class="file-history-stat">
-											<span class="file-history-stat-label">Filename</span>
-											<span class="file-history-stat-value">@Rev.Filename</span>
+										<div>
+											<dt>Filename</dt>
+											<dd>@Rev.Filename</dd>
 										</div>
-									</div>
+									</dl>
 
 									@if (!string.IsNullOrWhiteSpace(Rev.RevisionReason))
 									{
 										<div class="file-history-comment">
-											<span class="file-history-comment-label">Comment:</span>
-											<span class="file-history-comment-text">@Rev.RevisionReason</span>
+											<strong>Comment:</strong>
+											@Rev.RevisionReason
 										</div>
 									}
 								</div>

@@ -148,6 +148,7 @@ Builder.Services.AddScoped<ISiteContextService, SiteContextService>();
 Builder.Services.AddScoped<ArticleRevisionService>();
 Builder.Services.AddScoped<BookmarkService>();
 Builder.Services.AddScoped<ProfileService>();
+Builder.Services.AddScoped<PrivateMessagingService>();
 Builder.Services.AddScoped<FirehoseService>();
 Builder.Services.AddScoped<ArticleSearchService>();
 Builder.Services.AddScoped<IArticleRenderer, ArticleRenderer>();
@@ -304,6 +305,7 @@ Builder.Services.AddRazorPages(options =>
     options.Conventions.AddPageRoute("/Profile/Bookmarks", "@{Username}/bookmarks/{listid:int?}");
     options.Conventions.AddPageRoute("/Profile/NewMessage", "message/new");
     options.Conventions.AddPageRoute("/Profile/NewMessage", "@{Recipient}/message/new");
+    options.Conventions.AddPageRoute("/Profile/Conversation", "message/{ConversationId:guid}");
 });
 
 // Catch-all article routing (article view, /edit, /history, /talk, /revision, /links, /languages, 404:)
@@ -324,8 +326,6 @@ ContentTypeProvider.Mappings[".avif"] = "image/avif";
 
 WebApplication App = Builder.Build();
 
-App.UseAuthentication(); // Enables Identity Authentication
-
 // Configure the HTTP request pipeline.
 if (!App.Environment.IsDevelopment())
 {
@@ -338,7 +338,11 @@ App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
 using (IServiceScope StartupScope = App.Services.CreateScope())
 {
 	FileUploadStorageService FileUploadStorageService = StartupScope.ServiceProvider.GetRequiredService<FileUploadStorageService>();
-	await FileUploadStorageService.FinalizeCommittedUploadsAndDeleteStaleTempFilesAsync(CancellationToken.None);
+	FileUploadStartupMaintenanceResult UploadRecovery = await FileUploadStorageService.FinalizeCommittedUploadsAndDeleteStaleTempFilesAsync(CancellationToken.None);
+	foreach (FileUploadRecoveryIssue Issue in UploadRecovery.Issues)
+	{
+		App.Logger.LogWarning("Upload staging retained at {TemporaryFilePath}: {Reason}", Issue.TemporaryFilePath, Issue.Reason);
+	}
 }
 
 App.MapControllers();
@@ -431,6 +435,10 @@ App.UseHttpsRedirection();
 App.UseMiddleware<CanonicalDomainMiddleware>();
 
 App.UseRouting();
+
+// After the canonical-host redirects: validating a sign-in cookie resolves the site-scoped DbContext,
+// which throws for redirect-source hosts such as en.localhost.
+App.UseAuthentication();
 
 // Add headers to prevent this site from being embedded in iframes.
 App.Use(async (Context, Next) =>

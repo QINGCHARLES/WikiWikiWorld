@@ -119,7 +119,7 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         }
         else
         {
-            Renderer.Write("<p class=\"no-downloads\">Download file not available.</p>");
+            Renderer.Write("<p>Download file not available.</p>");
         }
 
         Renderer.Write("</aside>");
@@ -141,9 +141,9 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         }
 
         // Render file info with PDF icon to the left of the filename and metadata/provider below
-        Renderer.Write("<div class=\"file-info\">");
-        Renderer.Write("<div class=\"file-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1.5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M14 3v4a1 1 0 0 0 1 1h4\" /><path d=\"M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4\" /><path d=\"M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6\" /><path d=\"M17 18h2\" /><path d=\"M20 15h-3v6\" /><path d=\"M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z\" /></svg></div>");
-        Renderer.Write("<div class=\"text-content\">");
+        Renderer.Write("<div>");
+        Renderer.Write("<span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1.5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M14 3v4a1 1 0 0 0 1 1h4\" /><path d=\"M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4\" /><path d=\"M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6\" /><path d=\"M17 18h2\" /><path d=\"M20 15h-3v6\" /><path d=\"M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z\" /></svg></span>");
+        Renderer.Write("<div>");
         Renderer.Write($"<p class=\"filename\">{HtmlEscape(Download.Filename)}</p>");
         Renderer.Write($"<p class=\"filesize\">{HtmlEscape(FileFormatText)} &middot; {FileSizeText}</p>");
         if (!String.IsNullOrWhiteSpace(UploadedByUserName))
@@ -156,7 +156,7 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
 
         // Render download button
         Renderer.Write($"<a class=\"button\" data-hash=\"{Download.HashSha256}\" href=\"{Download.DownloadUrls}\" target=\"_blank\" rel=\"noopener noreferrer\">");
-        Renderer.Write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon icon-tabler icons-tabler-outline icon-tabler-download\">");
+        Renderer.Write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">");
         Renderer.Write("<path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/>");
         Renderer.Write("<path d=\"M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2\" />");
         Renderer.Write("<path d=\"M7 11l5 5l5 -5\" />");
