@@ -116,5 +116,62 @@ NuGet vulnerability warnings remain outside this messaging change.
   empty. No legacy messages existed to delete. The separate development upload
   staging migration was subsequently applied at 23:59 UTC before release activation;
   see [its operation record](upload-recovery.md#development-schema-operation-2026-11-06).
-- Production cutover/deployment has not been performed. The old release must not
-  run against this trimmed schema; coordinate schema and release activation.
+- Production cutover completed on 2026-11-07 at 03:45 UTC. The old release must
+  not run against the trimmed schema. See the release record below.
+
+## Production release: 2026-11-07 UTC
+
+- All pending working-tree changes were committed and pushed to `origin/main` as
+  `c61b89365da57387bddc9f6b004bf9f6a86395b3`, with explicit authorization to include
+  the earlier work already present in production. The release was built from that
+  clean source state as `release-20261107T033605Z-c61b89365da5`.
+- The SDK published a Linux amd64 `noble-chiseled-extra` image, user 1654, with
+  invariant globalization disabled. It was transferred as a checksummed Docker
+  archive, tested, and pushed to GHCR under the release tag and `latest`.
+  Production runs the immutable reference
+  `ghcr.io/qingcharles/wikiwikiworld@sha256:fe49857481e2df3b29c67ae3722737baf7946b99806910dd4187a9896c96771f`.
+- Before cutover, the actual image ran on an isolated, consistent production
+  database copy through a loopback-only container and SSH tunnel. Migration
+  preserved all 23 original table counts. Four synthetic accounts exercised
+  multiple recipients, autocomplete, member reads/replies, replies without
+  JavaScript, outsiders' GET/POST 404s, missing-antiforgery 400s, safe subject/body
+  rendering, cache headers and a 390px viewport. No page errors occurred.
+- An initial operational precheck used a read-only directory mount. After the
+  last writer closed, SQLite needed to recreate WAL sidecars and could not open
+  the schema through that mount. No migration ran. The old container was restored
+  and HTTPS verified. The check was corrected to retain `mode=ro` / `query_only`
+  with a writable directory mount, as required for WAL sidecars, and verified on
+  the stopped isolated database before the successful retry. No ownership or
+  database permissions were changed.
+- Writers stopped at `2026-11-07T03:44:58Z`. The standard maintenance runner applied
+  `ReplacePrivateMessaging.sql` with its shipped precheck/verification. Consistent
+  backup: `/opt/wiki/data/.db-backups/app.db-20261107T034500Z-ckipb4ud.db`.
+  Integrity, foreign keys, empty initial private schema and all 23 original table
+  counts passed. There were no legacy messages to delete.
+- The documented update script activated the new image at
+  `2026-11-07T03:45:02Z`. Production HTTPS, all four site homepages, the culture
+  selector, Japanese culture, header helper, an existing article, the homepage
+  without JavaScript, and anonymous private-route authentication gates passed.
+  The container remained running with restart count zero. Full .NET, browser
+  script and maintenance suites passed 296, 27 and 9 tests respectively.
+- Development is running the Windows Release build on HTTPS 7126 / HTTP 5097.
+  Authenticated checks using the approved development account returned 200 for
+  inbox/composer, `no-store,no-cache`, `noindex`, and 404 for an unknown
+  conversation. No real development or production messages were sent.
+- The isolated container, database copy, synthetic accounts/messages, data-protection
+  keys and SSH tunnel were removed. Production release metadata, checksums, schema
+  logs and count assertions remain at
+  `/home/deploy/releases/release-20261107T033605Z-c61b89365da5/`; the corresponding
+  local artifacts are Git-ignored under `.local/releases/`.
+- Previous image retained locally as
+  `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261107T033605Z-c61b89365da5`
+  (`sha256:476fae9d7634fd6df28b334cd52c72ae1a88d6606dea2cae3f3a0685e5cf9a48`).
+  Rollback must account for the removed subject columns and subsequent writes;
+  follow the stopped-writer backup/forward-repair guidance above.
+
+Two referenced homepage uploads return 404 because their files are absent from
+the production data volume. They are separate content-recovery issues; this
+migration did not alter upload files or file-revision rows:
+
+- `sitefiles/1/images/84e2f5ab-41d9-4025-923d-72459600024c/8.webp`
+- `sitefiles/1/images/9c3d1ef0-60f2-4d5f-a4a3-1f9b88c56e29/1.jpg`

@@ -24,7 +24,7 @@
 ## Private messaging
 
 - Private conversations use separate `PrivateConversations`, `PrivateConversationParticipants` and `PrivateMessages` tables with fixed multi-recipient membership. Public user/article discussions remain public. See [behavior, cleanup, schema cutover and verification](doc/private-messaging.md).
-- Existing databases require `ReplacePrivateMessaging.sql` with its precheck/verification before using this source. Stop old writers for the coordinated cutover: it removes two unused subject columns as well as adding the private tables. Applied to development `data/app.db` on 2026-11-06 at 23:36 UTC; all 23 existing tables retained their row counts and integrity/foreign-key/schema checks passed. Backup and scope are recorded in the linked procedure. Production cutover/deployment is pending; there are no startup schema migrations.
+- Existing databases require `ReplacePrivateMessaging.sql` with its precheck/verification before using this source. Stop old writers for the coordinated cutover: it removes two unused subject columns as well as adding the private tables. Applied to development `data/app.db` on 2026-11-06 at 23:36 UTC and production `/opt/wiki/data/app.db` on 2026-11-07 at 03:45 UTC; all 23 existing tables retained their row counts and integrity/foreign-key/schema checks passed. Release `release-20261107T033605Z-c61b89365da5` is deployed to production and the Windows Release build is running in development. See the linked procedure for backups, immutable image, verification and rollback. There are no startup schema migrations.
 
 ## File upload recovery
 
