@@ -103,6 +103,8 @@
 
 Custom Markdig extensions live in [src/WikiWikiWorld.Web/MarkDigExtensions](src/WikiWikiWorld.Web/MarkDigExtensions). They extend authoring syntax for the wiki and follow shared conventions so authors and parsers stay consistent.
 
+Citation text encoding and shared Markdown attribute/destination restrictions were deployed to production on 2026-11-07 as `release-20261107T152847Z-5262c63e96af`; no schema migration or content rewrite was needed. See [verification, immutable image and rollback](doc/markdown-rendering-security.md#production-operation-2026-11-07). The earlier Windows development process requires a rebuild/restart to run these changes.
+
 ### Shared Syntax Conventions
 
 | Token | Meaning |
