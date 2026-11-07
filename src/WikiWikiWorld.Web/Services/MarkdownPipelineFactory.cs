@@ -19,17 +19,17 @@ public interface IMarkdownPipelineFactory
 	MarkdownPipeline GetPipeline();
 
 	/// <summary>
-	/// Gets the cached minimal Markdown pipeline used for short user-generated content such as talk posts.
+	/// Gets the cached minimal Markdown pipeline used for short user content, including discussions, messages and notes.
 	/// </summary>
 	/// <returns>A configured <see cref="MarkdownPipeline"/> limited to safe inline formatting, lists, links and quotes.</returns>
-	MarkdownPipeline GetTalkPipeline();
+	MarkdownPipeline GetUserContentPipeline();
 
 	/// <summary>
-	/// Renders a fragment of Markdown using the talk pipeline and returns the resulting HTML.
+	/// Renders short user content as HTML with basic Markdown formatting and the shared URL safety policy.
 	/// </summary>
 	/// <param name="Source">The Markdown source. <see langword="null"/> or whitespace renders to <see cref="string.Empty"/>.</param>
 	/// <returns>The rendered HTML string. Callers are expected to wrap it with <c>Html.Raw</c>.</returns>
-	string RenderTalkMarkdown(string? Source);
+	string RenderUserContentMarkdown(string? Source);
 }
 
 /// <summary>
@@ -38,7 +38,7 @@ public interface IMarkdownPipelineFactory
 public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 {
 	private readonly Lazy<MarkdownPipeline> Pipeline;
-	private readonly Lazy<MarkdownPipeline> TalkPipeline;
+	private readonly Lazy<MarkdownPipeline> UserContentPipeline;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="MarkdownPipelineFactory"/> class.
@@ -47,7 +47,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	public MarkdownPipelineFactory(IOptions<SiteConfiguration> SiteConfiguration)
 	{
 		this.Pipeline = new Lazy<MarkdownPipeline>(() => BuildPipeline(SiteConfiguration.Value.ApprovedLinkDomains));
-		this.TalkPipeline = new Lazy<MarkdownPipeline>(BuildTalkPipeline);
+		this.UserContentPipeline = new Lazy<MarkdownPipeline>(BuildUserContentPipeline);
 	}
 
 	/// <inheritdoc/>
@@ -57,24 +57,24 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	}
 
 	/// <inheritdoc/>
-	public MarkdownPipeline GetTalkPipeline()
+	public MarkdownPipeline GetUserContentPipeline()
 	{
-		return TalkPipeline.Value;
+		return UserContentPipeline.Value;
 	}
 
 	/// <inheritdoc/>
-	public string RenderTalkMarkdown(string? Source)
+	public string RenderUserContentMarkdown(string? Source)
 	{
 		if (string.IsNullOrWhiteSpace(Source))
 		{
 			return string.Empty;
 		}
 
-		MarkdownPipeline TalkPipelineInstance = TalkPipeline.Value;
+		MarkdownPipeline UserContentPipelineInstance = UserContentPipeline.Value;
 		StringWriter Writer = new();
 		HtmlRenderer Renderer = new(Writer);
-		TalkPipelineInstance.Setup(Renderer);
-		Renderer.Render(Markdown.Parse(Source, TalkPipelineInstance));
+		UserContentPipelineInstance.Setup(Renderer);
+		Renderer.Render(Markdown.Parse(Source, UserContentPipelineInstance));
 		Writer.Flush();
 		return Writer.ToString();
 	}
@@ -140,15 +140,15 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	}
 
 	/// <summary>
-	/// Builds the minimal, Reddit-style Markdown pipeline used to render talk posts.
+	/// Builds the minimal Markdown pipeline shared by discussions, messages and notes.
 	/// </summary>
 	/// <remarks>
 	/// Deliberately omits wiki directives and generic attributes. Raw HTML is disabled so user-supplied
 	/// content cannot inject markup; the shared safety policy rejects executable URL schemes.
-	/// Soft line breaks become hard breaks for chat-style flow.
+	/// Soft line breaks become hard breaks to preserve authored line breaks.
 	/// </remarks>
 	/// <returns>A configured <see cref="MarkdownPipeline"/>.</returns>
-	private static MarkdownPipeline BuildTalkPipeline()
+	private static MarkdownPipeline BuildUserContentPipeline()
 	{
 		return new MarkdownPipelineBuilder()
 			.UseAutoLinks()

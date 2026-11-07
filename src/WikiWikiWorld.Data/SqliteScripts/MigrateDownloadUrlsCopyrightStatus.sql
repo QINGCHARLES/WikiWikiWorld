@@ -31,20 +31,6 @@ INSERT INTO DownloadUrlStatus (Status) VALUES ('DEPLOYED');
 INSERT INTO DownloadUrlStatus (Status) VALUES ('DEPLOYERROR');
 INSERT INTO DownloadUrlStatus (Status) VALUES ('UNKNOWN');
 
--- Create new DownloadUrlNotes table
-CREATE TABLE DownloadUrlNotes (
-    Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrlNotes PRIMARY KEY AUTOINCREMENT,
-    DownloadUrlId INTEGER NOT NULL,
-    UserId TEXT NOT NULL,
-    Culture TEXT NOT NULL,
-    Text TEXT NOT NULL,
-    DateCreated TEXT NOT NULL,
-    CONSTRAINT FK_DownloadUrlNotes_DownloadUrls_DownloadUrlId FOREIGN KEY (DownloadUrlId) REFERENCES DownloadUrls (Id) ON DELETE CASCADE,
-    CONSTRAINT FK_DownloadUrlNotes_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
-);
-
-CREATE INDEX IX_DownloadUrlNotes_DownloadUrlId ON DownloadUrlNotes (DownloadUrlId);
-
 -- SQLite requires recreating table to rename columns and add new ones
 -- Step 1: Rename old table
 ALTER TABLE DownloadUrls RENAME TO DownloadUrls_old;
@@ -99,6 +85,21 @@ DROP TABLE DownloadUrls_old;
 
 -- Step 5: Recreate index
 CREATE INDEX IX_DownloadUrls_SiteId_HashSha256 ON DownloadUrls (SiteId, HashSha256);
+
+-- Create notes only after replacing the parent: SQLite rewrites foreign keys on rename.
+-- Create new DownloadUrlNotes table
+CREATE TABLE DownloadUrlNotes (
+    Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrlNotes PRIMARY KEY AUTOINCREMENT,
+    DownloadUrlId INTEGER NOT NULL,
+    UserId TEXT NOT NULL,
+    Culture TEXT NOT NULL,
+    Text TEXT NOT NULL,
+    DateCreated TEXT NOT NULL,
+    CONSTRAINT FK_DownloadUrlNotes_DownloadUrls_DownloadUrlId FOREIGN KEY (DownloadUrlId) REFERENCES DownloadUrls (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_DownloadUrlNotes_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
+);
+
+CREATE INDEX IX_DownloadUrlNotes_DownloadUrlId ON DownloadUrlNotes (DownloadUrlId);
 
 -- Commit transaction
 COMMIT;

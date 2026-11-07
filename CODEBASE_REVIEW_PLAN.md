@@ -200,16 +200,16 @@ Status: Good. Architecture is sound and currently free of duplication risk for p
 
 Severity: Closed / Informational. No immediate action required.
 
-After exhaustive search of all `GetPipeline()`, `Markdown.Parse()`, `RenderTalkMarkdown()`, `IArticleRenderer`, and `HtmlRenderer` call sites across the Web layer:
+After exhaustive search of all `GetPipeline()`, `Markdown.Parse()`, `RenderUserContentMarkdown()`, `IArticleRenderer`, and `HtmlRenderer` call sites across the Web layer:
 
 - **Full wiki article body rendering** (all custom directives + enrichment + metadata extraction): Exclusively through `IArticleRenderer` / `ArticleRenderer`.
   - Single implementation of the full pipeline + enrichment in `Services/ArticleRenderer.cs:103-104` (`GetPipeline()` + `Markdown.Parse` + all `Enrich*` + `Reprocess*`).
   - Currently consumed only by `Pages/Article/View.cshtml.cs:262`.
   - Returns clean `RenderedArticle` record.
 
-- **Talk posts and short user-generated content**: Exclusively through the restricted talk pipeline via `MarkdownPipelineFactory.RenderTalkMarkdown()`.
+- **Talk posts and short user-generated content**: Exclusively through the restricted user-content pipeline via `MarkdownPipelineFactory.RenderUserContentMarkdown()`.
   - Used by talk pages (e.g. `TalkSubject.cshtml.cs:214`).
-  - Deliberately omits all wiki directives and disables raw HTML (see `BuildTalkPipeline()`).
+  - Deliberately omits all wiki directives and disables raw HTML (see `BuildUserContentPipeline()`).
 
 - Other pages touching article text do **not** perform full rendering:
   - `History.cshtml.cs`, `Links.cshtml.cs`, `Firehose.cshtml.cs`, `Index.cshtml.cs`: Metadata, lists, or lightweight string extraction only (e.g. `ExtractCoverImageFromInfobox` does raw text parsing of `{{PublicationIssueInfobox}}` syntax — no pipeline).
@@ -226,7 +226,7 @@ Relevant files:
 - `src/WikiWikiWorld.Web/Pages/Article/History.cshtml.cs`, `Links.cshtml.cs`, `CreateEdit.cshtml.cs`, `Index.cshtml.cs`
 
 Recommended action:
-- Maintain the boundary: Any future editor preview, API preview, or article preview features **must** go through `IArticleRenderer` (for full articles) or `RenderTalkMarkdown` (for talk content). Do not reintroduce manual enrichment blocks.
+- Maintain the boundary: Any future editor preview, API preview, or article preview features **must** go through `IArticleRenderer` (for full articles) or `RenderUserContentMarkdown` (for talk content). Do not reintroduce manual enrichment blocks.
 - This is the correct guardrail to prevent the duplication the architecture was designed to eliminate.
 
 ## Recommended Improvement Order
@@ -263,4 +263,4 @@ Recommended action:
 - the solution builds cleanly with warnings as errors
 - release publish succeeds with documented settings
 - local runtime data and build outputs stay out of Git
-- article and talk markdown rendering remains centralized (no re-introduction of manual enrichment blocks outside IArticleRenderer / RenderTalkMarkdown)
+- article and talk markdown rendering remains centralized (no re-introduction of manual enrichment blocks outside IArticleRenderer / RenderUserContentMarkdown)

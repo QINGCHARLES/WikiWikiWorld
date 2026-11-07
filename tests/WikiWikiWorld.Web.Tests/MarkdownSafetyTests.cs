@@ -198,7 +198,7 @@ public sealed class MarkdownSafetyTests
 	private static string Render(string Source, bool Talk = false)
 	{
 		MarkdownPipelineFactory Factory = new(Options.Create(new SiteConfiguration()));
-		if (Talk) return Factory.RenderTalkMarkdown(Source);
+		if (Talk) return Factory.RenderUserContentMarkdown(Source);
 		MarkdownPipeline Pipeline = Factory.GetPipeline();
 		MarkdownDocument Document = Markdown.Parse(Source, Pipeline);
 		FootnoteExtension.ReprocessFootnotes(Document, Pipeline);

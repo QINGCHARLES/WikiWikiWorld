@@ -96,7 +96,7 @@ public sealed class IssueContentsTests
 	{
 		const string Source = "{{IssueContents Title=Example}}";
 		Assert.Contains("class=\"issue-contents\"", Markdown.ToHtml(Source, Factory.GetPipeline()), StringComparison.Ordinal);
-		Assert.DoesNotContain("class=\"issue-contents\"", Factory.RenderTalkMarkdown(Source), StringComparison.Ordinal);
+		Assert.DoesNotContain("class=\"issue-contents\"", Factory.RenderUserContentMarkdown(Source), StringComparison.Ordinal);
 		foreach (string Literal in new[] { "```\n" + Source + "\n```", "    " + Source,
 			"Inline " + Source, Source.Replace("IssueContents", "IssueContentsExtra", StringComparison.Ordinal) })
 		{

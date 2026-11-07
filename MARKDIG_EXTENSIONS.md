@@ -9,13 +9,13 @@ WikiWikiWorld has two Markdown pipelines:
 | Pipeline | Used for | Features |
 | --- | --- | --- |
 | Full article | Article revisions and article-derived metadata | CommonMark, all custom WikiWikiWorld extensions, and Markdig's advanced extensions except media links |
-| Talk | Short talk posts | CommonMark, automatic links, extra emphasis, extended lists, pipe tables, and hard line breaks |
+| User content | Short discussions, private messages and notes | CommonMark, automatic links, extra emphasis, extended lists, pipe tables, and hard line breaks |
 
 Raw HTML is disabled in both pipelines. An author-written `<script>`, `<iframe>`, or other HTML element is displayed as text rather than executed. The full article pipeline also removes Markdig's built-in media-link extension; use `{{YouTube ...}}` for videos.
 
 Both pipelines apply `MarkdownSafetyExtension` to parsed destinations, including nested custom footnotes and infobox facts. Ordinary links allow relative/internal URLs, HTTP, HTTPS, FTP, `mailto:` and `tel:`. Images allow relative/internal URLs and HTTP/HTTPS. Unsupported schemes (including `javascript:`, `data:` and `file:`) and control characters clear the destination while preserving visible text or image alt text. Citation URLs have their own narrower HTTP/HTTPS-only policy below.
 
-Custom `{{...}}` directives are available only in the full article pipeline. Talk posts display them literally.
+Custom `{{...}}` directives are available only in the full article pipeline. The user-content pipeline displays them literally.
 
 ## Custom directive conventions
 
@@ -745,9 +745,9 @@ Generic attributes are the last built-in parser registered so they can decorate 
 
 Authored properties are limited to `id`, `class`, `title`, `lang`, `dir`, `role`, `data-kind`, `width`, `height`, `colspan`, `rowspan`, `scope`, `align`, `start`, `reversed`, and `aria-*`. IDs and classes also retain Markdig's dedicated storage. Other properties are removed, including native `on*` handlers, `style`, URL overrides (`href`/`src`), `srcdoc`, `target`, authored `rel`, and executable framework attributes. The trusted external-link policy then supplies `rel` where needed. These restrictions apply during rendering; stored Markdown is unchanged. See [verification and deployment](doc/markdown-rendering-security.md).
 
-## Talk-post Markdown
+## User-content Markdown
 
-Talk posts deliberately omit every custom `{{...}}` directive and most advanced article extensions. They support:
+`IMarkdownPipelineFactory.RenderUserContentMarkdown` renders discussions, private messages and notes through the cached `GetUserContentPipeline()` pipeline. Null or whitespace-only source renders as an empty string. It deliberately omits every custom `{{...}}` directive and most advanced article extensions, and supports:
 
 - CommonMark paragraphs, headings, emphasis, strong emphasis, block quotes, code, links, images, and ordered/unordered lists.
 - Automatic links for `http://`, `https://`, `ftp://`, `mailto:`, `tel:`, and `www.` text.
@@ -764,7 +764,7 @@ breaks here in a talk post.
 - [This custom directive remains text: {{Stub}}](https://example.com)
 ```
 
-Task lists, custom directives, automatic heading IDs, generic attributes, diagrams, mathematics, grid tables, alerts, and the other full-article-only features are not enabled in talk posts.
+Task lists, custom directives, automatic heading IDs, generic attributes, diagrams, mathematics, grid tables, alerts, and the other full-article-only features are not enabled in the user-content pipeline.
 
 ## Deliberately unavailable authoring paths
 

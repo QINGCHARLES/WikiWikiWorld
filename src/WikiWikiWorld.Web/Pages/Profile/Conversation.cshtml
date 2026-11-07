@@ -19,7 +19,7 @@
 					<strong>@Message.AuthorName</strong> ·
 					<time datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
 				</header>
-				<div class="private-message-body">@Html.Raw(Markdown.RenderTalkMarkdown(Message.Text))</div>
+				<div class="private-message-body">@Html.Raw(Markdown.RenderUserContentMarkdown(Message.Text))</div>
 			</article>
 		}
 		@if (Model.Thread.PageCount > 1)

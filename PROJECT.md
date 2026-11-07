@@ -21,6 +21,8 @@
 - Prepare and test SQL on disposable data first. Follow production authorization already given; obtain approval only when production changes are not authorized. On failure, diagnose rather than improvising permissions or another execution method. Report the backup location, scripts applied and verification results.
 - Schema ownership remains manual SQL. Use application services/API for content edits that require revision creation and category indexing.
 
+- **Download URL notes:** Repaired the stale `DownloadUrls_old` foreign key in development and production on 2026-11-07 at 18:03 UTC. `Create.sql` and the historical copyright/status migration now reference `DownloadUrls` correctly. All 26 tables retained every row and their identity history; integrity, foreign-key and fresh-schema parity checks passed. See [repair scripts, backups, verification and recovery](doc/download-url-notes.md). No application release or restart was required.
+
 ## Private messaging
 
 - Private conversations use separate `PrivateConversations`, `PrivateConversationParticipants` and `PrivateMessages` tables with fixed multi-recipient membership. Public user/article discussions remain public. See [behavior, cleanup, schema cutover and verification](doc/private-messaging.md).

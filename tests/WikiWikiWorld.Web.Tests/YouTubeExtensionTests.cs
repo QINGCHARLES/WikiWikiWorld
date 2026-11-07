@@ -152,14 +152,14 @@ public sealed class YouTubeExtensionTests
 	}
 
 	/// <summary>
-	/// Verifies that talk posts do not activate article directives or raw HTML.
+	/// Verifies that the shared user-content pipeline leaves article directives and raw HTML inert.
 	/// </summary>
 	[Fact]
-	public void TalkPipelineLeavesYouTubeDirectiveAsText()
+	public void UserContentPipelineLeavesYouTubeDirectiveAsText()
 	{
 		const string Source = "{{YouTube M7lc1UVf-VE |#| Title=Talk video}}\n<script>alert('x')</script>";
 
-		string Html = PipelineFactory.RenderTalkMarkdown(Source);
+		string Html = PipelineFactory.RenderUserContentMarkdown(Source);
 
 		Assert.Contains("{{YouTube", Html, StringComparison.Ordinal);
 		Assert.DoesNotContain("youtube-embed", Html, StringComparison.Ordinal);

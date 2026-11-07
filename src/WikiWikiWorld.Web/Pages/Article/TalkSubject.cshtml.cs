@@ -15,7 +15,7 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="UserManager">The user manager.</param>
-/// <param name="MarkdownPipelineFactory">The Markdown pipeline factory; used for the talk pipeline.</param>
+/// <param name="MarkdownPipelineFactory">The Markdown pipeline factory; uses the shared user-content renderer for discussion posts.</param>
 public sealed class TalkSubjectModel(
 	WikiWikiWorldDbContext Context,
 	SiteResolverService SiteResolverService,
@@ -208,7 +208,7 @@ public sealed class TalkSubjectModel(
 			{
 				Id = Post.Id,
 				ParentTalkSubjectPostId = Post.ParentTalkSubjectPostId,
-				Html = MarkdownPipelineFactory.RenderTalkMarkdown(Post.Text),
+				Html = MarkdownPipelineFactory.RenderUserContentMarkdown(Post.Text),
 				CreatedByUserId = Post.CreatedByUserId,
 				DateCreated = Post.DateCreated,
 				HasBeenEdited = Post.HasBeenEdited,

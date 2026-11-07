@@ -83,14 +83,14 @@ public sealed class IssueCreditsTests
 	}
 
 	/// <summary>
-	/// Checks parser boundaries and the restricted talk pipeline.
+	/// Checks parser boundaries and the restricted user-content pipeline.
 	/// </summary>
 	[Fact]
 	public void OnlyStandaloneArticleDirectivesRender()
 	{
 		const string Source = "{{IssueCredits Group=Models |~| Name=One |#| Name=Two}}";
 		Assert.Contains("<aside", Markdown.ToHtml(Source, Factory.GetPipeline()), StringComparison.Ordinal);
-		Assert.DoesNotContain("<aside", Factory.RenderTalkMarkdown(Source), StringComparison.Ordinal);
+		Assert.DoesNotContain("<aside", Factory.RenderUserContentMarkdown(Source), StringComparison.Ordinal);
 		Assert.DoesNotContain("<aside", Markdown.ToHtml("```\n" + Source + "\n```", Factory.GetPipeline()), StringComparison.Ordinal);
 		Assert.DoesNotContain("<aside", Markdown.ToHtml(Source.Replace("IssueCredits", "IssueCreditsExtra", StringComparison.Ordinal), Factory.GetPipeline()), StringComparison.Ordinal);
 		Assert.DoesNotContain("<aside", Markdown.ToHtml("    " + Source, Factory.GetPipeline()), StringComparison.Ordinal);

@@ -19,7 +19,7 @@ CREATE TABLE Users (
     ProfilePicGuid TEXT NULL,
     DateCreated TEXT NOT NULL,
     DateDeleted TEXT NULL
-) STRICT;
+);
 
 CREATE UNIQUE INDEX IX_Users_NormalizedUserName ON Users (NormalizedUserName);
 CREATE INDEX IX_Users_NormalizedEmail ON Users (NormalizedEmail);
@@ -31,7 +31,7 @@ CREATE TABLE Roles (
     ConcurrencyStamp TEXT NULL,
     DateCreated TEXT NOT NULL,
     DateDeleted TEXT NULL
-) STRICT;
+);
 
 CREATE UNIQUE INDEX IX_Roles_NormalizedName ON Roles (NormalizedName);
 
@@ -41,7 +41,7 @@ CREATE TABLE UserRoles (
     CONSTRAINT PK_UserRoles PRIMARY KEY (UserId, RoleId),
     CONSTRAINT FK_UserRoles_Roles_RoleId FOREIGN KEY (RoleId) REFERENCES Roles (Id) ON DELETE CASCADE,
     CONSTRAINT FK_UserRoles_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_UserRoles_RoleId ON UserRoles (RoleId);
 
@@ -51,7 +51,7 @@ CREATE TABLE UserClaims (
     ClaimType TEXT NULL,
     ClaimValue TEXT NULL,
     CONSTRAINT FK_UserClaims_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_UserClaims_UserId ON UserClaims (UserId);
 
@@ -62,7 +62,7 @@ CREATE TABLE UserLogins (
     UserId TEXT NOT NULL,
     CONSTRAINT PK_UserLogins PRIMARY KEY (LoginProvider, ProviderKey),
     CONSTRAINT FK_UserLogins_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_UserLogins_UserId ON UserLogins (UserId);
 
@@ -72,7 +72,7 @@ CREATE TABLE RoleClaims (
     ClaimType TEXT NULL,
     ClaimValue TEXT NULL,
     CONSTRAINT FK_RoleClaims_Roles_RoleId FOREIGN KEY (RoleId) REFERENCES Roles (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_RoleClaims_RoleId ON RoleClaims (RoleId);
 
@@ -83,7 +83,7 @@ CREATE TABLE UserTokens (
     Value TEXT NULL,
     CONSTRAINT PK_UserTokens PRIMARY KEY (UserId, LoginProvider, Name),
     CONSTRAINT FK_UserTokens_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE TABLE ArticleRevisions (
     Id INTEGER NOT NULL CONSTRAINT PK_ArticleRevisions PRIMARY KEY AUTOINCREMENT,
@@ -94,7 +94,7 @@ CREATE TABLE ArticleRevisions (
     DisplayTitle TEXT NULL,
     UrlSlug TEXT NOT NULL,
     IsCurrent INTEGER NOT NULL,
-    Type TEXT NOT NULL,
+    Type INTEGER NOT NULL,
     Text TEXT NOT NULL,
     CanonicalFileId TEXT NULL,
     RevisionReason TEXT NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE ArticleRevisions (
     DateCreated TEXT NOT NULL,
     DateDeleted TEXT NULL,
     CONSTRAINT FK_ArticleRevisions_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_ArticleRevisions_CreatedByUserId ON ArticleRevisions (CreatedByUserId);
 CREATE INDEX IX_ArticleRevisions_SiteId_Culture_UrlSlug_DateCreated ON ArticleRevisions (SiteId, Culture, UrlSlug, DateCreated);
@@ -122,22 +122,22 @@ CREATE INDEX IX_ArticleCategoryMemberships_CategorySlug_ArticleRevisionId
 CREATE TABLE FileRevisions (
     Id INTEGER NOT NULL CONSTRAINT PK_FileRevisions PRIMARY KEY AUTOINCREMENT,
     CanonicalFileId TEXT NOT NULL,
-    StagingUploadId TEXT NULL,
     IsCurrent INTEGER NOT NULL,
-    Type TEXT NOT NULL,
+    Type INTEGER NOT NULL,
     Filename TEXT NOT NULL,
     MimeType TEXT NOT NULL,
     FileSizeBytes INTEGER NOT NULL,
-    ImageWidthPixels INTEGER NULL,
-    ImageHeightPixels INTEGER NULL,
     Source TEXT NULL,
     RevisionReason TEXT NOT NULL,
     SourceAndRevisionReasonCulture TEXT NOT NULL,
     CreatedByUserId TEXT NOT NULL,
     DateCreated TEXT NOT NULL,
     DateDeleted TEXT NULL,
+    ImageWidthPixels INTEGER NULL,
+    ImageHeightPixels INTEGER NULL,
+    StagingUploadId TEXT NULL,
     CONSTRAINT FK_FileRevisions_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_FileRevisions_CanonicalFileId_DateCreated ON FileRevisions (CanonicalFileId, DateCreated DESC);
 CREATE UNIQUE INDEX UX_FileRevisions_StagingUploadId ON FileRevisions (StagingUploadId) WHERE StagingUploadId IS NOT NULL;
@@ -154,7 +154,7 @@ CREATE TABLE ArticleCultureLinks (
     DateDeleted TEXT NULL,
     CONSTRAINT FK_ArticleCultureLinks_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE,
     CONSTRAINT FK_ArticleCultureLinks_Users_DeletedByUserId FOREIGN KEY (DeletedByUserId) REFERENCES Users (Id)
-) STRICT;
+);
 
 CREATE INDEX IX_ArticleCultureLinks_CreatedByUserId ON ArticleCultureLinks (CreatedByUserId);
 CREATE INDEX IX_ArticleCultureLinks_DeletedByUserId ON ArticleCultureLinks (DeletedByUserId);
@@ -165,12 +165,12 @@ CREATE UNIQUE INDEX UX_ArticleCultureLinks_SiteId_CanonicalArticleId_Active ON A
 CREATE TABLE CopyrightStatus (
     Id INTEGER NOT NULL CONSTRAINT PK_CopyrightStatus PRIMARY KEY AUTOINCREMENT,
     Status TEXT NOT NULL
-) STRICT;
+);
 
 CREATE TABLE DownloadUrlStatus (
     Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrlStatus PRIMARY KEY AUTOINCREMENT,
     Status TEXT NOT NULL
-) STRICT;
+);
 
 CREATE TABLE DownloadUrls (
     Id INTEGER NOT NULL CONSTRAINT PK_DownloadUrls PRIMARY KEY AUTOINCREMENT,
@@ -193,7 +193,7 @@ CREATE TABLE DownloadUrls (
     DateCreated TEXT NOT NULL,
     DateModified TEXT NULL,
     DateDeleted TEXT NULL
-) STRICT;
+);
 
 CREATE INDEX IX_DownloadUrls_SiteId_HashSha256 ON DownloadUrls (SiteId, HashSha256);
 
@@ -206,7 +206,7 @@ CREATE TABLE DownloadUrlNotes (
     DateCreated TEXT NOT NULL,
     CONSTRAINT FK_DownloadUrlNotes_DownloadUrls_DownloadUrlId FOREIGN KEY (DownloadUrlId) REFERENCES DownloadUrls (Id) ON DELETE CASCADE,
     CONSTRAINT FK_DownloadUrlNotes_Users_UserId FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_DownloadUrlNotes_DownloadUrlId ON DownloadUrlNotes (DownloadUrlId);
 
@@ -220,7 +220,7 @@ CREATE TABLE ArticleTalkSubjects (
     DateCreated TEXT NOT NULL,
     DateDeleted TEXT NULL,
     CONSTRAINT FK_ArticleTalkSubjects_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_ArticleTalkSubjects_CreatedByUserId ON ArticleTalkSubjects (CreatedByUserId);
 CREATE INDEX IX_ArticleTalkSubjects_SiteId_CanonicalArticleId ON ArticleTalkSubjects (SiteId, CanonicalArticleId);
@@ -238,7 +238,7 @@ CREATE TABLE ArticleTalkSubjectPosts (
     CONSTRAINT FK_ArticleTalkSubjectPosts_ArticleTalkSubjects_ArticleTalkSubjectId FOREIGN KEY (ArticleTalkSubjectId) REFERENCES ArticleTalkSubjects (Id) ON DELETE CASCADE,
     CONSTRAINT FK_ArticleTalkSubjectPosts_ArticleTalkSubjectPosts_ParentTalkSubjectPostId FOREIGN KEY (ParentTalkSubjectPostId) REFERENCES ArticleTalkSubjectPosts (Id),
     CONSTRAINT FK_ArticleTalkSubjectPosts_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_ArticleTalkSubjectPosts_ArticleTalkSubjectId ON ArticleTalkSubjectPosts (ArticleTalkSubjectId);
 CREATE INDEX IX_ArticleTalkSubjectPosts_CreatedByUserId ON ArticleTalkSubjectPosts (CreatedByUserId);
@@ -285,13 +285,13 @@ CREATE TABLE BookmarkLists (
     SiteId INTEGER NOT NULL,
     Name TEXT NOT NULL,
     IsDefault INTEGER NOT NULL DEFAULT 0,
-    IsPublic INTEGER NOT NULL DEFAULT 0 CHECK (IsPublic IN (0, 1)),
     CreatedByUserId TEXT NOT NULL,
     DateCreated TEXT NOT NULL,
     DateModified TEXT NULL,
     DateDeleted TEXT NULL,
+    IsPublic INTEGER NOT NULL DEFAULT 0 CHECK (IsPublic IN (0, 1)),
     CONSTRAINT FK_BookmarkLists_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_BookmarkLists_CreatedByUserId ON BookmarkLists (CreatedByUserId);
 CREATE INDEX IX_BookmarkLists_SiteId_CreatedByUserId ON BookmarkLists (SiteId, CreatedByUserId);
@@ -308,7 +308,7 @@ CREATE TABLE Bookmarks (
     DateDeleted TEXT NULL,
     CONSTRAINT FK_Bookmarks_BookmarkLists_BookmarkListId FOREIGN KEY (BookmarkListId) REFERENCES BookmarkLists (Id) ON DELETE CASCADE,
     CONSTRAINT FK_Bookmarks_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
-) STRICT;
+);
 
 CREATE INDEX IX_Bookmarks_BookmarkListId ON Bookmarks (BookmarkListId);
 CREATE INDEX IX_Bookmarks_List_Recent_Active ON Bookmarks (BookmarkListId, DateCreated DESC, Id DESC) WHERE DateDeleted IS NULL;
@@ -320,7 +320,7 @@ CREATE UNIQUE INDEX UX_Bookmarks_BookmarkListId_CanonicalArticleId_Active
 CREATE TABLE PublicationUploadCopyrightExemptions (
     Id INTEGER NOT NULL CONSTRAINT PK_PublicationUploadCopyrightExemptions PRIMARY KEY AUTOINCREMENT,
     Code TEXT NOT NULL
-) STRICT;
+);
 
 CREATE UNIQUE INDEX UX_PublicationUploadCopyrightExemptions_Code
     ON PublicationUploadCopyrightExemptions (Code);
@@ -335,7 +335,7 @@ INSERT INTO PublicationUploadCopyrightExemptions (Code) VALUES
 CREATE TABLE PublicationUploadQueueStatuses (
     Id INTEGER NOT NULL CONSTRAINT PK_PublicationUploadQueueStatuses PRIMARY KEY AUTOINCREMENT,
     Code TEXT NOT NULL
-) STRICT;
+);
 
 CREATE UNIQUE INDEX UX_PublicationUploadQueueStatuses_Code
     ON PublicationUploadQueueStatuses (Code);
@@ -374,7 +374,7 @@ CREATE TABLE PublicationUploadQueue (
         FOREIGN KEY (CopyrightExemptionId) REFERENCES PublicationUploadCopyrightExemptions (Id),
     CONSTRAINT FK_PublicationUploadQueue_Status
         FOREIGN KEY (StatusId) REFERENCES PublicationUploadQueueStatuses (Id)
-) STRICT;
+);
 
 CREATE INDEX IX_PublicationUploadQueue_SubmittedByUserId ON PublicationUploadQueue (SubmittedByUserId);
 CREATE INDEX IX_PublicationUploadQueue_StatusId_DateCreated ON PublicationUploadQueue (StatusId, DateCreated);
