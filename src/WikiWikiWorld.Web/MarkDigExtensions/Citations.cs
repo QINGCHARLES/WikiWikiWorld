@@ -182,7 +182,7 @@ public sealed class CitationRenderer : HtmlObjectRenderer<CitationInline>
 }
 
 /// <summary>
-/// Renders a <see cref="CitationsBlock"/> as a formatted bibliography.
+/// Renders a bibliography with literal citation text and encoded HTTP/HTTPS link destinations.
 /// </summary>
 public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 {
@@ -244,21 +244,21 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 	}
 
 	/// <summary>
-	/// Writes a formatted citation entry to the HTML output.
+	/// Formats literal citation fields, linking only validated HTTP/HTTPS URLs and encoded DOI identifiers.
 	/// </summary>
 	/// <param name="Renderer">The HTML renderer.</param>
 	/// <param name="Citation">The citation to format.</param>
 	/// <param name="ApprovedDomains">The list of approved domains.</param>
 	private static void WriteFormattedCitation(HtmlRenderer Renderer, Citation Citation, IReadOnlyList<string> ApprovedDomains)
 	{
-		// Resolve URL and its link attributes once, since the title may consume it
+		// Domain approval controls nofollow, independently of whether a URL is safe to link.
 		string? Url = null;
-		string? UrlRelAttr = null;
+		Uri? Target = null;
 		if (Citation.Properties.TryGetValue("url", out List<string>? Urls) && Urls.Count > 0)
 		{
 			Url = Urls[0];
-			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(Url, ApprovedDomains);
-			UrlRelAttr = IsApproved ? "noopener" : "nofollow noopener";
+			if (Uri.TryCreate(Url, UriKind.Absolute, out Uri? ParsedUrl) && ParsedUrl.Scheme is "http" or "https")
+				Target = ParsedUrl;
 		}
 
 		// Author(s)
@@ -275,16 +275,16 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		{
 			if (HasAuthor) Renderer.Write(". ");
 
-			if (Url is not null)
+			if (Target is not null)
 			{
-				Renderer.Write($"<a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">");
-				Renderer.Write($"<em>{Titles[0]}</em>");
+				WriteLinkStart(Renderer, Target.AbsoluteUri, ApprovedDomains);
+				Renderer.Write("<em>").WriteEscape(Titles[0]).Write("</em>");
 				Renderer.Write("</a>");
 				TitleConsumedUrl = true;
 			}
 			else
 			{
-				Renderer.Write($"<em>{Titles[0]}</em>");
+				Renderer.Write("<em>").WriteEscape(Titles[0]).Write("</em>");
 			}
 
 			if (!Titles[0].EndsWith('.')) Renderer.Write(".");
@@ -297,20 +297,20 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		// Journal/Publication
 		if (Citation.Properties.TryGetValue("journal", out List<string>? Journals) && Journals.Count > 0)
 		{
-			Renderer.Write($" <em>{Journals[0]}</em>,");
+			Renderer.Write(" <em>").WriteEscape(Journals[0]).Write("</em>,");
 		}
 		else if (Citation.Properties.TryGetValue("publisher", out List<string>? Publishers) && Publishers.Count > 0)
 		{
-			Renderer.Write($" {Publishers[0]},");
+			Renderer.Write(" ").WriteEscape(Publishers[0]).Write(",");
 		}
 
 		// Volume
 		if (Citation.Properties.TryGetValue("volume", out List<string>? Volumes) && Volumes.Count > 0)
 		{
-			Renderer.Write($" vol. {Volumes[0]}");
+			Renderer.Write(" vol. ").WriteEscape(Volumes[0]);
 			if (Citation.Properties.TryGetValue("issue", out List<string>? Issues) && Issues.Count > 0)
 			{
-				Renderer.Write($", no. {Issues[0]}");
+				Renderer.Write(", no. ").WriteEscape(Issues[0]);
 			}
 			Renderer.Write(",");
 		}
@@ -318,44 +318,61 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		// Pages
 		if (Citation.Properties.TryGetValue("pages", out List<string>? Pages) && Pages.Count > 0)
 		{
-			Renderer.Write($" pp. {Pages[0]},");
+			Renderer.Write(" pp. ").WriteEscape(Pages[0]).Write(",");
 		}
 
 		// Year
 		if (Citation.Properties.TryGetValue("year", out List<string>? Years) && Years.Count > 0)
 		{
-			Renderer.Write($" {Years[0]}.");
+			Renderer.Write(" ").WriteEscape(Years[0]).Write(".");
 		}
 
 		// DOI
 		if (Citation.Properties.TryGetValue("doi", out List<string>? Dois) && Dois.Count > 0)
 		{
-			string DoiUrl = $"https://doi.org/{Dois[0]}";
-			bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(DoiUrl, ApprovedDomains);
-			string RelAttr = IsApproved ? "noopener" : "nofollow noopener";
-			Renderer.Write($" DOI: <a href=\"{DoiUrl}\" rel=\"{RelAttr}\" target=\"_blank\">{Dois[0]}</a>");
+			string DoiUrl = "https://doi.org/" + string.Join('/', Dois[0].Split('/').Select(Uri.EscapeDataString));
+			Renderer.Write(" DOI: ");
+			WriteLinkStart(Renderer, DoiUrl, ApprovedDomains);
+			Renderer.WriteEscape(Dois[0]).Write("</a>");
 		}
 
 		// URL — only render separately if the title didn't already consume it
 		if (Url is not null && !TitleConsumedUrl)
 		{
-			// Show just the domain name instead of the full raw URL
-			string LinkText = GetDomainDisplayName(Url);
-			Renderer.Write($" <a href=\"{Url}\" rel=\"{UrlRelAttr}\" target=\"_blank\">{LinkText}</a>");
+			Renderer.Write(" ");
+			if (Target is not null)
+			{
+				WriteLinkStart(Renderer, Target.AbsoluteUri, ApprovedDomains);
+				Renderer.WriteEscape(GetDomainDisplayName(Target)).Write("</a>");
+			}
+			else
+			{
+				Renderer.WriteEscape(Url);
+			}
 		}
 	}
 
 	/// <summary>
-	/// Extracts a clean domain name for display from a URL (e.g., "www.example.co.uk" → "example.co.uk").
+	/// Opens a link with an encoded destination and the existing approved-domain rel policy.
+	/// </summary>
+	/// <param name="Renderer">The HTML renderer receiving application-owned markup.</param>
+	/// <param name="Url">A validated HTTP/HTTPS destination or a constructed HTTPS DOI resolver URL.</param>
+	/// <param name="ApprovedDomains">Domains exempt from nofollow; they do not authorize unsafe schemes.</param>
+	private static void WriteLinkStart(HtmlRenderer Renderer, string Url, IReadOnlyList<string> ApprovedDomains)
+	{
+		bool IsApproved = WikiWikiWorld.Web.Helpers.LinkDomainHelper.IsApprovedDomain(Url, ApprovedDomains);
+		Renderer.Write("<a href=\"").WriteEscape(Url).Write("\" rel=\"")
+			.Write(IsApproved ? "noopener" : "nofollow noopener").Write("\" target=\"_blank\">");
+	}
+
+	/// <summary>
+	/// Extracts a display host from an already validated URL, omitting a leading www.
 	/// </summary>
 	/// <param name="Url">The URL to extract the domain from.</param>
-	/// <returns>A human-readable domain name, or the original URL if parsing fails.</returns>
-	private static string GetDomainDisplayName(string Url)
+	/// <returns>A host label for subsequent HTML encoding.</returns>
+	private static string GetDomainDisplayName(Uri Url)
 	{
-		if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri? ParsedUri))
-			return Url;
-
-		string Host = ParsedUri.Host;
+		string Host = Url.Host;
 
 		// Strip leading "www."
 		if (Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
@@ -365,7 +382,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 	}
 
 	/// <summary>
-	/// Writes a list of authors to the HTML output with proper formatting.
+	/// Writes author names as literal text with comma and conjunction formatting.
 	/// </summary>
 	/// <param name="Renderer">The HTML renderer.</param>
 	/// <param name="Authors">The list of author names.</param>
@@ -377,7 +394,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			{
 				Renderer.Write(i == Authors.Count - 1 ? " and " : ", ");
 			}
-			Renderer.Write(Authors[i]);
+			Renderer.WriteEscape(Authors[i]);
 		}
 	}
 }

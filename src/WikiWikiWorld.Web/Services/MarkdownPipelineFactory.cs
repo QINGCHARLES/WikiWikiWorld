@@ -80,7 +80,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	}
 
 	/// <summary>
-	/// Builds and configures the Markdown pipeline with all custom extensions.
+	/// Builds the article pipeline with authored-attribute/URL restrictions before the trusted external-link policy.
 	/// </summary>
 	/// <param name="ApprovedLinkDomains">The list of domains that do not require nofollow on external links.</param>
 	/// <returns>A fully configured <see cref="MarkdownPipeline"/>.</returns>
@@ -129,6 +129,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(PullQuoteExt)
 			.Use(StubExt)
 			.Use(SourceExt)
+			.Use(new MarkdownSafetyExtension())
 			.Use(LinksExt)
 			.UseAdvancedExtensions()
 			.DisableHtml();
@@ -142,8 +143,9 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	/// Builds the minimal, Reddit-style Markdown pipeline used to render talk posts.
 	/// </summary>
 	/// <remarks>
-	/// Deliberately omits every WikiWikiWorld custom extension. Raw HTML is disabled so user-supplied
-	/// content cannot inject markup; soft line breaks become hard breaks for chat-style flow.
+	/// Deliberately omits wiki directives and generic attributes. Raw HTML is disabled so user-supplied
+	/// content cannot inject markup; the shared safety policy rejects executable URL schemes.
+	/// Soft line breaks become hard breaks for chat-style flow.
 	/// </remarks>
 	/// <returns>A configured <see cref="MarkdownPipeline"/>.</returns>
 	private static MarkdownPipeline BuildTalkPipeline()
@@ -154,6 +156,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.UseListExtras()
 			.UsePipeTables()
 			.UseSoftlineBreakAsHardlineBreak()
+			.Use(new MarkdownSafetyExtension())
 			.DisableHtml()
 			.Build();
 	}

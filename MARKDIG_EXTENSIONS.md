@@ -13,6 +13,8 @@ WikiWikiWorld has two Markdown pipelines:
 
 Raw HTML is disabled in both pipelines. An author-written `<script>`, `<iframe>`, or other HTML element is displayed as text rather than executed. The full article pipeline also removes Markdig's built-in media-link extension; use `{{YouTube ...}}` for videos.
 
+Both pipelines apply `MarkdownSafetyExtension` to parsed destinations, including nested custom footnotes and infobox facts. Ordinary links allow relative/internal URLs, HTTP, HTTPS, FTP, `mailto:` and `tel:`. Images allow relative/internal URLs and HTTP/HTTPS. Unsupported schemes (including `javascript:`, `data:` and `file:`) and control characters clear the destination while preserving visible text or image alt text. Citation URLs have their own narrower HTTP/HTTPS-only policy below.
+
 Custom `{{...}}` directives are available only in the full article pipeline. Talk posts display them literally.
 
 ## Custom directive conventions
@@ -316,7 +318,7 @@ The publication began in 1993.{{Citation author=Smith, Jane |#| author=Doe, John
 | Property | Repeatable | Rendered behavior |
 | --- | --- | --- |
 | `author` | Yes | All values are rendered in order with commas and “and” |
-| `title` | Accepted repeatedly; first used | Italicized; becomes the link when `url` is present |
+| `title` | Accepted repeatedly; first used | Italicized; becomes the link when `url` is a valid HTTP/HTTPS URL |
 | `journal` | Accepted repeatedly; first used | Italicized publication name; takes precedence over `publisher` |
 | `publisher` | Accepted repeatedly; first used | Used when `journal` is absent |
 | `volume` | Accepted repeatedly; first used | Rendered as `vol.` |
@@ -324,9 +326,12 @@ The publication began in 1993.{{Citation author=Smith, Jane |#| author=Doe, John
 | `pages` | Accepted repeatedly; first used | Rendered as `pp.` |
 | `year` | Accepted repeatedly; first used | Rendered as the year |
 | `doi` | Accepted repeatedly; first used | Linked through `https://doi.org/` |
-| `url` | Accepted repeatedly; first used | Links the title, or displays the URL's host when no title exists |
+| `url` | Accepted repeatedly; first used | An absolute HTTP/HTTPS URL links the title, or displays its host when no title exists; unsupported or malformed destinations are shown as plain text |
 
 - Property names are case-insensitive.
+- Values are literal text: HTML and Markdown in citation fields are displayed without executing or formatting them. Bibliography italics, links and punctuation come from the renderer.
+- URL attributes are HTML-encoded after scheme validation. Domain approval controls `nofollow`, not whether a destination is safe to link. Relative/protocol-relative URLs and non-HTTP schemes such as `javascript:`, `data:` and `file:` are not linked.
+- Supply a raw DOI identifier (for example `10.1000/example`). Its path components are URL-encoded under `https://doi.org/`; reserved query/fragment characters remain part of the identifier, and the visible DOI is separately HTML-encoded.
 - Unknown properties are retained internally but are not rendered.
 - Identical raw citation payloads are de-duplicated into one bibliography entry with multiple back-links. Property reordering or other textual changes create a different citation.
 - Citations are numbered by the first occurrence of each unique payload.
@@ -721,9 +726,9 @@ Attributes can attach to a preceding inline element, the current block, or the n
 | --- | --- |
 | `#identifier` | `id="identifier"` |
 | `.class-name` | Adds a CSS class |
-| `name=value` | Adds an attribute |
-| `name="value with spaces"` | Adds a quoted attribute value |
-| `boolean-name` | Adds an empty-valued attribute |
+| `name=value` | Adds an allowed attribute |
+| `name="value with spaces"` | Adds an allowed quoted attribute value |
+| `boolean-name` | Adds an allowed empty-valued attribute |
 
 ````markdown
 ## Archive holdings {#holdings .catalog-section}
@@ -737,6 +742,8 @@ Box 12, folder 4
 ````
 
 Generic attributes are the last built-in parser registered so they can decorate output from other compatible Markdig extensions.
+
+Authored properties are limited to `id`, `class`, `title`, `lang`, `dir`, `role`, `data-kind`, `width`, `height`, `colspan`, `rowspan`, `scope`, `align`, `start`, `reversed`, and `aria-*`. IDs and classes also retain Markdig's dedicated storage. Other properties are removed, including native `on*` handlers, `style`, URL overrides (`href`/`src`), `srcdoc`, `target`, authored `rel`, and executable framework attributes. The trusted external-link policy then supplies `rel` where needed. These restrictions apply during rendering; stored Markdown is unchanged. See [verification and deployment](doc/markdown-rendering-security.md).
 
 ## Talk-post Markdown
 
