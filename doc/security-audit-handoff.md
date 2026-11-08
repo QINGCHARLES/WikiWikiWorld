@@ -1,6 +1,8 @@
 # Security audit handoff
 
-Prepared 2026-11-07 for continuing the outstanding findings with Claude or another engineer. Start with item 4. This is a focused handoff, not a completed security assessment.
+Prepared 2026-11-07 for continuing the outstanding findings with Claude or another engineer. This is a focused handoff, not a completed security assessment.
+
+**Deployment update, 2026-11-08:** Items 4 and 5 were committed as `0f53205`, pushed with the bookmark-description work, and deployed in `release-20261108T065825Z-467afe0ebbb5` (source `467afe0ebbb58d969fb444deeecf832361b5a89c`). The Windows development app is also refreshed. The actual Linux image passed SVG header/byte checks and synthetic cross-account refusal/owner-edit controls, including persistence after restart; production HTTPS and the SVG logo's sandbox headers passed. The detailed reproduction sections below describe the earlier investigation. Item 6 is the next remaining lead. See [the release record](release-2026-11-08.md).
 
 ## Repository and completed work
 
@@ -32,7 +34,7 @@ Prepared 2026-11-07 for continuing the outstanding findings with Claude or anoth
 - **Impact:** any account that can upload a file can store a script. That script runs with the site's full authority in any signed-in reader who opens the image. It can read authenticated pages and their antiforgery tokens, and so can act as the reader. The probe deliberately did not send messages or exfiltrate data. Responses are publicly cached for 30 days. The production configuration matches by source, but production itself was not tested.
 - Browser note: the fixture was restarted with the machine's already-trusted `CN=en.magazedia.com.localhost` dev certificate, read-only from the CurrentUser store, because the browser pane rejects the self-signed `fixture.pfx`. Cookies are not port-scoped, so the pane may still hold a fixture sign-in cookie for `en.magazedia.com.localhost`. The 7126 dev app has different data-protection keys and will reject it.
 
-### Fix (implemented 2026-11-07, uncommitted, not deployed)
+### Fix (implemented and committed 2026-11-07, deployed 2026-11-08)
 
 The owner chose the sandbox-header approach.
 
@@ -103,7 +105,7 @@ These are preliminary leads until independently reproduced against current code:
 
 | Number | Lead | Next investigation |
 | --- | --- | --- |
-| 5 | Mutations can omit another user's home-page ownership check | **Reproduced and fixed 2026-11-07 (uncommitted, not deployed)**. See the section below. |
+| 5 | Mutations can omit another user's home-page ownership check | **Reproduced, fixed and committed 2026-11-07; deployed 2026-11-08**. See the section below. |
 | 6 | Redirect administration requires login but no operator permission | `Pages/Admin/DomainRedirects.cshtml.cs:18` currently has `[Authorize]`. Test a normal synthetic account's GET, create, delete and helper handlers. Establish the intended operator policy, enforce it server-side, and cover all handlers. |
 | 7 | Logout link has no matching handler | `_Layout.cshtml` links `/Account/Logout`; no corresponding page handler was found. Verify routing and actual cookie termination. If confirmed, implement the established Identity sign-out flow with an antiforgery-protected POST and test that the session ends. |
 | 8 | Potentially expensive directive scanning | Revisit `MarkDigExtensions/DirectiveSyntax.cs` and callers. Use bounded offline inputs and Release measurements to determine whether malformed/repeated delimiters cause disproportionate work. No availability tests against shared development or production services. |

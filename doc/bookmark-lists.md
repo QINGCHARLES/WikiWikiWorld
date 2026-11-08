@@ -64,8 +64,10 @@ live application. The old application remains compatible with the additive colum
 application can precede deployment. Roll back application code while retaining the column and
 any descriptions; restoring a backup would discard later writes and needs a recovery decision.
 
-The description upgrade has not been applied to the development or production database by this
-implementation. Build/test checks use disposable databases only.
+The description upgrade was applied to development and production on 2026-11-08 through the
+maintenance runner after rehearsals on consistent disposable backups. All retained values and
+identity history were preserved; both schemas now match each other and fresh `Create.sql`.
+See [backup locations, release verification and rollback](release-2026-11-08.md).
 
 Verification:
 
