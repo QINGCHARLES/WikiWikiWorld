@@ -62,6 +62,12 @@ Verification includes `BookmarkManagementTests` for note ownership, visibility, 
 round trips, length/blank validation, cancellation, independent memberships, removal/undo/re-add,
 shared Markdown rendering, and populated/fresh SQLite schema preservation.
 
+The note upgrade was applied to development and production on 2026-11-08 after rehearsals on
+consistent disposable backups. Both schemas match each other and `Create.sql`; all retained
+data, including list descriptions and identity counters, was preserved. The updated Linux
+image and Windows development app are running. See [the bookmark-note release record and
+backup locations](release-bookmark-notes-2026-11-08.md).
+
 ## List descriptions (backend)
 
 Each list has an optional `Description` containing the original Markdown introduction, shared
