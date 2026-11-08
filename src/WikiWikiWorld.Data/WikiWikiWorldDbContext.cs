@@ -325,6 +325,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		Builder.Entity<Bookmark>(b =>
 		{
 			b.HasKey(e => e.Id);
+			b.Property(e => e.Notes).HasMaxLength(Bookmark.MaxNotesLength);
 			b.HasIndex(e => new { e.BookmarkListId, e.CanonicalArticleId }, "UX_Bookmarks_BookmarkListId_CanonicalArticleId_Active")
 				.IsUnique().HasFilter("DateDeleted IS NULL");
 			b.HasIndex(e => new { e.BookmarkListId, e.DateCreated, e.Id }, "IX_Bookmarks_List_Recent_Active")

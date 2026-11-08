@@ -36,14 +36,14 @@ public sealed partial class BookmarkService
 	/// <param name="Sort">Name for invariant Unicode case-insensitive title ordering; otherwise recent saves first.</param>
 	/// <param name="PageNumber">One-based requested page, clamped after counting.</param>
 	/// <param name="CancellationToken">Cancels database work.</param>
-	/// <returns>A bounded projection; inaccessible lists yield no entries.</returns>
+	/// <returns>A bounded projection including original note Markdown; inaccessible lists yield no entries.</returns>
 	public async Task<BookmarkEntryPage> GetListPageAsync(int ListId, Guid OwnerId, bool IsOwner, string Sort, int PageNumber, CancellationToken CancellationToken)
 	{
 		var Entries = Context.Bookmarks.AsNoTracking()
 			.Where(b => b.BookmarkListId == ListId && b.CreatedByUserId == OwnerId &&
 				Context.BookmarkLists.Any(l => l.Id == b.BookmarkListId && l.CreatedByUserId == OwnerId && (IsOwner || l.IsPublic)))
 			.Join(Context.ArticleRevisions.Where(r => r.IsCurrent), b => b.CanonicalArticleId, r => r.CanonicalArticleId,
-				(b, r) => new { b.Id, r.Title, r.UrlSlug, r.Type, b.DateCreated });
+				(b, r) => new { b.Id, r.Title, r.UrlSlug, r.Type, b.DateCreated, b.Notes });
 		int Total = await Entries.CountAsync(CancellationToken);
 		int ActualPage = Math.Clamp(PageNumber, 1, Math.Max(1, (Total + PageSize - 1) / PageSize));
 
@@ -55,7 +55,7 @@ public sealed partial class BookmarkService
 			? Entries.OrderBy(b => EF.Functions.Collate(b.Title, "BOOKMARK_TITLE")).ThenBy(b => b.Id)
 			: Entries.OrderByDescending(b => b.DateCreated).ThenByDescending(b => b.Id);
 		List<BookmarkEntry> Items = await Ordered.Skip((ActualPage - 1) * PageSize).Take(PageSize)
-			.Select(b => new BookmarkEntry(b.Id, b.Title, b.UrlSlug, b.Type, b.DateCreated)).ToListAsync(CancellationToken);
+			.Select(b => new BookmarkEntry(b.Id, b.Title, b.UrlSlug, b.Type, b.DateCreated, b.Notes)).ToListAsync(CancellationToken);
 		return new(Items, Total, ActualPage);
 	}
 

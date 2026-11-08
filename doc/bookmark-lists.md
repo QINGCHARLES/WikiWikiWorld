@@ -5,6 +5,63 @@ lists. Lists are private by default. The article split button saves to the defau
 lets an article belong to several lists. "New list" in that menu creates a private list holding the article,
 or reuses a same-named list. Names are trimmed, 1–60 characters, and compared ignoring case.
 
+## Bookmark notes (backend)
+
+Each `Bookmarks` membership has optional `Notes`: original Markdown explaining why that article
+was saved in that particular list. The same article can have different notes in different lists.
+The limit is 10,000 UTF-16 code units (`string.Length`). Null, empty or whitespace-only input
+clears a note; all other source, including meaningful Markdown whitespace, is preserved verbatim.
+
+- `SetBookmarkNotesAsync` accepts the bookmark membership ID and authenticated owner. It requires
+  an active membership and an active owned parent list in the current site; unavailable targets
+  return false without creating anything. Oversized input throws `ArgumentOutOfRangeException`.
+  The tracked edit keeps subsequent membership operations in that unit of work coherent.
+- `BookmarkEntry.Notes` is projected by `GetListPageAsync`, after the existing visibility,
+  site/culture, current-article, sorting and paging rules. Private notes never enter visitor
+  results; public list readers can read the notes. Note edits preserve the original save date,
+  list description, counts and ordering.
+- Render authorized source using `IMarkdownPipelineFactory.RenderUserContentMarkdown`, the same
+  pipeline as list descriptions. Links and emphasis work; raw HTML is disabled, unsafe URLs
+  remain inert and wiki directives are literal. Generated HTML is not stored. Future UI follows
+  the existing authored-content/Datastar boundaries.
+- Saving an already-present article or reusing a named list leaves its notes intact. Removal,
+  default-list clearing and custom-list deletion retain notes in the soft-deleted rows. Undo
+  restores the original note and save date. Re-adding after removal creates a new membership
+  without notes; undo of the older membership does not replace an already re-added membership's
+  note.
+
+This is backend support only: storage, owner-scoped editing and read projections. Note controls,
+new HTTP endpoints and preview UI are not part of this change.
+
+### Bookmark note schema upgrade
+
+Existing databases require `src/WikiWikiWorld.Data/SqliteScripts/AddBookmarkNotes.sql` before
+starting updated code. The script adds nullable, default-free `Notes TEXT` in one `BEGIN IMMEDIATE`
+transaction. Old memberships start with null notes; list descriptions, existing values, identity
+history and indexes stay intact. Fresh databases use `Create.sql` and skip the additive script.
+
+Stage the migration and both companion check files beside the standard maintenance runner:
+
+```bash
+/home/deploy/db-maintenance/db-update.sh production /opt/wiki/data/app.db \
+  /home/deploy/db-maintenance/AddBookmarkNotes.sql \
+  /home/deploy/db-maintenance/VerifyBookmarkNotes.sql \
+  /home/deploy/db-maintenance/CheckBookmarkNotesBefore.sql
+```
+
+Use the [database maintenance procedure](database-maintenance.md) for consistent backups,
+preconditions and verification. The precheck requires the current list-description schema and
+no existing bookmark `Notes` column. Verification requires the expected nullable `TEXT` column
+and valid foreign keys. Both return a single integer 1. Rehearse on disposable backups; compare
+all retained data and identity history with each maintenance backup after applying the change.
+The old app accepts the additive schema, so apply it before deployment. Application rollback can
+leave the column and notes in place; a backup restore would discard later writes and is a separate
+recovery decision. Deployment records below or in the project reference record actual application.
+
+Verification includes `BookmarkManagementTests` for note ownership, visibility, exact source
+round trips, length/blank validation, cancellation, independent memberships, removal/undo/re-add,
+shared Markdown rendering, and populated/fresh SQLite schema preservation.
+
 ## List descriptions (backend)
 
 Each list has an optional `Description` containing the original Markdown introduction, shared
@@ -35,7 +92,8 @@ preserved verbatim. HTML is generated on demand, never stored.
   descriptions intact. Custom-list deletion retains its description in the soft-deleted row.
 
 This change provides storage and service operations only. There are no description controls,
-new HTTP endpoints or preview UI. Individual bookmark notes remain a separate planned feature.
+new HTTP endpoints or preview UI. Individual bookmark notes use the separate membership field
+described above.
 
 ### Description schema upgrade
 

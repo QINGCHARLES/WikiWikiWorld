@@ -307,6 +307,7 @@ CREATE TABLE Bookmarks (
     CreatedByUserId TEXT NOT NULL,
     DateCreated TEXT NOT NULL,
     DateDeleted TEXT NULL,
+    Notes TEXT NULL,
     CONSTRAINT FK_Bookmarks_BookmarkLists_BookmarkListId FOREIGN KEY (BookmarkListId) REFERENCES BookmarkLists (Id) ON DELETE CASCADE,
     CONSTRAINT FK_Bookmarks_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
 );

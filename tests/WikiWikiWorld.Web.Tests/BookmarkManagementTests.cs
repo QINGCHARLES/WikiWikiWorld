@@ -8,8 +8,8 @@ using Xunit;
 
 namespace WikiWikiWorld.Web.Tests;
 
-/// <summary>Exercises list visibility, bounded queries, and mutations against actual SQLite.</summary>
-public sealed class BookmarkManagementTests : IDisposable
+/// <summary>Exercises list visibility, membership notes, bounded queries, and mutations against actual SQLite.</summary>
+public sealed partial class BookmarkManagementTests : IDisposable
 {
 	private readonly SqliteConnection Connection = new("Data Source=:memory:;Foreign Keys=True");
 	private readonly Guid Owner = Guid.NewGuid();

@@ -5,6 +5,9 @@ namespace WikiWikiWorld.Data.Models;
 /// </summary>
 public sealed record Bookmark
 {
+	/// <summary>The maximum number of UTF-16 code units accepted in the reason for saving a list membership.</summary>
+	public const int MaxNotesLength = 10_000;
+
 	/// <summary>
 	/// Gets the unique identifier for this bookmark.
 	/// </summary>
@@ -38,6 +41,10 @@ public sealed record Bookmark
 	/// Gets the date and time when this bookmark was created.
 	/// </summary>
 	public DateTimeOffset DateCreated { get; init; }
+
+	/// <summary>Gets or sets the optional Markdown reason for saving this article in this particular list.</summary>
+	/// <remarks>Stores source rather than HTML. Removal retains it for undo; a new membership starts without notes.</remarks>
+	public string? Notes { get; set; }
 
 	/// <summary>
 	/// Gets the date and time when this bookmark was deleted, if applicable.

@@ -22,7 +22,8 @@ public sealed record class BookmarkListDetails(int Id, string Name, bool IsDefau
 /// <param name="UrlSlug">Current article slug.</param>
 /// <param name="Type">Article namespace used to form the link.</param>
 /// <param name="DateCreated">Original UTC save instant.</param>
-public sealed record class BookmarkEntry(int Id, string Title, string UrlSlug, ArticleType Type, DateTimeOffset DateCreated);
+/// <param name="Notes">Original Markdown reason for saving this membership, or null when absent.</param>
+public sealed record class BookmarkEntry(int Id, string Title, string UrlSlug, ArticleType Type, DateTimeOffset DateCreated, string? Notes = null);
 
 /// <summary>A bounded, deterministically ordered page of visible memberships.</summary>
 /// <param name="Items">At most 50 entries.</param>

@@ -21,6 +21,7 @@
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/AddArticleCategoryMemberships.sql" Link="SqliteScripts/AddArticleCategoryMemberships.sql" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/AddBookmarkListVisibility.sql" Link="SqliteScripts/AddBookmarkListVisibility.sql" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*BookmarkListDescription*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*BookmarkNotes*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/Create.sql" Link="SqliteScripts/Create.sql" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*FileRevisionStagingUploadId*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*PrivateMessaging*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
