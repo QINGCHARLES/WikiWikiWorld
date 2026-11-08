@@ -1,8 +1,10 @@
 @model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
-@* Response to a signed-in toggle. Each top-level element is patched by id; the <details> wrapper is not included,
-   so an open menu stays open. The empty status clears any earlier server message. *@
+@* Response to a signed-in toggle or note save. Each top-level element is patched by id; the <details> wrapper and the
+   note dialog are not included, so an open menu stays open and an open dialog keeps its text. The status clears any
+   earlier server message unless this response confirms something. *@
 <partial name="_BookmarkToggle" model="Model" />
 <partial name="_BookmarkMenuTrigger" model="Model" />
 <partial name="_BookmarkLists" model="Model" />
 <partial name="_BookmarkNewList" model="Model" />
-<partial name="_BookmarkStatus" model="@(string.Empty)" />
+<partial name="_BookmarkStatus" model="Model.StatusMessage" />
+<partial name="_BookmarkPrompt" model="Model" />

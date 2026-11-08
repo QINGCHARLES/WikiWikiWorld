@@ -8,11 +8,13 @@ namespace WikiWikiWorld.Web.Pages.Profile;
 /// <param name="BookmarkService">Reads and manages scoped bookmark lists.</param>
 /// <param name="ProfileService">Loads profile identity and ownership.</param>
 /// <param name="DataProtectionProvider">Protects expiring, owner-bound undo commands.</param>
+/// <param name="MarkdownPipelineFactory">Renders list introductions and entry notes with the shared user-content renderer.</param>
 public sealed class BookmarksModel(
 	SiteResolverService SiteResolverService,
 	BookmarkService BookmarkService,
 	ProfileService ProfileService,
-	IDataProtectionProvider DataProtectionProvider) : BasePageModel(SiteResolverService)
+	IDataProtectionProvider DataProtectionProvider,
+	IMarkdownPipelineFactory MarkdownPipelineFactory) : BasePageModel(SiteResolverService)
 {
 	/// <summary>Gets or sets the profile route identity.</summary>
 	[BindProperty(SupportsGet = true)]
@@ -38,6 +40,15 @@ public sealed class BookmarksModel(
 
 	/// <summary>Gets the selected list, or null when a visitor has no public lists to read.</summary>
 	public BookmarkListSummary? SelectedList { get; private set; }
+
+	/// <summary>Gets the selected list's metadata, including its Markdown introduction source; null when no list is selected.</summary>
+	public BookmarkListDetails? SelectedDetails { get; private set; }
+
+	/// <summary>Gets the selected list's introduction rendered as sanitized HTML, or null when it has none.</summary>
+	public string? IntroductionHtml { get; private set; }
+
+	/// <summary>Gets how many memberships of the list carry a note, counted for the publish confirmation.</summary>
+	public int AffectedNotesCount { get; private set; }
 
 	/// <summary>Gets the current bounded page of entries.</summary>
 	public BookmarkEntryPage Entries { get; private set; } = new([], 0, 1);
@@ -88,9 +99,12 @@ public sealed class BookmarksModel(
 	/// <param name="BookmarkId">Membership to remove.</param>
 	/// <param name="Token">Protected undo token returned after removal.</param>
 	/// <param name="Confirmed">Whether the user submitted the explicit publish/delete confirmation.</param>
+	/// <param name="Description">New Markdown introduction for the description operation; blank removes it.</param>
+	/// <param name="Notes">New Markdown note for the notes operation on <paramref name="BookmarkId"/>; blank removes it.</param>
 	/// <param name="CancellationToken">Cancels request work.</param>
 	/// <returns>A redirect after mutation, a confirmation/validation page, or an access failure.</returns>
-	public async Task<IActionResult> OnPostAsync(string Operation, string? Name, bool IsPublic, int BookmarkId, string? Token, bool Confirmed, CancellationToken CancellationToken)
+	public async Task<IActionResult> OnPostAsync(string Operation, string? Name, bool IsPublic, int BookmarkId, string? Token, bool Confirmed,
+		string? Description, string? Notes, CancellationToken CancellationToken)
 	{
 		IActionResult? Failure = await LoadAsync(CancellationToken);
 		if (Failure is not null)
@@ -122,6 +136,7 @@ public sealed class BookmarksModel(
 				{
 					PendingOperation = Operation;
 					AffectedCount = await BookmarkService.CountListMembershipsAsync(SelectedId, Header.UserId, CancellationToken);
+					AffectedNotesCount = await BookmarkService.CountListNotesAsync(SelectedId, Header.UserId, CancellationToken);
 					return Page();
 				}
 				bool Changed = Operation == "visibility"
@@ -133,6 +148,27 @@ public sealed class BookmarksModel(
 					: SelectedList.IsDefault ? "Default list cleared." : "List deleted.";
 				UndoToken = null;
 				return LocalRedirect(Operation == "delete" ? ListUrl(null) : CurrentUrl);
+			case "description":
+				if ((Description?.Length ?? 0) > BookmarkList.MaxDescriptionLength)
+					return BadRequest();
+				if (!await BookmarkService.SetListDescriptionAsync(SelectedId, Description, Header.UserId, SiteId, CancellationToken))
+					return NotFound();
+				Notice = string.IsNullOrWhiteSpace(Description) ? "Introduction removed." : "Introduction saved.";
+				UndoToken = null;
+				return LocalRedirect(CurrentUrl);
+			case "notes":
+				if ((Notes?.Length ?? 0) > Bookmark.MaxNotesLength)
+					return BadRequest();
+				if (!Entries.Items.Any(e => e.Id == BookmarkId))
+				{
+					Notice = "That entry is no longer in this list, so the note was not saved.";
+					return LocalRedirect(CurrentUrl);
+				}
+				if (!await BookmarkService.SetBookmarkNotesAsync(BookmarkId, Notes, Header.UserId, CancellationToken))
+					return NotFound();
+				Notice = string.IsNullOrWhiteSpace(Notes) ? "Note removed." : "Note saved.";
+				UndoToken = null;
+				return LocalRedirect($"{CurrentUrl}#bookmark-{BookmarkId.ToString(CultureInfo.InvariantCulture)}");
 			case "remove":
 				DateTimeOffset? DeletedAt = await BookmarkService.RemoveEntryAsync(SelectedId, BookmarkId, Header.UserId, CancellationToken);
 				if (DeletedAt is { } Deleted)
@@ -154,6 +190,25 @@ public sealed class BookmarksModel(
 				return BadRequest();
 		}
 	}
+
+	/// <summary>Renders a draft introduction for the editor's Preview tab exactly as the list page will show it.</summary>
+	/// <param name="Description">Unsaved Markdown source.</param>
+	/// <returns>Sanitized HTML, or a challenge for anonymous callers; nothing is stored.</returns>
+	/// <remarks>Antiforgery validation applies as for every Razor Pages POST, so only the site's own forms can call it.</remarks>
+	public IActionResult OnPostPreview(string? Description)
+	{
+		if (User.Identity?.IsAuthenticated != true)
+			return Challenge();
+		if ((Description?.Length ?? 0) > BookmarkList.MaxDescriptionLength)
+			return BadRequest();
+		Response.Headers.CacheControl = "no-store";
+		return Content(MarkdownPipelineFactory.RenderUserContentMarkdown(Description), "text/html; charset=utf-8");
+	}
+
+	/// <summary>Renders an entry note or list introduction with the shared user-content renderer.</summary>
+	/// <param name="Source">Authorized Markdown source.</param>
+	/// <returns>Sanitized HTML for the view to emit unencoded.</returns>
+	public string RenderMarkdown(string? Source) => MarkdownPipelineFactory.RenderUserContentMarkdown(Source);
 
 	/// <summary>Creates a stable, lowercase-query URL, omitting default sort/page values.</summary>
 	/// <param name="List">Selected list; null or default uses the base URL.</param>
@@ -193,6 +248,8 @@ public sealed class BookmarksModel(
 		if (SelectedList is not null)
 		{
 			Entries = await BookmarkService.GetListPageAsync(SelectedList.Id, Header.UserId, Header.IsOwner, Sort, PageNumber, CancellationToken);
+			SelectedDetails = await BookmarkService.GetListDetailsAsync(SelectedList.Id, Header.UserId, Header.IsOwner, CancellationToken);
+			IntroductionHtml = string.IsNullOrWhiteSpace(SelectedDetails?.Description) ? null : RenderMarkdown(SelectedDetails.Description);
 		}
 		return null;
 	}

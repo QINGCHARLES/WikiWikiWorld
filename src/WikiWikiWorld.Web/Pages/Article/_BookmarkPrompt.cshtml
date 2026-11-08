@@ -1,0 +1,19 @@
+@model WikiWikiWorld.Web.Pages.Article.BookmarkControlModel
+@* After a save, offers "Add a note" for the list the article just joined instead of opening anything, so one-tap saving
+   stays one tap. When re-saving carried a removed membership's note forward, says so instead. bookmark-notes.js opens
+   the dialog from the matching row's note button and clears this prompt on the next click elsewhere. *@
+<div id="article-bookmark-prompt" role="status">
+	@if (Model.SavedMembership is { } Saved)
+	{
+		@if (string.IsNullOrWhiteSpace(Saved.Notes))
+		{
+			<span>Saved to @Saved.Name.</span>
+			<button type="button" data-bookmark-note-for="@Saved.BookmarkListId">Add a note</button>
+		}
+		else
+		{
+			<span>Saved to @Saved.Name. Your earlier note is back.</span>
+			<button type="button" data-bookmark-note-for="@Saved.BookmarkListId">Edit note</button>
+		}
+	}
+</div>

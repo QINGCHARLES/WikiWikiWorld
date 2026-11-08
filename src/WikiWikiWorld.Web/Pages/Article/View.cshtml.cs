@@ -364,7 +364,8 @@ public sealed class ViewModel(
             if (CurrentUserForBookmark is not null)
             {
                 IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(RevisionToRender.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
-                BookmarkControl = new(DisplayedArticlePath, IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUserForBookmark.UserName));
+                BookmarkControl = new(DisplayedArticlePath, IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUserForBookmark.UserName),
+                    ArticleTitle: RevisionToRender.Title);
             }
         }
 
@@ -439,7 +440,7 @@ public sealed class ViewModel(
 
         await BookmarkService.SetBookmarkAsync(Current.CanonicalArticleId, CurrentUser.Id, SiteId, Saved, CancellationToken);
 
-        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken, SavedList: Saved ? l => l.IsDefault : null);
     }
 
     /// <summary>
@@ -466,7 +467,7 @@ public sealed class ViewModel(
             return Partial("_BookmarkStatus", "That list no longer exists. Reload to see your lists.");
         }
 
-        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken, SavedList: Saved ? l => l.BookmarkListId == BookmarkListId : null);
     }
 
     /// <summary>
@@ -502,7 +503,40 @@ public sealed class ViewModel(
             return Partial("_BookmarkStatus", $"You can have up to {BookmarkService.MaxListsPerUser} lists.");
         }
 
-        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken,
+            SavedList: l => string.Equals(l.Name, Name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Saves or clears the note on one of the user's memberships of this article, from the note dialog.
+    /// </summary>
+    /// <param name="BookmarkId">The membership to annotate, posted by the dialog; it must belong to the current user.</param>
+    /// <param name="Notes">Markdown source; blank clears the note.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>
+    /// Razor partials that refresh the menu with the new note and confirm it in the status line; a status message when the
+    /// note is too long or the bookmark was removed meanwhile. Non-Datastar callers are rejected without changing a note.
+    /// </returns>
+    public async Task<IActionResult> OnPostSetBookmarkNoteAsync([FromForm] int BookmarkId, [FromForm] string? Notes, CancellationToken CancellationToken)
+    {
+        (IActionResult? Rejection, User? CurrentUser, ArticleRevision? Current) = await ResolveBookmarkRequestAsync(CancellationToken);
+        if (Rejection is not null || CurrentUser is null || Current is null)
+        {
+            return Rejection ?? NotFound();
+        }
+        if ((Notes?.Length ?? 0) > Bookmark.MaxNotesLength)
+        {
+            return Partial("_BookmarkStatus", $"Notes can be up to {Bookmark.MaxNotesLength:N0} characters.");
+        }
+
+        IReadOnlyList<BookmarkListMembership> Before = await BookmarkService.GetListMembershipsAsync(Current.CanonicalArticleId, CurrentUser.Id, CancellationToken);
+        BookmarkListMembership? Target = Before.FirstOrDefault(l => l.BookmarkId == BookmarkId);
+        bool Saved = Target is not null && await BookmarkService.SetBookmarkNotesAsync(BookmarkId, Notes, CurrentUser.Id, CancellationToken);
+        string Message = !Saved
+            ? "That bookmark was removed, so the note was not saved. Reload to see your lists."
+            : string.IsNullOrWhiteSpace(Notes) ? $"Note removed from {Target!.Name}." : $"Note saved to {Target!.Name}.";
+
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken, Message);
     }
 
     /// <summary>
@@ -551,12 +585,17 @@ public sealed class ViewModel(
     /// <param name="CurrentUser">The signed-in user.</param>
     /// <param name="Current">The article's current revision.</param>
     /// <param name="CancellationToken">A cancellation token.</param>
+    /// <param name="StatusMessage">A confirmation for the status line; empty clears it.</param>
+    /// <param name="SavedList">Picks the list the article was just added to, for the "Add a note" prompt; null when nothing was added.</param>
     /// <returns>The state partial, whose top-level elements Datastar patches by id.</returns>
-    private async Task<IActionResult> BookmarkStateResultAsync(User CurrentUser, ArticleRevision Current, CancellationToken CancellationToken)
+    private async Task<IActionResult> BookmarkStateResultAsync(User CurrentUser, ArticleRevision Current, CancellationToken CancellationToken,
+        string StatusMessage = "", Func<BookmarkListMembership, bool>? SavedList = null)
     {
         IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(Current.CanonicalArticleId, CurrentUser.Id, CancellationToken);
+        int? SavedListId = SavedList is null ? null : Lists.FirstOrDefault(SavedList)?.BookmarkListId;
 
-        return Partial("_BookmarkState", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUser.UserName)));
+        return Partial("_BookmarkState", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), IsSignedIn: true, Lists,
+            BookmarkControlModel.BuildBookmarksPath(CurrentUser.UserName), StatusMessage, SavedListId));
     }
 
     /// <summary>

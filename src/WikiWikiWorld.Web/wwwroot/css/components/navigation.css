@@ -409,7 +409,8 @@ ul.categories a {
     overscroll-behavior: contain;
 }
 
-.dropdown-menu > .menu-content > div > button {
+.dropdown-menu > .menu-content > div > button,
+#article-bookmark-lists > .bookmark-list-row > button[role="checkbox"] {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -441,18 +442,141 @@ ul.categories a {
     }
 }
 
-#article-bookmark-lists > button > span {
+/* Each list is a row: the checkbox button, plus a note button once the article is saved there. A saved note shows
+   as a one-line excerpt under the list name. */
+#article-bookmark > details > .menu-content {
+    inline-size: min(21rem, calc(100vw - 2rem));
+}
+
+/* The menu is anchored to the split button's start edge, which sits ~4rem in on phones; keep its end on screen. */
+@media (max-width: 34rem) {
+    #article-bookmark > details > .menu-content {
+        inline-size: min(17rem, calc(100vw - 6rem));
+    }
+}
+
+.bookmark-list-row {
+    display: flex;
+    align-items: stretch;
+
+    &:hover {
+        background-color: #f5f3ee;
+    }
+
+    & > button[role="checkbox"] {
+        flex: 1;
+        min-inline-size: 0;
+        padding-inline-end: 0.4rem;
+
+        &:hover {
+            background: none;
+        }
+    }
+}
+
+.bookmark-list-text {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-inline-size: 0;
+    display: grid;
+    gap: 0.1rem;
+
+    & > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.bookmark-list-excerpt {
+    font-size: 0.85em;
+    font-weight: 400;
+    color: #6b6f76;
+}
+
+.dropdown-menu > .menu-content .bookmark-note-button {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 2.6rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: #8a8d93;
+    cursor: pointer;
+
+    & svg {
+        inline-size: 1.05rem;
+        block-size: 1.05rem;
+    }
+
+    &:hover {
+        color: var(--color-foreground);
+        background: #ece9e1;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+    }
+}
+
+/* After a save: "Saved to List. Add a note" floats where the status does, and gives way to any status message. */
+#article-bookmark-prompt {
+    display: none;
+}
+
+#article-bookmark-prompt:has(span) {
+    position: absolute;
+    inset-block-start: calc(100% + 0.4rem);
+    inset-inline-start: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.5rem;
+    inline-size: max-content;
+    max-inline-size: min(22rem, calc(100vw - 2rem));
+    margin: 0;
+    padding: 0.45rem 0.75rem;
+    border-radius: 0.6rem;
+    background: var(--color-foreground);
+    color: #ffffff;
+    font-family: var(--font-family-san-serif);
+    font-size: 0.85em;
+    line-height: 1.35;
+
+    & button {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: underline;
+        text-decoration-color: var(--color-primary);
+        text-decoration-thickness: 2px;
+        text-underline-offset: 0.2em;
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
+        }
+    }
+}
+
+#article-bookmark-status:not(:empty) ~ #article-bookmark-prompt {
+    display: none;
 }
 
 .dropdown-menu > .menu-content .bookmark-list-check {
     visibility: hidden;
 }
 
-#article-bookmark-lists > button[aria-checked="true"] {
+#article-bookmark-lists button[aria-checked="true"] {
     font-weight: 550;
 
     & .bookmark-list-check {

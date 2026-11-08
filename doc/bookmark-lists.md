@@ -33,8 +33,8 @@ clears a note; all other source, including meaningful Markdown whitespace, is pr
   applies after Clear list, because removal and clearing store the same soft-deleted state.
   Undo of the older membership does not replace an already re-added membership's note.
 
-This is backend support only: storage, owner-scoped editing and read projections. Note controls,
-new HTTP endpoints and preview UI are not part of this change.
+The original change was backend only. The editing and reading UI is described in
+[Notes and introductions UI](#notes-and-introductions-ui).
 
 ### Bookmark note schema upgrade
 
@@ -100,9 +100,9 @@ preserved verbatim. HTML is generated on demand, never stored.
   reads. Bookmark saves, same-named-list reuse, removal/undo and clearing the default list leave
   descriptions intact. Custom-list deletion retains its description in the soft-deleted row.
 
-This change provides storage and service operations only. There are no description controls,
-new HTTP endpoints or preview UI. Individual bookmark notes use the separate membership field
-described above.
+The original change provided storage and service operations only. The editing and reading UI is
+described in [Notes and introductions UI](#notes-and-introductions-ui). Individual bookmark notes
+use the separate membership field described above.
 
 ### Description schema upgrade
 
@@ -150,6 +150,33 @@ Implementation verification on 2026-11-07: the Release build and all 384 .NET te
 including the 11 new description cases, along with all 14 existing Python maintenance tests.
 Existing ImageSharp NU1902/NU1903 advisory warnings remain unchanged. Build outputs were
 isolated so the running Windows development process could remain active.
+
+## Notes and introductions UI
+
+- **Article page.** In the bookmark menu, each list holding the article gets a note button, and a
+  one-line plain-text excerpt of any note under the list name. `GetListMembershipsAsync` returns
+  each membership's ID, note source and list visibility for this; it is only shown to the owner.
+  The note button opens one `#article-note-dialog` per page, kept outside `#article-bookmark` so
+  toggle responses (which patch the menu by id) never replace it. `js/bookmark-notes.js` fills the
+  dialog from the button's data attributes. Save posts `?handler=SetBookmarkNote` through Datastar
+  with the form's antiforgery token. The `_BookmarkState` response refreshes the menu, confirms in
+  the status line and closes the dialog. Ctrl+Enter saves, and Delete note saves a blank note.
+- **No prompt on save.** Saving never opens the dialog. `#article-bookmark-prompt` says
+  "Saved to List" with an "Add a note" button, or that an earlier note is back after a re-save.
+  It clears on the next click elsewhere and gives way to any status message.
+- **Profile, owner.** The list introduction renders under the list header, with an empty-state
+  invitation when there is none. It is edited in `#bookmark-intro-dialog` with Write/Preview tabs.
+  Preview posts the draft to `?handler=Preview`, which returns `RenderUserContentMarkdown` output
+  without storing anything. Each entry shows its rendered note. Add note / Edit note reveals an
+  inline editor in the row: a plain POST (`operation=notes`) that redirects back to `#bookmark-{id}`.
+  Notes longer than 240 characters or three lines start clamped to three lines with Read more.
+- **Publish confirmation.** Make public… now counts the list's notes and mentions its introduction.
+  Every editor states whether its text is public or private.
+- **Profile, visitor.** Public lists show "A list by {user}" in place of the visibility pill, then
+  the introduction and each entry's note, with no edit controls.
+- **Markup constraint.** `HtmlPrettifyMiddleware` removes empty `<p>` elements and empty `data-*`
+  attributes from full pages. JavaScript hooks therefore carry values (`data-bookmark-note="true"`),
+  and initially empty live regions use `<div>`.
 
 ## Profile page
 

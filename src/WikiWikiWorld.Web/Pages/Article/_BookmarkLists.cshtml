@@ -5,7 +5,8 @@
 }
 @* Checkable rows, one per list. Each URL carries the state the user is asking for (the opposite of the tick shown).
    The default row uses the default-list handler, which creates the list on first use; other rows name their list in
-   the query string, and the server checks the list belongs to the user. *@
+   the query string, and the server checks the list belongs to the user. A row holding the article also gets a note
+   button (and a one-line excerpt of any note); bookmark-notes.js opens the shared note dialog from its data. *@
 <div id="article-bookmark-lists" role="group" aria-label="Save to lists">
 	@foreach (WikiWikiWorld.Web.Services.BookmarkListMembership List in Model.Lists)
 	{
@@ -13,18 +14,38 @@
 		string Url = List.IsDefault
 			? $"{Model.ArticlePath}?handler=SetBookmark&saved={Saved}"
 			: $"{Model.ArticlePath}?handler=SetBookmarkList&bookmarklistid={List.BookmarkListId}&saved={Saved}";
-		<button type="button" role="checkbox" aria-checked="@(List.ContainsArticle ? "true" : "false")" disabled
-			data-url="@Url"
-			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
-			data-on:click="$_bookmarkError = ''; @@post(el.dataset.url, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your lists before trying again.' })"
-			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your lists before trying again.'">
-			<svg viewBox="0 0 24 24" width="16" height="16" fill="@(List.ContainsArticle ? "currentColor" : "none")" aria-hidden="true">
-				<use href="@IconSpriteUrl#Bookmark"></use>
-			</svg>
-			<span>@List.Name</span>
-			<svg class="bookmark-list-check" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-				<use href="@IconSpriteUrl#Check"></use>
-			</svg>
-		</button>
+		bool HasNote = !string.IsNullOrWhiteSpace(List.Notes);
+		<div class="bookmark-list-row">
+			<button type="button" role="checkbox" aria-checked="@(List.ContainsArticle ? "true" : "false")" disabled
+				data-url="@Url"
+				data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
+				data-on:click="$_bookmarkError = ''; @@post(el.dataset.url, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your lists before trying again.' })"
+				data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your lists before trying again.'">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="@(List.ContainsArticle ? "currentColor" : "none")" aria-hidden="true">
+					<use href="@IconSpriteUrl#Bookmark"></use>
+				</svg>
+				<span class="bookmark-list-text">
+					<span>@List.Name</span>
+					@if (HasNote)
+					{
+						<span class="bookmark-list-excerpt">@WikiWikiWorld.Web.Pages.Article.BookmarkControlModel.NoteExcerpt(List.Notes)</span>
+					}
+				</span>
+				<svg class="bookmark-list-check" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+					<use href="@IconSpriteUrl#Check"></use>
+				</svg>
+			</button>
+			@if (List.BookmarkId is { } BookmarkId)
+			{
+				<button type="button" class="bookmark-note-button" data-bookmark-note="true"
+					data-bookmark-id="@BookmarkId" data-list-id="@List.BookmarkListId" data-list-name="@List.Name"
+					data-public="@(List.IsPublic ? "true" : "false")" data-notes="@List.Notes"
+					aria-label="@(HasNote ? "Edit note" : "Add a note") for @List.Name" title="@(HasNote ? "Edit note" : "Add a note")">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+						<use href="@IconSpriteUrl#@(HasNote ? "Note" : "NoteAdd")"></use>
+					</svg>
+				</button>
+			}
+		</div>
 	}
 </div>

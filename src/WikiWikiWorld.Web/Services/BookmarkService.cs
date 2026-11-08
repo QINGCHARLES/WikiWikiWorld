@@ -183,8 +183,9 @@ public sealed partial class BookmarkService(WikiWikiWorldDbContext Context)
 	}
 
 	/// <summary>
-	/// Lists the user's bookmark lists on the current site with whether each one contains the given article.
+	/// Lists the user's bookmark lists on the current site with the article's membership in each, including its note source.
 	/// </summary>
+	/// <remarks>Notes are the owner's own source, returned only to that owner for the article page's note editor.</remarks>
 	/// <param name="CanonicalArticleId">The canonical identifier of the article.</param>
 	/// <param name="UserId">The owner's user identifier.</param>
 	/// <param name="CancellationToken">A cancellation token.</param>
@@ -199,16 +200,26 @@ public sealed partial class BookmarkService(WikiWikiWorldDbContext Context)
 			.Where(l => l.CreatedByUserId == UserId)
 			.OrderByDescending(l => l.IsDefault)
 			.ThenBy(l => l.Id)
-			.Select(l => new BookmarkListMembership(
+			.Select(l => new
+			{
 				l.Id,
 				l.Name,
 				l.IsDefault,
-				l.Bookmarks.Any(b => b.CanonicalArticleId == CanonicalArticleId)))
+				l.IsPublic,
+				Membership = l.Bookmarks
+					.Where(b => b.CanonicalArticleId == CanonicalArticleId)
+					.OrderBy(b => b.Id)
+					.Select(b => new { b.Id, b.Notes })
+					.FirstOrDefault()
+			})
+			.Select(l => new BookmarkListMembership(l.Id, l.Name, l.IsDefault, l.IsPublic,
+				l.Membership == null ? null : l.Membership.Id,
+				l.Membership == null ? null : l.Membership.Notes))
 			.ToListAsync(CancellationToken);
 
 		if (Lists is [] or [{ IsDefault: false }, ..])
 		{
-			Lists.Insert(0, new BookmarkListMembership(0, DefaultListName, IsDefault: true, ContainsArticle: false));
+			Lists.Insert(0, new BookmarkListMembership(0, DefaultListName, IsDefault: true));
 		}
 
 		return Lists;

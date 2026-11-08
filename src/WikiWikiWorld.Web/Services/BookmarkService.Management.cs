@@ -208,6 +208,15 @@ public sealed partial class BookmarkService
 		Context.Bookmarks.CountAsync(b => b.BookmarkListId == ListId && b.CreatedByUserId == UserId &&
 			Context.BookmarkLists.Any(l => l.Id == ListId && l.CreatedByUserId == UserId), CancellationToken);
 
+	/// <summary>Counts active memberships of an owned list that carry a note, across cultures, for the publish confirmation.</summary>
+	/// <param name="ListId">List identity; the placeholder zero has no memberships.</param>
+	/// <param name="UserId">Authenticated owner.</param>
+	/// <param name="CancellationToken">Cancels the count.</param>
+	/// <returns>The number of annotated memberships that become readable if the list is made public.</returns>
+	public Task<int> CountListNotesAsync(int ListId, Guid UserId, CancellationToken CancellationToken) =>
+		Context.Bookmarks.CountAsync(b => b.BookmarkListId == ListId && b.CreatedByUserId == UserId && b.Notes != null &&
+			Context.BookmarkLists.Any(l => l.Id == ListId && l.CreatedByUserId == UserId), CancellationToken);
+
 	/// <summary>Runs a list mutation atomically under the configured SQLite busy/locked retry strategy.</summary>
 	/// <typeparam name="TResult">Operation result.</typeparam>
 	/// <param name="Operation">Work sharing the current context; must express a repeatable requested state.</param>

@@ -1,5 +1,7 @@
 @model WikiWikiWorld.Web.Pages.Profile.BookmarksModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(Context.Request.PathBase, Url.Content("~/icons.svg"));
 	BookmarkListSummary? List = Model.SelectedList;
 	BookmarkEntryPage Entries = Model.Entries;
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
@@ -9,6 +11,10 @@
 	// Owners always get the sidebar because "New list" lives there; visitors only need it to choose between lists.
 	bool ShowLists = IsOwner ? List is not null : Model.Lists.Count > 1;
 	int FirstNumber = ((Entries.PageNumber - 1) * BookmarkService.PageSize) + 1;
+	string RangeText = Entries.TotalCount == 0 ? "No entries"
+		: Entries.PageCount == 1 ? (Entries.TotalCount == 1 ? "1 article" : $"{Entries.TotalCount} articles")
+		: $"Showing {FirstNumber}–{FirstNumber + Entries.Items.Count - 1} of {Entries.TotalCount}";
+	string ProfilePath = $"/@{Uri.EscapeDataString(Model.Header.UserName)}";
 }
 <div id="bookmark-content" class="bookmark-layout" data-url="@Model.CurrentUrl"
 	data-navigation-id="@Context.Request.Headers["X-Bookmark-Navigation"]">
@@ -49,20 +55,24 @@
 			<div class="bookmark-head-text">
 				<p class="profile-card-title">Bookmarks</p>
 				<h2 class="bookmark-title" id="bookmark-title" tabindex="-1">@(List?.Name ?? "Bookmarks")</h2>
-				@if (List is not null)
+				@if (List is not null && IsOwner)
 				{
 					<p class="bookmark-meta">
 						<span class="bookmark-pill" data-public="@(List.IsPublic ? "true" : "false")">@(List.IsPublic ? "Public" : "Private · Only you")</span>
-						<span id="bookmark-range">
-							@if (Entries.TotalCount > 0)
-							{
-								<text>Showing @FirstNumber–@(FirstNumber + Entries.Items.Count - 1) of @Entries.TotalCount</text>
-							}
-							else
-							{
-								<text>No entries</text>
-							}
-						</span>
+						<span id="bookmark-range">@RangeText</span>
+					</p>
+				}
+				else if (List is not null)
+				{
+					@* Visitors only ever see public lists, so attribution replaces the visibility pill. *@
+					<p class="bookmark-byline">
+						@if (!string.IsNullOrEmpty(Model.Header.AvatarPath))
+						{
+							<img src="@Model.Header.AvatarPath" alt="" width="22" height="22" />
+						}
+						<span>A list by <a href="@ProfilePath">@Model.Header.UserName</a></span>
+						<span aria-hidden="true">·</span>
+						<span id="bookmark-range">@RangeText</span>
 					</p>
 				}
 			</div>
@@ -107,7 +117,13 @@
 				<p>
 					@if (Pending == "visibility")
 					{
-						<text>Anyone will be able to view “@List.Name” and its @EntryCount.</text>
+						List<string> Parts = [EntryCount];
+						if (!string.IsNullOrWhiteSpace(Model.SelectedDetails?.Description))
+							Parts.Add("introduction");
+						if (Model.AffectedNotesCount > 0)
+							Parts.Add(Model.AffectedNotesCount == 1 ? "1 note" : $"{Model.AffectedNotesCount} notes");
+						string What = Parts.Count == 1 ? Parts[0] : $"{string.Join(", ", Parts[..^1])} and {Parts[^1]}";
+						<text>Anyone will be able to see “@List.Name” and its @What.@(Model.AffectedNotesCount > 0 ? " Notes you wrote while it was private become public too." : "")</text>
 					}
 					else
 					{
@@ -121,6 +137,33 @@
 					<button type="submit" class="profile-card-button @(Pending == "visibility" ? "profile-action-accent" : "bookmark-danger-action")">@(Pending == "visibility" ? "Make public" : List.IsDefault ? "Clear list" : "Delete list")</button>
 					<a href="@Model.CurrentUrl">Cancel</a>
 				</form>
+			</div>
+		}
+
+		@if (List is not null && Model.IntroductionHtml is not null)
+		{
+			<div class="bookmark-intro">
+				<div class="bookmark-markdown">@Html.Raw(Model.IntroductionHtml)</div>
+				@if (IsOwner)
+				{
+					<p class="bookmark-intro-edit">
+						<button type="button" class="bookmark-text-button" commandfor="bookmark-intro-dialog" command="show-modal">
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Edit"></use></svg>
+							Edit introduction
+						</button>
+					</p>
+				}
+			</div>
+		}
+		else if (List is not null && IsOwner)
+		{
+			<div class="bookmark-intro-empty">
+				<p><strong>Add an introduction</strong></p>
+				<p>@(List.IsPublic ? "Tell readers what this list is for. It appears above the entries." : "Say what this list is for. Readers see it if you make the list public.")</p>
+				<button type="button" class="bookmark-text-button" commandfor="bookmark-intro-dialog" command="show-modal">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Add"></use></svg>
+					Write an introduction
+				</button>
 			</div>
 		}
 
@@ -149,10 +192,55 @@
 				<ol class="profile-list">
 					@foreach (BookmarkEntry Item in Entries.Items)
 					{
-						<li class="profile-list-row">
+						bool HasNote = !string.IsNullOrWhiteSpace(Item.Notes);
+						// Long notes start clamped to three lines; bookmarks.js toggles the clamp.
+						bool IsLongNote = HasNote && (Item.Notes!.Length > 240 || Item.Notes.Count(c => c == '\n') >= 3);
+						string EditorId = $"bookmark-note-editor-{Item.Id.ToString(CultureInfo.InvariantCulture)}";
+						<li class="profile-list-row" id="bookmark-@Item.Id">
 							<div class="profile-list-main">
 								<a class="profile-list-title" href="@ArticleUrlHelper.BuildArticlePath(Item.UrlSlug, Item.Type)">@Item.Title</a>
-								<p class="profile-list-meta">Saved <time datetime="@Item.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.DateCreated, Now)</time></p>
+								@if (HasNote)
+								{
+									<div class="bookmark-markdown bookmark-note" id="bookmark-note-@Item.Id" data-clamped="@(IsLongNote ? "true" : "false")">@Html.Raw(Model.RenderMarkdown(Item.Notes))</div>
+									@if (IsLongNote)
+									{
+										<p class="bookmark-note-more">
+											<button type="button" class="bookmark-text-button" aria-expanded="false" aria-controls="bookmark-note-@Item.Id" data-bookmark-note-expand="true">Read more</button>
+										</p>
+									}
+								}
+								@if (IsOwner)
+								{
+									@* Inline editor, revealed by the row's Add/Edit note button. A plain POST like Remove; the redirect returns to this row. *@
+									<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true" class="bookmark-note-editor" id="@EditorId" hidden>
+										<input type="hidden" name="operation" value="notes" />
+										<input type="hidden" name="bookmarkid" value="@Item.Id" />
+										<label class="visually-hidden" for="@EditorId-text">Note for @Item.Title</label>
+										<textarea id="@EditorId-text" name="notes" maxlength="@Bookmark.MaxNotesLength" rows="3"
+											placeholder="Why is this in “@List.Name”?" aria-describedby="@EditorId-help">@Item.Notes</textarea>
+										<p class="bookmark-editor-help" id="@EditorId-help">
+											<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>. Ctrl+Enter saves.</span>
+											<span class="bookmark-editor-count" data-count-for="@EditorId-text" aria-hidden="true"></span>
+										</p>
+										<div class="bookmark-editor-actions">
+											<span class="bookmark-editor-visibility" data-public="@(List.IsPublic ? "true" : "false")">
+												<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
+												@(List.IsPublic ? "Public list. Anyone can read this." : "Private list. Only you can see this.")
+											</span>
+											<button type="button" class="bookmark-editor-button" data-bookmark-note-cancel="true">Cancel</button>
+											<button type="submit" class="bookmark-editor-button" data-variant="primary">Save note</button>
+										</div>
+									</form>
+								}
+								<p class="profile-list-meta">
+									Saved <time datetime="@Item.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.DateCreated, Now)</time>
+									@if (IsOwner)
+									{
+										<span class="bookmark-meta-dot" aria-hidden="true">·</span>
+										<button type="button" class="bookmark-text-button" aria-expanded="false" aria-controls="@EditorId" data-bookmark-note-edit="true"
+											aria-label="@(HasNote ? "Edit note for" : "Add a note to") @Item.Title">@(HasNote ? "Edit note" : "Add note")</button>
+									}
+								</p>
 							</div>
 							@if (IsOwner)
 							{
@@ -195,6 +283,42 @@
 
 	@if (IsOwner && List is not null)
 	{
+		string? Introduction = Model.SelectedDetails?.Description;
+		@* Introduction editor, opened by the invoker buttons beside the introduction. A plain POST like the other list forms;
+		   bookmarks.js adds the Write/Preview tabs, the character count and the remove button's behaviour. *@
+		<dialog id="bookmark-intro-dialog" class="bookmark-dialog bookmark-intro-dialog" aria-labelledby="bookmark-intro-title" closedby="any">
+			<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
+				<input type="hidden" name="operation" value="description" />
+				<p class="bookmark-editor-eyebrow">Introduction · @List.Name</p>
+				<h2 class="bookmark-editor-title" id="bookmark-intro-title">@(string.IsNullOrWhiteSpace(Introduction) ? "Introduce this list" : "Edit the introduction")</h2>
+				<div class="bookmark-editor-tabs" role="tablist" aria-label="Editor mode" hidden>
+					<button type="button" role="tab" aria-selected="true" aria-controls="bookmark-intro-text" data-bookmark-intro-tab="write">Write</button>
+					<button type="button" role="tab" aria-selected="false" aria-controls="bookmark-intro-preview" data-bookmark-intro-tab="preview">Preview</button>
+				</div>
+				<label class="visually-hidden" for="bookmark-intro-text">Introduction</label>
+				<textarea id="bookmark-intro-text" name="description" autofocus maxlength="@BookmarkList.MaxDescriptionLength" rows="8"
+					placeholder="What is this list for, and who is it for? Readers see this above the entries."
+					aria-describedby="bookmark-intro-help">@Introduction</textarea>
+				<div class="bookmark-markdown bookmark-intro-preview" id="bookmark-intro-preview" role="tabpanel" aria-live="polite" hidden></div>
+				<p class="bookmark-editor-help" id="bookmark-intro-help">
+					<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>, <code>- lists</code>, a blank line for a new paragraph.</span>
+					<span class="bookmark-editor-count" data-count-for="bookmark-intro-text" aria-hidden="true"></span>
+				</p>
+				<p class="bookmark-editor-visibility" data-public="@(List.IsPublic ? "true" : "false")">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
+					@(List.IsPublic ? "Public list. Anyone can read this." : "Private list. Only you can see this, until you make the list public.")
+				</p>
+				<div class="bookmark-editor-actions">
+					@if (!string.IsNullOrWhiteSpace(Introduction))
+					{
+						<button type="button" class="bookmark-editor-button" data-variant="danger-quiet" data-bookmark-intro-remove="true">Remove introduction</button>
+					}
+					<button type="button" class="bookmark-editor-button" commandfor="bookmark-intro-dialog" command="close">Cancel</button>
+					<button type="submit" class="bookmark-editor-button" data-variant="primary">Save introduction</button>
+				</div>
+			</form>
+		</dialog>
+
 		@* Opened by the "New list" invoker button. A failed create re-renders it open; bookmarks.js upgrades that to modal. *@
 		<dialog id="bookmark-new-list" class="bookmark-dialog" aria-labelledby="bookmark-new-list-title" closedby="any" open="@(Model.Error is not null)">
 			<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">

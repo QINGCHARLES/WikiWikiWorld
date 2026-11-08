@@ -1629,6 +1629,471 @@
 	margin-block-start: 0.75rem;
 }
 
+/* ---- Bookmark introductions and notes: editors shared by the article page's note dialog and this page ---- */
+
+/* The article page's note dialog sits outside .profile, so it brings the profile tokens it uses. */
+.bookmark-note-dialog {
+	--profile-ink: oklch(21% 0.012 255);
+	--profile-paper: oklch(98.6% 0.006 85);
+	--profile-rule: oklch(90.5% 0.008 85);
+	--profile-quiet: oklch(52% 0.01 260);
+	--profile-pad: clamp(1rem, 0.75rem + 1.2vw, 1.4rem);
+	--profile-card-radius: 1.25rem;
+}
+
+.bookmark-note-dialog,
+.bookmark-intro-dialog,
+.bookmark-note-editor {
+	font-family: var(--font-family-san-serif);
+
+	& :is(p, label, button, span) {
+		font-family: var(--font-family-san-serif);
+	}
+
+	& .bookmark-markdown :is(p, li) {
+		font-family: var(--font-family-serif);
+	}
+}
+
+.bookmark-dialog.bookmark-intro-dialog {
+	inline-size: min(100% - 2rem, 40rem);
+}
+
+.bookmark-editor-eyebrow {
+	margin: 0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--profile-quiet);
+	overflow-wrap: anywhere;
+}
+
+.bookmark-editor-title {
+	margin: 0.15rem 0 0.25rem;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: 1.45rem;
+	line-height: 1.15;
+	text-align: start;
+	filter: none;
+	color: var(--profile-ink);
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+
+.bookmark-editor-subject {
+	margin: 0 0 0.35rem;
+	font-size: 0.9rem;
+	color: var(--profile-quiet);
+
+	& strong {
+		color: var(--profile-ink);
+	}
+}
+
+.bookmark-dialog textarea,
+.bookmark-note-editor textarea {
+	inline-size: 100%;
+	box-sizing: border-box;
+	min-block-size: 7rem;
+	max-block-size: 50vh;
+	field-sizing: content;
+	padding: 0.65rem 0.75rem;
+	resize: vertical;
+	border: 1px solid var(--profile-rule);
+	border-radius: 0.6rem;
+	background: #fff;
+	color: var(--profile-ink);
+	font: 1rem/1.5 var(--font-family-serif);
+
+	&:focus-visible {
+		outline: 2px solid var(--profile-ink);
+		outline-offset: 1px;
+	}
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.bookmark-intro-dialog textarea {
+	min-block-size: 12rem;
+}
+
+.bookmark-editor-help {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.35rem 1rem;
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--profile-quiet);
+
+	& code {
+		font-size: 0.95em;
+		padding: 0.05em 0.3em;
+		border-radius: 0.3em;
+		background: oklch(96% 0.006 85);
+	}
+}
+
+.bookmark-editor-count {
+	font-variant-numeric: tabular-nums;
+}
+
+.bookmark-editor-visibility {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0.15rem 0 0;
+	padding: 0.55rem 0.75rem;
+	border-radius: 0.6rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	background: oklch(96% 0.006 85);
+	color: var(--profile-quiet);
+
+	& svg {
+		inline-size: 1rem;
+		block-size: 1rem;
+		flex: none;
+	}
+
+	&[data-public="true"] {
+		background: oklch(95.5% 0.045 145);
+		color: oklch(38% 0.1 145);
+	}
+
+	/* The article dialog carries both wordings and shows the one matching the chosen list. */
+	&[data-public="true"] [data-when-public="false"],
+	&[data-public="false"] [data-when-public="true"] {
+		display: none;
+	}
+}
+
+.bookmark-editor-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin-block-start: 0.5rem;
+
+	& > :first-child:is([data-variant="danger-quiet"], .bookmark-editor-visibility) {
+		margin-inline-end: auto;
+	}
+
+	& > [hidden] {
+		display: none;
+	}
+}
+
+.bookmark-editor-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-block-size: 2.5rem;
+	padding: 0 1.1rem;
+	border-radius: 999px;
+	border: 1px solid var(--profile-rule);
+	background: #fff;
+	color: var(--profile-ink);
+	font: 600 0.88rem/1 var(--font-family-san-serif);
+	letter-spacing: 0;
+	cursor: pointer;
+
+	&:hover {
+		border-color: var(--profile-ink);
+		background: #fff;
+		color: var(--profile-ink);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--profile-ink);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: progress;
+		opacity: 0.6;
+	}
+
+	&[data-variant="primary"],
+	&[data-variant="primary"]:hover {
+		background: var(--profile-ink);
+		border-color: var(--profile-ink);
+		color: #fff;
+	}
+
+	&[data-variant="primary"]:hover {
+		background: oklch(32% 0.012 255);
+	}
+
+	&[data-variant="danger-quiet"] {
+		border-color: transparent;
+		padding-inline: 0.5rem;
+		color: oklch(48% 0.17 25);
+	}
+
+	&[data-variant="danger-quiet"]:hover {
+		border-color: transparent;
+		background: oklch(96% 0.03 25);
+		color: oklch(48% 0.17 25);
+	}
+}
+
+.bookmark-editor-tabs {
+	display: flex;
+	gap: 0.25rem;
+	margin-block-end: -0.25rem;
+
+	&[hidden] {
+		display: none;
+	}
+
+	& button {
+		padding: 0.4rem 0.8rem;
+		border: 0;
+		border-radius: 999px;
+		background: none;
+		color: var(--profile-quiet);
+		font: 600 0.82rem/1 var(--font-family-san-serif);
+		cursor: pointer;
+
+		&:hover {
+			background: oklch(96% 0.006 85);
+			color: var(--profile-ink);
+		}
+
+		&[aria-selected="true"] {
+			background: var(--profile-ink);
+			color: #fff;
+		}
+	}
+}
+
+.bookmark-intro-preview {
+	min-block-size: 12rem;
+	padding: 0.65rem 0.9rem;
+	border: 1px dashed var(--profile-rule);
+	border-radius: 0.6rem;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+/* Narrow screens: the editors become bottom sheets so the keyboard and thumb reach stay comfortable. */
+@media (max-width: 34rem) {
+	.bookmark-dialog:is(.bookmark-note-dialog, .bookmark-intro-dialog) {
+		inline-size: 100%;
+		max-inline-size: 100%;
+		margin: auto 0 0;
+		border-end-start-radius: 0;
+		border-end-end-radius: 0;
+		padding-block-end: calc(var(--profile-pad) + env(safe-area-inset-bottom, 0px));
+	}
+}
+
+/* Rendered user Markdown: list introductions and entry notes, in the article serif. */
+.bookmark-markdown {
+	max-inline-size: 65ch;
+	font-family: var(--font-family-serif);
+	font-size: 1.05rem;
+	line-height: 1.6;
+	color: var(--profile-ink);
+	overflow-wrap: anywhere;
+
+	& > * {
+		margin: 0;
+	}
+
+	& > * + * {
+		margin-block-start: 0.75em;
+	}
+
+	& :is(h1, h2, h3, h4, h5, h6) {
+		font-family: var(--font-family-san-serif);
+		font-size: 1rem;
+		font-weight: 700;
+		text-align: start;
+		filter: none;
+	}
+
+	& :is(ul, ol) {
+		padding-inline-start: 1.3em;
+	}
+
+	& a {
+		color: var(--color-hyperlinks, #1a5fb4);
+		text-decoration-color: var(--color-primary);
+		text-underline-offset: 0.18em;
+	}
+}
+
+.bookmark-intro {
+	margin-block-start: 1.1rem;
+	padding-block-end: 1.1rem;
+	border-block-end: 1px solid var(--profile-rule);
+}
+
+.bookmark-intro-edit {
+	margin: 0.75rem 0 0;
+}
+
+.bookmark-intro-empty {
+	display: grid;
+	gap: 0.35rem;
+	justify-items: start;
+	margin-block-start: 1.1rem;
+	padding: 1rem 1.1rem;
+	border: 1.5px dashed var(--profile-rule);
+	border-radius: 0.9rem;
+
+	& p {
+		margin: 0;
+		font-size: 0.9rem;
+		color: var(--profile-quiet);
+	}
+
+	& strong {
+		color: var(--profile-ink);
+	}
+}
+
+/* Underlined text actions: edit introduction, add/edit note, read more. */
+.bookmark-text-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	color: var(--profile-ink);
+	font: 600 0.85rem/1.3 var(--font-family-san-serif);
+	letter-spacing: 0;
+	text-decoration: underline;
+	text-decoration-color: var(--profile-rule);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 0.2em;
+	cursor: pointer;
+
+	&:hover {
+		background: none;
+		color: var(--profile-ink);
+		text-decoration-color: var(--profile-lime-deep, oklch(80% 0.2 128));
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--profile-ink);
+		outline-offset: 3px;
+		border-radius: 2px;
+	}
+
+	& svg {
+		inline-size: 0.95em;
+		block-size: 0.95em;
+	}
+}
+
+/* Visitors: attribution in place of the visibility pill. */
+.bookmark-byline {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem 0.5rem;
+	margin: 0.6rem 0 0;
+	font-size: 0.85rem;
+	color: var(--profile-quiet);
+	font-variant-numeric: tabular-nums;
+
+	& img {
+		inline-size: 1.4rem;
+		block-size: 1.4rem;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	& a {
+		color: var(--profile-ink);
+		font-weight: 700;
+		text-decoration: none;
+	}
+}
+
+/* Per-entry notes, under each title. Long notes are clamped to three lines until "Read more". */
+.bookmark-note {
+	margin: 0.4rem 0 0;
+	font-size: 0.98rem;
+	line-height: 1.55;
+	color: oklch(30% 0.012 255);
+
+	& > * + * {
+		margin-block-start: 0.5em;
+	}
+
+	&[data-clamped="true"] {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+	}
+}
+
+.bookmark-note-more {
+	margin: 0.2rem 0 0;
+
+	& .bookmark-text-button {
+		font-size: 0.8rem;
+	}
+}
+
+.profile-list-meta .bookmark-text-button {
+	font-size: inherit;
+	color: var(--profile-quiet);
+
+	&:hover {
+		color: var(--profile-ink);
+	}
+}
+
+.bookmark-meta-dot {
+	padding-inline: 0.3rem;
+	opacity: 0.6;
+}
+
+.bookmark-note-editor {
+	display: grid;
+	gap: 0.5rem;
+	margin-block-start: 0.6rem;
+	padding: 0.75rem;
+	border: 1px solid var(--profile-rule);
+	border-radius: 0.75rem;
+	background: var(--profile-paper);
+
+	&[hidden] {
+		display: none;
+	}
+
+	& textarea {
+		min-block-size: 5rem;
+	}
+
+	& .bookmark-editor-visibility {
+		margin: 0;
+		padding: 0.35rem 0.6rem;
+		font-size: 0.78rem;
+	}
+}
+
+/* While a row's editor is open it replaces the rendered note. */
+.profile-list-main:has(> .bookmark-note-editor:not([hidden])) > :is(.bookmark-note, .bookmark-note-more) {
+	display: none;
+}
+
 .profile-pager [aria-current="page"] {
 	background: var(--profile-ink);
 	color: var(--profile-cream);
