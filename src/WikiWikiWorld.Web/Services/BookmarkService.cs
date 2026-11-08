@@ -256,6 +256,8 @@ public sealed partial class BookmarkService(WikiWikiWorldDbContext Context)
 	/// soft-deletes the active one if it is unwanted, and otherwise changes nothing.
 	/// </summary>
 	/// <remarks>
+	/// A newly added bookmark gets a fresh save date but inherits the notes of the most recently removed membership of
+	/// the same article in the same list, if any.
 	/// Concurrent adds race between the existence check and the insert; the losers hit
 	/// <c>UX_Bookmarks_BookmarkListId_CanonicalArticleId_Active</c>, which means another request already saved it, so they
 	/// succeed without writing.
@@ -290,6 +292,17 @@ public sealed partial class BookmarkService(WikiWikiWorldDbContext Context)
 			return;
 		}
 
+		// Re-saving after a removal carries forward the most recently removed membership's note, so an accidental
+		// uncheck in the article menu (which has no undo) does not lose it. A note deliberately cleared before that
+		// removal stays cleared, because only the latest removed row is consulted.
+		string? PreviousNotes = await Context.Bookmarks
+			.IgnoreQueryFilters([WikiWikiWorldDbContext.SoftDeleteFilter])
+			.Where(b => b.BookmarkListId == BookmarkListId && b.CanonicalArticleId == CanonicalArticleId && b.CreatedByUserId == UserId && b.DateDeleted != null)
+			.OrderByDescending(b => b.DateDeleted)
+			.ThenByDescending(b => b.Id)
+			.Select(b => b.Notes)
+			.FirstOrDefaultAsync(CancellationToken);
+
 		Bookmark NewBookmark = new()
 		{
 			BookmarkListId = BookmarkListId,
@@ -297,6 +310,7 @@ public sealed partial class BookmarkService(WikiWikiWorldDbContext Context)
 			CanonicalArticleId = CanonicalArticleId,
 			CreatedByUserId = UserId,
 			DateCreated = DateTimeOffset.UtcNow,
+			Notes = PreviousNotes,
 		};
 
 		Context.Bookmarks.Add(NewBookmark);

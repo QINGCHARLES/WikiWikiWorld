@@ -27,8 +27,11 @@ clears a note; all other source, including meaningful Markdown whitespace, is pr
 - Saving an already-present article or reusing a named list leaves its notes intact. Removal,
   default-list clearing and custom-list deletion retain notes in the soft-deleted rows. Undo
   restores the original note and save date. Re-adding after removal creates a new membership
-  without notes; undo of the older membership does not replace an already re-added membership's
-  note.
+  with a new save date that copies the notes of the most recently removed membership of that
+  article in that list. Its notes may be null if they were cleared before removal. This
+  protects notes from an accidental uncheck in the article menu, which has no undo. It also
+  applies after Clear list, because removal and clearing store the same soft-deleted state.
+  Undo of the older membership does not replace an already re-added membership's note.
 
 This is backend support only: storage, owner-scoped editing and read projections. Note controls,
 new HTTP endpoints and preview UI are not part of this change.

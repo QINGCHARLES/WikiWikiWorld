@@ -134,9 +134,9 @@ public sealed partial class BookmarkManagementTests
 		Assert.Empty((await Service.GetListPageAsync(ListId, Owner, false, "recent", 1, default)).Items);
 	}
 
-	/// <summary>Removal retains the original note and save date for undo; re-adding creates a blank note that old undo cannot overwrite.</summary>
+	/// <summary>Removal retains the original note and save date for undo; re-adding carries the latest removed note forward, and old undo cannot overwrite a later edit.</summary>
 	[Fact]
-	public async Task BookmarkNotesSurviveUndoAndDoNotTransferToReaddedEntries()
+	public async Task BookmarkNotesSurviveUndoAndCarryIntoReaddedEntries()
 	{
 		int ListId = await SeedAsync(1);
 		Bookmark Original;
@@ -169,7 +169,7 @@ public sealed partial class BookmarkManagementTests
 			BookmarkEntry Readded = Assert.Single((await Service.GetListPageAsync(ListId, Owner, true, "recent", 1, default)).Items);
 			NewId = Readded.Id;
 			Assert.NotEqual(Original.Id, NewId);
-			Assert.Null(Readded.Notes);
+			Assert.Equal("Original reason", Readded.Notes);
 			Assert.True(await Service.SetBookmarkNotesAsync(NewId, "New reason", Owner, default));
 		}
 		await using (WikiWikiWorldDbContext Context = CreateContext(1))

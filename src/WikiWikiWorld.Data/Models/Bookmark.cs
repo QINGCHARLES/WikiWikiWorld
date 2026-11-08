@@ -43,7 +43,7 @@ public sealed record Bookmark
 	public DateTimeOffset DateCreated { get; init; }
 
 	/// <summary>Gets or sets the optional Markdown reason for saving this article in this particular list.</summary>
-	/// <remarks>Stores source rather than HTML. Removal retains it for undo; a new membership starts without notes.</remarks>
+	/// <remarks>Stores source rather than HTML. Removal retains it for undo; re-saving the article to the same list copies the latest removed membership's notes.</remarks>
 	public string? Notes { get; set; }
 
 	/// <summary>
