@@ -440,12 +440,16 @@ App.UseRouting();
 // which throws for redirect-source hosts such as en.localhost.
 App.UseAuthentication();
 
-// Add headers to prevent this site from being embedded in iframes.
+// Add headers to prevent this site from being embedded in iframes. A policy already set by a later
+// component (such as the sandbox for uploaded SVGs) is kept: replacing it would loosen it.
 App.Use(async (Context, Next) =>
 {
     Context.Response.OnStarting(() =>
     {
-        Context.Response.Headers[HeaderNames.ContentSecurityPolicy] = "frame-ancestors 'none'; frame-src https://www.youtube-nocookie.com";
+        if (!Context.Response.Headers.ContainsKey(HeaderNames.ContentSecurityPolicy))
+        {
+            Context.Response.Headers[HeaderNames.ContentSecurityPolicy] = "frame-ancestors 'none'; frame-src https://www.youtube-nocookie.com";
+        }
         Context.Response.Headers[HeaderNames.XFrameOptions] = "DENY";
         return Task.CompletedTask;
     });
@@ -476,10 +480,8 @@ App.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(SiteFilesPath),
     RequestPath = "/sitefiles",
     ContentTypeProvider = ContentTypeProvider,
-    OnPrepareResponse = FileContext =>
-    {
-        FileContext.Context.Response.Headers.Append(HeaderNames.CacheControl, "public, max-age=2592000");
-    }
+    // Uploaded files are untrusted: SVGs get a sandboxing CSP so they cannot run script as this origin.
+    OnPrepareResponse = UploadedFileResponseHeaders.Apply
 });
 
 

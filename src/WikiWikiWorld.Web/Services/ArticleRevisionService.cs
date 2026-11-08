@@ -15,6 +15,67 @@ namespace WikiWikiWorld.Web.Services;
 /// <param name="Logger">The logger.</param>
 public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogger<ArticleRevisionService> Logger)
 {
+	/// <summary>
+	/// Decides whether a slug addresses a user page (<c>@UserName</c>). User pages belong to the account they
+	/// name; every other page stays open to collaborative editing.
+	/// </summary>
+	/// <param name="UrlSlug">The article slug, without any namespace prefix.</param>
+	/// <returns><see langword="true"/> when the slug starts with <c>@</c> followed by at least one character.</returns>
+	public static bool IsUserPageSlug(string? UrlSlug) => UrlSlug is { Length: > 1 } && UrlSlug[0] == '@';
+
+	/// <summary>
+	/// Enforces the user-page rules for creating an article: only the named account may create its
+	/// <c>@UserName</c> page, that page must use <see cref="ArticleType.User"/>, and no other page may use that type.
+	/// Creation paths that do not go through this service call it before writing anything.
+	/// </summary>
+	/// <param name="UrlSlug">The slug of the article to be created.</param>
+	/// <param name="Type">The requested article type.</param>
+	/// <param name="ActingUserId">The account creating the article.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>A task that completes when the request is allowed.</returns>
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown with <see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/> for another account's user page, or <see cref="ArticleRevisionWorkflowFailureKind.Invalid"/> for a slug/type mismatch.</exception>
+	public async Task EnsureMayCreateAsync(string UrlSlug, ArticleType Type, Guid ActingUserId, CancellationToken CancellationToken)
+	{
+		ArgumentException.ThrowIfNullOrWhiteSpace(UrlSlug);
+
+		if (IsUserPageSlug(UrlSlug))
+		{
+			await EnsureOwnsUserPageAsync(UrlSlug, ActingUserId, CancellationToken);
+			if (Type != ArticleType.User)
+			{
+				throw ArticleRevisionWorkflowException.Invalid("A user page must use the User article type.");
+			}
+		}
+		else if (Type == ArticleType.User)
+		{
+			throw ArticleRevisionWorkflowException.Invalid("Only @username user pages can use the User article type.");
+		}
+	}
+
+	/// <summary>
+	/// Refuses a change to a user page unless the acting account is the one the slug names. Does nothing for
+	/// ordinary slugs.
+	/// </summary>
+	/// <param name="UrlSlug">The slug being changed.</param>
+	/// <param name="ActingUserId">The account making the change.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>A task that completes when the change is allowed.</returns>
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown with <see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/> when another account owns the page.</exception>
+	private async Task EnsureOwnsUserPageAsync(string UrlSlug, Guid ActingUserId, CancellationToken CancellationToken)
+	{
+		if (!IsUserPageSlug(UrlSlug)) return;
+
+		string? ActingUserName = await Context.Users
+			.Where(U => U.Id == ActingUserId)
+			.Select(U => U.UserName)
+			.FirstOrDefaultAsync(CancellationToken);
+
+		if (ActingUserName is null || !string.Equals(UrlSlug[1..], ActingUserName, StringComparison.OrdinalIgnoreCase))
+		{
+			throw ArticleRevisionWorkflowException.Forbidden("Only the owner can change this user page.");
+		}
+	}
+
 	/// <summary>Counts active discussion threads for an article within the current site's query scope.</summary>
 	/// <param name="CanonicalArticleId">The stable article identifier shared by its revisions.</param>
 	/// <param name="CancellationToken">The request cancellation token.</param>
@@ -181,8 +242,13 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	/// </summary>
 	/// <param name="Command">The update command.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <remarks>
+	/// User pages (<c>@UserName</c>) may be edited only by <see cref="ArticleRevisionUpdateCommand.CreatedByUserId"/>
+	/// when that is the named account, and must keep their address and the User type. Ordinary pages may not move to
+	/// an <c>@</c> address or take the User type. All other pages remain open to any signed-in editor.
+	/// </remarks>
 	/// <returns>The new current article revision.</returns>
-	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be updated.</exception>
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be updated: not found, a slug conflict, another account's user page (<see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/>), or a slug/type mismatch (<see cref="ArticleRevisionWorkflowFailureKind.Invalid"/>).</exception>
 	public async Task<ArticleRevision> UpdateArticleAsync(ArticleRevisionUpdateCommand Command, CancellationToken CancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(Command);
@@ -207,6 +273,29 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 			if (CurrentArticle is null)
 			{
 				throw ArticleRevisionWorkflowException.NotFound("Article not found.");
+			}
+
+			// A user page stays at its owner's address with the User type; no other page may move onto an
+			// @ address or take that type.
+			if (IsUserPageSlug(CurrentArticle.UrlSlug))
+			{
+				await EnsureOwnsUserPageAsync(CurrentArticle.UrlSlug, Command.CreatedByUserId, CT);
+				if (!CurrentArticle.UrlSlug.Equals(Command.NewUrlSlug, StringComparison.OrdinalIgnoreCase))
+				{
+					throw ArticleRevisionWorkflowException.Invalid("A user page cannot be moved to another address.");
+				}
+				if (Command.Type != ArticleType.User)
+				{
+					throw ArticleRevisionWorkflowException.Invalid("A user page must use the User article type.");
+				}
+			}
+			else if (IsUserPageSlug(Command.NewUrlSlug))
+			{
+				throw ArticleRevisionWorkflowException.Invalid("@ addresses are reserved for user pages.");
+			}
+			else if (Command.Type == ArticleType.User)
+			{
+				throw ArticleRevisionWorkflowException.Invalid("Only @username user pages can use the User article type.");
 			}
 
 			if (!Command.OriginalUrlSlug.Equals(Command.NewUrlSlug, StringComparison.OrdinalIgnoreCase))
@@ -258,11 +347,16 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	/// <summary>
 	/// Reverts an article to its most recent previous revision.
 	/// </summary>
+	/// <remarks>
+	/// When either the current or the restored revision sits at a user-page address, only that page's owner
+	/// may revert, so a revert cannot be used to overwrite or reclaim another account's page.
+	/// </remarks>
 	/// <param name="UrlSlug">The URL slug of the article to revert.</param>
+	/// <param name="ActingUserId">The account performing the revert.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>The restored current article revision.</returns>
-	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be reverted.</exception>
-	public async Task<ArticleRevision> RevertToPreviousRevisionAsync(string UrlSlug, CancellationToken CancellationToken)
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be reverted, including <see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/> for another account's user page.</exception>
+	public async Task<ArticleRevision> RevertToPreviousRevisionAsync(string UrlSlug, Guid ActingUserId, CancellationToken CancellationToken)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(UrlSlug);
 
@@ -293,6 +387,9 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 				throw ArticleRevisionWorkflowException.NotFound("No previous revision found to revert to.");
 			}
 
+			await EnsureOwnsUserPageAsync(CurrentArticle.UrlSlug, ActingUserId, CT);
+			await EnsureOwnsUserPageAsync(PreviousRevision.UrlSlug, ActingUserId, CT);
+
 			CurrentArticle.IsCurrent = false;
 			CurrentArticle.DateDeleted = DateTimeOffset.UtcNow;
 			Context.ArticleRevisions.Update(CurrentArticle);
@@ -312,10 +409,11 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	/// Soft-deletes all revisions for an article, reusing tracked instances and preserving historical memberships.
 	/// </summary>
 	/// <param name="UrlSlug">The URL slug of the article to delete.</param>
+	/// <param name="ActingUserId">The account performing the deletion; only the owner may delete a user page.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be deleted.</exception>
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be deleted, including <see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/> for another account's user page.</exception>
 	/// <returns>A task completing when all revision tombstones have been committed.</returns>
-	public async Task DeleteArticleAsync(string UrlSlug, CancellationToken CancellationToken)
+	public async Task DeleteArticleAsync(string UrlSlug, Guid ActingUserId, CancellationToken CancellationToken)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(UrlSlug);
 
@@ -334,6 +432,8 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 			{
 				throw ArticleRevisionWorkflowException.NotFound("Article not found.");
 			}
+
+			await EnsureOwnsUserPageAsync(CurrentArticle.UrlSlug, ActingUserId, CT);
 
 			ArticleRevisionsByCanonicalIdSpec AllRevisionsSpec = new(CurrentArticle.CanonicalArticleId, null);
 			IReadOnlyList<ArticleRevision> Revisions = await Context.ArticleRevisions
@@ -417,6 +517,20 @@ public sealed class ArticleRevisionWorkflowException : InvalidOperationException
 	/// <param name="Message">The exception message.</param>
 	/// <returns>The workflow exception.</returns>
 	public static ArticleRevisionWorkflowException Conflict(string Message) => new(ArticleRevisionWorkflowFailureKind.Conflict, Message);
+
+	/// <summary>
+	/// Creates a workflow exception for a change the acting account is not allowed to make.
+	/// </summary>
+	/// <param name="Message">The exception message.</param>
+	/// <returns>The workflow exception.</returns>
+	public static ArticleRevisionWorkflowException Forbidden(string Message) => new(ArticleRevisionWorkflowFailureKind.Forbidden, Message);
+
+	/// <summary>
+	/// Creates a workflow exception for a request whose slug and type combination is not allowed.
+	/// </summary>
+	/// <param name="Message">The exception message.</param>
+	/// <returns>The workflow exception.</returns>
+	public static ArticleRevisionWorkflowException Invalid(string Message) => new(ArticleRevisionWorkflowFailureKind.Invalid, Message);
 }
 
 /// <summary>
@@ -432,5 +546,15 @@ public enum ArticleRevisionWorkflowFailureKind
 	/// <summary>
 	/// The requested article change conflicts with existing article state.
 	/// </summary>
-	Conflict
+	Conflict,
+
+	/// <summary>
+	/// The acting account may not change the article, such as another account's user page.
+	/// </summary>
+	Forbidden,
+
+	/// <summary>
+	/// The requested slug and article type combination breaks the user-page rules.
+	/// </summary>
+	Invalid
 }

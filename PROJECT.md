@@ -47,6 +47,8 @@
 
 ## Frontend weight and progressive enhancement
 
+- **Uploaded file headers:** `/sitefiles` responses use `UploadedFileResponseHeaders.Apply`. Every uploaded file gets `nosniff`. SVGs also get a `sandbox; default-src 'none'` CSP, so an opened SVG cannot run script as the site. The global CSP middleware keeps any policy already set. See [the reproduction and verification](doc/security-audit-handoff.md#4-svg-uploads-retain-active-content--current-investigation).
+- **User-page ownership:** `@UserName` pages belong to the named account. `ArticleRevisionService` enforces the rule for update, revert and delete. Both create paths (Razor and API) call `EnsureMayCreateAsync`. User pages keep their address and the User type, and no other page may take either. Ordinary articles stay collaborative. See [item 5](doc/security-audit-handoff.md#5-user-page-ownership--reproduced-and-fixed).
 - **Header helper:** `/wiki:header-helper` provides local browser cropping, device previews, HEIC import and AVIF export. Its codecs load only when needed; no image-processing server endpoint or publication is involved. See [workflow, bounds, dependencies and verification](doc/header-helper.md).
 
 - The site must stay very lightweight, especially in JavaScript. Prefer plain HTML and CSS. Use JavaScript judiciously to extend small interactions that need it, such as saving a bookmark in place. Keep native controls (including category disclosures) native.

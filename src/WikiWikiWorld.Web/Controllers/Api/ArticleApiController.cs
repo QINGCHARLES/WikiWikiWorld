@@ -88,6 +88,7 @@ public class ArticleApiController(
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model, CancellationToken CancellationToken)
     {
@@ -129,6 +130,14 @@ public class ArticleApiController(
         {
             return Conflict(Ex.Message);
         }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, Ex.Message);
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Invalid)
+        {
+            return BadRequest(Ex.Message);
+        }
 
         return Ok("Article revision updated successfully.");
     }
@@ -152,6 +161,7 @@ public class ArticleApiController(
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateArticleRevision(
         string UrlSlug,
@@ -183,6 +193,19 @@ public class ArticleApiController(
         if (!Guid.TryParse(UserId, out Guid ParsedUserId))
         {
             return Unauthorized("User ID not found in token.");
+        }
+
+        try
+        {
+            await ArticleRevisionService.EnsureMayCreateAsync(UrlSlug, Type, ParsedUserId, CancellationToken);
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, Ex.Message);
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Invalid)
+        {
+            return BadRequest(Ex.Message);
         }
 
         (int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
@@ -364,6 +387,7 @@ public class ArticleApiController(
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteArticle(string UrlSlug, CancellationToken CancellationToken)
     {
@@ -380,11 +404,15 @@ public class ArticleApiController(
 
         try
         {
-            await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CancellationToken);
+            await ArticleRevisionService.DeleteArticleAsync(UrlSlug, ParsedUserId, CancellationToken);
         }
         catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {
             return NotFound("Article not found.");
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, Ex.Message);
         }
 
         return Ok("Article deleted successfully.");

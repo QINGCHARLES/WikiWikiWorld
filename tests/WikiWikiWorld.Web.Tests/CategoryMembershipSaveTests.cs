@@ -90,7 +90,7 @@ public sealed class CategoryMembershipSaveTests : IDisposable
 			SiteId: 1, Culture: "en", Type: ArticleType.Article, CreatedByUserId: Original.CreatedByUserId), CancellationToken.None);
 		Assert.Empty(Context.ArticleCategoryMemberships.Where(m => m.ArticleRevisionId == Updated.Id));
 		Assert.Single(Context.ArticleCategoryMemberships.Where(m => m.ArticleRevisionId == Original.Id));
-		await Service.DeleteArticleAsync(Original.UrlSlug, CancellationToken.None);
+		await Service.DeleteArticleAsync(Original.UrlSlug, Original.CreatedByUserId, CancellationToken.None);
 		Assert.Empty(Context.ArticleRevisions.Where(r => r.IsCurrent));
 		Assert.Single(Context.ArticleCategoryMemberships);
 	}
@@ -112,7 +112,7 @@ public sealed class CategoryMembershipSaveTests : IDisposable
 		}
 		using WikiWikiWorldDbContext Context = CreateContext();
 		ArticleRevisionService Service = new(Context, NullLogger<ArticleRevisionService>.Instance);
-		ArticleRevision Restored = await Service.RevertToPreviousRevisionAsync("example", CancellationToken.None);
+		ArticleRevision Restored = await Service.RevertToPreviousRevisionAsync("example", Guid.NewGuid(), CancellationToken.None);
 		Assert.Equal(PreviousId, Restored.Id);
 		Assert.Equal("old-slug", Assert.Single(Context.ArticleCategoryMemberships).CategorySlug);
 	}

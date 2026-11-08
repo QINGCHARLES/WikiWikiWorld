@@ -31,7 +31,7 @@ public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverServi
 	/// Handles the POST request to delete an article.
 	/// </summary>
 	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <returns>A redirect to the home page or page with errors.</returns>
+	/// <returns>A redirect to the home page, the page with errors, or a forbidden result for another account's user page.</returns>
 	public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(UrlSlug))
@@ -53,11 +53,15 @@ public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverServi
 
 		try
 		{
-			await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CancellationToken);
+			await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CurrentUserId.Value, CancellationToken);
 		}
 		catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
 		{
 			return NotFound("Article not found.");
+		}
+		catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+		{
+			return Forbid();
 		}
 
 		return Redirect("/");

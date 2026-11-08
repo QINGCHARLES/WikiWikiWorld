@@ -180,8 +180,12 @@ public sealed class CreateEditModel(
 
         try
         {
-            ArticleRevision PreviousRevision = await ArticleRevisionService.RevertToPreviousRevisionAsync(OriginalUrlSlug, CancellationToken);
+            ArticleRevision PreviousRevision = await ArticleRevisionService.RevertToPreviousRevisionAsync(OriginalUrlSlug, CurrentUserId.Value, CancellationToken);
             return Redirect(ArticleUrlHelper.BuildArticlePath(PreviousRevision));
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+        {
+             return Forbid();
         }
         catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound && Ex.Message == "Article not found.")
         {
@@ -239,6 +243,21 @@ public sealed class CreateEditModel(
     /// <returns>A redirect to the new article or a page with errors.</returns>
     private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId, CancellationToken CancellationToken)
     {
+        // Creation writes its own revision, so it applies the shared user-page rules explicitly.
+        try
+        {
+            await ArticleRevisionService.EnsureMayCreateAsync(UrlSlug!, SelectedType, CurrentUserId, CancellationToken);
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+        {
+            return Forbid();
+        }
+        catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Invalid)
+        {
+            ErrorMessage = Ex.Message;
+            return Page();
+        }
+
         // Check if article with this slug already exists
         ArticleRevisionsBySlugSpec Spec = new(UrlSlug!, IsCurrent: true);
         ArticleRevision? ExistingArticle = await Context.ArticleRevisions.AsNoTracking().WithSpecification(Spec).FirstOrDefaultAsync(CancellationToken);
@@ -407,7 +426,11 @@ public sealed class CreateEditModel(
             {
                 return NotFound("Article not found.");
             }
-            catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Conflict)
+            catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
+            {
+                return Forbid();
+            }
+            catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind is ArticleRevisionWorkflowFailureKind.Conflict or ArticleRevisionWorkflowFailureKind.Invalid)
             {
                 ErrorMessage = Ex.Message;
                 await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
@@ -437,6 +460,15 @@ public sealed class CreateEditModel(
         if (CurrentArticle is null)
         {
             return NotFound("Article not found.");
+        }
+
+        // This path writes its own revision, so it enforces the user-page rule itself: a user page never
+        // becomes a file article, whoever submits the form.
+        if (ArticleRevisionService.IsUserPageSlug(CurrentArticle.UrlSlug))
+        {
+            ErrorMessage = "User home pages cannot have an attached file.";
+            await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+            return Page();
         }
 
         Guid TargetCanonicalFileId = CurrentArticle.CanonicalFileId ?? Guid.NewGuid();
