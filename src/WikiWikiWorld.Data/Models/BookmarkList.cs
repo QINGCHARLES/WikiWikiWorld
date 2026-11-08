@@ -9,6 +9,9 @@ namespace WikiWikiWorld.Data.Models;
 /// </remarks>
 public sealed record BookmarkList
 {
+	/// <summary>The maximum number of UTF-16 code units accepted in a list's Markdown introduction.</summary>
+	public const int MaxDescriptionLength = 10_000;
+
 	/// <summary>
 	/// Gets the unique identifier for this list.
 	/// </summary>
@@ -23,6 +26,10 @@ public sealed record BookmarkList
 	/// Gets the display name of this list.
 	/// </summary>
 	public required string Name { get; init; }
+
+	/// <summary>Gets or sets the optional Markdown introduction shared by every language view of this list.</summary>
+	/// <remarks>Stores source rather than HTML; visibility follows the list. Service writes normalize blank input to null.</remarks>
+	public string? Description { get; set; }
 
 	/// <summary>
 	/// Gets a value indicating whether this is the user's default list.

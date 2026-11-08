@@ -59,18 +59,32 @@ public sealed partial class BookmarkService
 		return new(Items, Total, ActualPage);
 	}
 
-	/// <summary>Creates an empty list, keeping duplicate-name and list-limit rules shared with the article menu.</summary>
+	/// <summary>Creates an empty list without an introduction, preserving duplicate-name and list-limit rules.</summary>
 	/// <param name="Name">User-supplied name, trimmed before validation.</param>
 	/// <param name="IsPublic">Explicit visibility selection.</param>
 	/// <param name="UserId">Authenticated owner.</param>
 	/// <param name="SiteId">Current site.</param>
 	/// <param name="CancellationToken">Cancels database work.</param>
 	/// <returns>The new identity or a validation error.</returns>
-	public async Task<BookmarkListCreation> CreateEmptyListAsync(string? Name, bool IsPublic, Guid UserId, int SiteId, CancellationToken CancellationToken)
+	public Task<BookmarkListCreation> CreateEmptyListAsync(string? Name, bool IsPublic, Guid UserId, int SiteId, CancellationToken CancellationToken) =>
+		CreateEmptyListAsync(Name, IsPublic, UserId, SiteId, Description: null, CancellationToken);
+
+	/// <summary>Creates an empty list with an optional Markdown introduction, validating input before any database write.</summary>
+	/// <param name="Name">User-supplied name, trimmed before validation.</param>
+	/// <param name="IsPublic">Whether readers other than the owner may read the list and its description.</param>
+	/// <param name="UserId">Authenticated owner.</param>
+	/// <param name="SiteId">Current site.</param>
+	/// <param name="Description">Markdown source; blank input means no introduction.</param>
+	/// <param name="CancellationToken">Cancels database work.</param>
+	/// <returns>The new identity or a validation error; duplicate names never overwrite an existing list.</returns>
+	public async Task<BookmarkListCreation> CreateEmptyListAsync(string? Name, bool IsPublic, Guid UserId, int SiteId, string? Description, CancellationToken CancellationToken)
 	{
 		string Trimmed = Name?.Trim() ?? string.Empty;
 		if (Trimmed.Length is 0 or > MaxListNameLength)
 			return new(null, $"Enter a list name between 1 and {MaxListNameLength} characters.");
+		if (Description is { Length: > BookmarkList.MaxDescriptionLength })
+			return new(null, $"Enter a description no longer than {BookmarkList.MaxDescriptionLength} characters.");
+		string? NormalizedDescription = NormalizeListDescription(Description);
 
 		await ListCreationGate.WaitAsync(CancellationToken);
 		try
@@ -83,7 +97,8 @@ public sealed partial class BookmarkService
 				return new(null, $"You can have up to {MaxListsPerUser} lists, including Bookmarks.");
 			BookmarkList List = new()
 			{
-				Name = Trimmed, IsPublic = IsPublic, CreatedByUserId = UserId, SiteId = SiteId, DateCreated = DateTimeOffset.UtcNow
+				Name = Trimmed, Description = NormalizedDescription, IsPublic = IsPublic,
+				CreatedByUserId = UserId, SiteId = SiteId, DateCreated = DateTimeOffset.UtcNow
 			};
 			Context.BookmarkLists.Add(List);
 			await Context.SaveChangesAsync(CancellationToken);

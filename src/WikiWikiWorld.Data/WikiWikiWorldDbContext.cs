@@ -311,6 +311,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		Builder.Entity<BookmarkList>(b =>
 		{
 			b.HasKey(e => e.Id);
+			b.Property(e => e.Description).HasMaxLength(BookmarkList.MaxDescriptionLength);
 			b.Property(e => e.IsPublic).HasDefaultValue(false);
 			b.HasQueryFilter(SoftDeleteFilter, e => e.DateDeleted == null);
 			b.HasQueryFilter(SiteFilter, e => _allowCrossSiteAndCultureQueries || e.SiteId == _currentSiteId);

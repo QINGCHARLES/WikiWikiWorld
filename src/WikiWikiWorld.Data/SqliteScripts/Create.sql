@@ -290,6 +290,7 @@ CREATE TABLE BookmarkLists (
     DateModified TEXT NULL,
     DateDeleted TEXT NULL,
     IsPublic INTEGER NOT NULL DEFAULT 0 CHECK (IsPublic IN (0, 1)),
+    Description TEXT NULL,
     CONSTRAINT FK_BookmarkLists_Users_CreatedByUserId FOREIGN KEY (CreatedByUserId) REFERENCES Users (Id) ON DELETE CASCADE
 );
 

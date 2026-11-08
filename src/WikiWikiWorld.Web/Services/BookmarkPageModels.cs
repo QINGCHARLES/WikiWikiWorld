@@ -8,6 +8,14 @@ namespace WikiWikiWorld.Web.Services;
 /// <param name="Count">Visible active article memberships.</param>
 public sealed record class BookmarkListSummary(int Id, string Name, bool IsDefault, bool IsPublic, int Count);
 
+/// <summary>Metadata for one readable list, including its optional Markdown introduction even when it has no entries.</summary>
+/// <param name="Id">Stable list identity; zero represents an owner's not-yet-created default list.</param>
+/// <param name="Name">Plain-text list name.</param>
+/// <param name="IsDefault">Whether the article's main bookmark action saves here.</param>
+/// <param name="IsPublic">Whether other readers may read the list and its description.</param>
+/// <param name="Description">Original Markdown source, or null when no introduction was supplied.</param>
+public sealed record class BookmarkListDetails(int Id, string Name, bool IsDefault, bool IsPublic, string? Description);
+
 /// <summary>A projected bookmark row without loading article bodies.</summary>
 /// <param name="Id">Membership identity, used for removal.</param>
 /// <param name="Title">Current article title.</param>

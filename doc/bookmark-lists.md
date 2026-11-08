@@ -5,6 +5,83 @@ lists. Lists are private by default. The article split button saves to the defau
 lets an article belong to several lists. "New list" in that menu creates a private list holding the article,
 or reuses a same-named list. Names are trimmed, 1–60 characters, and compared ignoring case.
 
+## List descriptions (backend)
+
+Each list has an optional `Description` containing the original Markdown introduction, shared
+across its language views. The limit is 10,000 UTF-16 code units (`string.Length`). Null, empty
+or whitespace-only input becomes null; other source, including meaningful whitespace, is
+preserved verbatim. HTML is generated on demand, never stored.
+
+- `CreateEmptyListAsync` has an overload accepting a description; existing callers still create
+  lists without one. Invalid descriptions are rejected before any list, including the default,
+  is created. Duplicate names never replace existing metadata.
+- `SetListDescriptionAsync` updates only an active owned list in the current site and its UTC
+  `DateModified`. Oversized source throws `ArgumentOutOfRangeException`. List ID zero selects
+  the default list and creates it privately on demand, without adding an article. The set-based
+  update bypasses tracked list instances; query again for current values.
+- `GetListDetailsAsync` projects the selected list's metadata and Markdown source independently
+  of article availability or count. Site/soft-delete filters and owner/public visibility apply.
+  `IsOwner` must come from authenticated ownership checks, never request input. Owners may read
+  an unsaved default placeholder with ID zero without creating database state. Other missing,
+  deleted or inaccessible lists return null. The selector's `BookmarkListSummary` stays lean
+  and does not load descriptions for every list.
+- Render an authorized description using `IMarkdownPipelineFactory.RenderUserContentMarkdown`.
+  This provides headings, paragraphs, links, emphasis and the shared short-content Markdown
+  features. Raw HTML is disabled, unsafe destinations are restricted and wiki directives remain
+  literal. Future UI rendering must retain the project's authored-HTML/Datastar boundaries.
+- Descriptions follow list visibility: public list readers can read them; private descriptions
+  are owner-only. Publishing includes the description. Making the list private restricts later
+  reads. Bookmark saves, same-named-list reuse, removal/undo and clearing the default list leave
+  descriptions intact. Custom-list deletion retains its description in the soft-deleted row.
+
+This change provides storage and service operations only. There are no description controls,
+new HTTP endpoints or preview UI. Individual bookmark notes remain a separate planned feature.
+
+### Description schema upgrade
+
+Existing databases require `src/WikiWikiWorld.Data/SqliteScripts/AddBookmarkListDescription.sql`
+before running an updated application: EF entity queries and inserts now include `Description`.
+There are no startup migrations. The script adds nullable `TEXT` in one `BEGIN IMMEDIATE`
+transaction, leaves existing values and indexes unchanged and gives old lists null descriptions.
+Fresh databases use `Create.sql` and must not run the additive upgrade.
+
+The database operator applies this once through the [standard maintenance command](database-maintenance.md),
+which takes a consistent SQLite backup before changing the database:
+
+```bash
+/home/deploy/db-maintenance/db-update.sh production /opt/wiki/data/app.db \
+  /home/deploy/db-maintenance/AddBookmarkListDescription.sql \
+  /home/deploy/db-maintenance/VerifyBookmarkListDescription.sql \
+  /home/deploy/db-maintenance/CheckBookmarkListDescriptionBefore.sql
+```
+
+Stage the three reviewed SQL files beside the runner first. The precheck requires an existing
+visibility-aware list schema without `Description`; verification requires a nullable, default-free
+`TEXT` column and valid foreign keys. Both checks return the runner's required single integer 1.
+Compare existing list/membership values and counts with the maintenance backup, verify initial
+null descriptions and run integrity/foreign-key checks. Test representative populated data before
+live application. The old application remains compatible with the additive column, so schema
+application can precede deployment. Roll back application code while retaining the column and
+any descriptions; restoring a backup would discard later writes and needs a recovery decision.
+
+The description upgrade has not been applied to the development or production database by this
+implementation. Build/test checks use disposable databases only.
+
+Verification:
+
+```powershell
+dotnet test tests/WikiWikiWorld.Web.Tests -c Release --filter "FullyQualifiedName~BookmarkListDescriptionTests|FullyQualifiedName~BookmarkManagementTests|FullyQualifiedName~MarkdownSafetyTests"
+```
+
+SQLite tests cover exact source round trips, validation, ownership/visibility/site/deletion,
+empty and default lists, shared language views, timestamps, cancellation, membership lifecycle,
+shared Markdown rendering, populated schema preservation and fresh/upgraded column parity.
+
+Implementation verification on 2026-11-07: the Release build and all 384 .NET tests passed,
+including the 11 new description cases, along with all 14 existing Python maintenance tests.
+Existing ImageSharp NU1902/NU1903 advisory warnings remain unchanged. Build outputs were
+isolated so the running Windows development process could remain active.
+
 ## Profile page
 
 - `/@username/bookmarks` shows the owner's default list. Visitors see the first public list, or a neutral
