@@ -4,8 +4,7 @@ const Path = require('node:path');
 const { test: Test } = require('node:test');
 const Vm = require('node:vm');
 
-const Page = ReadFile(Path.join(__dirname, '../../src/WikiWikiWorld.Web/Pages/Profile/NewMessage.cshtml'), 'utf8');
-const Script = Page.match(/<script>([\s\S]*?)<\/script>/)[1];
+const Script = ReadFile(Path.join(__dirname, '../../src/WikiWikiWorld.Web/wwwroot/js/recipient-autocomplete.js'), 'utf8');
 
 /** Minimal event-driven DOM for deterministic query ordering; Chromium checks cover native pointer/focus behavior. */
 function CreateHarness() {

@@ -3,53 +3,62 @@
 @{
 	ViewData["Title"] = $"{Model.Header.UserName} · Messages";
 	string BasePath = $"/@{Model.Header.UserName}/messages";
-	string FolderPath = Model.Tab == "sent" ? $"{BasePath}/sent" : BasePath;
+	bool IsSentFolder = Model.Tab == "sent";
+	string FolderPath = IsSentFolder ? $"{BasePath}/sent" : BasePath;
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
 }
 <div class="profile">
 	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Model.Header, ProfileTab.Messages)" />
-	<section class="profile-card" aria-labelledby="messages-title">
-		<h2 id="messages-title" class="profile-card-title">Private messages</h2>
-		<nav aria-label="Message folders">
-			<a href="@BasePath" aria-current="@(Model.Tab == "inbox" ? "page" : null)">Inbox</a> ·
-			<a href="@BasePath/sent" aria-current="@(Model.Tab == "sent" ? "page" : null)">Started by you</a> ·
-			<a href="/message/new">New conversation</a>
-		</nav>
-		<p class="profile-card-note">Only participants can open a conversation. Public user-page discussions are separate.</p>
-		@if (Model.Folder.Items.Count == 0)
-		{
-			<p class="profile-card-empty">No conversations in this folder.</p>
-		}
-		else
-		{
-			<ul class="profile-list">
-				@foreach (PrivateConversationItem Conversation in Model.Folder.Items)
-				{
-					<li class="profile-list-row">
-						<div class="profile-list-main">
-							<a class="profile-list-title" href="/message/@Conversation.Id.ToString("D")">@Conversation.Subject</a>
-							<p class="profile-list-meta">Started by @Conversation.CreatorName</p>
-						</div>
-						<time class="profile-list-time" datetime="@Conversation.LastMessageDate.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Conversation.LastMessageDate, Now)</time>
-					</li>
-				}
-			</ul>
-		}
-		@if (Model.Folder.PageCount > 1)
-		{
-			<nav class="profile-pager" aria-label="Message folder pages">
-				@if (Model.Folder.PageNumber > 1)
-				{
-					<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber - 1)" rel="prev">Previous</a>
-				}
-				<span>Page @Model.Folder.PageNumber of @Model.Folder.PageCount</span>
-				@if (Model.Folder.PageNumber < Model.Folder.PageCount)
-				{
-					<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber + 1)" rel="next">Next</a>
-				}
+	<div class="profile-stack">
+		<section class="profile-card" aria-labelledby="messages-title">
+			<header class="profile-card-head profile-card-head-wrap">
+				<h2 id="messages-title" class="profile-card-title">Private messages</h2>
+				<a href="/message/new" class="button profile-card-button profile-action-accent">New conversation</a>
+			</header>
+			<nav class="message-toolbar" aria-label="Message folders">
+				<div class="profile-segments">
+					<a href="@BasePath" aria-current="@(IsSentFolder ? null : "page")">Inbox</a>
+					<a href="@BasePath/sent" aria-current="@(IsSentFolder ? "page" : null)">Started by you</a>
+				</div>
 			</nav>
-		}
-	</section>
+			@if (Model.Folder.Items.Count == 0)
+			{
+				<p class="profile-card-empty message-empty">@(IsSentFolder ? "You haven't started any conversations yet." : "Nobody has started a conversation with you yet.")</p>
+			}
+			else
+			{
+				<ul class="profile-list">
+					@foreach (PrivateConversationItem Conversation in Model.Folder.Items)
+					{
+						string Initial = Conversation.CreatorName.Length > 0 ? Conversation.CreatorName[..1] : "?";
+						<li class="profile-list-row message-row">
+							<span class="avatar" aria-hidden="true"><span>@Initial</span></span>
+							<div class="profile-list-main">
+								<a class="profile-list-title" href="/message/@Conversation.Id.ToString("D")">@Conversation.Subject</a>
+								<p class="profile-list-meta">@(IsSentFolder ? "Started by you" : $"Started by {Conversation.CreatorName}")</p>
+							</div>
+							<time class="profile-list-time" datetime="@Conversation.LastMessageDate.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@Conversation.LastMessageDate.UtcDateTime.ToString("f", CultureInfo.CurrentCulture) UTC">@ProfileFormatting.ToRelativeTime(Conversation.LastMessageDate, Now)</time>
+						</li>
+					}
+				</ul>
+			}
+			@if (Model.Folder.PageCount > 1)
+			{
+				<nav class="profile-pager" aria-label="Message folder pages">
+					@if (Model.Folder.PageNumber > 1)
+					{
+						<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber - 1)" rel="prev">Previous</a>
+					}
+					<span class="profile-pager-current">Page @Model.Folder.PageNumber of @Model.Folder.PageCount</span>
+					@if (Model.Folder.PageNumber < Model.Folder.PageCount)
+					{
+						<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber + 1)" rel="next">Next</a>
+					}
+				</nav>
+			}
+			<p class="message-footnote">Only participants can open a conversation. Public user-page discussions are separate.</p>
+		</section>
+	</div>
 </div>
 @section Scripts {
 	<script src="~/js/profile.js" asp-append-version="true" defer></script>

@@ -6,7 +6,7 @@ From the repository root:
 node --test tests/browser/recipient-autocomplete.test.cjs tests/browser/admin-article-picker.test.cjs
 ```
 
-These tests use Node's built-in test runner and execute the actual inline scripts from `Pages/Profile/NewMessage.cshtml` and `Pages/Admin/DomainRedirects.cshtml` in an isolated event/DOM harness. No npm packages, frontend build, server, database, or credentials are needed. Node 24.19.0 is verified.
+These tests use Node's built-in test runner and execute the actual page scripts (`wwwroot/js/recipient-autocomplete.js`, loaded by `Pages/Profile/NewMessage.cshtml`, and the inline script in `Pages/Admin/DomainRedirects.cshtml`) in an isolated event/DOM harness. No npm packages, frontend build, server, database, or credentials are needed. Node 24.19.0 is verified.
 
 The 14 recipient cases cover clearing before/after the debounce, reordered responses, returning to a previous query, Escape/outside-click/blur dismissal, empty-list keyboard handling, selection/wrapping, result replacement, failed and empty searches, a response body completing after dismissal, and multi-recipient final-token selection without overwriting earlier recipients. Changing an earlier recipient also invalidates pending results. The fake fetch deliberately allows aborted requests to resolve, so the checks exercise response ownership as well as cancellation.
 

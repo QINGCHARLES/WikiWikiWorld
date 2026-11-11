@@ -1,46 +1,84 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.ConversationModel
 @inject IMarkdownPipelineFactory Markdown
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
 	ViewData["Title"] = "Private conversation";
 	string ConversationPath = $"/message/{Model.ConversationId:D}";
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
+
+	static string Initial(string Name) => Name.Length > 0 ? Name[..1] : "?";
+	bool IsViewer(string Name) => string.Equals(Name, Model.ViewerName, StringComparison.OrdinalIgnoreCase);
 }
-<div class="profile">
-	<section class="profile-card private-conversation" aria-labelledby="conversation-title">
-		<a href="/@@@Model.ViewerName/messages">Back to messages</a>
-		<h1 id="conversation-title" class="private-conversation-title">@Model.Thread.Subject</h1>
-		<p>Participants: @string.Join(", ", Model.Thread.Participants.Select(p => p.UserName))</p>
-		<p class="profile-card-note">Everyone listed can read and reply. Participants are fixed when the conversation starts.</p>
+<div class="profile profile-narrow">
+	<header class="message-head">
+		<a class="message-back" href="/@@@Model.ViewerName/messages"><span aria-hidden="true">←</span> Messages</a>
+		<p class="profile-card-title">Private conversation</p>
+		<h1 id="conversation-title" class="message-title">@Model.Thread.Subject</h1>
+		<ul class="message-participants" aria-label="Participants">
+			@foreach (PrivateParticipant Participant in Model.Thread.Participants)
+			{
+				<li>
+					<span class="avatar" aria-hidden="true"><span>@Initial(Participant.UserName)</span></span>
+					@Participant.UserName
+					@if (IsViewer(Participant.UserName))
+					{
+						<small>(you)</small>
+					}
+				</li>
+			}
+		</ul>
+		<p class="message-footnote">Everyone listed can read and reply. Participants are fixed when the conversation starts.</p>
+	</header>
+
+	<ol class="message-thread" aria-labelledby="conversation-title">
 		@foreach (PrivateMessageItem Message in Model.Thread.Messages)
 		{
-			<article id="message-@Message.Id" class="profile-card" data-ignore="true">
-				<header>
-					<strong>@Message.AuthorName</strong> ·
-					<time datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
-				</header>
-				<div class="private-message-body">@Html.Raw(Markdown.RenderUserContentMarkdown(Message.Text))</div>
-			</article>
+			@* data-ignore keeps Datastar away from the rendered Markdown. *@
+			<li id="message-@Message.Id" data-own="@(IsViewer(Message.AuthorName) ? "true" : "false")" data-ignore="true">
+				<span class="avatar" aria-hidden="true"><span>@Initial(Message.AuthorName)</span></span>
+				<article>
+					<header>
+						<strong>@(IsViewer(Message.AuthorName) ? "You" : Message.AuthorName)</strong>
+						<time datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@Message.DateCreated.UtcDateTime.ToString("f", CultureInfo.CurrentCulture) UTC">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
+					</header>
+					<div class="bookmark-markdown private-message-body">@Html.Raw(Markdown.RenderUserContentMarkdown(Message.Text))</div>
+				</article>
+			</li>
 		}
-		@if (Model.Thread.PageCount > 1)
-		{
-			<nav class="profile-pager" aria-label="Conversation pages">
-				@if (Model.Thread.PageNumber > 1)
-				{
-					<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber - 1)" rel="prev">Earlier</a>
-				}
-				<span>Page @Model.Thread.PageNumber of @Model.Thread.PageCount</span>
-				@if (Model.Thread.PageNumber < Model.Thread.PageCount)
-				{
-					<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber + 1)" rel="next">Later</a>
-				}
-			</nav>
-		}
-		<form method="post" action="@ConversationPath" asp-antiforgery="true" class="private-reply">
+	</ol>
+
+	@if (Model.Thread.PageCount > 1)
+	{
+		<nav class="profile-pager" aria-label="Conversation pages">
+			@if (Model.Thread.PageNumber > 1)
+			{
+				<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber - 1)" rel="prev"><span aria-hidden="true">←</span> Earlier</a>
+			}
+			<span class="profile-pager-current">Page @Model.Thread.PageNumber of @Model.Thread.PageCount</span>
+			@if (Model.Thread.PageNumber < Model.Thread.PageCount)
+			{
+				<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber + 1)" rel="next">Later <span aria-hidden="true">→</span></a>
+			}
+		</nav>
+	}
+
+	<form method="post" action="@ConversationPath" asp-antiforgery="true" class="profile-card message-form">
+		<div class="message-field">
 			<label asp-for="Input.Text">Reply</label>
-			<textarea asp-for="Input.Text" rows="6" required maxlength="10000" aria-describedby="reply-error"></textarea>
-			<span asp-validation-for="Input.Text" id="reply-error" class="text-danger"></span>
-			<button type="submit" class="button button-primary">Send reply</button>
-		</form>
-	</section>
+			<textarea asp-for="Input.Text" rows="5" required maxlength="@PrivateMessagingService.MaxMessageLength" aria-describedby="reply-help reply-error"></textarea>
+			<p class="bookmark-editor-help" id="reply-help">
+				<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>, a blank line for a new paragraph.</span>
+			</p>
+			<span asp-validation-for="Input.Text" id="reply-error" class="bookmark-error"></span>
+		</div>
+		<div class="bookmark-editor-actions">
+			<span class="bookmark-editor-visibility">
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg>
+				Only the participants can read this.
+			</span>
+			<button type="submit" class="bookmark-editor-button" data-variant="primary">Send reply</button>
+		</div>
+	</form>
 </div>

@@ -1,475 +1,65 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.NewMessageModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
-	ViewData["Title"] = Model.HasPresetRecipient ? $"Message to {Model.RecipientDisplayName}" : "New Message";
+	ViewData["Title"] = Model.HasPresetRecipient ? $"Message to {Model.RecipientDisplayName}" : "New conversation";
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
+	string CancelUrl = Model.HasPresetRecipient ? $"/@{Model.Recipient}/profile" : $"/@{User.Identity?.Name}/messages";
 }
 
-<div class="message-compose-container">
-	<div class="compose-header">
-		<h1>@(Model.HasPresetRecipient ? "Send Message" : "New Message")</h1>
-		@if (Model.HasPresetRecipient)
+<div class="profile profile-narrow">
+	<header class="message-head">
+		<a class="message-back" href="/@@@User.Identity?.Name/messages"><span aria-hidden="true">←</span> Messages</a>
+		<p class="profile-card-title">Private messages</p>
+		<h1 class="message-title">@(Model.HasPresetRecipient ? $"Message {Model.RecipientDisplayName}" : "New conversation")</h1>
+	</header>
+
+	<form method="post" action="/message/new" asp-antiforgery="true" class="profile-card message-form">
+		@if (!string.IsNullOrEmpty(Model.ErrorMessage))
 		{
-			<div class="recipient-badge">
-				@if (!string.IsNullOrEmpty(Model.RecipientProfilePicPath))
-				{
-					<span class="avatar"><img src="@Model.RecipientProfilePicPath" alt="" /></span>
-				}
-				<span class="recipient-name">To: <strong>@Model.RecipientDisplayName</strong></span>
-			</div>
+			<p class="bookmark-error" role="alert">@Model.ErrorMessage</p>
 		}
-	</div>
+		<div asp-validation-summary="ModelOnly" class="bookmark-error"></div>
 
-	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
-	{
-		<div class="alert alert-error">
-			<i class="alert-icon">⚠️</i>
-			@Model.ErrorMessage
-		</div>
-	}
-
-	<form method="post" action="/message/new" asp-antiforgery="true" class="compose-form">
-		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-		<div class="form-group">
+		<div class="message-field">
+			<label for="recipient-input">To</label>
 			<div class="autocomplete-wrapper">
-				<div class="md3-field md3-filled">
-					<input asp-for="Input.Recipients" placeholder=" " autocomplete="off" autocapitalize="none" spellcheck="false" id="recipient-input" required maxlength="2000" aria-describedby="recipient-help recipient-error" />
-					<label for="recipient-input">To (usernames)</label>
-					<span class="md-line"></span>
-				</div>
+				<input asp-for="Input.Recipients" id="recipient-input" autocomplete="off" autocapitalize="none" spellcheck="false" required maxlength="2000"
+					placeholder="Usernames, separated by commas" data-avatar-base="/sitefiles/@Model.SiteId/profilepics/" aria-describedby="recipient-help recipient-error" />
 				<div id="autocomplete-list" class="autocomplete-items"></div>
 			</div>
-			<small id="recipient-help">Separate up to 20 usernames with commas. Everyone listed can read and reply; participants cannot be changed later.</small>
-			<span asp-validation-for="Input.Recipients" id="recipient-error" class="validation-message"></span>
+			<p class="bookmark-editor-help" id="recipient-help">
+				<span>Up to @PrivateMessagingService.MaxRecipients people. Everyone listed can read and reply; participants cannot be changed later.</span>
+			</p>
+			<span asp-validation-for="Input.Recipients" id="recipient-error" class="bookmark-error"></span>
 		</div>
 
-		<div class="form-group">
-			<div class="md3-field md3-filled">
-				<input asp-for="Input.Subject" placeholder=" " required maxlength="200" aria-describedby="subject-error" />
-				<label asp-for="Input.Subject">Subject</label>
-				<span class="md-line"></span>
-			</div>
-			<span asp-validation-for="Input.Subject" id="subject-error" class="validation-message"></span>
+		<div class="message-field">
+			<label asp-for="Input.Subject">Subject</label>
+			<input asp-for="Input.Subject" required maxlength="@PrivateMessagingService.MaxSubjectLength" aria-describedby="subject-error" />
+			<span asp-validation-for="Input.Subject" id="subject-error" class="bookmark-error"></span>
 		</div>
 
-		<div class="form-group">
-			<label asp-for="Input.Message" class="textarea-label">Message</label>
-			<textarea asp-for="Input.Message" rows="8" class="message-textarea" placeholder="Write your message here..." required maxlength="10000" aria-describedby="message-error"></textarea>
-			<span asp-validation-for="Input.Message" id="message-error" class="validation-message"></span>
+		<div class="message-field">
+			<label asp-for="Input.Message">Message</label>
+			<textarea asp-for="Input.Message" rows="8" required maxlength="@PrivateMessagingService.MaxMessageLength" aria-describedby="message-help message-error"></textarea>
+			<p class="bookmark-editor-help" id="message-help">
+				<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>, a blank line for a new paragraph.</span>
+			</p>
+			<span asp-validation-for="Input.Message" id="message-error" class="bookmark-error"></span>
 		</div>
 
-		<div class="compose-actions">
-			@if (Model.HasPresetRecipient)
-			{
-				<a href="/@@@Model.Recipient/profile" class="button button-text">Cancel</a>
-			}
-			else
-			{
-				<a href="/@@@User.Identity?.Name/messages" class="button button-text">Cancel</a>
-			}
-			<button type="submit" class="button button-primary">
-				<span class="button-icon" aria-hidden="true">✉️</span> Send Message
-			</button>
+		<div class="bookmark-editor-actions">
+			<span class="bookmark-editor-visibility">
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg>
+				Only the people you list can read this.
+			</span>
+			<a href="@CancelUrl" class="bookmark-editor-button">Cancel</a>
+			<button type="submit" class="bookmark-editor-button" data-variant="primary">Send message</button>
 		</div>
 	</form>
 </div>
 
-<style>
-	.message-compose-container {
-		max-width: 700px;
-		margin: 3rem auto;
-		padding: 2.5rem;
-		background: var(--color-surface);
-		border-radius: 1.5rem;
-		border: 1px solid var(--color-border);
-		box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-	}
-
-	.compose-header {
-		margin-bottom: 2.5rem;
-		text-align: center;
-	}
-
-	.compose-header h1 {
-		margin: 0 0 1rem 0;
-		color: var(--color-title);
-		font-size: 2rem;
-		font-weight: 700;
-	}
-
-	.recipient-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.75rem;
-		background: var(--color-surface-alt);
-		padding: 0.5rem 1rem;
-		border-radius: 2rem;
-		border: 1px solid var(--color-border);
-	}
-
-	.recipient-badge > .avatar {
-		--avatar-size: 1.5rem;
-	}
-
-	.recipient-name {
-		color: var(--color-foreground);
-	}
-
-	.compose-form {
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-	}
-
-	.form-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	/* Material 3 Field Overrides/Enhancements */
-	.md3-field {
-		position: relative;
-		background: var(--color-surface-alt);
-		border-radius: 0.75rem 0.75rem 0 0;
-		height: 3.5rem;
-		transition: background 0.2s;
-	}
-
-	.md3-field:hover {
-		background: var(--color-action-hover);
-	}
-
-	.md3-field input {
-		width: 100%;
-		height: 100%;
-		padding: 1.5rem 1rem 0.5rem;
-		background: transparent;
-		border: none;
-		outline: none;
-		color: var(--color-foreground);
-		font-size: 1rem;
-		font-family: inherit;
-	}
-
-	.md3-field label {
-		position: absolute;
-		left: 1rem;
-		top: 1rem;
-		color: var(--color-muted);
-		pointer-events: none;
-		transition: all 0.2s ease;
-		font-size: 1rem;
-	}
-
-	.md3-field input:focus ~ label,
-	.md3-field input:not(:placeholder-shown) ~ label {
-		top: 0.5rem;
-		font-size: 0.75rem;
-		color: var(--color-primary);
-	}
-
-	.md-line {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		width: 100%;
-		height: 1px;
-		background: var(--color-border);
-		transition: height 0.2s, background 0.2s;
-	}
-
-	.md3-field input:focus ~ .md-line {
-		height: 2px;
-		background: var(--color-primary);
-	}
-
-	.textarea-label {
-		font-weight: 600;
-		color: var(--color-foreground);
-		margin-left: 0.5rem;
-	}
-
-	.message-textarea {
-		width: 100%;
-		padding: 1rem;
-		border: 1px solid var(--color-border);
-		border-radius: 1rem;
-		background: var(--color-surface-alt);
-		color: var(--color-foreground);
-		font-family: inherit;
-		font-size: 1rem;
-		resize: vertical;
-		min-height: 150px;
-		transition: all 0.2s;
-	}
-
-	.message-textarea:focus {
-		outline: none;
-		border-color: var(--color-primary);
-		background: var(--color-surface);
-		box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.1);
-	}
-
-	.validation-message {
-		color: var(--color-error);
-		font-size: 0.875rem;
-		margin-left: 0.5rem;
-	}
-
-	.compose-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 1rem;
-		margin-top: 1rem;
-		align-items: center;
-	}
-
-	.button-text {
-		color: var(--color-muted);
-		background: transparent;
-		padding: 0.75rem 1.5rem;
-		text-decoration: none;
-		font-weight: 600;
-		border-radius: 2rem;
-		transition: all 0.2s;
-	}
-
-	.button-text:hover {
-		color: var(--color-foreground);
-		background: var(--color-surface-alt);
-	}
-
-	.button-primary {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.75rem 2rem;
-		border-radius: 2rem;
-		font-weight: 600;
-		transition: transform 0.1s;
-	}
-	
-	.button-primary:active {
-		transform: scale(0.98);
-	}
-
-	.alert-error {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		background: rgba(255, 59, 48, 0.1);
-		color: #ff3b30;
-		padding: 1rem;
-		border-radius: 0.75rem;
-		margin-bottom: 2rem;
-		border: 1px solid rgba(255, 59, 48, 0.2);
-	}
-
-	.alert-icon {
-		font-style: normal;
-	}
-
-    /* Autocomplete Styles */
-    .autocomplete-wrapper {
-        position: relative;
-    }
-
-    .autocomplete-items {
-        position: absolute;
-        border: 1px solid var(--color-border);
-        border-bottom: none;
-        border-top: none;
-        z-index: 99;
-        top: 100%;
-        left: 0;
-        right: 0;
-        border-radius: 0 0 1rem 1rem;
-        background: var(--color-surface);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        overflow: hidden;
-        max-height: 200px;
-        overflow-y: auto;
-        display: none; /* Hidden by default */
-    }
-
-    .autocomplete-items.show {
-        display: block;
-        border-bottom: 1px solid var(--color-border);
-    }
-
-    .autocomplete-item {
-        padding: 10px;
-        cursor: pointer;
-        background-color: var(--color-surface);
-        border-bottom: 1px solid var(--color-border);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        transition: background 0.1s;
-    }
-
-    .autocomplete-item:last-child {
-        border-bottom: none;
-    }
-
-    .autocomplete-item:hover {
-        background-color: var(--color-surface-alt);
-    }
-
-    .autocomplete-item.active {
-        background-color: var(--color-primary);
-        color: white; /* Contrast text */
-    }
-
-    .autocomplete-item > .avatar {
-        --avatar-size: 2rem;
-    }
-</style>
-
-<script>
-	document.addEventListener("DOMContentLoaded", function ()
-	{
-		const Input = document.getElementById("recipient-input");
-		const List = document.getElementById("autocomplete-list");
-		if (!Input || !List) return;
-
-		let ActiveIndex = -1;
-		let DebounceTimer = 0;
-		let CurrentRequest = null;
-		Input.setAttribute("role", "combobox");
-		Input.setAttribute("aria-autocomplete", "list");
-		Input.setAttribute("aria-controls", "autocomplete-list");
-		Input.setAttribute("aria-expanded", "false");
-		List.setAttribute("role", "listbox");
-		List.setAttribute("aria-label", "Recipient suggestions");
-
-		/** Cancel pending work and invalidate even responses whose callbacks were queued before cancellation. */
-		function Dismiss()
-		{
-			clearTimeout(DebounceTimer);
-			CurrentRequest?.Controller.abort();
-			CurrentRequest = null;
-			List.replaceChildren();
-			List.classList.remove("show");
-			ActiveIndex = -1;
-			Input.removeAttribute("aria-activedescendant");
-			Input.setAttribute("aria-expanded", "false");
-		}
-
-		/** Keep keyboard selection within the currently rendered options, leaving DOM focus in the input. */
-		function SetActive(Index)
-		{
-			const Options = Array.from(List.children);
-			if (Options.length === 0) return;
-			ActiveIndex = (Index + Options.length) % Options.length;
-			Options.forEach((Option, i) =>
-			{
-				Option.classList.toggle("active", i === ActiveIndex);
-				Option.setAttribute("aria-selected", String(i === ActiveIndex));
-			});
-			Input.setAttribute("aria-activedescendant", Options[ActiveIndex].id);
-			Options[ActiveIndex].scrollIntoView({ block: "nearest" });
-		}
-
-		Dismiss();
-		Input.addEventListener("input", () =>
-		{
-			Dismiss();
-			const Snapshot = Input.value;
-			const TokenStart = Snapshot.lastIndexOf(",") + 1;
-			const Query = Snapshot.slice(TokenStart).trim();
-			if (!Query) return;
-			const Request = { Controller: new AbortController() };
-			CurrentRequest = Request;
-			DebounceTimer = setTimeout(async () =>
-			{
-				try
-				{
-					const Response = await fetch(`?handler=SearchUsers&term=${encodeURIComponent(Query)}`, { signal: Request.Controller.signal });
-					if (!Response.ok) throw new Error("Recipient search failed.");
-					const Users = await Response.json();
-					if (CurrentRequest !== Request || Input.value !== Snapshot || document.activeElement !== Input) return;
-
-					List.replaceChildren();
-					Users.forEach((User, Index) =>
-					{
-						const Item = document.createElement("div");
-						Item.className = "autocomplete-item";
-						Item.id = `recipient-option-${Index}`;
-						Item.setAttribute("role", "option");
-						Item.setAttribute("aria-selected", "false");
-						const Avatar = document.createElement("span");
-						Avatar.className = "avatar";
-						Avatar.setAttribute("aria-hidden", "true");
-						if (User.profilePicGuid)
-						{
-							const Image = document.createElement("img");
-							Image.src = `/sitefiles/@Model.SiteId/profilepics/${User.profilePicGuid}.png`;
-							Image.alt = "";
-							Image.width = 32;
-							Image.height = 32;
-							Avatar.appendChild(Image);
-						}
-						else
-						{
-							const Initial = document.createElement("span");
-							Initial.className = "avatar-initials";
-							Initial.textContent = User.userName.charAt(0).toUpperCase();
-							Avatar.appendChild(Initial);
-						}
-						const Name = document.createElement("span");
-						Name.textContent = User.userName;
-						Item.append(Avatar, Name);
-						Item.addEventListener("click", () =>
-						{
-							Input.value = Snapshot.slice(0, TokenStart) + (TokenStart > 0 ? " " : "") + User.userName;
-							Dismiss();
-						});
-						List.appendChild(Item);
-					});
-					List.classList.toggle("show", Users.length > 0);
-					Input.setAttribute("aria-expanded", String(Users.length > 0));
-				}
-				catch (Failure)
-				{
-					if (CurrentRequest === Request && Failure.name !== "AbortError")
-					{
-						console.error("Error fetching users:", Failure);
-					}
-				}
-			}, 300);
-		});
-
-		Input.addEventListener("keydown", Event =>
-		{
-			if (Event.isComposing) return;
-			if (Event.key === "Escape")
-			{
-				if (CurrentRequest || List.classList.contains("show")) Event.preventDefault();
-				Dismiss();
-				return;
-			}
-			const Options = List.children;
-			if (Options.length === 0 || !List.classList.contains("show")) return;
-			if (Event.key === "ArrowDown" || Event.key === "ArrowUp")
-			{
-				Event.preventDefault();
-				SetActive(Event.key === "ArrowDown" ? ActiveIndex + 1 : ActiveIndex < 0 ? Options.length - 1 : ActiveIndex - 1);
-			}
-			else if (Event.key === "Enter" && Options[ActiveIndex])
-			{
-				Event.preventDefault();
-				Options[ActiveIndex].click();
-			}
-		});
-
-		// Preserve input focus until the option's click selects it; Tab/blur still dismisses normally.
-		List.addEventListener("pointerdown", Event => { if (Event.button === 0) Event.preventDefault(); });
-		Input.addEventListener("blur", Dismiss);
-		document.addEventListener("click", Event =>
-		{
-			if (Event.target !== Input && !List.contains(Event.target)) Dismiss();
-		});
-	});
-</script>
+@section Scripts {
+	<script src="~/js/recipient-autocomplete.js" asp-append-version="true" defer></script>
+}

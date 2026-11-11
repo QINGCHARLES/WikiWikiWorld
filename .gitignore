@@ -74,3 +74,4 @@ secrets.json
 
 # Retired agent/tool state
 .claude/
+.project-map/

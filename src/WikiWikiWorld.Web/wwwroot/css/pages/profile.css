@@ -899,43 +899,6 @@
 
 /* ---- Sub-pages: contributions, bookmarks and messages ---- */
 
-.private-conversation {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-	gap: var(--space-m);
-	overflow-wrap: anywhere;
-
-	& > .private-conversation-title {
-		margin: 0;
-		font: 700 clamp(1.4rem, 1rem + 1vw, 2rem)/1.2 var(--font-family-san-serif);
-		letter-spacing: normal;
-		text-transform: none;
-		text-align: start;
-		filter: none;
-	}
-}
-
-.private-message-body {
-	min-inline-size: 0;
-	overflow-x: auto;
-}
-
-.private-reply {
-	display: grid;
-	gap: 0.5rem;
-
-	& textarea {
-		min-inline-size: 0;
-		padding: 0.75rem;
-		font: inherit;
-		resize: vertical;
-	}
-
-	& button {
-		justify-self: start;
-	}
-}
-
 .profile-stack {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
@@ -1150,6 +1113,319 @@
 .profile-pager-current {
 	color: var(--profile-quiet);
 	font-variant-numeric: tabular-nums;
+}
+
+/* ---- Private messages: inbox rows, the conversation thread, and the compose and reply forms ---- */
+
+/* The conversation and compose pages have no profile header, so they sit in a narrower reading column. */
+.profile.profile-narrow {
+	--profile-inline-size: min(100vw, 48rem);
+}
+
+.message-head {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: start;
+	gap: 0.5rem;
+	padding-block: var(--space-m) var(--space-s);
+	overflow-wrap: anywhere;
+}
+
+.message-back {
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--profile-quiet);
+	text-decoration: none;
+
+	&:hover {
+		color: var(--profile-ink);
+	}
+}
+
+/* Overrides the site's centred, upper-case, extruded article title, like .profile-name. */
+.profile .message-title {
+	margin: 0;
+	font-family: 'Lyon Custom Headings', Georgia, serif;
+	font-weight: 900;
+	font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.5rem);
+	line-height: 1.08;
+	letter-spacing: -0.02em;
+	text-transform: none;
+	text-align: start;
+	text-wrap: balance;
+	color: var(--profile-ink);
+	filter: none;
+}
+
+.message-footnote {
+	margin: 0;
+	font-size: 0.8rem;
+	line-height: 1.45;
+	color: var(--profile-quiet);
+
+	.profile-card > & {
+		margin-block-start: 1rem;
+	}
+}
+
+/* Message avatars are initials only (the service returns names, not pictures), in the profile's ink and lime. */
+:is(.message-row, .message-participants, .message-thread) .avatar {
+	box-shadow: none;
+
+	& > span {
+		background: var(--profile-ink);
+		color: var(--profile-lime);
+	}
+}
+
+.message-toolbar {
+	display: flex;
+	margin-block-end: 0.5rem;
+}
+
+/* Unlike other list rows this one never wraps, so the avatar stays beside the subject on a phone. */
+.profile-list-row.message-row {
+	flex-wrap: nowrap;
+	align-items: center;
+
+	& .profile-list-main {
+		flex-basis: 0;
+	}
+
+	& .profile-list-time {
+		align-self: flex-start;
+	}
+
+	& .avatar {
+		--avatar-size: 2.25rem;
+	}
+}
+
+.message-empty {
+	padding-block: 1.5rem 0.5rem;
+}
+
+.message-participants {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0.25rem 0 0;
+	padding: 0;
+	list-style: none;
+
+	& li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.2rem 0.75rem 0.2rem 0.25rem;
+		border: 1px solid var(--profile-rule);
+		border-radius: 999px;
+		background: #fff;
+		color: var(--profile-ink);
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	& .avatar {
+		--avatar-size: 1.5rem;
+	}
+
+	& small {
+		font-size: inherit;
+		font-weight: 500;
+		color: var(--profile-quiet);
+	}
+}
+
+.message-thread {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-s);
+	margin: var(--space-s) 0 var(--space-m);
+	padding: 0;
+	list-style: none;
+
+	& > li {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		gap: 0.75rem;
+		scroll-margin-block-start: 1rem;
+	}
+
+	& .avatar {
+		--avatar-size: 2.25rem;
+
+		margin-block-start: 0.55rem;
+	}
+
+	& article {
+		padding: 0.8rem 1rem 0.9rem;
+		border: 1px solid var(--profile-rule);
+		border-radius: var(--profile-card-radius);
+		background: #fff;
+		overflow-wrap: anywhere;
+	}
+
+	/* The reader's own messages sit on cream so a long thread can be scanned by speaker. */
+	& > [data-own="true"] article {
+		border-color: oklch(90% 0.035 88);
+		background: var(--profile-cream);
+	}
+
+	/* A reply redirects to its own fragment; mark where it landed. */
+	& > li:target article {
+		outline: 2px solid var(--profile-lime-deep);
+		outline-offset: 2px;
+	}
+
+	& article > header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.2rem 0.6rem;
+		margin-block-end: 0.4rem;
+		font-size: 0.85rem;
+		color: var(--profile-quiet);
+
+		& strong {
+			color: var(--profile-ink);
+		}
+	}
+}
+
+.private-message-body {
+	min-inline-size: 0;
+	overflow-x: auto;
+
+	/* Fenced code scrolls sideways as one block instead of wrapping as highlighted inline code. */
+	& pre {
+		padding: 0.6rem 0.75rem;
+		border-radius: 0.5rem;
+		background: oklch(96% 0.006 85);
+		overflow-x: auto;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		white-space: pre;
+	}
+
+	& pre code {
+		padding: 0;
+		background: none;
+		font-size: inherit;
+	}
+}
+
+.message-form {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1.1rem;
+
+	/* :where() keeps this at single-class weight so the textarea rule below can refine it. */
+	& :where(input[type="text"], textarea) {
+		inline-size: 100%;
+		min-block-size: 2.75rem;
+		padding: 0.6rem 0.75rem;
+		border: 1px solid var(--profile-rule);
+		border-radius: 0.6rem;
+		background: #fff;
+		color: var(--profile-ink);
+		font: 1rem/1.5 var(--font-family-san-serif);
+
+		&:focus-visible {
+			outline: 2px solid var(--profile-ink);
+			outline-offset: 1px;
+		}
+
+		&.input-validation-error {
+			border-color: oklch(60% 0.17 25);
+		}
+	}
+
+	& textarea {
+		min-block-size: 9rem;
+		max-block-size: 60vh;
+		field-sizing: content;
+		resize: vertical;
+		font-family: var(--font-family-serif);
+	}
+
+	/* Empty validation placeholders would otherwise each claim a grid gap. */
+	& .bookmark-error:empty {
+		display: none;
+	}
+
+	& .bookmark-editor-actions {
+		justify-content: flex-end;
+		margin-block-start: 0;
+	}
+
+	& a.bookmark-editor-button {
+		text-decoration: none;
+	}
+}
+
+.message-field {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.4rem;
+
+	& > label {
+		color: var(--profile-ink);
+		font-size: 0.85rem;
+		font-weight: 700;
+	}
+}
+
+/* Recipient suggestions; recipient-autocomplete.js fills the list and toggles .show and .active. */
+.message-form .autocomplete-wrapper {
+	position: relative;
+}
+
+.message-form .autocomplete-items {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: calc(100% + 0.25rem);
+	z-index: 5;
+	display: none;
+	max-block-size: 15rem;
+	overflow-y: auto;
+	padding: 0.25rem;
+	border: 1px solid var(--profile-rule);
+	border-radius: 0.75rem;
+	background: #fff;
+	box-shadow: 0 1rem 2.5rem -1rem rgb(20 20 30 / 0.35);
+
+	&.show {
+		display: block;
+	}
+}
+
+.message-form .autocomplete-item {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.45rem 0.55rem;
+	border-radius: 0.5rem;
+	color: var(--profile-ink);
+	font-size: 0.92rem;
+	font-weight: 600;
+	cursor: pointer;
+
+	&:hover {
+		background: oklch(96% 0.006 85);
+	}
+
+	&.active {
+		background: var(--profile-ink);
+		color: #fff;
+	}
+
+	& .avatar {
+		--avatar-size: 1.75rem;
+
+		box-shadow: none;
+	}
 }
 
 /* ---- Previews of planned modules ---- */
