@@ -27,7 +27,7 @@
                 "-p:ContainerRegistry=ghcr.io",
                 "-p:ContainerRepository=qingcharles/wikiwikiworld",
                 "-p:ContainerImageTag=latest",
-                "-p:ContainerFamily=noble-chiseled-extra",
+                "-p:ContainerFamily=resolute-chiseled-extra",
                 "-p:ContainerRegistryUsername=qingcharles", 
                 "-p:ContainerRegistryPassword=",
                 "-c", "Release"

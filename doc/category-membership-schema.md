@@ -70,7 +70,7 @@ From the repository root, build and preview development changes:
 
 ```powershell
 dotnet build src/WikiWikiWorld.Web -c Release
-dotnet src/WikiWikiWorld.Web/bin/Release/net10.0/WikiWikiWorld.Web.dll backfill-categories E:/Source/WikiWikiWorld/data/app.db
+dotnet src/WikiWikiWorld.Web/bin/Release/net11.0/WikiWikiWorld.Web.dll backfill-categories E:/Source/WikiWikiWorld/data/app.db
 ```
 
 Take a consistent SQLite backup, then run the same command with `--apply` appended.

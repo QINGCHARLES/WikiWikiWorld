@@ -112,6 +112,8 @@ commit and hope it is reproducible."
 | `noble-chiseled` | Runtime only. **No ICU, no tzdata.** | The app sets `InvariantGlobalization=true` and never formats culture-aware dates, currency, or sorts. |
 | `noble-chiseled-extra` | Adds ICU + tzdata | The app uses `CultureInfo`, formats currency (`ToString("C")`), parses culture-sensitive input, or converts time zones. |
 
+.NET 11 chiseled images are built on Ubuntu 26.04: use `resolute-chiseled` / `resolute-chiseled-extra` for a `net11.0` app. The `noble-*` names apply to .NET 10.
+
 **`noble-chiseled` sets `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true`** — verified on a
 running container, 2026-08-29. Confirm for any image with:
 

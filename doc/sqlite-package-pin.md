@@ -1,4 +1,6 @@
-# SQLite native package pin (temporary)
+# SQLite native package pin (removed 2026-11-11)
+
+**Status:** the pin was removed with the upgrade to .NET 11 / EF Core 11.0.0, which references `SQLitePCLRaw.bundle_e_sqlite3` 3.0.5 itself. The rest of this note is kept as history.
 
 **TL;DR for future devs:** `src/WikiWikiWorld.Data/WikiWikiWorld.Data.csproj` pins
 `SQLitePCLRaw.bundle_e_sqlite3` to `3.0.3` to dodge a SQLite CVE in the version EF Core
@@ -93,3 +95,6 @@ should be `3.50.4.5` (≥ 3.50.2, the CVE-2025-6965 fix).
   (GHSA-2m69-gcr7-jv3q / CVE-2025-6965) that blocked the solution build under
   `TreatWarningsAsErrors`. EF Core 10.0.x still references the vulnerable 2.1.11 bundle;
   the fix lands upstream in EF Core 11 (dotnet/efcore#36535).
+- **2026-11-11** — Removed the pin with the .NET 11 / EF Core 11.0.0 upgrade. The graph now resolves
+  `SQLitePCLRaw.bundle_e_sqlite3` 3.0.5 transitively; `dotnet list package --vulnerable` reports no
+  SQLite advisory and the 395-test suite passes against the new native library.

@@ -11,7 +11,7 @@ The application uses SQLite for persistence and stores uploaded runtime media un
 
 ## Prerequisites
 
-- .NET 10 SDK or later.
+- .NET 11 SDK or later.
 - SQLite support through the bundled `Microsoft.Data.Sqlite` package.
 
 ## Build

@@ -4,6 +4,13 @@
 - **Objective:** Build the world's largest magazine encyclopedia with a wiki-style platform, in multiple languages, and downloads of magazines where possible.
 - **Target Audience:** Magazine enthusiasts, collectors, and historians.
 
+## Runtime
+
+- **Target:** .NET 11 / C# 15, ASP.NET Core 11 and EF Core 11.0.0 on SQLite (all three projects target `net11.0`; upgraded from .NET 10 on 2026-11-11). There is no `global.json`; build with the .NET 11 SDK.
+- **Container image:** publish with `ContainerFamily=resolute-chiseled-extra` (set in `.vscode/tasks.json`). **Production still runs the last .NET 10 image** until the next release; the first .NET 11 deploy needs the host CPU to support x86-64-v2.
+- **OpenAPI:** `Program.cs` pins the document to OpenAPI 3.1. ASP.NET Core 11 defaults to 3.2; move only after checking the bundled Scalar viewer against it.
+- **Removed pins:** `SQLitePCLRaw.bundle_e_sqlite3` and `System.Security.Cryptography.Xml` are no longer referenced directly; EF Core 11 resolves patched versions itself. See [the SQLite pin history](doc/sqlite-package-pin.md).
+
 ## 🛠 Operational Data (Local Only)
 - **Test User:** DevvyTheBot (formerly `llmtest`; the legacy name remains blocked outside Development)
 - **Test credentials:** Read `.local/DevvyTheBot.json` in this checkout (Git-ignored). Never copy the password into tracked files or chat. The account is restricted to Development for browser login, API tokens, registration, and session validation.

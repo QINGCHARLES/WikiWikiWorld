@@ -316,7 +316,9 @@ Builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
-Builder.Services.AddOpenApi();
+// ASP.NET Core 11 emits OpenAPI 3.2 by default. Stay on 3.1, the version this API has always
+// published, until the bundled Scalar viewer and any external consumers are checked against 3.2.
+Builder.Services.AddOpenApi(Options => Options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_1);
 
 Builder.Services.AddImageSharp();
 

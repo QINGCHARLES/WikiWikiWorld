@@ -253,7 +253,7 @@ a routing/filter string (`ef_filter___currentCulture`), never as a formatting cu
 From VS Code, **⚡ FULL RELEASE** chains publish-to-GHCR and the SSH deploy. Manually:
 
 ```bash
-dotnet publish src/WikiWikiWorld.Web/WikiWikiWorld.Web.csproj /t:PublishContainer -p:ContainerRegistry=ghcr.io -p:ContainerRepository=qingcharles/wikiwikiworld -p:ContainerFamily=noble-chiseled-extra -c Release
+dotnet publish src/WikiWikiWorld.Web/WikiWikiWorld.Web.csproj /t:PublishContainer -p:ContainerRegistry=ghcr.io -p:ContainerRepository=qingcharles/wikiwikiworld -p:ContainerFamily=resolute-chiseled-extra -c Release
 ```
 
 ```bash

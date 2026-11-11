@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	<ScopedCssEnabled>false</ScopedCssEnabled>
@@ -13,14 +13,14 @@
          integration-point bypass, affects < 1.5.0. -->
     <PackageReference Include="AngleSharp" Version="1.7.2" />
     <PackageReference Include="Markdig" Version="0.42.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0" />
     <!-- 10.0.7 -> 10.0.11 (2026-08-29): 10.0.7 pulled Microsoft.OpenApi 2.0.0, vulnerable to
          GHSA-v5pm-xwqc-g5wc (circular schema references terminate parsing). 10.0.11 requires
          Microsoft.OpenApi [2.7.5, 3.0.0), and 2.7.5 is the first patched 2.x release, so no
          direct pin on Microsoft.OpenApi is needed. -->
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="11.0.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.9" />
     <PackageReference Include="SixLabors.ImageSharp.Web" Version="3.2.0" />
   </ItemGroup>
