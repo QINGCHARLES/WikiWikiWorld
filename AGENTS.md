@@ -1,14 +1,17 @@
-# AGENTS.md - v20
+# AGENTS.md - v21
 
 ## Defaults and existing projects
 
-* **Runtime:** .NET 10 / C# 14 is the default for all new projects and standalone examples. In an existing project, respect its current target until an upgrade is agreed.
-* **Older .NET projects:** ask whether to upgrade to .NET 10 unless I have already answered for this scope. First inspect the project and propose the smallest compatible change: usually update `TargetFramework`/`TargetFrameworks`, preserving platform qualifiers, then adjust only required SDK, packages, workloads, or incompatible code. Avoid migration tools and broad refactoring when ordinary changes suffice. Continue compatible work on the current target while awaiting a decision. Build and verify an approved upgrade; changing the TFM alone does not prove compatibility.
+* **Runtime:** .NET 11 / C# 15 is the default for all new projects and standalone examples. Existing projects on an older .NET target are upgraded to .NET 11 under the standing approval below.
+* **Older .NET projects:** upgrading to .NET 11 is pre-approved; do not ask first. When a task takes you into a project on an older target, upgrade it as a separate step (its own commit, before the task's other changes) unless `PROJECT.md` records a hold.
+  * Make the smallest compatible change: update `TargetFramework`/`TargetFrameworks`, preserving platform qualifiers; move `global.json`, CI, and the container base image to .NET 11; move version-matched `Microsoft.*` packages (ASP.NET Core, EF Core, `Microsoft.Extensions.*`) and tools such as `dotnet-ef` to their stable 11.x releases together; then fix only what the upgrade breaks. Avoid migration tools and broad refactoring when ordinary changes suffice.
+  * Check the .NET 11, ASP.NET Core 11, and EF Core 11 breaking-change lists against what the project actually uses. Build, run the tests, and verify affected behavior; changing the TFM alone does not prove compatibility. Record the new target in `PROJECT.md`.
+  * If a dependency, workload, build host, or deployment host blocks the upgrade, report the concrete blocker, record the hold in `PROJECT.md`, and continue compatible work on the current target. Deploying the upgraded build to production still needs the usual approval.
 * **Windows desktop:** use WinUI 3 with the Windows App SDK for new Windows desktop apps; develop and run them on Windows. Maintain existing WinForms/WPF apps unless a UI migration is agreed. Do not default new apps to WinForms.
 * **Web:** ASP.NET Core Razor Pages, developed on Windows and deployed as chiseled Docker containers on bare-metal Ubuntu. Use the brief deployment conventions below.
 * **Mobile:** .NET MAUI for Android/iOS/iPadOS; follow the platform SDK, workload, and build-host requirements recorded by the project.
-* **Data:** EF Core 10 + SQLite for new projects. Existing Dapper projects remain supported under the data-access transition policy below.
-* A runtime upgrade does not authorize a UI-framework migration, an ORM migration, or a deployment redesign. Treat their scopes separately.
+* **Data:** EF Core 11 + SQLite for new projects. Existing Dapper projects remain supported under the data-access transition policy below.
+* A runtime upgrade does not authorize a UI-framework migration, an ORM migration, a deployment redesign, or a rewrite of working code to use new language features. Treat their scopes separately; new-feature adoption follows "C# 15: unions, closed hierarchies, and adoption" below.
 
 ## Instruction priority and project context
 
@@ -49,10 +52,19 @@ If a material conflict remains unresolved by this order, explain it and ask for 
 
 Do not reject modern APIs based on model memory. Check the actual target, SDK/language and package versions, namespaces, overloads, and diagnostics. Check database-provider translation separately from API availability. Consult official documentation for unresolved version-sensitive questions. Diagnose failures before proposing dependency changes; never silently upgrade or downgrade to make an example work.
 
-These released capabilities are valid on the .NET 10 baseline, subject to their required packages and context:
+These released capabilities are valid on the .NET 11 baseline, subject to their required packages and context:
 
 |Capability|Context|
 |-|-|
+|`union Name(CaseA, CaseB);` declarations with exhaustive `switch`|C# 15; needs `UnionAttribute`/`IUnion` from the .NET 11 runtime|
+|`closed` class hierarchies with exhaustive `switch`|C# 15|
+|Collection expression arguments, such as `\[with(Comparer), .. Items]`|C# 15|
+|Extension indexers in `extension(Type Receiver)` blocks; labeled `break`/`continue`|C# 15|
+|Union serialization and `\[JsonUnion]`|`System.Text.Json` in .NET 11|
+|`FullJoin(...)` and tuple-returning `Join`/`GroupJoin`/`LeftJoin`/`RightJoin` overloads|.NET 11 LINQ; EF Core 11 translates `FullJoin` on relational providers|
+|`MaxBy`/`MinBy` and their async forms in queries|EF Core 11 translation|
+|`AsyncValidationAttribute`, `IAsyncValidatableObject`, `Validator.ValidateObjectAsync`, `IAsyncValidateOptions<T>`|.NET 11 DataAnnotations and options|
+|`Process.RunAsync(...)` / `Process.RunAndCaptureTextAsync(...)`|.NET 11|
 |`extension(Type Receiver)` blocks and `field`-backed properties|C# 14|
 |`TypedResults.ServerSentEvents(...)`|ASP.NET Core 10 server-to-client streaming|
 |`Builder.Services.AddValidation()`|ASP.NET Core 10 Minimal API validation|
@@ -60,9 +72,9 @@ These released capabilities are valid on the .NET 10 baseline, subject to their 
 |`LeftJoin(...)` / `RightJoin(...)`|.NET 10 LINQ operators with EF Core 10 translation support|
 |Named `HasQueryFilter(...)` and `IgnoreQueryFilters(\["FilterName"])`|EF Core 10|
 
-Use the compiler's default language version for the target (.NET 10 defaults to C# 14). Do not enable preview language features or prerelease packages without an agreed need. Older projects awaiting an upgrade must use capabilities supported by their actual target.
+Use the compiler's default language version for the target (.NET 11 defaults to C# 15). Do not enable preview language features or prerelease packages without an agreed need; the C# 15 memory-safety rules (`unsafe(...)` expressions, the `safe` keyword, pointer relaxations) are still preview and stay off. Projects held on an older target must use capabilities supported by their actual target.
 
-References when needed: [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14), [EF Core 10](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/whatsnew).
+References when needed: [C# 15](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-15), [union types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/union), [.NET 11](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-11/overview), [EF Core 11](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-11.0/whatsnew). Breaking changes: [.NET 11](https://learn.microsoft.com/en-us/dotnet/core/compatibility/11), [ASP.NET Core 11](https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/11/overview), [EF Core 11 and Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-11.0/breaking-changes).
 
 ## Naming, formatting, and build conventions
 
@@ -71,7 +83,7 @@ References when needed: [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/
 * Use descriptive names, including longer names when helpful. Preserve public/named-argument contracts, external JSON/config schemas, database mappings, framework/browser-required names, and generated code. Avoid unrelated renames.
 * Include units in owned numeric names: `DelaySeconds`, `TimeoutMs`, `FileSizeBytes`, `BufferSizeKiB`, `DistanceMeters`, `WeightKg`, `TempCelsius`. Prefer bytes; define `KB`/`MB` as decimal bytes and `KiB`/`MiB` as binary bytes. Avoid ambiguous `Kb`/`Mb`. Apply this to owned config/database/API fields without breaking existing contracts. Omit redundant units for types such as `TimeSpan`, date/time types, indices, and counters.
 * Use tabs and opening braces on their own line in C#. A single-line `if` that only returns may omit braces. Use file-scoped namespaces; use block scope only when a file genuinely needs multiple namespaces.
-* Enable nullability, warnings as errors, .NET analyzers, implicit usings, and deterministic builds. Use `AnalysisLevel=latest` with the repository-selected SDK; set `ContinuousIntegrationBuild=true` only in CI. Preserve platform-qualified TFMs such as `net10.0-windows` and project-specific `TargetFrameworks`; do not force plain `net10.0` through shared props.
+* Enable nullability, warnings as errors, .NET analyzers, implicit usings, and deterministic builds. Use `AnalysisLevel=latest` with the repository-selected SDK; set `ContinuousIntegrationBuild=true` only in CI. Preserve platform-qualified TFMs such as `net11.0-windows` and project-specific `TargetFrameworks`; do not force plain `net11.0` through shared props.
 * Record the chosen SDK and roll-forward policy in `global.json` where appropriate, and keep CI aligned. Keep compatible package/tool versions consistent without unrelated upgrades or warning suppression.
 * Express mechanical rules through the repository's `.editorconfig`, analyzers, and build configuration where supported. Follow file-format requirements for JSON, YAML, shell, and other non-C# files; do not force C# indentation rules onto them.
 * Check explicit, implicit, and generated global usings, including `GlobalUsings.cs` and project `Using` items. Avoid duplicates. Keep genuinely common namespaces global and specialized ones local; no percentage census. Remove confirmed unused usings in edited files.
@@ -81,7 +93,8 @@ References when needed: [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/
 ## Modern C# and collections
 
 * Prefer readable modern syntax: primary constructors, target-typed `new()`, pattern matching, switch expressions for values, expression-bodied members, and suitable `field`-backed properties. Prefer `is null` / `is not null` for null tests.
-* Prefer C# 14 extension blocks for new extensions inside a non-nested, nongeneric static class. Preserve public signatures and verify callers when changing overload resolution. Use `OverloadResolutionPriority` only for a demonstrated selection problem.
+* Prefer extension blocks for new extensions inside a non-nested, nongeneric static class; C# 15 also allows indexers in them. Preserve public signatures and verify callers when changing overload resolution. Use `OverloadResolutionPriority` only for a demonstrated selection problem.
+* Use a labeled `break`/`continue` rather than a flag variable or `goto` to leave or advance an outer loop.
 * Use `sealed` unless inheritance is intended or required. Make helpers and local functions `static` when they need no instance state/capture and no framework or interface contract requires an instance member.
 * Prefer matching guard helpers, such as `ArgumentNullException.ThrowIfNull(Value)` and `ArgumentException.ThrowIfNullOrWhiteSpace(Text)`. Use explicit argument exceptions when no helper expresses the required contract.
 * Prefer using declarations when method scope is the right lifetime; use an explicit block when resources, locks, or transactions should end earlier. Use `await using` for asynchronous disposal where appropriate.
@@ -91,7 +104,17 @@ References when needed: [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/
 * Consider `params ReadOnlySpan<T>`, other supported `params` collections, `readonly record struct` value objects, and immutable/frozen collections when justified. Account for boxing, copying, and construction costs rather than assuming a performance improvement.
 * C# 14 null-conditional assignment, supported lambda modifiers, and `nameof` on unbound generics are available when clearer. Use `"\\e"` for ANSI escape characters. Use less common features such as inline arrays, ref constraints, or partial members only for an actual requirement.
 
-Never return null for collection results. Empty means successful absence of results, not failure/cancellation. Use a non-collection result type when unavailable data must be distinguished from an empty result.
+### C# 15: unions, closed hierarchies, and adoption
+
+* Use a new feature where it removes a real weakness. Write new code with it where it fits. Convert existing code when the task already changes that code, or when the conversion fixes a concrete defect such as an unhandled case or a throwing default arm. Do not sweep a codebase to adopt features, and keep conversions out of the runtime-upgrade commit.
+* Declare a `union` when a value is exactly one of a fixed set of otherwise unrelated types and every consumer must handle each one: result-or-error returns, a closed set of messages or commands, parse outcomes. It replaces marker interfaces that exist only for pattern matching, `(bool Success, T? Value, string? Error)` shapes, pairs of nullables where exactly one is set, and third-party one-of types.
+* Use a `closed` hierarchy instead when the cases are types you own that share members or state. Derived types must live in the declaring assembly; mark intermediate types `closed` as well when exhaustiveness must extend below them.
+* Consume both with `switch` expressions that name every case and have no discard or `var` arm, so adding a case fails the build at each switch that misses it. A declared union is a struct whose `default` holds null: add a `null` arm wherever a default value (an unset field, an array element) can reach the switch, because the compiler does not always warn.
+* Know the costs. A declared union stores its value as `object?`, so value-type cases box; write a custom `\[Union]` type with `TryGetValue` members only for a measured hot path. A union adds no equality or deconstruction. Avoid case types where one value converts to more than one case.
+* Keep unions where they can be carried. EF Core 11 documents no union mapping, so keep them out of entities and mapped properties. ASP.NET Core 11 binds them only from JSON bodies, not route, query, header, or form values. `System.Text.Json` writes the active case with no discriminator and chooses the case on read by JSON token kind; two object-shaped cases need `\[JsonUnion(TypeClassifier = typeof(JsonUnionTypeStructuralClassifier))]` or a custom classifier. Treat a union in a public JSON contract as a contract decision.
+* Do not use a union for plain absence (use a nullable) or for genuinely exceptional failures (throw).
+
+Never return null for collection results. Empty means successful absence of results, not failure/cancellation. Use a non-collection result type, such as a union, when unavailable data must be distinguished from an empty result.
 
 Use collection expressions when the target type is supported and known. For ordinary in-memory collections:
 
@@ -101,12 +124,14 @@ Use collection expressions when the target type is supported and known. For ordi
 |Materialize list|`List<Article> Result = \[.. Articles];`|
 |Materialize array|`Article\[] Result = \[.. Articles];`|
 |Default-comparer set|`HashSet<Item> Result = \[.. Items];`|
+|Set with a comparer|`HashSet<string> Result = \[with(StringComparer.OrdinalIgnoreCase), .. Names];`|
+|List with a known capacity|`List<Article> Result = \[with(capacity: ExpectedCount), .. Articles];`|
 |Empty concrete dictionary|`Dictionary<string, int> Counts = \[];`|
 |Copy a concrete dictionary and its comparer|`Dictionary<string, int> Copy = new(Counts, Counts.Comparer);`|
 |Empty synchronous sequence|`Enumerable.Empty<T>()` or a target-typed `\[]`|
-|Empty asynchronous sequence on .NET 10|`AsyncEnumerable.Empty<T>()`|
+|Empty asynchronous sequence|`AsyncEnumerable.Empty<T>()`|
 
-Keep `ToHashSet(Comparer)` and `ToDictionary(...)` for required comparers/projections/duplicate-key behavior. Use a constructor for dictionary copies, not spread-copy syntax. Preserve EF asynchronous materialization. When target inference fails, use an explicit API result type, typed local, or cast; retain LINQ when clearer.
+Pass a comparer or capacity with a leading `with(...)` element. Keep `ToDictionary(...)` for projections and duplicate-key behavior, and `ToHashSet(Comparer)` where it ends a LINQ chain more clearly. Use a constructor for dictionary copies, not spread-copy syntax. Preserve EF asynchronous materialization. When target inference fails, use an explicit API result type, typed local, or cast; retain LINQ when clearer.
 
 ## XML documentation and human readability
 
@@ -132,7 +157,7 @@ Reference when needed: [synchronous lock semantics](https://learn.microsoft.com/
 
 ### Transition and ownership
 
-* Use EF Core 10 + SQLite for new projects. Maintain Dapper during ordinary maintenance and feature work in existing Dapper areas. Convert only within the migration scope already agreed for the task or an approved project plan.
+* Use EF Core 11 + SQLite for new projects. Maintain Dapper during ordinary maintenance and feature work in existing Dapper areas. Convert only within the migration scope already agreed for the task or an approved project plan.
 * `PROJECT.md` identifies the current stack and partially migrated areas. Preserve each area's established stack outside the agreed scope. EF-specific rules do not require introducing EF components into Dapper code, and an ORM migration does not follow automatically from a runtime upgrade.
 * Keep data access in established service/query boundaries rather than page markup or handlers. Do not add generic repositories, specifications, or interfaces without demonstrated value. Parameterize SQL values, including in retained Dapper queries.
 
@@ -142,8 +167,8 @@ Reference when needed: [synchronous lock semantics](https://learn.microsoft.com/
 * Use scoped contexts for normal web requests. Use an appropriate scope or `IDbContextFactory<TContext>` for background jobs, desktop/mobile operations, and independent concurrent units of work. Dispose contexts you create; do not retain one in a singleton or for application lifetime.
 * Project needed columns to DTOs in the query. Use `AsNoTracking()` for read-only entity results. Entity-free projections already avoid tracking; DTOs containing entities can still track them. Track entities when the unit of work updates them.
 * Keep filtering, projection, ordering, and bounded paging in `IQueryable` before materialization. Avoid unnecessary graphs, round trips, and accidental client evaluation. Use deterministic paging order with a tie-breaker when needed.
-* Prefer `Any()`/`AnyAsync()` for existence queries. In-memory `Chunk`, `MaxBy`/`MinBy`, and collection expressions are not universal EF optimizations. Check changed query shapes for translation and SQL; do not hide translation failures with client evaluation.
-* Use .NET 10 `LeftJoin`/`RightJoin` where clearer and supported by the provider/query shape. For EF Core 10 soft-delete or tenant filters, use named filters and selectively disable only the intended filter, such as `IgnoreQueryFilters(\["SoftDelete"])`. Preserve required tenant isolation; bypassing a filter is an explicit operation, not a default query workaround.
+* Prefer `Any()`/`AnyAsync()` for existence queries. EF Core 11 translates `MaxBy`/`MinBy`; in-memory `Chunk` and collection expressions are still not EF optimizations. Check changed query shapes for translation and SQL; do not hide translation failures with client evaluation.
+* Use `LeftJoin`/`RightJoin` and .NET 11 `FullJoin` where clearer and supported by the provider/query shape. For soft-delete or tenant filters, use named filters and selectively disable only the intended filter, such as `IgnoreQueryFilters(\["SoftDelete"])`. Preserve required tenant isolation; bypassing a filter is an explicit operation, not a default query workaround.
 * Write LINQ in method syntax. Use query syntax only where `let`, group joins, or multi-source joins are materially clearer; do not mix styles within one query without need. Prefer navigation properties over explicit joins.
 * Use raw SQL in EF areas only for constructs EF cannot translate (for example SQLite FTS5, recursive CTEs, window functions) or a measured query problem after inspecting the generated SQL. Use `FromSql`/`SqlQuery`/`ExecuteSql` with interpolated parameters; never pass concatenated or interpolated values to `FromSqlRaw`/`ExecuteSqlRaw`. Select explicit columns, not `*`, and keep raw SQL in the query/service boundary.
 * Raw SQL is not compile-checked: cover each raw query with a test against the actual provider so renames and schema changes fail in tests, not production.
@@ -154,7 +179,7 @@ Reference when needed: [synchronous lock semantics](https://learn.microsoft.com/
 * EF's SQLite provider uses `Microsoft.Data.Sqlite`; let the configured context/provider manage ordinary connection lifetimes. Centralize connection settings, foreign-key enforcement, and initialization rather than repeating PRAGMAs in handlers.
 * Prefer WAL with normal/private cache for file-backed databases. Do not add `Cache=Shared` alongside WAL by default; special shared in-memory scenarios need an explicit reason.
 * SQLite's ADO.NET async methods execute synchronously. Propagate cancellation where supported, but do not promise nonblocking database I/O or immediate interruption merely because an API is async. Keep units of work short and respect provider concurrency limits.
-* Use EF migrations for schema evolution in new EF projects. For existing projects, follow the recorded schema owner and application procedure, including approved manual SQL. Do not silently introduce startup migrations, replace migration history, or mix `EnsureCreated` with a migrations-managed database.
+* Use EF migrations for schema evolution in new EF projects. For existing projects, follow the recorded schema owner and application procedure, including approved manual SQL. Do not silently introduce startup migrations, replace migration history, or mix `EnsureCreated` with a migrations-managed database. EF Core 11 `Migrate()`/`MigrateAsync()` throws when the assembly contains no migrations; where the schema is managed another way, remove the call rather than suppress the error.
 * Plan Dapper-to-EF baseline migrations around existing schema/data. Review generated changes for data, constraints, and externally managed objects. Justify indexes by queries and required correctness constraints.
 * Record who applies migrations and when. SQLite cannot generate EF standard idempotent scripts; use a supported procedure based on actual migration state. Test schema changes on representative disposable data and assess rollback/recovery before deployment.
 * Default to `synchronous=FULL` for durable writes in new SQLite setups. Preserve the project's documented durability policy and its configuration owner. Relax durability only for explicitly classified, reconstructible data with accepted loss; drafts/autosaves and user writing are not disposable by default. Do not alter durability inside an active transaction or add per-write wrappers when centralized configuration already owns it.
@@ -176,7 +201,7 @@ References when needed: [context lifetime](https://learn.microsoft.com/en-us/ef/
 
 * Prefer sealed, primary-constructor `PageModel` classes where compatible. Parameters are not automatically readonly fields; use explicit readonly storage when required. Preserve framework-required inheritance/members.
 * Use async handlers when they await asynchronous work, and synchronous handlers otherwise. Bind only the fields needed; enable GET binding with `SupportsGet = true` only intentionally. Prefer feature organization and reuse through partials within the established layout.
-* Use Minimal API `AddValidation()` with its required package when appropriate; disable per-endpoint validation only deliberately. Use keyed services for actual multiple-implementation selection needs.
+* Use Minimal API `AddValidation()` with its required package when appropriate; disable per-endpoint validation only deliberately. For a validation rule that needs I/O, use the .NET 11 async validators (`AsyncValidationAttribute`, `IAsyncValidatableObject`) rather than blocking inside `IsValid`. Use keyed services for actual multiple-implementation selection needs.
 * Prefer `TypedResults.ServerSentEvents(...)` for suitable unidirectional updates. Select polling, SSE, or WebSockets according to required behavior.
 * For JSON Patch, prefer `Microsoft.AspNetCore.JsonPatch.SystemTextJson` with a compatible package and endpoint binding. A `PATCH` request does not inherently require JSON Patch. Restrict updates to the intended input surface and apply validation before persistence.
 * Use structured logs and scopes for meaningful operational context when logging is needed. Do not add logging boilerplate to every small method or leave temporary debugging output behind.
@@ -198,7 +223,7 @@ References when needed: [factory handler behavior](https://learn.microsoft.com/e
 
 The standard is a chiseled Docker container on a bare-metal Ubuntu host. Keep host provisioning, actual domains, registry values, schedules, and recovery procedures in the project's deployment runbook.
 
-* **Build:** use SDK container publishing (`dotnet publish -t:PublishContainer`), normally without a Dockerfile. Target the host's Linux architecture and a compatible chiseled image; use `ContainerFamily=noble-chiseled-extra` and `InvariantGlobalization=false` for culture/currency/time-zone features. Check native/font dependencies; runtime images have no shell/package manager.
+* **Build:** use SDK container publishing (`dotnet publish -t:PublishContainer`), normally without a Dockerfile. Target the host's Linux architecture and a compatible chiseled image; use `ContainerFamily=resolute-chiseled-extra` (.NET 11 chiseled images are built on Ubuntu 26.04; a project held on .NET 10 keeps `noble-chiseled-extra`) and `InvariantGlobalization=false` for culture/currency/time-zone features. Check native/font dependencies; runtime images have no shell/package manager. .NET 11 will not start on an x64 CPU below x86-64-v2: confirm the host before its first .NET 11 deploy. The .NET 11 SDK prefers a platform-native local container runtime (`wslc` on Windows) over Docker; confirm where a local publish put the image, or publish straight to the registry.
 * **Edge:** single-app hosts expose Kestrel HTTP 80 / HTTPS 443 with app-side TLS. Do not add a proxy or forwarded-header processing by default; configure trusted proxies only when the project actually uses them.
 * **State/config:** keep binaries in `/app`, persistent data/uploads in bind-mounted `/app/data`, and certificates in `/app/certs`. Match production paths/endpoints to mounts. Run non-root; verify permissions against the image user (normally UID/GID 1654). Keep secrets outside tracked files/images.
 * **TLS:** serve only `/app/data/.well-known/acme-challenge` at its public ACME path before HTTP redirects/authentication; never expose the data root. Cover all hostnames, including redirect sources. Runbooks own issuance/renewal and certificate activation by restart or verified reload.
