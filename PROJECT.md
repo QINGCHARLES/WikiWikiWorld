@@ -7,7 +7,7 @@
 ## Runtime
 
 - **Target:** .NET 11 / C# 15, ASP.NET Core 11 and EF Core 11.0.0 on SQLite (all three projects target `net11.0`; upgraded from .NET 10 on 2026-11-11). There is no `global.json`; build with the .NET 11 SDK.
-- **Container image:** publish with `ContainerFamily=resolute-chiseled-extra` (set in `.vscode/tasks.json`). **Production still runs the last .NET 10 image** until the next release. The production host's CPU was checked read-only over SSH on 2026-11-11 (Skylake Xeon; the glibc loader reports x86-64-v2, v3 and v4 as supported), so it meets .NET 11's x86-64-v2 minimum and its x86-64-v3 ReadyToRun target.
+- **Container image:** publish with `ContainerFamily=resolute-chiseled-extra` (set in `.vscode/tasks.json`). Production has run .NET 11 since 2026-11-11 (`release-20261111T172401Z-dae5d261ea47`); see [verification and rollback](doc/release-dotnet11-2026-11-11.md). The production host's CPU was checked read-only over SSH on 2026-11-11 (Skylake Xeon; the glibc loader reports x86-64-v2, v3 and v4 as supported), so it meets .NET 11's x86-64-v2 minimum and its x86-64-v3 ReadyToRun target.
 - **OpenAPI:** `Program.cs` pins the document to OpenAPI 3.1. ASP.NET Core 11 defaults to 3.2; move only after checking the bundled Scalar viewer against it.
 - **Removed pins:** `SQLitePCLRaw.bundle_e_sqlite3` and `System.Security.Cryptography.Xml` are no longer referenced directly; EF Core 11 resolves patched versions itself. See [the SQLite pin history](doc/sqlite-package-pin.md).
 
