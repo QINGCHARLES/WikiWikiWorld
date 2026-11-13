@@ -70,6 +70,11 @@ public sealed record class RenderedArticle
 	public string? EyebrowLabel { get; init; }
 
 	/// <summary>
+	/// Gets the resolved eyebrow type, or <see langword="null"/> when the article has no valid eyebrow.
+	/// </summary>
+	public EyebrowType? Eyebrow { get; init; }
+
+	/// <summary>
 	/// Gets the resolved subtitle text, if present.
 	/// </summary>
 	public string? SubtitleText { get; init; }
@@ -138,6 +143,7 @@ public sealed class ArticleRenderer(
 			HeaderImageFocus = Document.GetData(HeaderImageExtension.FocusDocumentKey) as string,
 			MetaDescription = Document.GetData(ShortDescriptionExtension.DocumentKey) as string,
 			EyebrowLabel = Document.GetData(EyebrowExtension.DocumentKey) as string,
+			Eyebrow = Document.GetData(EyebrowExtension.TypeDocumentKey) as EyebrowType?,
 			SubtitleText = Document.GetData(SubtitleExtension.DocumentKey) as string,
 			FileSourceText = Document.GetData(SourceExtension.TextKey) as string,
 			FileSourceUrl = FileSourceUrl,

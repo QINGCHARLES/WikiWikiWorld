@@ -5,6 +5,7 @@ using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using WikiWikiWorld.Web.Helpers;
+using WikiWikiWorld.Web.MarkdigExtensions;
 using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Article;
@@ -189,6 +190,11 @@ public sealed class ViewModel(
     public string? EyebrowLabel { get; private set; }
 
     /// <summary>
+    /// Gets the eyebrow type extracted from the markdown, or <see langword="null"/> when the article has no valid eyebrow.
+    /// </summary>
+    public EyebrowType? Eyebrow { get; private set; }
+
+    /// <summary>
     /// Gets the subtitle text extracted from the markdown, if present.
     /// </summary>
     public string? SubtitleText { get; private set; }
@@ -215,10 +221,12 @@ public sealed class ViewModel(
 
     /// <summary>
     /// Gets a value indicating whether to render the publication-upload call-to-action aside.
-    /// True when the displayed revision is a standard Article that does not already embed a {{DownloadsBox ...}} extension.
+    /// True when the displayed revision is a standard Article whose eyebrow marks a single publication issue
+    /// (magazine, zine, journal or newsletter) and that does not already embed a {{DownloadsBox ...}} extension.
     /// </summary>
     public bool ShowPublicationUploadAside =>
         DisplayedRevision is { Type: ArticleType.Article } R
+        && Eyebrow is { } Type && EyebrowExtension.IsPublicationIssue(Type)
         && !R.Text.Contains("{{DownloadsBox ", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
@@ -351,6 +359,7 @@ public sealed class ViewModel(
         HeaderImageFocus = RenderedArticle.HeaderImageFocus;
         MetaDescription = RenderedArticle.MetaDescription ?? string.Empty;
         EyebrowLabel = RenderedArticle.EyebrowLabel;
+        Eyebrow = RenderedArticle.Eyebrow;
         SubtitleText = RenderedArticle.SubtitleText;
         FileSourceText = RenderedArticle.FileSourceText;
         FileSourceUrl = RenderedArticle.FileSourceUrl;

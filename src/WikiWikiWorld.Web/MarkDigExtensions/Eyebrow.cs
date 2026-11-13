@@ -86,6 +86,11 @@ public sealed class EyebrowExtension : IMarkdownExtension
 	public const string DocumentKey = "Eyebrow";
 
 	/// <summary>
+	/// The document metadata key used to store the parsed <see cref="EyebrowType"/>, so callers can act on the type rather than its label.
+	/// </summary>
+	public const string TypeDocumentKey = "EyebrowType";
+
+	/// <summary>
 	/// Maps each <see cref="EyebrowType"/> to its human-readable display label.
 	/// </summary>
 	private static readonly FrozenDictionary<EyebrowType, string> DisplayLabels = new Dictionary<EyebrowType, string>
@@ -132,7 +137,7 @@ public sealed class EyebrowExtension : IMarkdownExtension
 	}
 
 	/// <summary>
-	/// Extracts the eyebrow type from the parsed document and stores the display label in metadata.
+	/// Extracts the eyebrow type from the parsed document and stores both the display label and the type in metadata.
 	/// Only the first valid <see cref="EyebrowBlock"/> is used; unknown types and duplicates are ignored.
 	/// </summary>
 	/// <param name="Document">The parsed markdown document.</param>
@@ -142,8 +147,18 @@ public sealed class EyebrowExtension : IMarkdownExtension
 		if (Block is not null && DisplayLabels.TryGetValue(Block.Type, out string? Label))
 		{
 			Document.SetData(DocumentKey, Label);
+			Document.SetData(TypeDocumentKey, Block.Type);
 		}
 	}
+
+	/// <summary>
+	/// Determines whether an eyebrow marks a single issue of a publication, which is the kind of article
+	/// a reader could hold a copy of and upload.
+	/// </summary>
+	/// <param name="Type">The eyebrow type to test.</param>
+	/// <returns><see langword="true"/> for magazine, zine, journal and newsletter issues; otherwise <see langword="false"/>.</returns>
+	public static bool IsPublicationIssue(EyebrowType Type) =>
+		Type is EyebrowType.MagazineIssue or EyebrowType.ZineIssue or EyebrowType.JournalIssue or EyebrowType.NewsletterIssue;
 }
 
 /// <summary>
