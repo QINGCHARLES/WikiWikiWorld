@@ -184,13 +184,19 @@ function FitSurface() {
 /** Render the desktop cropper's reference viewports using the wiki's current hero geometry. */
 function DrawPreviews() {
     if (!Source) return;
+    const Styles = getComputedStyle(Root);
+    const DarkSurface = Styles.getPropertyValue('--color-surface-strong').trim();
+    const LightSurface = Styles.getPropertyValue('--color-white').trim();
+    const DarkInk = Styles.getPropertyValue('--color-preview-ink-light').trim();
+    const LightInk = Styles.getPropertyValue('--color-preview-ink-dark').trim();
+    const BlackRgb = Styles.getPropertyValue('--color-black-rgb').trim();
     for (const [Name, ViewWidth, ViewHeight] of [['Phone', 320, 690], ['Tablet', 800, 1280], ['Desktop', 1920, 1080]]) {
         const Canvas = Get(`Preview${Name}`);
         const Width = Math.min(ViewWidth, 1872), Height = Math.max(416, Math.min(ViewWidth * .52, ViewHeight * .6));
         const Scale = Math.min(1, 720 / Width);
         Canvas.width = Math.round(Width * Scale); Canvas.height = Math.round((Height + 70) * Scale);
         const Context = Canvas.getContext('2d'); Context.scale(Scale, Scale);
-        const Dark = Get('DarkPreview').checked, Background = Dark ? '#171717' : '#fff';
+        const Dark = Get('DarkPreview').checked, Background = Dark ? DarkSurface : LightSurface;
         Context.fillStyle = Background; Context.fillRect(0, 0, Width, Height + 70);
         const Layer = document.createElement('canvas'); Layer.width = Canvas.width; Layer.height = Math.round(Height * Scale);
         const ImageContext = Layer.getContext('2d'); ImageContext.scale(Scale, Scale);
@@ -204,26 +210,26 @@ function DrawPreviews() {
         if (Get('ShowFade').checked) {
             ImageContext.globalCompositeOperation = 'destination-in';
             const Fade = ImageContext.createLinearGradient(0, 0, 0, Height);
-            for (const [Stop, Opacity] of [[0, 1], [.5, 1], [.58, .96], [.68, .82], [.8, .5], [.91, .15], [1, 0]]) Fade.addColorStop(Stop, `rgba(0,0,0,${Opacity})`);
+            for (const [Stop, Opacity] of [[0, 1], [.5, 1], [.58, .96], [.68, .82], [.8, .5], [.91, .15], [1, 0]]) Fade.addColorStop(Stop, `rgb(${BlackRgb} / ${Opacity})`);
             ImageContext.fillStyle = Fade; ImageContext.fillRect(0, 0, Width, Height);
             const Feather = Math.min(96, Math.max(0, (ViewWidth - 1872) / 2));
             if (Feather) {
                 const Edge = ImageContext.createLinearGradient(0, 0, Width, 0);
                 for (const [Stop, Opacity] of [[0, 0], [.25, .15], [.5, .5], [.75, .85], [.9, .97], [1, 1]]) {
-                    Edge.addColorStop(Stop * Feather / Width, `rgba(0,0,0,${Opacity})`);
-                    Edge.addColorStop(1 - Stop * Feather / Width, `rgba(0,0,0,${Opacity})`);
+                    Edge.addColorStop(Stop * Feather / Width, `rgb(${BlackRgb} / ${Opacity})`);
+                    Edge.addColorStop(1 - Stop * Feather / Width, `rgb(${BlackRgb} / ${Opacity})`);
                 }
                 ImageContext.fillStyle = Edge; ImageContext.fillRect(0, 0, Width, Height);
             }
         }
         Context.drawImage(Layer, 0, 0, Width, Height);
         if (Get('ShowBar').checked) {
-            Context.fillStyle = Dark ? '#171717dd' : '#ffffffdd'; Context.fillRect(0, 0, Width, 75);
-            Context.fillStyle = Dark ? '#efefef' : '#333535'; Context.font = 'bold 24px system-ui'; Context.fillText(Root.dataset.siteName, 20, 45, Width - 40);
+            Context.save(); Context.globalAlpha = 221 / 255; Context.fillStyle = Background; Context.fillRect(0, 0, Width, 75); Context.restore();
+            Context.fillStyle = Dark ? DarkInk : LightInk; Context.font = 'bold 24px system-ui'; Context.fillText(Root.dataset.siteName, 20, 45, Width - 40);
         }
         if (Get('ShowTitle').checked) {
             const TitleSize = Math.max(56, Math.min(ViewWidth * .1, ViewHeight * .14, 120));
-            Context.fillStyle = Dark ? '#efefef' : '#333535'; Context.font = `900 ${TitleSize}px Georgia`; Context.textAlign = 'center';
+            Context.fillStyle = Dark ? DarkInk : LightInk; Context.font = `900 ${TitleSize}px Georgia`; Context.textAlign = 'center';
             Context.fillText('Article title', Width / 2, Height - TitleSize * .1, Width - 32);
         }
     }

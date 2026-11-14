@@ -23,10 +23,10 @@
         <div class="not-found-actions">
             @if (!string.IsNullOrWhiteSpace(Model.UrlSlug))
             {
-                <a href="/@Model.UrlSlug/edit" class="button button-primary">Create this Page</a>
+                <a href="/@Model.UrlSlug/edit" class="button button-primary" data-button-variant="primary">Create this Page</a>
             }
-            <a href="/" class="button button-secondary">Go Home</a>
-            <a href="javascript:history.back()" class="button button-secondary">Go Back</a>
+            <a href="/" class="button button-secondary" data-button-variant="ghost">Go Home</a>
+            <a href="javascript:history.back()" class="button button-secondary" data-button-variant="ghost">Go Back</a>
         </div>
     </div>
 </div>
@@ -50,7 +50,7 @@
         font-weight: 800;
         line-height: 1;
         margin: 0;
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary, #f3de8a) 100%);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         opacity: 0.8;

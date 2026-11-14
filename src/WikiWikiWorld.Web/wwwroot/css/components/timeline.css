@@ -21,7 +21,7 @@ li.timeline-item::before {
 	top: 18px;
 	bottom: 0;
 	width: 0;
-	border-left: 2px dotted var(--color-border, #555555);
+	border-left: 2px dotted var(--color-border);
 }
 
 /* Last timeline item has no trailing line below its node marker */
@@ -41,8 +41,8 @@ li.timeline-item .timeline-marker {
 	width: 14px;
 	height: 14px;
 	border-radius: 50%;
-	border: 2px solid var(--color-foreground, #ffffff);
-	background-color: var(--color-background, #1c1b1f);
+	border: 2px solid var(--color-foreground);
+	background-color: var(--color-background);
 	box-sizing: border-box;
 	z-index: 1;
 }
@@ -68,7 +68,7 @@ li.timeline-item .timeline-date {
 	font-size: var(--step--1, 0.9rem);
 	font-style: italic;
 	line-height: 1.4;
-	color: var(--color-muted, #a0a0a0);
+	color: var(--color-muted);
 	margin-bottom: 0.75rem;
 }
 

@@ -157,14 +157,12 @@
 		}
 		else if (List is not null && IsOwner)
 		{
-			<div class="bookmark-intro-empty">
-				<p><strong>Add an introduction</strong></p>
-				<p>@(List.IsPublic ? "Tell readers what this list is for. It appears above the entries." : "Say what this list is for. Readers see it if you make the list public.")</p>
+			<p class="bookmark-intro-empty">
 				<button type="button" class="bookmark-text-button" commandfor="bookmark-intro-dialog" command="show-modal">
 					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Add"></use></svg>
-					Write an introduction
+					Add an introduction
 				</button>
-			</div>
+			</p>
 		}
 
 		@if (List is null)
@@ -219,13 +217,13 @@
 										<textarea id="@EditorId-text" name="notes" maxlength="@Bookmark.MaxNotesLength" rows="3"
 											placeholder="Why is this in “@List.Name”?" aria-describedby="@EditorId-help">@Item.Notes</textarea>
 										<p class="bookmark-editor-help" id="@EditorId-help">
-											<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>. Ctrl+Enter saves.</span>
+											<span>Markdown supported</span>
 											<span class="bookmark-editor-count" data-count-for="@EditorId-text" aria-hidden="true"></span>
 										</p>
 										<div class="bookmark-editor-actions">
 											<span class="bookmark-editor-visibility" data-public="@(List.IsPublic ? "true" : "false")">
-												<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
-												@(List.IsPublic ? "Public list. Anyone can read this." : "Private list. Only you can see this.")
+												<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
+												@(List.IsPublic ? "Public" : "Private")<span class="visually-hidden"> list. @(List.IsPublic ? "Anyone can read this." : "Only you can see this.")</span>
 											</span>
 											<button type="button" class="bookmark-editor-button" data-bookmark-note-cancel="true">Cancel</button>
 											<button type="submit" class="bookmark-editor-button" data-variant="primary">Save note</button>
@@ -289,24 +287,26 @@
 		<dialog id="bookmark-intro-dialog" class="bookmark-dialog bookmark-intro-dialog" aria-labelledby="bookmark-intro-title" closedby="any">
 			<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 				<input type="hidden" name="operation" value="description" />
-				<p class="bookmark-editor-eyebrow">Introduction · @List.Name</p>
-				<h2 class="bookmark-editor-title" id="bookmark-intro-title">@(string.IsNullOrWhiteSpace(Introduction) ? "Introduce this list" : "Edit the introduction")</h2>
+				<div class="bookmark-editor-head">
+					<p class="bookmark-editor-eyebrow">Introduction · @List.Name</p>
+					<span class="bookmark-editor-visibility" id="bookmark-intro-visibility" data-public="@(List.IsPublic ? "true" : "false")">
+						<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
+						@(List.IsPublic ? "Public" : "Private")<span class="visually-hidden"> list. @(List.IsPublic ? "Anyone can read this." : "Only you can see this, until you make the list public.")</span>
+					</span>
+				</div>
+				<h2 class="bookmark-editor-title" id="bookmark-intro-title">@(string.IsNullOrWhiteSpace(Introduction) ? "Introduce this list" : "Edit introduction")</h2>
 				<div class="bookmark-editor-tabs" role="tablist" aria-label="Editor mode" hidden>
 					<button type="button" role="tab" aria-selected="true" aria-controls="bookmark-intro-text" data-bookmark-intro-tab="write">Write</button>
 					<button type="button" role="tab" aria-selected="false" aria-controls="bookmark-intro-preview" data-bookmark-intro-tab="preview">Preview</button>
 				</div>
 				<label class="visually-hidden" for="bookmark-intro-text">Introduction</label>
-				<textarea id="bookmark-intro-text" name="description" autofocus maxlength="@BookmarkList.MaxDescriptionLength" rows="8"
-					placeholder="What is this list for, and who is it for? Readers see this above the entries."
-					aria-describedby="bookmark-intro-help">@Introduction</textarea>
+				<textarea id="bookmark-intro-text" name="description" autofocus maxlength="@BookmarkList.MaxDescriptionLength" rows="6"
+					placeholder="What is this list for? Readers see this above the entries."
+					aria-describedby="bookmark-intro-help bookmark-intro-visibility">@Introduction</textarea>
 				<div class="bookmark-markdown bookmark-intro-preview" id="bookmark-intro-preview" role="tabpanel" aria-live="polite" hidden></div>
 				<p class="bookmark-editor-help" id="bookmark-intro-help">
-					<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>, <code>- lists</code>, a blank line for a new paragraph.</span>
+					<span>Markdown supported · Blank line for new paragraph</span>
 					<span class="bookmark-editor-count" data-count-for="bookmark-intro-text" aria-hidden="true"></span>
-				</p>
-				<p class="bookmark-editor-visibility" data-public="@(List.IsPublic ? "true" : "false")">
-					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
-					@(List.IsPublic ? "Public list. Anyone can read this." : "Private list. Only you can see this, until you make the list public.")
 				</p>
 				<div class="bookmark-editor-actions">
 					@if (!string.IsNullOrWhiteSpace(Introduction))

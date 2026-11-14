@@ -21,10 +21,10 @@
     flex-shrink: 0;
     border-radius: 50%;
     overflow: hidden;
-    border: calc(var(--avatar-size) * 0.065) solid #ffffff;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    border: calc(var(--avatar-size) * 0.065) solid var(--color-white);
+    box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.1);
     text-decoration: none;
-    background-color: #777;
+    background-color: var(--color-muted-mid);
     transition: transform 0.15s ease;
 }
 
@@ -54,8 +54,8 @@ a.avatar:hover {
     justify-content: center;
     width: 100%;
     height: 100%;
-    color: #fff;
-    background-color: #555;
+    color: var(--color-white);
+    background-color: var(--color-muted);
     font-family: var(--font-family-san-serif);
     font-weight: 600;
     font-size: calc(var(--avatar-size) * 0.4);
@@ -135,7 +135,7 @@ a.avatar:hover {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8c96a6;
+    color: var(--color-muted-subtle);
     white-space: nowrap;
 }
 
@@ -155,12 +155,12 @@ a.avatar:hover {
     text-decoration: none;
 
     &:hover {
-        color: var(--color-primary);
+        color: var(--color-hyperlinks);
         text-decoration: underline;
     }
 }
 
 .editor-info dd > span {
-    color: #8c96a6;
+    color: var(--color-muted-subtle);
     font-weight: 400;
 }

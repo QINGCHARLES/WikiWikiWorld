@@ -3,16 +3,16 @@
 
 .profile {
 	--profile-inline-size: min(100vw, 76rem);
-	--profile-ink: oklch(21% 0.012 255);
-	--profile-paper: oklch(98.6% 0.006 85);
-	--profile-cream: oklch(95.5% 0.028 88);
-	--profile-lime: oklch(90% 0.2 125);
-	--profile-lime-deep: oklch(80% 0.2 128);
-	--profile-rule: oklch(90.5% 0.008 85);
-	--profile-quiet: oklch(52% 0.01 260);
+	--profile-ink: var(--color-brand-ink);
+	--profile-paper: var(--color-paper);
+	--profile-cream: var(--color-paper-cream);
+	--profile-lime: var(--color-brand-lime);
+	--profile-lime-deep: var(--color-brand-lime-hover);
+	--profile-rule: var(--color-paper-rule);
+	--profile-quiet: var(--color-paper-ink-muted);
 	--profile-card-radius: 1rem;
 	--profile-pad: clamp(1rem, 0.75rem + 1.2vw, 1.4rem);
-	--profile-shadow: 0 1px 0 rgb(20 20 30 / 0.03), 0 0.75rem 2rem -1.25rem rgb(20 20 30 / 0.22);
+	--profile-shadow: 0 1px 0 rgb(var(--color-shadow-ink-rgb) / 0.03), 0 0.75rem 2rem -1.25rem rgb(var(--color-shadow-ink-rgb) / 0.22);
 	--profile-label: 700 0.68rem/1.2 var(--font-family-wide-grotesque);
 	--profile-avatar: clamp(6rem, 4.5rem + 5vw, 9.5rem);
 
@@ -47,7 +47,7 @@
 		font-size: 0.85em;
 		padding: 0.05em 0.35em;
 		border-radius: 0.3em;
-		background: oklch(94% 0.01 85);
+		background: var(--color-paper-well);
 	}
 }
 
@@ -90,7 +90,7 @@
 	--avatar-size: var(--profile-avatar);
 
 	position: relative;
-	box-shadow: 0 0.9rem 2rem -0.5rem rgb(10 12 20 / 0.35);
+	box-shadow: 0 0.9rem 2rem -0.5rem rgb(var(--color-shadow-deep-rgb) / 0.35);
 	background: var(--profile-ink);
 
 	& .avatar-initials {
@@ -99,8 +99,8 @@
 		text-transform: none;
 		color: var(--profile-cream);
 		background:
-			radial-gradient(90% 90% at 25% 15%, oklch(62% 0.17 145), transparent 70%),
-			linear-gradient(160deg, oklch(42% 0.1 200), var(--profile-ink));
+			radial-gradient(90% 90% at 25% 15%, var(--color-brand-lime-bright-glow), transparent 70%),
+			linear-gradient(160deg, var(--color-brand-lime-shadow), var(--profile-ink));
 	}
 }
 
@@ -168,8 +168,8 @@
 }
 
 .profile-role {
-	background: oklch(93% 0.05 145);
-	color: oklch(38% 0.1 145);
+	background: var(--color-brand-lime-surface);
+	color: var(--color-hyperlinks);
 }
 
 .profile-summary {
@@ -178,7 +178,7 @@
 	font-family: var(--font-family-serif);
 	font-size: 1.05rem;
 	line-height: 1.5;
-	color: oklch(35% 0.01 260);
+	color: var(--color-paper-ink-mid);
 }
 
 .profile-actions {
@@ -200,21 +200,23 @@
 	}
 
 	& .button[data-button-variant="ghost"] {
+		--button-bg: var(--color-white);
 		--button-color: var(--profile-ink);
 		--button-border-color: var(--profile-rule);
 		--button-hover-bg: var(--profile-ink);
 		--button-hover-color: var(--profile-cream);
-		background: #fff;
+		--button-hover-border-color: var(--profile-ink);
 	}
 }
 
 .profile .profile-action-accent {
-	--button-bg: var(--profile-lime);
-	--button-color: var(--profile-ink);
-	--button-border-color: var(--profile-lime);
-	--button-hover-bg: var(--profile-lime-deep);
-	--button-hover-color: var(--profile-ink);
-	--button-outline-color: var(--profile-ink);
+	--button-bg: var(--color-brand-lime);
+	--button-color: var(--color-brand-ink);
+	--button-border-color: var(--color-brand-lime);
+	--button-hover-bg: var(--color-brand-lime-hover);
+	--button-hover-color: var(--color-brand-ink);
+	--button-hover-border-color: var(--color-brand-lime-hover);
+	--button-outline-color: var(--color-brand-ink);
 }
 
 /* ---- Tabs ---- */
@@ -234,7 +236,7 @@
 		overscroll-behavior-x: contain;
 		scrollbar-width: none;
 		/* Fades the trailing edge so a strip wider than the screen reads as scrollable. */
-		mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+		mask-image: linear-gradient(to right, var(--color-black) calc(100% - 1.5rem), transparent);
 	}
 
 	& li {
@@ -279,7 +281,7 @@
 .profile-tab-count {
 	padding: 0.15em 0.55em;
 	border-radius: 999px;
-	background: oklch(94.5% 0.008 85);
+	background: var(--color-paper-muted);
 	color: var(--profile-quiet);
 	font-size: 0.72rem;
 	font-weight: 700;
@@ -324,7 +326,7 @@
 	padding: var(--profile-pad);
 	border: 1px solid var(--profile-rule);
 	border-radius: var(--profile-card-radius);
-	background: #fff;
+	background: var(--color-white);
 	box-shadow: var(--profile-shadow);
 }
 
@@ -405,7 +407,7 @@
 		padding: 0.8rem 0.9rem;
 		border-radius: 0.75rem;
 		background: var(--profile-paper);
-		border: 1px solid oklch(93% 0.008 85);
+		border: 1px solid var(--color-paper-rule-card);
 	}
 
 	& dt {
@@ -455,12 +457,12 @@
 	display: block;
 	aspect-ratio: 1;
 	border-radius: 28%;
-	background: oklch(94.5% 0.006 145);
+	background: var(--color-brand-lime-heatmap-0);
 
-	&[data-level="1"] { background: oklch(88% 0.075 145); }
-	&[data-level="2"] { background: oklch(79% 0.14 145); }
-	&[data-level="3"] { background: oklch(67% 0.17 145); }
-	&[data-level="4"] { background: oklch(50% 0.14 147); }
+	&[data-level="1"] { background: var(--color-brand-lime-heatmap-1); }
+	&[data-level="2"] { background: var(--color-brand-lime); }
+	&[data-level="3"] { background: var(--color-brand-lime-hover); }
+	&[data-level="4"] { background: var(--color-brand-lime-heatmap-4); }
 	&[data-future] { visibility: hidden; }
 }
 
@@ -521,9 +523,9 @@
 	margin-block-end: var(--space-s);
 	padding: 0.8rem 1rem;
 	border-radius: 0.85rem;
-	background: oklch(97% 0.04 120);
-	border: 1px solid oklch(90% 0.09 122);
-	color: oklch(32% 0.05 130);
+	background: var(--color-brand-lime-surface-soft);
+	border: 1px solid var(--color-brand-lime-border);
+	color: var(--color-brand-lime-deep);
 	font-size: 0.9rem;
 	line-height: 1.45;
 
@@ -538,7 +540,7 @@
 	}
 
 	& code {
-		background: oklch(92% 0.07 122);
+		background: var(--color-brand-lime-tint);
 	}
 }
 
@@ -552,7 +554,7 @@
 	text-decoration: none;
 
 	&:hover {
-		background: oklch(30% 0.02 255);
+		background: var(--color-brand-ink-hover);
 	}
 }
 
@@ -589,10 +591,10 @@
 	justify-items: start;
 	gap: 0.6rem;
 	padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
-	border: 1px dashed oklch(84% 0.01 85);
+	border: 1px dashed var(--color-paper-border-dashed);
 	border-radius: var(--profile-card-radius);
 	background:
-		radial-gradient(60% 80% at 100% 0%, oklch(96% 0.05 120), transparent 70%),
+		radial-gradient(60% 80% at 100% 0%, var(--color-brand-lime-surface), transparent 70%),
 		var(--profile-paper);
 
 	& p {
@@ -601,7 +603,7 @@
 		font-family: var(--font-family-san-serif);
 		font-size: 0.95rem;
 		line-height: 1.55;
-		color: oklch(38% 0.01 260);
+		color: var(--color-paper-ink-secondary);
 	}
 
 	& .button {
@@ -619,7 +621,7 @@
 	font-weight: 900;
 	font-size: 2.5rem;
 	line-height: 1;
-	color: var(--color-primary);
+	color: var(--color-hyperlinks);
 }
 
 .profile .profile-empty-title {
@@ -641,9 +643,9 @@
 }
 
 .profile-badge {
-	--medal-face: oklch(72% 0.09 60);
-	--medal-rim: oklch(58% 0.1 50);
-	--medal-ink: oklch(98% 0.02 80);
+	--medal-face: var(--color-medal-bronze-face);
+	--medal-rim: var(--color-medal-bronze-rim);
+	--medal-ink: var(--color-medal-bronze-ink);
 
 	display: grid;
 	justify-items: center;
@@ -652,15 +654,15 @@
 	text-align: center;
 
 	&[data-tier="silver"] {
-		--medal-face: oklch(86% 0.01 250);
-		--medal-rim: oklch(68% 0.015 250);
-		--medal-ink: oklch(30% 0.01 250);
+		--medal-face: var(--color-medal-silver-face);
+		--medal-rim: var(--color-medal-silver-rim);
+		--medal-ink: var(--color-medal-silver-ink);
 	}
 
 	&[data-tier="gold"] {
-		--medal-face: oklch(84% 0.13 88);
-		--medal-rim: oklch(66% 0.13 75);
-		--medal-ink: oklch(30% 0.05 70);
+		--medal-face: var(--color-medal-gold-face);
+		--medal-rim: var(--color-medal-gold-rim);
+		--medal-ink: var(--color-medal-gold-ink);
 	}
 
 	&[data-tier="ink"] {
@@ -670,9 +672,9 @@
 	}
 
 	&[data-locked] {
-		--medal-face: oklch(97% 0.004 85);
-		--medal-rim: oklch(86% 0.006 85);
-		--medal-ink: oklch(70% 0.006 260);
+		--medal-face: var(--color-medal-locked-face);
+		--medal-rim: var(--color-medal-locked-rim);
+		--medal-ink: var(--color-medal-locked-ink);
 	}
 }
 
@@ -689,12 +691,12 @@
 	line-height: 1;
 	color: var(--medal-ink);
 	background:
-		radial-gradient(circle at 32% 25%, rgb(255 255 255 / 0.55), transparent 45%),
+		radial-gradient(circle at 32% 25%, rgb(var(--color-white-rgb) / 0.55), transparent 45%),
 		var(--medal-face);
 	box-shadow:
 		inset 0 0 0 2px var(--medal-rim),
-		inset 0 0 0 4px rgb(255 255 255 / 0.35),
-		0 0.35rem 0.8rem -0.35rem rgb(20 20 30 / 0.45);
+		inset 0 0 0 4px rgb(var(--color-white-rgb) / 0.35),
+		0 0.35rem 0.8rem -0.35rem rgb(var(--color-shadow-ink-rgb) / 0.45);
 
 	[data-locked] > & {
 		background: var(--medal-face);
@@ -722,10 +724,10 @@
 	border-radius: 999px;
 	overflow: hidden;
 	appearance: none;
-	background: oklch(92% 0.006 85);
+	background: var(--color-paper-track);
 	color: var(--color-primary);
 
-	&::-webkit-progress-bar { background: oklch(92% 0.006 85); }
+	&::-webkit-progress-bar { background: var(--color-paper-track); }
 	&::-webkit-progress-value { background: var(--color-primary); border-radius: 999px; }
 	&::-moz-progress-bar { background: var(--color-primary); border-radius: 999px; }
 }
@@ -780,36 +782,38 @@
 }
 
 .profile-focus-pill {
-	--pill-hue: 145;
+	--pill-bg: var(--color-pill-default-bg);
+	--pill-fg: var(--color-pill-default-fg);
+	--pill-hover-bg: var(--color-pill-default-hover);
 
 	display: inline-flex;
 	align-items: center;
 	gap: 0.5em;
 	padding: 0.4em 0.5em 0.4em 0.8em;
 	border-radius: 999px;
-	background: oklch(95.5% 0.04 var(--pill-hue));
-	color: oklch(36% 0.1 var(--pill-hue));
+	background: var(--pill-bg);
+	color: var(--pill-fg);
 	font-size: 0.82rem;
 	font-weight: 600;
 	text-decoration: none;
 	transition: background-color 0.15s ease;
 
 	&:hover {
-		background: oklch(91% 0.07 var(--pill-hue));
+		background: var(--pill-hover-bg);
 	}
 
-	&[data-hue="1"] { --pill-hue: 60; }
-	&[data-hue="2"] { --pill-hue: 255; }
-	&[data-hue="3"] { --pill-hue: 320; }
-	&[data-hue="4"] { --pill-hue: 110; }
-	&[data-hue="5"] { --pill-hue: 25; }
+	&[data-hue="1"] { --pill-bg: var(--color-pill-1-bg); --pill-fg: var(--color-pill-1-fg); --pill-hover-bg: var(--color-pill-1-hover); }
+	&[data-hue="2"] { --pill-bg: var(--color-pill-2-bg); --pill-fg: var(--color-pill-2-fg); --pill-hover-bg: var(--color-pill-2-hover); }
+	&[data-hue="3"] { --pill-bg: var(--color-pill-3-bg); --pill-fg: var(--color-pill-3-fg); --pill-hover-bg: var(--color-pill-3-hover); }
+	&[data-hue="4"] { --pill-bg: var(--color-pill-4-bg); --pill-fg: var(--color-pill-4-fg); --pill-hover-bg: var(--color-pill-4-hover); }
+	&[data-hue="5"] { --pill-bg: var(--color-pill-5-bg); --pill-fg: var(--color-pill-5-fg); --pill-hover-bg: var(--color-pill-5-hover); }
 }
 
 .profile-focus-count {
 	min-inline-size: 1.6em;
 	padding: 0.1em 0.45em;
 	border-radius: 999px;
-	background: rgb(255 255 255 / 0.75);
+	background: rgb(var(--color-white-rgb) / 0.75);
 	font-size: 0.72rem;
 	font-weight: 700;
 	text-align: center;
@@ -831,7 +835,7 @@
 		padding-block: 0.65rem;
 
 		&:first-child { padding-block-start: 0; }
-		&:not(:last-child) { border-block-end: 1px solid oklch(94% 0.006 85); }
+		&:not(:last-child) { border-block-end: 1px solid var(--color-paper-rule-subtle); }
 
 		&::before {
 			content: "";
@@ -845,8 +849,8 @@
 		}
 
 		&:first-child::before { inset-block-start: 0.45em; }
-		&[data-kind="created"] { --dot: oklch(65% 0.2 260); }
-		&[data-kind="discussed"] { --dot: oklch(70% 0.16 55); }
+		&[data-kind="created"] { --dot: var(--color-status-created); }
+		&[data-kind="discussed"] { --dot: var(--color-status-discussed); }
 	}
 
 	& p {
@@ -926,7 +930,7 @@
 	margin-inline-end: auto;
 	padding: 0.25rem;
 	border-radius: 999px;
-	background: oklch(96% 0.006 85);
+	background: var(--color-paper-subtle);
 
 	& a {
 		display: inline-flex;
@@ -945,9 +949,9 @@
 	}
 
 	& a[aria-current="page"] {
-		background: #fff;
+		background: var(--color-white);
 		color: var(--profile-ink);
-		box-shadow: 0 1px 3px rgb(20 20 30 / 0.12);
+		box-shadow: 0 1px 3px rgb(var(--color-shadow-ink-rgb) / 0.12);
 	}
 }
 
@@ -957,7 +961,7 @@
 	z-index: 1;
 	margin: 1.25rem 0 0.25rem;
 	padding-block: 0.4rem;
-	background: #fff;
+	background: var(--color-white);
 	font: var(--profile-label);
 	font-stretch: 125%;
 	letter-spacing: 0.16em;
@@ -985,7 +989,7 @@
 	padding-block: 0.8rem;
 
 	&:not(:last-child) {
-		border-block-end: 1px solid oklch(94.5% 0.006 85);
+		border-block-end: 1px solid var(--color-paper-rule-soft);
 	}
 }
 
@@ -997,8 +1001,8 @@
 	block-size: 2rem;
 	align-self: center;
 	border-radius: 0.6rem;
-	background: oklch(96% 0.03 135);
-	color: oklch(45% 0.12 145);
+	background: var(--color-brand-lime-surface);
+	color: var(--color-hyperlinks);
 }
 
 .profile-kind {
@@ -1006,16 +1010,16 @@
 	min-inline-size: 4.6rem;
 	padding: 0.2em 0.6em;
 	border-radius: 999px;
-	background: oklch(95% 0.04 145);
-	color: oklch(40% 0.11 145);
+	background: var(--color-brand-lime-surface);
+	color: var(--color-hyperlinks);
 	font-size: 0.7rem;
 	font-weight: 700;
 	letter-spacing: 0.03em;
 	text-align: center;
 
 	&[data-kind="created"] {
-		background: oklch(94% 0.04 260);
-		color: oklch(42% 0.15 262);
+		background: var(--color-badge-surface);
+		color: var(--color-badge-text);
 	}
 }
 
@@ -1068,8 +1072,9 @@
 	--button-bg: transparent;
 	--button-color: var(--profile-quiet);
 	--button-border-color: var(--profile-rule);
-	--button-hover-bg: oklch(95% 0.05 25);
-	--button-hover-color: oklch(45% 0.17 25);
+	--button-hover-bg: var(--color-danger-hover-surface);
+	--button-hover-color: var(--uchu-red-8);
+	--button-hover-border-color: var(--color-danger-border);
 	--button-padding: 0.4em 0.9em;
 	--button-border-width: 1px;
 	--button-font-size: 0.8rem;
@@ -1077,10 +1082,6 @@
 
 	font-family: var(--font-family-san-serif);
 	letter-spacing: 0;
-
-	&:hover {
-		border-color: oklch(85% 0.08 25);
-	}
 }
 
 .profile-pager {
@@ -1220,7 +1221,7 @@
 		padding: 0.2rem 0.75rem 0.2rem 0.25rem;
 		border: 1px solid var(--profile-rule);
 		border-radius: 999px;
-		background: #fff;
+		background: var(--color-white);
 		color: var(--profile-ink);
 		font-size: 0.85rem;
 		font-weight: 600;
@@ -1263,13 +1264,13 @@
 		padding: 0.8rem 1rem 0.9rem;
 		border: 1px solid var(--profile-rule);
 		border-radius: var(--profile-card-radius);
-		background: #fff;
+		background: var(--color-white);
 		overflow-wrap: anywhere;
 	}
 
 	/* The reader's own messages sit on cream so a long thread can be scanned by speaker. */
 	& > [data-own="true"] article {
-		border-color: oklch(90% 0.035 88);
+		border-color: var(--color-paper-cream-border);
 		background: var(--profile-cream);
 	}
 
@@ -1302,7 +1303,7 @@
 	& pre {
 		padding: 0.6rem 0.75rem;
 		border-radius: 0.5rem;
-		background: oklch(96% 0.006 85);
+		background: var(--color-paper-subtle);
 		overflow-x: auto;
 		font-size: 0.85rem;
 		line-height: 1.5;
@@ -1328,7 +1329,7 @@
 		padding: 0.6rem 0.75rem;
 		border: 1px solid var(--profile-rule);
 		border-radius: 0.6rem;
-		background: #fff;
+		background: var(--color-white);
 		color: var(--profile-ink);
 		font: 1rem/1.5 var(--font-family-san-serif);
 
@@ -1338,7 +1339,7 @@
 		}
 
 		&.input-validation-error {
-			border-color: oklch(60% 0.17 25);
+			border-color: var(--color-danger-border-strong);
 		}
 	}
 
@@ -1393,8 +1394,8 @@
 	padding: 0.25rem;
 	border: 1px solid var(--profile-rule);
 	border-radius: 0.75rem;
-	background: #fff;
-	box-shadow: 0 1rem 2.5rem -1rem rgb(20 20 30 / 0.35);
+	background: var(--color-white);
+	box-shadow: 0 1rem 2.5rem -1rem rgb(var(--color-shadow-ink-rgb) / 0.35);
 
 	&.show {
 		display: block;
@@ -1413,12 +1414,12 @@
 	cursor: pointer;
 
 	&:hover {
-		background: oklch(96% 0.006 85);
+		background: var(--color-paper-subtle);
 	}
 
 	&.active {
 		background: var(--profile-ink);
-		color: #fff;
+		color: var(--color-white);
 	}
 
 	& .avatar {
@@ -1432,15 +1433,15 @@
 
 .profile-preview {
 	background:
-		repeating-linear-gradient(135deg, transparent 0 10px, oklch(97% 0.004 85) 10px 11px),
-		#fff;
+		repeating-linear-gradient(135deg, transparent 0 10px, var(--color-paper-stripe) 10px 11px),
+		var(--color-white);
 }
 
 .profile-preview-spark {
 	display: block;
 	inline-size: 100%;
 	block-size: 3rem;
-	color: oklch(80% 0.01 260);
+	color: var(--color-paper-ink-dim);
 }
 
 .profile-preview-copy {
@@ -1454,12 +1455,12 @@
 	border-color: transparent;
 	color: var(--profile-cream);
 	background:
-		radial-gradient(90% 120% at 100% 0%, oklch(62% 0.17 145 / 0.35), transparent 60%),
+		radial-gradient(90% 120% at 100% 0%, oklch(var(--color-brand-lime-raw) / 0.22), transparent 60%),
 		var(--profile-ink);
 
 	& .profile-card-title,
 	& .profile-soon {
-		color: oklch(95% 0.03 88 / 0.65);
+		color: oklch(var(--color-paper-cream-raw) / 0.65);
 	}
 }
 
@@ -1477,14 +1478,14 @@
 	font-family: var(--font-family-serif);
 	font-size: 0.95rem;
 	line-height: 1.5;
-	color: oklch(95% 0.03 88 / 0.8);
+	color: oklch(var(--color-paper-cream-raw) / 0.8);
 }
 
 .profile-ink-cta {
 	margin: 0;
 	padding: 0.65em 1em;
 	border-radius: 999px;
-	border: 1px dashed oklch(90% 0.2 125 / 0.6);
+	border: 1px dashed oklch(var(--color-brand-lime-raw) / 0.6);
 	color: var(--profile-lime);
 	font-size: 0.85rem;
 	font-weight: 700;
@@ -1642,33 +1643,33 @@
 	flex: none;
 	padding: 0.15em 0.6em;
 	border-radius: 999px;
-	background: oklch(95% 0.04 145);
-	color: oklch(40% 0.11 145);
+	background: var(--color-brand-lime-surface);
+	color: var(--color-hyperlinks);
 	font-size: 0.7rem;
 	font-weight: 700;
 	letter-spacing: 0.03em;
 
 	&[data-public="false"] {
-		background: oklch(95% 0.006 85);
+		background: var(--color-paper-surface-soft);
 		color: var(--profile-quiet);
 	}
 }
 
 .profile .bookmark-new-button {
-	--button-bg: transparent;
+	--button-bg: var(--profile-paper);
 	--button-color: var(--profile-ink);
 	--button-border-color: var(--profile-rule);
-	--button-hover-bg: var(--profile-lime);
-	--button-hover-color: var(--profile-ink);
+	--button-hover-bg: var(--color-brand-lime);
+	--button-hover-color: var(--color-brand-ink);
+	--button-hover-border-color: var(--color-brand-lime);
 	--button-padding: 0.65em 1em;
-	--button-border-width: 1.5px;
+	--button-border-width: 1px;
 	--button-font-size: 0.88rem;
 	--button-gap: 0.4em;
 
 	justify-content: center;
 	inline-size: 100%;
 	margin-block-start: 0.75rem;
-	border-style: dashed;
 	font-family: var(--font-family-san-serif);
 	letter-spacing: 0;
 
@@ -1680,6 +1681,11 @@
 .bookmark-main {
 	flex: 999 1 min(100%, 30rem);
 	min-inline-size: 0;
+
+	& > .profile-list {
+		margin-block-start: 1rem;
+		border-block-start: 1px solid var(--color-paper-rule-soft);
+	}
 }
 
 .bookmark-head {
@@ -1688,8 +1694,6 @@
 	align-items: end;
 	justify-content: space-between;
 	gap: 0.75rem 1.5rem;
-	padding-block-end: 1rem;
-	border-block-end: 1px solid var(--profile-rule);
 }
 
 .bookmark-head-text {
@@ -1734,19 +1738,17 @@
 .profile .bookmark-quiet-action {
 	--button-hover-bg: var(--profile-paper);
 	--button-hover-color: var(--profile-ink);
-
-	&:hover {
-		border-color: var(--profile-ink);
-	}
+	--button-hover-border-color: var(--profile-ink);
 }
 
 .profile .bookmark-danger-action {
-	--button-bg: oklch(52% 0.19 25);
-	--button-color: #fff;
-	--button-border-color: var(--button-bg);
-	--button-hover-bg: oklch(44% 0.17 25);
-	--button-hover-color: #fff;
-	--button-outline-color: var(--profile-ink);
+	--button-bg: var(--uchu-red-6);
+	--button-color: var(--color-white);
+	--button-border-color: var(--uchu-red-6);
+	--button-hover-bg: var(--uchu-red-7);
+	--button-hover-color: var(--color-white);
+	--button-hover-border-color: var(--uchu-red-7);
+	--button-outline-color: var(--uchu-red-7);
 }
 
 .bookmark-toolbar {
@@ -1755,10 +1757,14 @@
 	align-items: center;
 	justify-content: end;
 	gap: 0.5rem 0.75rem;
-	margin-block-start: 1rem;
+	margin-block-start: 0.85rem;
 
 	& .profile-segments {
 		margin-inline-end: 0;
+	}
+
+	& + .profile-list {
+		margin-block-start: 0.65rem;
 	}
 }
 
@@ -1795,8 +1801,8 @@
 
 .bookmark-confirmation {
 	display: block;
-	border: 1px solid oklch(85% 0.08 25);
-	background: oklch(97.5% 0.02 25);
+	border: 1px solid var(--color-danger-border);
+	background: var(--color-danger-surface-soft);
 
 	& h3 {
 		margin: 0 0 0.4rem;
@@ -1821,7 +1827,7 @@
 	margin: 0;
 	font-size: 0.85rem;
 	font-weight: 600;
-	color: oklch(48% 0.17 25);
+	color: var(--color-danger-text-soft);
 }
 
 /* New-list dialog: opened by an invoker button, closed by Cancel, Esc or a backdrop click. */
@@ -1831,12 +1837,12 @@
 	padding: var(--profile-pad);
 	border: 0;
 	border-radius: var(--profile-card-radius);
-	background: #fff;
+	background: var(--color-white);
 	color: var(--profile-ink);
-	box-shadow: 0 1.5rem 4rem -1rem rgb(20 20 30 / 0.45);
+	box-shadow: 0 1.5rem 4rem -1rem rgb(var(--color-shadow-ink-rgb) / 0.45);
 
 	&::backdrop {
-		background: rgb(20 20 30 / 0.45);
+		background: rgb(var(--color-shadow-ink-rgb) / 0.45);
 	}
 
 	& form {
@@ -1856,10 +1862,10 @@
 		border-radius: 0.5rem;
 		font: inherit;
 		color: inherit;
-		background: #fff;
+		background: var(--color-white);
 
 		&[aria-invalid="true"] {
-			border-color: oklch(60% 0.17 25);
+			border-color: var(--color-danger-border-strong);
 		}
 	}
 
@@ -1909,10 +1915,10 @@
 
 /* The article page's note dialog sits outside .profile, so it brings the profile tokens it uses. */
 .bookmark-note-dialog {
-	--profile-ink: oklch(21% 0.012 255);
-	--profile-paper: oklch(98.6% 0.006 85);
-	--profile-rule: oklch(90.5% 0.008 85);
-	--profile-quiet: oklch(52% 0.01 260);
+	--profile-ink: var(--color-brand-ink);
+	--profile-paper: var(--color-paper);
+	--profile-rule: var(--color-paper-rule);
+	--profile-quiet: var(--color-paper-ink-muted);
 	--profile-pad: clamp(1rem, 0.75rem + 1.2vw, 1.4rem);
 	--profile-card-radius: 1.25rem;
 }
@@ -1935,6 +1941,19 @@
 	inline-size: min(100% - 2rem, 40rem);
 }
 
+.bookmark-editor-context {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.bookmark-editor-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.4rem 0.75rem;
+}
+
 .bookmark-editor-eyebrow {
 	margin: 0;
 	font-size: 0.72rem;
@@ -1945,11 +1964,42 @@
 	overflow-wrap: anywhere;
 }
 
+.bookmark-editor-list {
+	margin: 0;
+	font-size: 0.88rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--profile-ink);
+	overflow-wrap: anywhere;
+}
+
+.bookmark-editor-subject {
+	position: relative;
+	margin: 0;
+	padding-inline-start: 1.15rem;
+	font-size: 0.88rem;
+	line-height: 1.3;
+	color: var(--profile-quiet);
+	overflow-wrap: anywhere;
+
+	&::before {
+		content: "";
+		position: absolute;
+		inset-inline-start: 0.35rem;
+		inset-block-start: -0.1rem;
+		inline-size: 0.55rem;
+		block-size: 0.75rem;
+		border-inline-start: 1.5px solid var(--color-paper-border-corner);
+		border-block-end: 1.5px solid var(--color-paper-border-corner);
+		border-end-start-radius: 0.25rem;
+	}
+}
+
 .bookmark-editor-title {
-	margin: 0.15rem 0 0.25rem;
+	margin: -0.2rem 0 0;
 	font-family: 'Lyon Custom Headings', Georgia, serif;
 	font-weight: 900;
-	font-size: 1.45rem;
+	font-size: 1.4rem;
 	line-height: 1.15;
 	text-align: start;
 	filter: none;
@@ -1958,34 +2008,30 @@
 	overflow-wrap: anywhere;
 }
 
-.bookmark-editor-subject {
-	margin: 0 0 0.35rem;
-	font-size: 0.9rem;
-	color: var(--profile-quiet);
-
-	& strong {
-		color: var(--profile-ink);
-	}
+.bookmark-note-dialog .bookmark-editor-title {
+	margin: 0.3rem 0 -0.25rem;
+	font-size: 1.2rem;
 }
 
 .bookmark-dialog textarea,
 .bookmark-note-editor textarea {
 	inline-size: 100%;
 	box-sizing: border-box;
-	min-block-size: 7rem;
+	min-block-size: 6rem;
 	max-block-size: 50vh;
 	field-sizing: content;
 	padding: 0.65rem 0.75rem;
-	resize: vertical;
+	resize: none;
 	border: 1px solid var(--profile-rule);
 	border-radius: 0.6rem;
-	background: #fff;
+	background: var(--color-white);
 	color: var(--profile-ink);
 	font: 1rem/1.5 var(--font-family-serif);
 
 	&:focus-visible {
-		outline: 2px solid var(--profile-ink);
-		outline-offset: 1px;
+		border-color: var(--profile-ink);
+		box-shadow: 0 0 0 1px var(--profile-ink);
+		outline: 2px solid transparent;
 	}
 
 	&[hidden] {
@@ -1994,7 +2040,7 @@
 }
 
 .bookmark-intro-dialog textarea {
-	min-block-size: 12rem;
+	min-block-size: 9.5rem;
 }
 
 .bookmark-editor-help {
@@ -2002,43 +2048,47 @@
 	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 0.35rem 1rem;
-	margin: 0;
-	font-size: 0.8rem;
+	margin: -0.15rem 0 0;
+	font-size: 0.78rem;
 	color: var(--profile-quiet);
 
 	& code {
 		font-size: 0.95em;
 		padding: 0.05em 0.3em;
 		border-radius: 0.3em;
-		background: oklch(96% 0.006 85);
+		background: var(--color-paper-subtle);
 	}
 }
 
 .bookmark-editor-count {
 	font-variant-numeric: tabular-nums;
+
+	&:empty {
+		display: none;
+	}
 }
 
 .bookmark-editor-visibility {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 0.5rem;
-	margin: 0.15rem 0 0;
-	padding: 0.55rem 0.75rem;
-	border-radius: 0.6rem;
-	font-size: 0.85rem;
+	gap: 0.35rem;
+	margin: 0;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
 	font-weight: 600;
-	background: oklch(96% 0.006 85);
+	background: var(--color-paper-subtle);
 	color: var(--profile-quiet);
 
 	& svg {
-		inline-size: 1rem;
-		block-size: 1rem;
+		inline-size: 0.85rem;
+		block-size: 0.85rem;
 		flex: none;
 	}
 
 	&[data-public="true"] {
-		background: oklch(95.5% 0.045 145);
-		color: oklch(38% 0.1 145);
+		background: var(--color-brand-lime-surface);
+		color: var(--color-hyperlinks);
 	}
 
 	/* The article dialog carries both wordings and shows the one matching the chosen list. */
@@ -2052,8 +2102,9 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
+	justify-content: end;
 	gap: 0.5rem;
-	margin-block-start: 0.5rem;
+	margin-block-start: 0.35rem;
 
 	& > :first-child:is([data-variant="danger-quiet"], .bookmark-editor-visibility) {
 		margin-inline-end: auto;
@@ -2065,28 +2116,32 @@
 }
 
 .bookmark-editor-button {
+	--button-bg: var(--color-white);
+	--button-color: var(--profile-ink);
+	--button-border-color: var(--profile-rule);
+	--button-border-width: 1px;
+	--button-hover-bg: var(--profile-paper);
+	--button-hover-color: var(--profile-ink);
+	--button-hover-border-color: var(--profile-ink);
+	--button-padding: 0 1.1rem;
+	--button-gap: 0.4rem;
+	--button-radius: 999px;
+
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 0.4rem;
 	min-block-size: 2.5rem;
-	padding: 0 1.1rem;
-	border-radius: 999px;
-	border: 1px solid var(--profile-rule);
-	background: #fff;
-	color: var(--profile-ink);
 	font: 600 0.88rem/1 var(--font-family-san-serif);
 	letter-spacing: 0;
+	text-box-trim: normal;
 	cursor: pointer;
 
-	&:hover {
-		border-color: var(--profile-ink);
-		background: #fff;
-		color: var(--profile-ink);
+	&:focus {
+		outline: none;
 	}
 
 	&:focus-visible {
-		outline: 2px solid var(--profile-ink);
+		outline: 2px solid var(--uchu-yin-9);
 		outline-offset: 2px;
 	}
 
@@ -2095,65 +2150,79 @@
 		opacity: 0.6;
 	}
 
-	&[data-variant="primary"],
-	&[data-variant="primary"]:hover {
-		background: var(--profile-ink);
-		border-color: var(--profile-ink);
-		color: #fff;
-	}
-
-	&[data-variant="primary"]:hover {
-		background: oklch(32% 0.012 255);
+	&[data-variant="primary"] {
+		--button-bg: var(--color-brand-lime);
+		--button-color: var(--color-brand-ink);
+		--button-border-color: var(--color-brand-lime);
+		--button-hover-bg: var(--color-brand-lime-hover);
+		--button-hover-color: var(--color-brand-ink);
+		--button-hover-border-color: var(--color-brand-lime-hover);
 	}
 
 	&[data-variant="danger-quiet"] {
-		border-color: transparent;
-		padding-inline: 0.5rem;
-		color: oklch(48% 0.17 25);
-	}
+		--button-bg: transparent;
+		--button-color: var(--uchu-red-7);
+		--button-border-color: transparent;
+		--button-hover-bg: var(--color-danger-hover-surface);
+		--button-hover-color: var(--uchu-red-8);
+		--button-hover-border-color: transparent;
 
-	&[data-variant="danger-quiet"]:hover {
-		border-color: transparent;
-		background: oklch(96% 0.03 25);
-		color: oklch(48% 0.17 25);
+		padding-inline: 0.5rem;
 	}
 }
 
 .bookmark-editor-tabs {
-	display: flex;
-	gap: 0.25rem;
-	margin-block-end: -0.25rem;
+	display: inline-flex;
+	justify-self: start;
+	gap: 0.2rem;
+	padding: 0.2rem;
+	border-radius: 999px;
+	background: var(--color-paper-subtle);
 
 	&[hidden] {
 		display: none;
 	}
 
 	& button {
-		padding: 0.4rem 0.8rem;
+		padding: 0.35rem 0.85rem;
 		border: 0;
 		border-radius: 999px;
 		background: none;
 		color: var(--profile-quiet);
-		font: 600 0.82rem/1 var(--font-family-san-serif);
+		font: 600 0.8rem/1 var(--font-family-san-serif);
 		cursor: pointer;
 
 		&:hover {
-			background: oklch(96% 0.006 85);
 			color: var(--profile-ink);
 		}
 
+		&:focus {
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--profile-ink);
+			outline-offset: 1px;
+		}
+
+		&:active {
+			transform: none;
+		}
+
 		&[aria-selected="true"] {
-			background: var(--profile-ink);
-			color: #fff;
+			background: var(--color-white);
+			color: var(--profile-ink);
+			box-shadow: 0 1px 3px rgb(var(--color-shadow-ink-rgb) / 0.12);
 		}
 	}
 }
 
 .bookmark-intro-preview {
-	min-block-size: 12rem;
+	min-block-size: 9.5rem;
 	padding: 0.65rem 0.9rem;
-	border: 1px dashed var(--profile-rule);
+	border: 1px solid var(--profile-rule);
 	border-radius: 0.6rem;
+	background: var(--profile-paper);
 
 	&[hidden] {
 		display: none;
@@ -2202,43 +2271,28 @@
 	}
 
 	& a {
-		color: var(--color-hyperlinks, #1a5fb4);
+		color: var(--color-hyperlinks);
 		text-decoration-color: var(--color-primary);
 		text-underline-offset: 0.18em;
 	}
 }
 
 .bookmark-intro {
-	margin-block-start: 1.1rem;
-	padding-block-end: 1.1rem;
-	border-block-end: 1px solid var(--profile-rule);
+	margin-block-start: 1rem;
+	padding: 0.9rem 1.05rem;
+	border-radius: 0.75rem;
+	background: var(--profile-paper);
 }
 
 .bookmark-intro-edit {
-	margin: 0.75rem 0 0;
+	margin: 0.55rem 0 0;
 }
 
 .bookmark-intro-empty {
-	display: grid;
-	gap: 0.35rem;
-	justify-items: start;
-	margin-block-start: 1.1rem;
-	padding: 1rem 1.1rem;
-	border: 1.5px dashed var(--profile-rule);
-	border-radius: 0.9rem;
-
-	& p {
-		margin: 0;
-		font-size: 0.9rem;
-		color: var(--profile-quiet);
-	}
-
-	& strong {
-		color: var(--profile-ink);
-	}
+	margin: 0.75rem 0 0;
 }
 
-/* Underlined text actions: edit introduction, add/edit note, read more. */
+/* Quiet text actions: edit introduction, add/edit note, read more. */
 .bookmark-text-button {
 	display: inline-flex;
 	align-items: center;
@@ -2247,25 +2301,34 @@
 	border: 0;
 	border-radius: 0;
 	background: none;
-	color: var(--profile-ink);
+	color: var(--profile-quiet);
 	font: 600 0.85rem/1.3 var(--font-family-san-serif);
 	letter-spacing: 0;
-	text-decoration: underline;
-	text-decoration-color: var(--profile-rule);
-	text-decoration-thickness: 2px;
-	text-underline-offset: 0.2em;
+	text-decoration: none;
 	cursor: pointer;
+	transition: color 0.12s ease;
 
 	&:hover {
 		background: none;
 		color: var(--profile-ink);
-		text-decoration-color: var(--profile-lime-deep, oklch(80% 0.2 128));
+		text-decoration: underline;
+		text-decoration-color: var(--profile-rule);
+		text-decoration-thickness: 1.5px;
+		text-underline-offset: 0.2em;
+	}
+
+	&:focus {
+		outline: none;
 	}
 
 	&:focus-visible {
 		outline: 2px solid var(--profile-ink);
 		outline-offset: 3px;
 		border-radius: 2px;
+	}
+
+	&:active {
+		transform: none;
 	}
 
 	& svg {
@@ -2304,7 +2367,7 @@
 	margin: 0.4rem 0 0;
 	font-size: 0.98rem;
 	line-height: 1.55;
-	color: oklch(30% 0.012 255);
+	color: var(--color-brand-ink-muted);
 
 	& > * + * {
 		margin-block-start: 0.5em;
@@ -2359,8 +2422,8 @@
 	}
 
 	& .bookmark-editor-visibility {
-		margin: 0;
-		padding: 0.35rem 0.6rem;
+		padding: 0;
+		background: none;
 		font-size: 0.78rem;
 	}
 }

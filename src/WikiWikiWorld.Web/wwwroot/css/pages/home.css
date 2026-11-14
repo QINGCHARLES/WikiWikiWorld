@@ -7,9 +7,9 @@
 .home-categories {
     --pill-block-size: clamp(2.5rem, 2.3rem + 0.6vw, 3rem);
     --pill-gap: clamp(0.5rem, 0.4rem + 0.3vw, 0.75rem);
-    --pill-border: #e6e2d8;
-    --pill-border-hover: #cfc9bc;
-    --pill-surface-hover: #f5f3ee;
+    --pill-border: var(--color-paper-border-warm);
+    --pill-border-hover: var(--color-paper-border-strong);
+    --pill-surface-hover: var(--color-paper-alt);
     --pill-focus-room: 4px;
     /* Breaks out of main's 65ch column, centred; edge to edge on phones so the scroller reaches the screen edge. */
     --strip-inline-size: min(100vw, 76rem);
@@ -60,7 +60,7 @@
         &[aria-current="page"] {
             border-color: var(--uchu-yin-8);
             background: var(--uchu-yin-8);
-            color: oklch(90% 0.2 125);
+            color: var(--color-brand-lime);
             font-weight: 700;
         }
     }
@@ -141,7 +141,7 @@
         scroll-snap-type: x proximity;
         scroll-padding-inline: var(--grid-gutter);
         scrollbar-width: none;
-        mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+        mask-image: linear-gradient(to right, var(--color-black) calc(100% - 2.5rem), transparent);
 
         & li {
             flex: none;

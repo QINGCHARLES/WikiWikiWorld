@@ -119,7 +119,7 @@
     justify-content: center;
 }
 .md-clear-btn:hover {
-    background-color: rgba(0,0,0,0.08);
+    background-color: rgb(var(--color-black-rgb) / 0.08);
 }
 
 .md3-field:has(input:not(:placeholder-shown)) .md-clear-btn {

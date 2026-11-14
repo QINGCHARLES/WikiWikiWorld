@@ -5,11 +5,11 @@
    echoing the pull-quote attribution. Slash separators are CSS-only and silent to assistive tech. */
 
 article aside.issue-credits {
-    --credits-ink: #ffffff;
-    --credits-quiet: rgb(255 255 255 / 0.56);
-    --credits-rule: rgb(255 255 255 / 0.14);
+    --credits-ink: var(--color-white);
+    --credits-quiet: rgb(var(--color-white-rgb) / 0.56);
+    --credits-rule: rgb(var(--color-white-rgb) / 0.14);
     --credits-accent: var(--color-primary);
-    --credits-separator: oklch(var(--uchu-green-5-raw) / 0.55);
+    --credits-separator: oklch(var(--color-brand-lime-raw) / 0.55);
     --credits-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 6l4.5 4.5L12.5 6' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
     box-sizing: border-box;
@@ -203,7 +203,7 @@ article aside.issue-credits {
     color: inherit;
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
-    text-decoration-color: oklch(var(--uchu-green-5-raw) / 0.7);
+    text-decoration-color: oklch(var(--color-brand-lime-raw) / 0.7);
     text-underline-offset: 0.22em;
     transition: color 0.15s ease, text-underline-offset 0.15s ease;
 

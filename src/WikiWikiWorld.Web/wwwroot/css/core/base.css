@@ -24,11 +24,12 @@ a {
     text-decoration: underline;
     text-decoration-thickness: 0.125rem;
     text-underline-offset: 0.25rem;
-    text-decoration-color: var(--color-primary);
+    text-decoration-color: var(--color-brand-lime-hover);
 }
 
 ::selection {
     background-color: var(--color-primary);
+    color: var(--color-brand-ink);
 }
 
 figure {

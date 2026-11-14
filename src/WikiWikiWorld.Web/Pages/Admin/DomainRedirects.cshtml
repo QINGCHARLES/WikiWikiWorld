@@ -41,7 +41,7 @@
 		</div>
 	}
 
-	<section class="card" style="margin-block: 2rem; padding: 1.5rem; border: 1px solid var(--md-outline-variant, #ccc); border-radius: 8px;">
+	<section class="card" style="margin-block: 2rem; padding: 1.5rem; border: 1px solid var(--md-outline-variant); border-radius: 8px;">
 		<h2>Add Domain Redirect</h2>
 		<form method="post" asp-page-handler="Create" id="create-redirect-form">
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
@@ -96,10 +96,10 @@
 				<input type="hidden" asp-for="InputCanonicalArticleId" id="InputCanonicalArticleId" />
 				<input type="hidden" asp-for="SelectedArticleTitle" id="SelectedArticleTitle" />
 
-				<div id="selected-article-display" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "flex" : "none"); align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: var(--md-surface-variant, #f0f0f0); border-radius: 6px; margin-bottom: 0.75rem;">
+				<div id="selected-article-display" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "flex" : "none"); align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: var(--md-surface-variant); border-radius: 6px; margin-bottom: 0.75rem;">
 					<div>
 						<strong>Selected:</strong> <span id="selected-article-text">@Model.SelectedArticleTitle</span>
-						<br /><small style="color: var(--md-on-surface-variant, #666);"><code id="selected-article-guid">@Model.InputCanonicalArticleId</code></small>
+						<br /><small style="color: var(--md-on-surface-variant);"><code id="selected-article-guid">@Model.InputCanonicalArticleId</code></small>
 					</div>
 					<button type="button" class="button" id="clear-article-btn" style="margin-left: auto; font-size: 0.85rem;" data-button-variant="naked">Change</button>
 				</div>
@@ -112,8 +112,8 @@
 					</div>
 					<p id="article-picker-status" role="status"></p>
 					<button type="button" id="retry-cultures" class="button" style="display: none;">Retry loading cultures</button>
-					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary, #0066cc);">Searching...</div>
-					<div id="article-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--md-outline-variant, #ddd); border-radius: 6px; display: none;"></div>
+					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary);">Searching...</div>
+					<div id="article-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--md-outline-variant); border-radius: 6px; display: none;"></div>
 				</div>
 			</div>
 
@@ -152,7 +152,7 @@
 							{
 								string Path = ArticleUrlHelper.BuildArticlePath(Item.ArticleUrlSlug, Item.ArticleType);
 								<a href="@Path" target="_blank" rel="noopener">@Item.ArticleTitle</a>
-								<br /><small style="color: var(--md-on-surface-variant, #666);"><code>@Path</code></small>
+								<br /><small style="color: var(--md-on-surface-variant);"><code>@Path</code></small>
 							}
 							else
 							{
@@ -162,7 +162,7 @@
 						<td><small>@Item.DateCreated.ToString("yyyy-MM-dd HH:mm") UTC</small></td>
 						<td>
 							<form method="post" asp-page-handler="Delete" asp-route-id="@Item.Id" onsubmit="return confirm('Are you sure you want to delete the redirect for @Item.Domain?');">
-								<button type="submit" class="button" style="color: var(--md-error, #b00020); font-size: 0.85rem;" data-button-variant="naked">Delete</button>
+								<button type="submit" class="button" style="font-size: 0.85rem;" data-button-variant="negative-quiet">Delete</button>
 							</form>
 						</td>
 					</tr>
@@ -315,14 +315,14 @@
 					{
 						const Row = document.createElement("button");
 						Row.type = "button";
-						Object.assign(Row.style, { display: "block", padding: "0.6rem 1rem", cursor: "pointer", width: "100%", textAlign: "start", background: "transparent", color: "inherit", font: "inherit", letterSpacing: "normal", border: "0", borderRadius: "0", borderBottom: "1px solid var(--md-outline-variant, #eee)" });
+						Object.assign(Row.style, { display: "block", padding: "0.6rem 1rem", cursor: "pointer", width: "100%", textAlign: "start", background: "transparent", color: "inherit", font: "inherit", letterSpacing: "normal", border: "0", borderRadius: "0", borderBottom: "1px solid var(--md-outline-variant)" });
 						const Title = document.createElement("strong");
 						Title.textContent = Item.Title;
 						const Slug = document.createElement("small");
-						Slug.style.color = "#666";
+						Slug.style.color = "var(--color-muted)";
 						Slug.textContent = ` (/${Item.UrlSlug})`;
 						Row.append(Title, Slug);
-						Row.addEventListener("mouseover", () => { Row.style.background = "var(--md-surface-variant, #f5f5f5)"; });
+						Row.addEventListener("mouseover", () => { Row.style.background = "var(--md-surface-variant)"; });
 						Row.addEventListener("mouseout", () => { Row.style.background = "transparent"; });
 						Row.addEventListener("click", () => SelectArticle(Item));
 						ResultsList.appendChild(Row);

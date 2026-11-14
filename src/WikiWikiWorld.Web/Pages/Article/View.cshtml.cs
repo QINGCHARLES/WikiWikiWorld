@@ -476,7 +476,7 @@ public sealed class ViewModel(
             return Partial("_BookmarkStatus", "That list no longer exists. Reload to see your lists.");
         }
 
-        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken, SavedList: Saved ? l => l.BookmarkListId == BookmarkListId : null);
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
     }
 
     /// <summary>
@@ -512,8 +512,7 @@ public sealed class ViewModel(
             return Partial("_BookmarkStatus", $"You can have up to {BookmarkService.MaxListsPerUser} lists.");
         }
 
-        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken,
-            SavedList: l => string.Equals(l.Name, Name, StringComparison.OrdinalIgnoreCase));
+        return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
     }
 
     /// <summary>

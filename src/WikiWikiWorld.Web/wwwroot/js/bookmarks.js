@@ -80,10 +80,12 @@ if (Browser) {
 
 	const Formatter = new Intl.NumberFormat();
 
-	/** Shows a textarea's length against its maxlength in the matching counter. */
+	/** Shows a textarea's length once it approaches its maxlength. */
 	function UpdateCount(Text) {
 		const Counter = Browser.querySelector(`[data-count-for="${CSS.escape(Text.id)}"]`);
-		if (Counter) Counter.textContent = `${Formatter.format(Text.value.length)} / ${Formatter.format(Text.maxLength)}`;
+		if (!Counter) return;
+		const Length = Text.value.length;
+		Counter.textContent = Length >= 8000 ? `${Formatter.format(Length)} / ${Formatter.format(Text.maxLength)}` : "";
 	}
 
 	/** Shows or hides a row's inline note editor; cancelling restores the saved text. */

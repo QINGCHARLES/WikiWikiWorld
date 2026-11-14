@@ -191,7 +191,7 @@
 					<span>@(Model.IsEditMode ? "Save Changes" : "Create Article")</span>
 				</button>
 				
-				<a href="/@(Model.IsEditMode ? Model.OriginalUrlSlug : string.Empty)" class="button button-secondary">
+				<a href="/@(Model.IsEditMode ? Model.OriginalUrlSlug : string.Empty)" class="button button-secondary" data-button-variant="ghost">
 					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="18" y1="6" x2="6" y2="18"></line>
 						<line x1="6" y1="6" x2="18" y2="18"></line>
@@ -280,15 +280,15 @@
 	}
 
 	.alert-error {
-		background-color: #fee;
-		border-color: #dc2626;
-		color: #991b1b;
+		background-color: var(--color-danger-surface);
+		border-color: var(--color-danger-bright);
+		color: var(--color-danger-text);
 	}
 
 	.alert-warning {
-		background-color: #fffbeb;
-		border-color: #f59e0b;
-		color: #92400e;
+		background-color: var(--color-warning-surface);
+		border-color: var(--color-warning);
+		color: var(--color-warning-text);
 	}
 
 	.alert a {
@@ -299,8 +299,8 @@
 
 	/* Form Styles */
 	.article-form {
-		background: var(--color-surface, #fff);
-		border: 2px solid var(--color-border, #e5e5e5);
+		background: var(--color-surface);
+		border: 2px solid var(--color-border);
 		border-radius: 1rem;
 		padding: 2rem;
 		margin-bottom: 2rem;
@@ -336,7 +336,7 @@
 	}
 
 	.label-required {
-		color: #dc2626;
+		color: var(--color-danger-bright);
 		font-weight: 700;
 	}
 
@@ -348,8 +348,8 @@
 		font-size: var(--step-0);
 		line-height: 1.5;
 		color: var(--color-foreground);
-		background-color: var(--color-background, #fff);
-		border: 2px solid var(--color-border, #d1d5db);
+		background-color: var(--color-background);
+		border: 2px solid var(--color-border-subtle);
 		border-radius: 0.5rem;
 		transition: border-color 0.15s ease, box-shadow 0.15s ease;
 	}
@@ -359,12 +359,12 @@
 	.form-textarea:focus {
 		outline: none;
 		border-color: var(--color-primary);
-		box-shadow: 0 0 0 3px rgba(243, 222, 138, 0.3);
+		box-shadow: 0 0 0 3px oklch(var(--color-brand-lime-raw) / 0.3);
 	}
 
 	.form-input::placeholder,
 	.form-textarea::placeholder {
-		color: var(--color-muted, #9ca3af);
+		color: var(--color-muted);
 	}
 
 	.form-textarea {
@@ -382,7 +382,7 @@
 		font-size: var(--step--1);
 		color: var(--color-foreground);
 		background-color: var(--color-background);
-		border: 2px dashed var(--color-border, #d1d5db);
+		border: 2px dashed var(--color-border-subtle);
 		border-radius: 0.5rem;
 		cursor: pointer;
 		transition: border-color 0.15s ease;
@@ -394,7 +394,7 @@
 
 	.form-help {
 		font-size: var(--step--1);
-		color: var(--color-muted, #6b7280);
+		color: var(--color-muted);
 		line-height: 1.4;
 	}
 
@@ -404,20 +404,16 @@
 		gap: 1rem;
 		margin-top: 2rem;
 		padding-top: 2rem;
-		border-top: 2px solid var(--color-border, #e5e5e5);
+		border-top: 2px solid var(--color-border);
 	}
 
 	.button {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.875rem 1.5rem;
-		font-size: var(--step-0);
-		font-weight: 600;
-		text-decoration: none;
-		border: 2px solid;
-		border-radius: 0.5rem;
-		cursor: pointer;
+		--button-gap: 0.5rem;
+		--button-padding: 0.875rem 1.5rem;
+		--button-font-size: var(--step-0);
+		--button-font-weight: 600;
+		--button-border-width: 2px;
+		--button-radius: 0.5rem;
 		transition: all 0.15s ease;
 	}
 
@@ -425,32 +421,10 @@
 		flex-shrink: 0;
 	}
 
-	.button-primary {
-		background-color: var(--color-primary, #f3de8a);
-		color: #342a21;
-		border-color: var(--color-primary, #f3de8a);
-	}
-
-	.button-primary:hover {
-		background-color: #f1d979;
-		transform: translateY(-1px);
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	}
-
-	.button-secondary {
-		background-color: transparent;
-		color: var(--color-foreground);
-		border-color: var(--color-border, #d1d5db);
-	}
-
-	.button-secondary:hover {
-		background-color: var(--color-surface-alt, #f3f4f6);
-	}
-
 	/* Danger Zone */
 	.danger-zone {
-		background: #fee;
-		border: 2px solid #dc2626;
+		background: var(--color-danger-surface);
+		border: 2px solid var(--color-danger-bright);
 		border-radius: 1rem;
 		padding: 2rem;
 		margin-top: 3rem;
@@ -458,7 +432,7 @@
 
 	.danger-zone-title {
 		font-size: var(--step-1);
-		color: #991b1b;
+		color: var(--color-danger-text);
 		margin-bottom: 1rem;
 	}
 
@@ -482,33 +456,11 @@
 	.danger-zone-description {
 		flex: 1;
 		font-size: var(--step--1);
-		color: #991b1b;
+		color: var(--color-danger-text);
 		margin: 0;
 	}
 
-	.button-danger {
-		background-color: #dc2626;
-		color: #fff;
-		border-color: #dc2626;
-	}
 
-	.button-danger:hover {
-		background-color: #b91c1c;
-		transform: translateY(-1px);
-		box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
-	}
-
-    .button-warning {
-        background-color: #f59e0b;
-        color: #fff;
-        border-color: #f59e0b;
-    }
-
-    .button-warning:hover {
-        background-color: #d97706;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
-    }
 
 	/* Current File Preview Styles */
 	.current-file-preview {
@@ -518,8 +470,8 @@
 		gap: 1rem;
 		padding: 0.75rem 1rem;
 		margin-bottom: 0.5rem;
-		background: var(--color-surface-subtle, #f9fafb);
-		border: 1px solid var(--color-border, #e5e5e5);
+		background: var(--color-surface-subtle);
+		border: 1px solid var(--color-border);
 		border-radius: 0.5rem;
 	}
 
@@ -528,8 +480,8 @@
 		max-height: 80px;
 		object-fit: contain;
 		border-radius: 0.25rem;
-		border: 1px solid var(--color-border, #e5e5e5);
-		background: #fff;
+		border: 1px solid var(--color-border);
+		background: var(--color-white);
 	}
 
 	.current-file-info {
@@ -547,7 +499,7 @@
 
 	.current-file-meta {
 		margin: 0;
-		color: var(--color-muted, #6b7280);
+		color: var(--color-muted);
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.35rem;

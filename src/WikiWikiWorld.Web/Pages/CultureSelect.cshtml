@@ -9,6 +9,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@Model.SiteName</title>
+    <link rel="stylesheet" href="/css/core/colors.css" />
+    <link rel="stylesheet" href="/css/core/variables.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -18,8 +20,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #fff;
+            background: linear-gradient(135deg, var(--color-culture-bg-start) 0%, var(--color-culture-bg-mid) 50%, var(--color-culture-bg-end) 100%);
+            color: var(--color-white);
         }
         h1 {
             font-size: 3rem;
@@ -35,17 +37,17 @@
             text-align: center;
         }
         .languages a {
-            color: #fff;
+            color: var(--color-white);
             text-decoration: none;
             font-size: 1.25rem;
             padding: 0.75rem 2rem;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgb(var(--color-white-rgb) / 0.2);
             border-radius: 8px;
             transition: all 0.2s ease;
         }
         .languages a:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.4);
+            background: rgb(var(--color-white-rgb) / 0.1);
+            border-color: rgb(var(--color-white-rgb) / 0.4);
         }
     </style>
 </head>

@@ -2,7 +2,7 @@
    Large serif quote text; **bold** words switch to a wide, heavy grotesque in caps. */
 
 blockquote.pullquote {
-    --pullquote-color: var(--uchu-green-9);
+    --pullquote-color: var(--color-brand-lime-text);
     --pullquote-ornament-color: var(--uchu-yin-4);
     --pullquote-cite-color: var(--uchu-yin-7);
     /* Zig-zag with a small hollow "pin" at each end; used as a mask so the colour stays a CSS token. */

@@ -2,10 +2,10 @@
 
 #file-info-panel {
 	margin-block-end: 2rem;
-	border: 2px solid var(--color-border, #e0e0e0);
+	border: 2px solid var(--color-border);
 	border-radius: 1rem;
 	overflow: hidden;
-	background: var(--color-surface, #fafafa);
+	background: var(--color-surface);
 }
 
 #file-info-panel > figure {
@@ -16,8 +16,8 @@
 	align-items: center;
 	background:
 		repeating-conic-gradient(
-			oklch(0.85 0 0) 0% 25%,
-			oklch(0.95 0 0) 0% 50%
+			var(--color-checker-mid) 0% 25%,
+			var(--color-checker-light) 0% 50%
 		) 0 0 / 1.25rem 1.25rem;
 }
 
@@ -31,13 +31,13 @@
 	height: auto;
 	display: block;
 	border-radius: 0.25rem;
-	box-shadow: 0 2px 12px oklch(0 0 0 / 0.12);
+	box-shadow: 0 2px 12px rgb(var(--color-black-rgb) / 0.12);
 }
 
 #file-info-panel > dl {
 	margin: 0;
 	padding: 0;
-	border-block-start: 2px solid var(--color-border, #e0e0e0);
+	border-block-start: 2px solid var(--color-border);
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
 }
@@ -47,7 +47,7 @@
 	flex-direction: column;
 	gap: 0.125rem;
 	padding: 0.875rem 1.25rem;
-	border-inline-end: 1px solid var(--color-border, #e0e0e0);
+	border-inline-end: 1px solid var(--color-border);
 }
 
 #file-info-panel > dl > div:last-child {
@@ -57,7 +57,7 @@
 #file-info-panel dt {
 	font-size: var(--step--1, 0.8rem);
 	font-weight: 600;
-	color: var(--color-muted, #6b7280);
+	color: var(--color-muted);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 }
@@ -65,7 +65,7 @@
 #file-info-panel dd {
 	margin: 0;
 	font-size: var(--step-0, 0.95rem);
-	color: var(--color-foreground, #1a1a1a);
+	color: var(--color-foreground);
 	word-break: break-all;
 }
 
@@ -80,12 +80,12 @@
 
 	#file-info-panel > dl > div {
 		border-inline-end: none;
-		border-block-end: 1px solid var(--color-border, #e0e0e0);
+		border-block-end: 1px solid var(--color-border);
 		padding: 0.625rem 1rem;
 	}
 
 	#file-info-panel > dl > div:nth-child(odd) {
-		border-inline-end: 1px solid var(--color-border, #e0e0e0);
+		border-inline-end: 1px solid var(--color-border);
 	}
 
 }
@@ -96,17 +96,17 @@
 	flex-wrap: wrap;
 	gap: 0.75rem;
 	padding: 0.875rem 1.25rem;
-	background: var(--color-surface-subtle, #f5f5f5);
-	border-block-start: 1px solid var(--color-border, #e0e0e0);
+	background: var(--color-surface-subtle);
+	border-block-start: 1px solid var(--color-border);
 	align-items: center;
 }
 
 /* File History Section */
 #file-history-panel {
 	margin-block: 2rem;
-	border: 2px solid var(--color-border, #e0e0e0);
+	border: 2px solid var(--color-border);
 	border-radius: 1rem;
-	background: var(--color-surface, #fafafa);
+	background: var(--color-surface);
 	overflow: hidden;
 }
 
@@ -117,21 +117,21 @@
 	justify-content: space-between;
 	gap: 1rem;
 	padding: 1.25rem;
-	border-block-end: 2px solid var(--color-border, #e0e0e0);
-	background: var(--color-surface-subtle, #f5f5f5);
+	border-block-end: 2px solid var(--color-border);
+	background: var(--color-surface-subtle);
 }
 
 #file-history-panel > header h2 {
 	margin: 0;
 	font-size: var(--step-1, 1.25rem);
 	font-weight: 700;
-	color: var(--color-title, #111827);
+	color: var(--color-title);
 }
 
 #file-history-panel > header p {
 	margin: 0.25rem 0 0 0;
 	font-size: var(--step--1, 0.875rem);
-	color: var(--color-muted, #6b7280);
+	color: var(--color-muted);
 }
 
 .file-history-item {
@@ -139,7 +139,7 @@
 	flex-wrap: wrap;
 	gap: 1.25rem;
 	padding: 1.25rem;
-	border-block-end: 1px solid var(--color-border, #e0e0e0);
+	border-block-end: 1px solid var(--color-border);
 	align-items: flex-start;
 }
 
@@ -148,7 +148,7 @@
 }
 
 .file-history-item.is-current {
-	background: color-mix(in oklch, var(--color-surface, #fafafa) 90%, var(--uchu-green-6, #15803d) 10%);
+	background: color-mix(in oklch, var(--color-surface) 82%, var(--color-brand-lime) 18%);
 }
 
 .file-history-item > a {
@@ -159,11 +159,11 @@
 	justify-content: center;
 	overflow: hidden;
 	border-radius: 0.5rem;
-	border: 1px solid var(--color-border, #e0e0e0);
+	border: 1px solid var(--color-border);
 	background:
 		repeating-conic-gradient(
-			oklch(0.88 0 0) 0% 25%,
-			oklch(0.96 0 0) 0% 50%
+			var(--color-checker-mid-alt) 0% 25%,
+			var(--color-checker-light-alt) 0% 50%
 		) 0 0 / 0.875rem 0.875rem;
 	text-decoration: none;
 	transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -171,7 +171,7 @@
 
 .file-history-item > a:hover {
 	transform: scale(1.02);
-	box-shadow: 0 2px 8px oklch(0 0 0 / 0.15);
+	box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.15);
 }
 
 .file-history-item > a > img {
@@ -208,28 +208,28 @@
 }
 
 .file-history-item.is-current .file-history-badge {
-	background: #dcfce7;
-	color: #15803d;
-	border: 1px solid #86efac;
+	background: var(--color-brand-lime-surface);
+	color: var(--color-hyperlinks);
+	border: 1px solid var(--color-brand-lime-hover);
 }
 
 .file-history-item:not(.is-current) .file-history-badge {
-	background: #f3f4f6;
-	color: #4b5563;
-	border: 1px solid #d1d5db;
+	background: var(--color-surface-pill);
+	color: var(--color-muted-strong);
+	border: 1px solid var(--color-border-subtle);
 }
 
 .file-history-item time {
 	font-weight: 600;
-	color: var(--color-foreground, #111827);
+	color: var(--color-foreground);
 }
 
 .file-history-author {
-	color: var(--color-muted, #6b7280);
+	color: var(--color-muted);
 }
 
 .file-history-author a {
-	color: var(--color-primary, #2563eb);
+	color: var(--color-hyperlinks);
 	font-weight: 600;
 	text-decoration: none;
 }
@@ -244,8 +244,8 @@
 	grid-template-columns: repeat(auto-fit, minmax(clamp(7.5rem, 25%, 11rem), 1fr));
 	gap: 0.5rem 1rem;
 	padding: 0.625rem 0.875rem;
-	background: var(--color-surface, #ffffff);
-	border: 1px solid var(--color-border, #e5e7eb);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border-faint);
 	border-radius: 0.5rem;
 }
 
@@ -260,30 +260,30 @@
 	font-size: var(--step--2, 0.75rem);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
-	color: var(--color-muted, #6b7280);
+	color: var(--color-muted);
 	font-weight: 600;
 }
 
 .file-history-item dd {
 	margin: 0;
 	font-size: var(--step--1, 0.875rem);
-	color: var(--color-foreground, #1f2937);
+	color: var(--color-foreground);
 	font-weight: 500;
 	word-break: break-all;
 }
 
 .file-history-comment {
 	font-size: var(--step--1, 0.875rem);
-	color: var(--color-foreground, #374151);
-	background: var(--color-surface, #ffffff);
+	color: var(--color-foreground);
+	background: var(--color-surface);
 	padding: 0.4rem 0.75rem;
-	border-left: 3px solid var(--color-border, #d1d5db);
+	border-left: 3px solid var(--color-border-subtle);
 	border-radius: 0 0.25rem 0.25rem 0;
 }
 
 .file-history-comment > strong {
 	font-weight: 600;
 	margin-right: 0.35rem;
-	color: var(--color-muted, #6b7280);
+	color: var(--color-muted);
 }
 

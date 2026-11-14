@@ -44,8 +44,8 @@
 
 
     &:hover {
-        background: var(--uchu-green-1);
-        color: var(--uchu-green-8);
+        background: var(--color-brand-lime-surface);
+        color: var(--color-hyperlinks);
     }
 
     &:focus-visible {
@@ -73,8 +73,8 @@
 }
 
 .categories li a {
-    color: var(--uchu-green-8);
-    background-color: var(--uchu-green-1);
+    color: var(--color-hyperlinks);
+    background-color: var(--color-brand-lime-surface);
     border: none;
     text-transform: uppercase;
     text-decoration: none;
@@ -87,10 +87,10 @@ ul.categories a {
 
 .article-actions {
     --action-height: clamp(2.25rem, 2.05rem + 0.45vw, 2.45rem);
-    --action-border-color: #e2dfd7;
-    --action-border-hover: #cfc9bc;
-    --action-surface: #ffffff;
-    --action-surface-hover: #f5f3ee;
+    --action-border-color: var(--color-paper-border-action);
+    --action-border-hover: var(--color-paper-border-strong);
+    --action-surface: var(--color-white);
+    --action-surface-hover: var(--color-paper-alt);
     --action-fg: var(--color-foreground);
 
     display: flex;
@@ -169,7 +169,7 @@ ul.categories a {
    Kept below the open menu (z-index 100) so it never covers the list. */
 #article-bookmark-status:not(:empty) {
     position: absolute;
-    inset-block-start: calc(100% + 0.4rem);
+    inset-block-start: calc(100% + 0.5rem);
     inset-inline-start: 0;
     z-index: 50;
     inline-size: max-content;
@@ -177,7 +177,7 @@ ul.categories a {
     padding: 0.45rem 0.75rem;
     border-radius: 0.6rem;
     background: var(--color-foreground);
-    color: #ffffff;
+    color: var(--color-white);
     font-size: 0.85em;
     line-height: 1.35;
     white-space: normal;
@@ -216,6 +216,10 @@ ul.categories a {
         background: var(--action-surface-hover);
         border-color: var(--action-border-hover);
         color: var(--action-fg);
+    }
+
+    &:focus {
+        outline: none;
     }
 
     &:focus-visible {
@@ -282,7 +286,7 @@ ul.categories a {
 .article-actions .m3-split-button > details[open] > summary {
     background: var(--color-foreground);
     border-color: var(--color-foreground);
-    color: #ffffff;
+    color: var(--color-white);
     border-radius: 9999px;
 }
 
@@ -291,14 +295,14 @@ ul.categories a {
     position: absolute;
     top: calc(100% + 0.45rem);
     right: 0;
-    background-color: #ffffff;
+    background-color: var(--color-white);
     min-width: 14.5rem;
     padding: 0.4rem 0;
     border-radius: 0.9rem;
-    border: 1px solid #e6e4dd;
+    border: 1px solid var(--color-paper-border);
     box-shadow:
-        0 10px 28px rgb(0 0 0 / 0.1),
-        0 2px 6px rgb(0 0 0 / 0.05);
+        0 10px 28px rgb(var(--color-black-rgb) / 0.1),
+        0 2px 6px rgb(var(--color-black-rgb) / 0.05);
     z-index: 100;
 }
 
@@ -317,7 +321,7 @@ ul.categories a {
     transition: background-color 0.12s ease;
 
     &:hover {
-        background-color: #f5f3ee;
+        background-color: var(--color-paper-alt);
     }
 }
 
@@ -325,24 +329,24 @@ ul.categories a {
     width: 1.1em;
     height: 1.1em;
     flex-shrink: 0;
-    color: #3a3d42;
+    color: var(--color-paper-ink-subtle);
 }
 
 .dropdown-menu > .menu-content hr {
     margin: 0.35rem 0.85rem;
     border: 0;
-    border-top: 1px solid #eceae3;
+    border-top: 1px solid var(--color-paper-border-subtle);
 }
 
 .dropdown-menu > .menu-content a.menu-item-danger {
-    color: #c83a2a;
+    color: var(--color-danger-link);
 
     & > svg {
-        color: #c83a2a;
+        color: var(--color-danger-link);
     }
 
     &:hover {
-        background-color: rgb(200 58 42 / 0.07);
+        background-color: rgb(var(--color-danger-rgb) / 0.07);
     }
 }
 
@@ -390,7 +394,7 @@ ul.categories a {
     box-sizing: border-box;
     border-radius: 9999px;
     background: var(--color-foreground);
-    color: #ffffff;
+    color: var(--color-white);
     font-size: 0.68rem;
     font-weight: 600;
     line-height: 1.05rem;
@@ -398,7 +402,7 @@ ul.categories a {
 }
 
 #article-bookmark > details[open] .bookmark-menu-badge {
-    background: #ffffff;
+    background: var(--color-white);
     color: var(--color-foreground);
     box-shadow: 0 0 0 1px var(--color-foreground);
 }
@@ -418,23 +422,35 @@ ul.categories a {
     margin: 0;
     padding: 0.62rem 1.05rem;
     border: 0;
+    border-radius: 0;
     background: none;
     color: var(--color-foreground);
     font-family: var(--font-family-san-serif);
     font-size: 0.92em;
     font-weight: 450;
+    letter-spacing: 0;
     line-height: 1.25;
     text-align: start;
+    text-box-trim: normal;
     cursor: pointer;
     transition: background-color 0.12s ease;
 
     &:hover {
-        background-color: #f5f3ee;
+        background-color: var(--color-paper-alt);
+        color: var(--color-foreground);
+    }
+
+    &:focus {
+        outline: none;
     }
 
     &:focus-visible {
-        outline: 2px solid var(--color-primary);
+        outline: 2px solid var(--color-foreground);
         outline-offset: -2px;
+    }
+
+    &:active {
+        transform: none;
     }
 
     &:disabled {
@@ -460,7 +476,7 @@ ul.categories a {
     align-items: stretch;
 
     &:hover {
-        background-color: #f5f3ee;
+        background-color: var(--color-paper-alt);
     }
 
     & > button[role="checkbox"] {
@@ -470,6 +486,7 @@ ul.categories a {
 
         &:hover {
             background: none;
+            color: var(--color-foreground);
         }
     }
 }
@@ -490,7 +507,7 @@ ul.categories a {
 .bookmark-list-excerpt {
     font-size: 0.85em;
     font-weight: 400;
-    color: #6b6f76;
+    color: var(--color-paper-ink-soft);
 }
 
 .dropdown-menu > .menu-content .bookmark-note-button {
@@ -503,7 +520,9 @@ ul.categories a {
     border: 0;
     border-radius: 0;
     background: none;
-    color: #8a8d93;
+    color: var(--color-paper-ink-placeholder);
+    letter-spacing: 0;
+    text-box-trim: normal;
     cursor: pointer;
 
     & svg {
@@ -513,12 +532,20 @@ ul.categories a {
 
     &:hover {
         color: var(--color-foreground);
-        background: #ece9e1;
+        background: var(--color-paper-border-active);
+    }
+
+    &:focus {
+        outline: none;
     }
 
     &:focus-visible {
-        outline: 2px solid var(--color-primary);
+        outline: 2px solid var(--color-foreground);
         outline-offset: -2px;
+    }
+
+    &:active {
+        transform: none;
     }
 }
 
@@ -529,7 +556,7 @@ ul.categories a {
 
 #article-bookmark-prompt:has(span) {
     position: absolute;
-    inset-block-start: calc(100% + 0.4rem);
+    inset-block-start: calc(100% + 0.5rem);
     inset-inline-start: 0;
     z-index: 50;
     display: flex;
@@ -542,7 +569,7 @@ ul.categories a {
     padding: 0.45rem 0.75rem;
     border-radius: 0.6rem;
     background: var(--color-foreground);
-    color: #ffffff;
+    color: var(--color-white);
     font-family: var(--font-family-san-serif);
     font-size: 0.85em;
     line-height: 1.35;
@@ -555,20 +582,31 @@ ul.categories a {
         color: inherit;
         font: inherit;
         font-weight: 700;
+        letter-spacing: 0;
+        text-box-trim: normal;
         text-decoration: underline;
         text-decoration-color: var(--color-primary);
         text-decoration-thickness: 2px;
         text-underline-offset: 0.2em;
         cursor: pointer;
 
+        &:focus {
+            outline: none;
+        }
+
         &:focus-visible {
-            outline: 2px solid #ffffff;
+            outline: 2px solid var(--color-white);
             outline-offset: 2px;
+        }
+
+        &:active {
+            transform: none;
         }
     }
 }
 
-#article-bookmark-status:not(:empty) ~ #article-bookmark-prompt {
+#article-bookmark-status:not(:empty) ~ #article-bookmark-prompt,
+#article-bookmark:has(> details[open]) > #article-bookmark-prompt {
     display: none;
 }
 
@@ -599,9 +637,9 @@ ul.categories a {
         min-inline-size: 0;
         block-size: 2.2rem;
         padding: 0 0.7rem;
-        border: 1px solid var(--action-border-color, #e2dfd7);
+        border: 1px solid var(--action-border-color);
         border-radius: 0.55rem;
-        background: #ffffff;
+        background: var(--color-white);
         color: var(--color-foreground);
         font: inherit;
         font-size: 0.92em;
@@ -619,11 +657,15 @@ ul.categories a {
         border: 0;
         border-radius: 9999px;
         background: var(--color-foreground);
-        color: #ffffff;
+        color: var(--color-white);
         font: inherit;
         font-size: 0.88em;
         font-weight: 550;
         cursor: pointer;
+    }
+
+    & > button:focus {
+        outline: none;
     }
 
     & > button:focus-visible {

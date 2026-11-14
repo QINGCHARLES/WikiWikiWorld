@@ -8,7 +8,7 @@
 
 .issue-contents {
     --contents-panel: var(--uchu-gray-1);
-    --contents-number: oklch(48% 0.13 145);
+    --contents-number: var(--color-brand-lime-text);
 
     /* A new block formatting context sits beside the floated cards (carousel, infobox, credits)
        instead of running underneath them. The minimum width makes it drop below them on its own

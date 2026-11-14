@@ -48,7 +48,7 @@
 }
 
 .languages-error {
-	border-inline-start: 4px solid var(--color-danger, oklch(60% 0.2 25));
+	border-inline-start: 4px solid var(--color-danger);
 }
 
 .languages-list {

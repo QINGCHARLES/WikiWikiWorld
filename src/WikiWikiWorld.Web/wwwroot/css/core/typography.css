@@ -92,7 +92,7 @@ h1.title {
     text-align: center;
     line-height: .9;
     color: var(--color-title);
-    background: linear-gradient(to bottom, #3338, #fff0), url(/sitefiles/1/gqstyletest4.jpg) top center / cover no-repeat;
+    background: linear-gradient(to bottom, var(--color-header-gradient-tint), transparent), url(/sitefiles/1/gqstyletest4.jpg) top center / cover no-repeat;
     margin-bottom: var(--space-2xl);
     /* Keeps its own text-shadow; a filter here would also shadow the background box */
     filter: none;
@@ -101,12 +101,12 @@ h1.title {
     letter-spacing: -0.2rem;
     text-transform: uppercase;
     text-shadow:
-        0.06rem 0.06rem 0.04rem #919191,
-        0.12rem 0.12rem 0.04rem #919191,
-        0.18rem 0.18rem 0.04rem #919191,
-        0.24rem 0.24rem 0.04rem #919191,
-        0.32rem 0.32rem 0.45rem rgb(60 60 60 / 0.32),
-        0.55rem 0.55rem 1.1rem rgb(60 60 60 / 0.22);
+        0.06rem 0.06rem 0.04rem var(--color-shadow-extrusion),
+        0.12rem 0.12rem 0.04rem var(--color-shadow-extrusion),
+        0.18rem 0.18rem 0.04rem var(--color-shadow-extrusion),
+        0.24rem 0.24rem 0.04rem var(--color-shadow-extrusion),
+        0.32rem 0.32rem 0.45rem rgb(var(--color-shadow-ambient-rgb) / 0.32),
+        0.55rem 0.55rem 1.1rem rgb(var(--color-shadow-ambient-rgb) / 0.22);
     padding: var(--grid-gutter) 20vw;
     padding-top: calc(6rem + var(--grid-gutter));
     width: 100vw;

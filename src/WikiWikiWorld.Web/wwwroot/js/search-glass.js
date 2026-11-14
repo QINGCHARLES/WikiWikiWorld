@@ -79,7 +79,7 @@ function ReadHeroPixels() {
     Canvas.height = Height;
     const Context = Canvas.getContext('2d');
     // The page shows through transparent hero pixels, and its background is white.
-    Context.fillStyle = '#ffffff';
+    Context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-background').trim();
     Context.fillRect(0, 0, Width, Height);
     Context.drawImage(HeroImage, 0, 0, Width, Height);
     HeroPixels = { Data: Context.getImageData(0, 0, Width, Height).data, Width, Height };

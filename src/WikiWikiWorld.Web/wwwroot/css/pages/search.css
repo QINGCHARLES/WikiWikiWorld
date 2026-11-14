@@ -30,7 +30,7 @@
 .search-result-item mark,
 .search-snippet mark {
     background-color: var(--color-primary);
-    color: var(--color-foreground-inverse);
+    color: var(--color-brand-ink);
     padding: 0 0.15em;
     border-radius: 2px;
 }
@@ -52,21 +52,21 @@ table.gsc-search-box td {
 }
 
 .gsc-search-button-v2 svg {
-    fill: #000 !important;
+    fill: var(--color-black) !important;
     width: 1rem !important;
     height: 1rem !important;
 }
 
 .gsc-search-button-v2:hover {
-    background-color: #fff !important;
+    background-color: var(--color-white) !important;
     border: none !important;
 }
 
 .gsc-search-button-v2 {
-    box-shadow: 3px 4px 0px 1px #000;
+    box-shadow: 3px 4px 0px 1px var(--color-black);
     transition: ease 0.1s;
     background-color: var(--color-primary) !important;
-    color: #000 !important;
+    color: var(--color-black) !important;
     border: none !important;
     padding: var(--space-3xs) var(--space-2xs) !important;
     font-size: 1rem !important;
@@ -80,7 +80,7 @@ table.gsc-search-box td {
 
 table.gsc-search-box td.gsc-input {
     padding-right: 0 !important;
-    color: black;
+    color: var(--color-black);
     border-radius: 2px !important;
 }
 
@@ -98,7 +98,7 @@ table.gsc-search-box, table.gsc-search-box tr {
 }
 
 input.gsc-input {
-    background: #fff !important;
+    background: var(--color-white) !important;
     padding: 4px 14px !important;
     border-radius: 2px !important;
 }

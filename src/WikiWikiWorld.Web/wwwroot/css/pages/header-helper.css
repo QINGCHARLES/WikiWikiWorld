@@ -1,6 +1,6 @@
 /* Scoped to the utility so encyclopedia pages retain their existing layout. */
 main:has(.header-helper) { max-inline-size: 90rem; }
-.header-helper { --helper-accent: var(--uchu-green-6); --helper-danger: var(--uchu-red-6); --helper-radius: .75rem; display: grid; gap: 1.25rem; padding-block-end: 3rem; font-family: var(--font-family-san-serif); font-size: 1rem; line-height: 1.45; accent-color: var(--helper-accent); }
+.header-helper { --helper-accent: var(--color-hyperlinks); --helper-danger: var(--uchu-red-6); --helper-radius: .75rem; display: grid; gap: 1.25rem; padding-block-end: 3rem; font-family: var(--font-family-san-serif); font-size: 1rem; line-height: 1.45; accent-color: var(--helper-accent); }
 
 /* Shared text: the site's serif paragraph rule and article-sized margins are too loud for tool help. */
 .header-helper p { margin: .5rem 0 0; font-family: inherit; font-size: .875rem; line-height: 1.5; color: var(--color-muted); }
@@ -12,7 +12,7 @@ main:has(.header-helper) { max-inline-size: 90rem; }
 .header-helper [hidden] { display: none !important; }
 
 /* Steps: cards whose title sits inside the card; steps unavailable until a picture is open are dimmed. */
-.header-helper fieldset { min-inline-size: 0; margin: 0; border: 1px solid var(--color-border); border-radius: var(--helper-radius); padding: clamp(1rem, 2.5vw, 1.75rem); background: var(--color-background); box-shadow: 0 1px 2px #0000000d; transition: opacity .2s; }
+.header-helper fieldset { min-inline-size: 0; margin: 0; border: 1px solid var(--color-border); border-radius: var(--helper-radius); padding: clamp(1rem, 2.5vw, 1.75rem); background: var(--color-background); box-shadow: 0 1px 2px rgb(var(--color-black-rgb) / 0.05); transition: opacity .2s; }
 .header-helper fieldset:disabled { opacity: .55; }
 .header-helper legend { float: inline-start; inline-size: 100%; display: flex; gap: .75rem; align-items: center; margin-block-end: 1rem; padding: 0; font-family: var(--font-family-wide-grotesque); font-size: 1.25rem; font-weight: 800; letter-spacing: -.01em; }
 .header-helper legend + * { clear: both; }
@@ -39,17 +39,17 @@ main:has(.header-helper) { max-inline-size: 90rem; }
 .header-helper:has(#HelperError:not([hidden])) #HelperStatus::before { background: var(--helper-danger); }
 @keyframes helper-pulse { to { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { #HelperStatus::before { animation: none !important; } }
-#HelperError, #ArticleSlugError { padding: .75rem 1rem; border-inline-start: 4px solid var(--helper-danger); border-radius: .5rem; background: oklch(from var(--helper-danger) 96% .03 h); color: oklch(from var(--helper-danger) 40% c h); font-size: .9375rem; }
+#HelperError, #ArticleSlugError { padding: .75rem 1rem; border-inline-start: 4px solid var(--helper-danger); border-radius: .5rem; background: var(--color-helper-error-bg); color: var(--color-helper-error-text); font-size: .9375rem; }
 #ArticleSlugError { padding: .5rem .75rem; font-size: .875rem; }
 
 /* Step 1: drop target. Drops are accepted anywhere in the helper; this makes the target obvious. */
 .helper-drop { display: grid; gap: .6rem; justify-items: center; margin-block-end: 1.25rem; padding: clamp(1.25rem, 4vw, 2.5rem) 1rem; border: 2px dashed var(--color-border); border-radius: var(--helper-radius); background: var(--color-surface-alt); text-align: center; transition: border-color .15s, background-color .15s; }
 .helper-drop > label { font-size: 1.05rem; }
 .helper-drop > p { max-inline-size: 40rem; margin: 0; }
-.header-helper[data-dragging] .helper-drop { border-color: var(--helper-accent); background: oklch(from var(--helper-accent) 96% .04 h); }
+.header-helper[data-dragging] .helper-drop { border-color: var(--helper-accent); background: var(--color-helper-accent-surface); }
 #SourceFile { max-inline-size: 100%; font: inherit; font-size: .9375rem; }
 #SourceFile::file-selector-button { margin-inline-end: .75rem; padding: .55em 1.15em; border: 3px solid var(--uchu-yin-8); border-radius: 999px; background: var(--uchu-yin-8); color: var(--uchu-yang); font: inherit; font-weight: 700; cursor: pointer; }
-#SourceFile:hover:not(:disabled)::file-selector-button { border-color: var(--uchu-green-6); background: var(--uchu-green-6); }
+#SourceFile:hover:not(:disabled)::file-selector-button { border-color: var(--color-brand-lime-hover); background: var(--color-brand-lime); color: var(--color-brand-ink); }
 #SourceUrl { flex: 1 1 15rem; min-inline-size: 0; }
 label[for=SourceUrl] { display: block; margin-block-end: .35rem; }
 
@@ -61,18 +61,18 @@ label[for=SourceUrl] { display: block; margin-block-end: .35rem; }
 .header-helper #SourceInfo { margin: 0; font-variant-numeric: tabular-nums; color: var(--color-foreground); font-weight: 600; }
 #Zoom { inline-size: 7rem; }
 /* FitSurface subtracts 28px for this padding, so keep 14px per side and no border on the viewport box. */
-.helper-viewport { overflow: auto; max-block-size: 65vh; padding: 14px; border-radius: var(--helper-radius); background: #1b1b1b repeating-conic-gradient(#232323 0 25%, #1b1b1b 0 50%) 0 0 / 20px 20px; }
+.helper-viewport { overflow: auto; max-block-size: 65vh; padding: 14px; border-radius: var(--helper-radius); background: var(--color-surface-strong-alt) repeating-conic-gradient(var(--color-surface-strong-checker) 0 25%, var(--color-surface-strong-alt) 0 50%) 0 0 / 20px 20px; }
 .helper-surface { position: relative; inline-size: 100%; margin-inline: auto; overflow: clip; }
 .helper-surface canvas { display: block; inline-size: 100%; block-size: auto; }
-.helper-crop { position: absolute; box-sizing: border-box; border: 1px solid #fffc; cursor: move; touch-action: none; -webkit-user-select: none; user-select: none; box-shadow: 0 0 0 100vmax #000a; clip-path: inset(-100vmax);
-	background: linear-gradient(90deg, transparent calc(100% / 3 - .5px), #fff5 0 calc(100% / 3 + .5px), transparent 0 calc(200% / 3 - .5px), #fff5 0 calc(200% / 3 + .5px), transparent 0), linear-gradient(transparent calc(100% / 3 - .5px), #fff5 0 calc(100% / 3 + .5px), transparent 0 calc(200% / 3 - .5px), #fff5 0 calc(200% / 3 + .5px), transparent 0); }
+.helper-crop { position: absolute; box-sizing: border-box; border: 1px solid rgb(var(--color-white-rgb) / 0.8); cursor: move; touch-action: none; -webkit-user-select: none; user-select: none; box-shadow: 0 0 0 100vmax rgb(var(--color-black-rgb) / 0.67); clip-path: inset(-100vmax);
+	background: linear-gradient(90deg, transparent calc(100% / 3 - .5px), rgb(var(--color-white-rgb) / 0.33) 0 calc(100% / 3 + .5px), transparent 0 calc(200% / 3 - .5px), rgb(var(--color-white-rgb) / 0.33) 0 calc(200% / 3 + .5px), transparent 0), linear-gradient(transparent calc(100% / 3 - .5px), rgb(var(--color-white-rgb) / 0.33) 0 calc(100% / 3 + .5px), transparent 0 calc(200% / 3 - .5px), rgb(var(--color-white-rgb) / 0.33) 0 calc(200% / 3 + .5px), transparent 0); }
 .helper-crop:focus-visible { outline-offset: 0; }
 /* Corner brackets drawn on a 28px transparent hit area, overriding the site's pill button styling. */
-.header-helper .helper-handle { --button-bg: transparent; --button-hover-bg: transparent; --button-border-color: transparent; position: absolute; inline-size: 28px; block-size: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; touch-action: none; filter: drop-shadow(0 0 1.5px #000c); }
+.header-helper .helper-handle { --button-bg: transparent; --button-hover-bg: transparent; --button-border-color: transparent; position: absolute; inline-size: 28px; block-size: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; touch-action: none; filter: drop-shadow(0 0 1.5px rgb(var(--color-black-rgb) / 0.8)); }
 .header-helper .helper-handle:active { transform: none; }
 .header-helper .helper-handle:focus { outline: none; }
 .helper-handle:focus-visible::before { border-color: var(--uchu-yellow-4); }
-.helper-handle::before { content: ""; position: absolute; inset: -1px; border: 0 solid #fff; }
+.helper-handle::before { content: ""; position: absolute; inset: -1px; border: 0 solid var(--color-white); }
 .helper-handle[data-corner=NW] { inset: 0 auto auto 0; cursor: nwse-resize; }
 .helper-handle[data-corner=NW]::before { border-block-start-width: 4px; border-inline-start-width: 4px; }
 .helper-handle[data-corner=NE] { inset: 0 0 auto auto; cursor: nesw-resize; }
@@ -90,11 +90,11 @@ label[for=SourceUrl] { display: block; margin-block-end: .35rem; }
 .helper-previews figure { flex: 1 1 10rem; min-inline-size: 0; margin: 0; }
 .helper-previews figure:first-child { flex: 0 1 8rem; }
 .helper-previews figure:last-child { flex-basis: 100%; }
-.helper-previews canvas { display: block; inline-size: 100%; border-radius: .4rem; background: var(--color-background); box-shadow: 0 0 0 1px var(--color-border), 0 4px 14px #0000001a; }
+.helper-previews canvas { display: block; inline-size: 100%; border-radius: .4rem; background: var(--color-background); box-shadow: 0 0 0 1px var(--color-border), 0 4px 14px rgb(var(--color-black-rgb) / 0.1); }
 .helper-previews figcaption { margin-block-start: .4rem; text-align: center; font-size: .8125rem; color: var(--color-muted); }
 .helper-toggles { display: flex; flex-wrap: wrap; gap: .4rem; }
 .helper-toggles label { padding: .3rem .7rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-background); font-size: .875rem; }
-.helper-toggles label:has(:checked) { border-color: var(--helper-accent); background: oklch(from var(--helper-accent) 96% .04 h); }
+.helper-toggles label:has(:checked) { border-color: var(--helper-accent); background: var(--color-helper-accent-surface); }
 
 /* Step 3: export */
 .helper-export { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1.25rem 2rem; }

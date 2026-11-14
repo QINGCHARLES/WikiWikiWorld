@@ -9,9 +9,10 @@ if (Dialog) {
 	const Formatter = new Intl.NumberFormat();
 	const Limit = Formatter.format(Text.maxLength);
 
-	/** Shows the character count against the limit. */
+	/** Shows the character count once the note approaches the limit. */
 	function UpdateCount() {
-		Count.textContent = `${Formatter.format(Text.value.length)} / ${Limit}`;
+		const Length = Text.value.length;
+		Count.textContent = Length >= 8000 ? `${Formatter.format(Length)} / ${Limit}` : "";
 	}
 
 	/** Fills the dialog from a row's note button and opens it modally over the closed menu. */
@@ -19,8 +20,8 @@ if (Dialog) {
 		const Notes = Button.dataset.notes ?? "";
 		const ListName = Button.dataset.listName ?? "";
 		Form.elements.BookmarkId.value = Button.dataset.bookmarkId;
-		Dialog.querySelector("#article-note-eyebrow").textContent = `Note · ${ListName}`;
-		Dialog.querySelector("#article-note-title").textContent = Notes.trim() ? "Edit your note" : `Why save it to ${ListName}?`;
+		Dialog.querySelector("#article-note-eyebrow").textContent = ListName;
+		Dialog.querySelector("#article-note-title").textContent = Notes.trim() ? "Edit note" : "Add a note";
 		Dialog.querySelector("#article-note-visibility").dataset.public = Button.dataset.public;
 		Dialog.querySelector("[data-bookmark-note-delete]").hidden = !Notes.trim();
 		Text.value = Notes;
@@ -51,6 +52,17 @@ if (Dialog) {
 		if (Event.key === "Enter" && (Event.ctrlKey || Event.metaKey)) {
 			Event.preventDefault();
 			Form.requestSubmit();
+		}
+	});
+
+	// Clear any lingering post-save prompt or confirmation when the list menu opens.
+	document.querySelector("#article-bookmark > details")?.addEventListener("toggle", Event => {
+		if (!Event.currentTarget.open) return;
+		document.getElementById("article-bookmark-prompt")?.replaceChildren();
+		const Status = document.getElementById("article-bookmark-status");
+		if (Status) {
+			Status.dataset.message = "";
+			Status.textContent = "";
 		}
 	});
 

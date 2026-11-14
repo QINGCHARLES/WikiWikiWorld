@@ -55,24 +55,28 @@ else
 			data-on:submit__prevent="$_noteError = ''; @@post(el.action, {contentType: 'form', retry: 'never', retryMaxCount: 0}).then(() => $_noteError || el.closest('dialog').close()).catch(() => { $_noteError = 'Could not save the note. Check your connection and try again.' })"
 			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_noteError = 'Could not save the note. Check your connection and try again.'">
 			<input type="hidden" name="BookmarkId" value="" />
-			<p class="bookmark-editor-eyebrow" id="article-note-eyebrow">Note</p>
+			<div class="bookmark-editor-context">
+				<div class="bookmark-editor-head">
+					<p class="bookmark-editor-list" id="article-note-eyebrow">Bookmarks</p>
+					<span class="bookmark-editor-visibility" id="article-note-visibility" data-public="false">
+						<svg data-when-public="false" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg>
+						<svg data-when-public="true" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="@IconSpriteUrl#Globe"></use></svg>
+						<span data-when-public="false">Private<span class="visually-hidden"> list. Only you can see this note.</span></span>
+						<span data-when-public="true">Public<span class="visually-hidden"> list. Anyone can read this note.</span></span>
+					</span>
+				</div>
+				@if (!string.IsNullOrEmpty(Model.ArticleTitle))
+				{
+					<p class="bookmark-editor-subject">@Model.ArticleTitle</p>
+				}
+			</div>
 			<h2 class="bookmark-editor-title" id="article-note-title">Add a note</h2>
-			@if (!string.IsNullOrEmpty(Model.ArticleTitle))
-			{
-				<p class="bookmark-editor-subject">On <strong>@Model.ArticleTitle</strong></p>
-			}
 			<label class="visually-hidden" for="article-note-text">Note</label>
-			<textarea id="article-note-text" name="Notes" maxlength="@WikiWikiWorld.Data.Models.Bookmark.MaxNotesLength" rows="5"
-				placeholder="Why are you saving this? e.g. Need the 1984 issues for the launch coverage." aria-describedby="article-note-help article-note-visibility"></textarea>
+			<textarea id="article-note-text" name="Notes" maxlength="@WikiWikiWorld.Data.Models.Bookmark.MaxNotesLength" rows="4"
+				aria-describedby="article-note-help article-note-visibility"></textarea>
 			<p class="bookmark-editor-help" id="article-note-help">
-				<span>Supports <code>**bold**</code>, <code>_italic_</code> and <code>[links](https://…)</code>. Ctrl+Enter saves.</span>
+				<span>Markdown supported</span>
 				<span class="bookmark-editor-count" data-count-for="article-note-text" aria-hidden="true"></span>
-			</p>
-			<p class="bookmark-editor-visibility" id="article-note-visibility" data-public="false">
-				<svg data-when-public="false" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg>
-				<svg data-when-public="true" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Globe"></use></svg>
-				<span data-when-public="false">Private list. Only you can see this note.</span>
-				<span data-when-public="true">Public list. Anyone can read this note.</span>
 			</p>
 			<div class="bookmark-error" role="alert" data-text="$_noteError"></div>
 			<div class="bookmark-editor-actions">
