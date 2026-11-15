@@ -317,6 +317,12 @@ public sealed class ViewModel(
             }
             else
             {
+                // Temporary, not permanent: browsers cache a 301 indefinitely, and a later article may reuse the old slug.
+                if (string.IsNullOrWhiteSpace(Revision) && await FindRenamedArticleAsync(UrlSlug, CancellationToken) is { } RenamedArticle)
+                {
+                    return Redirect(ArticleUrlHelper.BuildArticlePath(RenamedArticle));
+                }
+
                 return NotFound();
             }
         }
@@ -604,6 +610,33 @@ public sealed class ViewModel(
 
         return Partial("_BookmarkState", new BookmarkControlModel(ArticleUrlHelper.BuildArticlePath(Current), IsSignedIn: true, Lists,
             BookmarkControlModel.BuildBookmarksPath(CurrentUser.UserName), StatusMessage, SavedListId));
+    }
+
+    /// <summary>
+    /// Finds the article a slug used to belong to before it was renamed, so the old address can redirect.
+    /// Takes the newest non-current revision stored under the slug and returns its article's current revision.
+    /// Soft-deleted articles are excluded by the query filter, and the caller only asks after no current
+    /// article holds the slug, so a page that later takes over the slug always wins.
+    /// </summary>
+    /// <param name="UrlSlug">The normalized slug that has no current article.</param>
+    /// <param name="CancellationToken">A cancellation token.</param>
+    /// <returns>The renamed article's current revision, or <see langword="null"/> when the slug was never renamed away.</returns>
+    private async Task<ArticleRevision?> FindRenamedArticleAsync(string UrlSlug, CancellationToken CancellationToken)
+    {
+        ArticleRevisionsBySlugSpec FormerSpec = new(UrlSlug, IsCurrent: false);
+        ArticleRevision? Former = await Context.ArticleRevisions
+            .AsNoTracking()
+            .WithSpecification(FormerSpec)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        if (Former is null) return null;
+
+        ArticleRevision? Current = await Context.ArticleRevisions
+            .AsNoTracking()
+            .Where(r => r.CanonicalArticleId == Former.CanonicalArticleId && r.IsCurrent)
+            .FirstOrDefaultAsync(CancellationToken);
+
+        return Current is not null && !Current.UrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase) ? Current : null;
     }
 
     /// <summary>

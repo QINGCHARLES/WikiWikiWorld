@@ -114,14 +114,17 @@ Base Path: `/api/article`
       "Type": "Article", // one of "Article", "Category", "File", "User", "Info"
       "CanonicalFileId": null, // optional Guid
       "Text": "Updated markdown content...",
-      "RevisionReason": "Fixed typos"
+      "RevisionReason": "Fixed typos",
+      "NewUrlSlug": "new-slug" // optional: renames the article
   }
   ```
+- **Renaming**: Set `NewUrlSlug` to move the article to a new address. The new revision keeps the same `CanonicalArticleId`, so history, discussions and bookmarks follow it; earlier revisions keep the old slug. Omit it or leave it empty to keep the current slug. A `file:` prefix is ignored, as for lookups. Afterwards the old address answers with a temporary `302` redirect to the new one, unless another current article takes the old slug, which then wins. (It is not a `301`, because browsers cache those and slugs can be reused.) Links to the old slug in other articles' text, including `file:` references and `{{CoverGrid}}` lists, are not rewritten; `file:` and CoverGrid lookups do not follow the redirect.
 - **Responses**:
   - `200 OK`: Article revision updated successfully.
-  - `400 Bad Request`: Missing slug or invalid parameters.
+  - `400 Bad Request`: Missing slug or invalid parameters, or `NewUrlSlug` is a reserved system path.
   - `401 Unauthorized`: Missing or invalid token.
   - `404 Not Found`: Article does not exist.
+  - `409 Conflict`: `NewUrlSlug` is already used by another current article.
 
 ### Get Article History
 - **Endpoint**: `GET /api/article/{UrlSlug}/history`

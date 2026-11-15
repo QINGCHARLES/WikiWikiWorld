@@ -9,6 +9,7 @@ Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
   python scripts/wiki_api.py request prod --host en.cinepedia.wiki GET api/article/the-matrix
   python scripts/wiki_api.py request dev --host en.cinepedia.wiki.localhost GET api/article/the-matrix
   python scripts/wiki_api.py request prod PUT api/article/gq-hype --json body.json
+  python scripts/wiki_api.py request prod PUT api/article/old-slug --json body.json   # body with "NewUrlSlug": "new-slug" renames
   python scripts/wiki_api.py request prod POST api/file/some-file-slug --file File=pic.webp --form Culture=en
 """
 

@@ -76,12 +76,12 @@ public class ArticleApiController(
     }
 
     /// <summary>
-    /// Updates an article revision.
+    /// Updates an article revision, optionally moving the article to <see cref="UpdateArticleRevisionModel.NewUrlSlug"/>.
     /// </summary>
-    /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="UrlSlug">The current URL slug of the article.</param>
     /// <param name="Model">The update model.</param>
     /// <param name="CancellationToken">The cancellation token.</param>
-    /// <returns>The result of the update operation.</returns>
+    /// <returns>The result of the update operation; 409 when the new slug is already used by another current article.</returns>
     [HttpPut("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Consumes("application/json")]
@@ -90,6 +90,7 @@ public class ArticleApiController(
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateArticleRevision(string UrlSlug, [FromBody] UpdateArticleRevisionModel Model, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug) || Model == null)
@@ -105,11 +106,22 @@ public class ArticleApiController(
             return Unauthorized("User ID not found in token.");
         }
 
+        // An optional NewUrlSlug moves the article; the old address then redirects to it from the article page.
+        string TargetUrlSlug = UrlSlug;
+        if (!string.IsNullOrWhiteSpace(Model.NewUrlSlug))
+        {
+            TargetUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(Model.NewUrlSlug.Trim());
+            if (ArticleUrlHelper.IsRestrictedSlug(TargetUrlSlug))
+            {
+                return BadRequest("The new URL slug conflicts with a reserved system path.");
+            }
+        }
+
         try
         {
             ArticleRevisionUpdateCommand Command = new(
                 OriginalUrlSlug: UrlSlug,
-                NewUrlSlug: UrlSlug,
+                NewUrlSlug: TargetUrlSlug,
                 SiteId: SiteId,
                 Culture: Culture,
                 Title: Model.Title,
@@ -477,5 +489,12 @@ public class UpdateArticleRevisionModel
     /// Gets or sets the reason for the revision.
     /// </summary>
     public required string RevisionReason { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional new URL slug. When set and different from the route slug, the new revision is
+    /// stored under this slug, keeping the article's identity and history; a <c>file:</c> prefix is ignored.
+    /// Omit it or leave it empty to keep the current slug.
+    /// </summary>
+    public string? NewUrlSlug { get; set; }
 }
 
