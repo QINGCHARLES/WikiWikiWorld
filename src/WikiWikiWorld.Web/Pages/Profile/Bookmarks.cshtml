@@ -1,7 +1,7 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.BookmarksModel
 @{
-	ViewData["Title"] = $"{Model.Header.UserName} · Bookmarks";
+	ViewData["Title"] = L["{0} · Bookmarks", Model.Header.UserName];
 }
 <div class="profile">
 	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Model.Header, ProfileTab.Bookmarks)" />

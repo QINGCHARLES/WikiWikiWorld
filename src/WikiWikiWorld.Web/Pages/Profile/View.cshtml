@@ -3,7 +3,7 @@
 @{
 	ProfileHeader Header = Model.Header;
 	ProfileOverview Overview = Model.Overview;
-	ViewData["Title"] = $"{Header.UserName} · Profile";
+	ViewData["Title"] = L["{0} · Profile", Header.UserName];
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
 	List<ProfileBadge> EarnedBadges = [.. Overview.Badges.Where(b => b.IsEarned)];
 	List<ProfileBadge> LockedBadges = [.. Overview.Badges.Where(b => !b.IsEarned)];
@@ -11,11 +11,11 @@
 		? $"{Header.ArticlePath}/edit"
 		: $"/Article/CreateEdit?UrlSlug={Uri.EscapeDataString(Header.ArticlePath.TrimStart('/'))}";
 
-	static string KindLabel(ProfileActivityKind Kind) => Kind switch
+	string KindLabel(ProfileActivityKind Kind) => Kind switch
 	{
-		ProfileActivityKind.Created => "Created",
-		ProfileActivityKind.Discussed => "Discussed",
-		_ => "Edited"
+		ProfileActivityKind.Created => L["Created"],
+		ProfileActivityKind.Discussed => L["Discussed"],
+		_ => L["Edited"]
 	};
 }
 
@@ -28,10 +28,10 @@
 
 			<section class="profile-article-section" aria-labelledby="profile-article-title">
 				<header class="profile-section-head">
-					<h2 class="profile-section-title" id="profile-article-title">Profile article</h2>
+					<h2 class="profile-section-title" id="profile-article-title">@L["Profile article"]</h2>
 					@if (Header.IsProfileArticleWritten)
 					{
-						<a class="profile-section-link" href="@Header.ArticlePath">Open as article <span aria-hidden="true">→</span></a>
+						<a class="profile-section-link" href="@Header.ArticlePath">@L["Open as article"] <span aria-hidden="true">@L["Arrow.Forward"]</span></a>
 					}
 				</header>
 
@@ -44,8 +44,8 @@
 								<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
 								<path d="m15 5 4 4"></path>
 							</svg>
-							<p>This is <strong>your profile article</strong>, the first thing readers see here. Its <code>{{Subtitle}}</code> becomes your masthead epigraph and its <code>{{ShortDescription}}</code> your one-line bio.</p>
-							<a href="@EditArticleUrl" class="profile-owner-note-link" rel="nofollow">Edit</a>
+							<p>@HL["This is {0}, the first thing readers see here. Its {1} becomes your masthead epigraph and its {2} your one-line bio.", UiFormat.Strong(L["your profile article"]), new Microsoft.AspNetCore.Html.HtmlString("<code>{{Subtitle}}</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>{{ShortDescription}}</code>")]</p>
+							<a href="@EditArticleUrl" class="profile-owner-note-link" rel="nofollow">@L["Edit"]</a>
 						</div>
 					}
 
@@ -59,14 +59,14 @@
 						<span class="profile-empty-mark" aria-hidden="true">¶</span>
 						@if (Header.IsOwner)
 						{
-							<p class="profile-empty-title">Write your profile article</p>
-							<p>Introduce yourself: your collection, the eras and titles you know best, and what you are working on. It uses the same wiki syntax as every article; add <code>{{Subtitle}}</code> for a masthead epigraph and <code>{{ShortDescription}}</code> for a one-line bio.</p>
-							<a href="@EditArticleUrl" class="button profile-action-accent" rel="nofollow">Start writing</a>
+							<p class="profile-empty-title">@L["Write your profile article"]</p>
+							<p>@HL["Introduce yourself: your collection, the eras and titles you know best, and what you are working on. It uses the same wiki syntax as every article; add {0} for a masthead epigraph and {1} for a one-line bio.", new Microsoft.AspNetCore.Html.HtmlString("<code>{{Subtitle}}</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>{{ShortDescription}}</code>")]</p>
+							<a href="@EditArticleUrl" class="button profile-action-accent" rel="nofollow">@L["Start writing"]</a>
 						}
 						else
 						{
-							<p class="profile-empty-title">No profile article yet</p>
-							<p>@Header.UserName hasn't written a profile article. Their contributions tell the story so far.</p>
+							<p class="profile-empty-title">@L["No profile article yet"]</p>
+							<p>@L["{0} hasn't written a profile article. Their contributions tell the story so far.", Header.UserName]</p>
 						}
 					</div>
 				}
@@ -76,8 +76,8 @@
 		<div class="profile-aside">
 			<section class="profile-card profile-badges" aria-labelledby="profile-badges-title">
 				<header class="profile-card-head">
-					<h2 class="profile-card-title" id="profile-badges-title">Badges</h2>
-					<p class="profile-card-note">@EarnedBadges.Count of @Overview.Badges.Count</p>
+					<h2 class="profile-card-title" id="profile-badges-title">@L["Badges"]</h2>
+					<p class="profile-card-note">@L["{0} of {1}", EarnedBadges.Count, Overview.Badges.Count]</p>
 				</header>
 
 				@if (EarnedBadges.Count > 0)
@@ -85,35 +85,35 @@
 					<ul class="profile-badge-grid">
 						@foreach (ProfileBadge Badge in EarnedBadges)
 						{
-							<li class="profile-badge" data-tier="@Badge.Tier.ToString().ToLowerInvariant()" title="@Badge.Description">
+							<li class="profile-badge" data-tier="@Badge.Tier.ToString().ToLowerInvariant()" title="@L[Badge.Description]">
 								<span class="profile-badge-medal" aria-hidden="true">@Badge.Glyph</span>
-								<span class="profile-badge-name">@Badge.Name</span>
-								<span class="visually-hidden">: @Badge.Description</span>
+								<span class="profile-badge-name">@L[Badge.Name]</span>
+								<span class="visually-hidden">@L[": {0}", L[Badge.Description]]</span>
 							</li>
 						}
 					</ul>
 				}
 				else
 				{
-					<p class="profile-card-empty">No badges yet. The first arrives with the first edit.</p>
+					<p class="profile-card-empty">@L["No badges yet. The first arrives with the first edit."]</p>
 				}
 
 				@if (LockedBadges.Count > 0)
 				{
 					<details class="profile-badges-locked" open="@(EarnedBadges.Count == 0)">
 						<summary>
-							@LockedBadges.Count still to earn
+							@SharedResource.Plural("Profile.BadgesToEarn", LockedBadges.Count)
 							<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
 						</summary>
 						<ul class="profile-badge-grid">
 							@foreach (ProfileBadge Badge in LockedBadges)
 							{
-								<li class="profile-badge" data-locked="true" title="@Badge.Description">
+								<li class="profile-badge" data-locked="true" title="@L[Badge.Description]">
 									<span class="profile-badge-medal" aria-hidden="true">@Badge.Glyph</span>
-									<span class="profile-badge-name">@Badge.Name</span>
-									<progress class="profile-badge-progress" max="@Badge.Target" value="@Math.Min(Badge.Progress, Badge.Target)" aria-label="@Badge.Name progress: @Badge.Progress.ToString("N0", CultureInfo.CurrentCulture) of @Badge.Target.ToString("N0", CultureInfo.CurrentCulture)"></progress>
+									<span class="profile-badge-name">@L[Badge.Name]</span>
+									<progress class="profile-badge-progress" max="@Badge.Target" value="@Math.Min(Badge.Progress, Badge.Target)" aria-label="@L["{0} progress: {1} of {2}", L[Badge.Name], Badge.Progress.ToString("N0", CultureInfo.CurrentCulture), Badge.Target.ToString("N0", CultureInfo.CurrentCulture)]"></progress>
 									<span class="profile-badge-count" aria-hidden="true">@Badge.Progress.ToString("N0", CultureInfo.CurrentCulture)/@Badge.Target.ToString("N0", CultureInfo.CurrentCulture)</span>
-									<span class="visually-hidden">: @Badge.Description</span>
+									<span class="visually-hidden">@L[": {0}", L[Badge.Description]]</span>
 								</li>
 							}
 						</ul>
@@ -123,10 +123,10 @@
 
 			<section class="profile-card" aria-labelledby="profile-focus-title">
 				<header class="profile-card-head">
-					<h2 class="profile-card-title" id="profile-focus-title">Focus areas</h2>
+					<h2 class="profile-card-title" id="profile-focus-title">@L["Focus areas"]</h2>
 					@if (Overview.CategoryCount > 0)
 					{
-						<p class="profile-card-note">@Overview.CategoryCount @(Overview.CategoryCount == 1 ? "category" : "categories")</p>
+						<p class="profile-card-note">@SharedResource.Plural("Profile.Categories", Overview.CategoryCount)</p>
 					}
 				</header>
 				@if (Overview.FocusAreas.Count > 0)
@@ -136,7 +136,7 @@
 						{
 							ProfileFocusArea Area = Overview.FocusAreas[i];
 							<li>
-								<a class="profile-focus-pill" data-hue="@(i % 6)" href="/category:@Area.CategorySlug" title="@Area.ArticleCount @(Area.ArticleCount == 1 ? "article" : "articles") edited">
+								<a class="profile-focus-pill" data-hue="@(i % 6)" href="/category:@Area.CategorySlug" title="@SharedResource.Plural("Profile.ArticlesEdited", Area.ArticleCount)">
 									@Area.Label
 									<span class="profile-focus-count">@Area.ArticleCount.ToString("N0", CultureInfo.CurrentCulture)</span>
 								</a>
@@ -146,13 +146,13 @@
 				}
 				else
 				{
-					<p class="profile-card-empty">Categories appear here once the articles @(Header.IsOwner ? "you edit" : $"{Header.UserName} edits") are categorised.</p>
+					<p class="profile-card-empty">@(Header.IsOwner ? L["Categories appear here once the articles you edit are categorised."] : L["Categories appear here once the articles {0} edits are categorised.", Header.UserName])</p>
 				}
 			</section>
 
 			<section class="profile-card" aria-labelledby="profile-activity-title">
 				<header class="profile-card-head">
-					<h2 class="profile-card-title" id="profile-activity-title">Recent activity</h2>
+					<h2 class="profile-card-title" id="profile-activity-title">@L["Recent activity"]</h2>
 				</header>
 				@if (Overview.RecentActivity.Count > 0)
 				{
@@ -168,30 +168,30 @@
 									<time datetime="@Item.Date.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.Date, Now)</time>
 									@if (!string.IsNullOrWhiteSpace(Item.Summary))
 									{
-										<span class="profile-activity-summary">@(Item.Kind == ProfileActivityKind.Discussed ? $"on {Item.Summary}" : Item.Summary)</span>
+										<span class="profile-activity-summary">@(Item.Kind == ProfileActivityKind.Discussed ? L["on {0}", Item.Summary].Value : Item.Summary)</span>
 									}
 								</p>
 							</li>
 						}
 					</ol>
-					<a class="profile-card-link" href="/@@@Header.UserName/contributions">All contributions <span aria-hidden="true">→</span></a>
+					<a class="profile-card-link" href="/@@@Header.UserName/contributions">@L["All contributions"] <span aria-hidden="true">@L["Arrow.Forward"]</span></a>
 				}
 				else
 				{
-					<p class="profile-card-empty">Nothing yet. Edits and talk posts will appear here.</p>
+					<p class="profile-card-empty">@L["Nothing yet. Edits and talk posts will appear here."]</p>
 				}
 			</section>
 
 			@* Reputation has no storage or scoring yet: this card previews the planned module without inventing a number. *@
 			<section class="profile-card profile-preview" aria-labelledby="profile-reputation-title">
 				<header class="profile-card-head">
-					<h2 class="profile-card-title" id="profile-reputation-title">Reputation</h2>
-					<p class="profile-soon">Coming soon</p>
+					<h2 class="profile-card-title" id="profile-reputation-title">@L["Reputation"]</h2>
+					<p class="profile-soon">@L["Coming soon"]</p>
 				</header>
 				<svg class="profile-preview-spark" viewBox="0 0 240 56" preserveAspectRatio="none" aria-hidden="true">
 					<path d="M0 50 C 20 48, 30 44, 48 42 S 80 30, 100 34 S 130 22, 150 20 S 190 14, 205 9 S 230 6, 240 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"></path>
 				</svg>
-				<p class="profile-preview-copy">Reputation will grow as readers cite, thank and review your work, and unlock moderation tools along the way.</p>
+				<p class="profile-preview-copy">@L["Reputation will grow as readers cite, thank and review your work, and unlock moderation tools along the way."]</p>
 			</section>
 
 			@if (Header.IsOwner)
@@ -199,12 +199,12 @@
 				@* Owner-only preview of watchlist alerts, which need watchlists first. *@
 				<section class="profile-card profile-card-ink" aria-labelledby="profile-alerts-title">
 					<header class="profile-card-head">
-						<p class="profile-card-title">Heads up</p>
-						<p class="profile-soon">Preview</p>
+						<p class="profile-card-title">@L["Heads up"]</p>
+						<p class="profile-soon">@L["Preview"]</p>
 					</header>
-					<h2 class="profile-ink-title" id="profile-alerts-title">Watchlist alerts</h2>
-					<p class="profile-ink-copy">Watch the articles you care about and you'll hear here when they're edited, discussed or nominated for a feature.</p>
-					<p class="profile-ink-cta">Arriving with watchlists</p>
+					<h2 class="profile-ink-title" id="profile-alerts-title">@L["Watchlist alerts"]</h2>
+					<p class="profile-ink-copy">@L["Watch the articles you care about and you'll hear here when they're edited, discussed or nominated for a feature."]</p>
+					<p class="profile-ink-cta">@L["Arriving with watchlists"]</p>
 				</section>
 			}
 		</div>

@@ -28,18 +28,18 @@
 		<div class="profile-identity-text">
 			<h1 class="profile-name" id="profile-name">@Header.UserName</h1>
 			<ul class="profile-facts">
-				<li class="profile-rank">@Header.Rank</li>
+				<li class="profile-rank">@L[Header.Rank]</li>
 				@foreach (string Role in Header.Roles)
 				{
 					<li class="profile-role">@Role</li>
 				}
 				@if (Header.DateJoined is { } Joined)
 				{
-					<li>Joined <time datetime="@Joined.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@Joined.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</time></li>
+					<li>@HL["Joined {0}", new Microsoft.AspNetCore.Html.HtmlContentBuilder().AppendHtml($"<time datetime=\"{Joined.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)}\">").Append(UiFormat.Format(Joined, "MMMM yyyy", CultureInfo.CurrentCulture, "Y")).AppendHtml("</time>")]</li>
 				}
 				@if (Header.LastActive is { } LastActive)
 				{
-					<li>Active <time datetime="@LastActive.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(LastActive, Now)</time></li>
+					<li>@HL["Active {0}", new Microsoft.AspNetCore.Html.HtmlContentBuilder().AppendHtml($"<time datetime=\"{LastActive.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)}\">").Append(ProfileFormatting.ToRelativeTime(LastActive, Now)).AppendHtml("</time>")]</li>
 				}
 			</ul>
 			@if (!string.IsNullOrWhiteSpace(Header.Summary))
@@ -55,7 +55,7 @@
 					<path d="m16 6-4-4-4 4"></path>
 					<path d="M12 2v13"></path>
 				</svg>
-				<span class="profile-share-label">Share</span>
+				<span class="profile-share-label">@L["Share"]</span>
 			</button>
 			@if (Header.IsOwner)
 			{
@@ -64,7 +64,7 @@
 						<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
 						<path d="m15 5 4 4"></path>
 					</svg>
-					<span>@(Header.HasProfileArticle ? "Edit profile" : "Write your profile")</span>
+					<span>@(Header.HasProfileArticle ? L["Edit profile"] : L["Write your profile"])</span>
 				</a>
 			}
 			else if (Header.IsViewerAuthenticated)
@@ -74,7 +74,7 @@
 						<rect x="2" y="4" width="20" height="16" rx="2"></rect>
 						<path d="m22 6-10 7L2 6"></path>
 					</svg>
-					<span>Message</span>
+					<span>@L["Message"]</span>
 				</a>
 			}
 			<span class="profile-share-status visually-hidden" role="status"></span>
@@ -82,7 +82,7 @@
 	</div>
 </header>
 
-<nav class="profile-tabs" aria-label="Profile sections">
+<nav class="profile-tabs" aria-label="@L["Profile sections"]">
 	<ul>
 		<li>
 			<a href="@Header.ProfilePath" aria-current="@TabCurrent(ProfileTab.Overview)">
@@ -90,7 +90,7 @@
 					<circle cx="12" cy="8" r="4"></circle>
 					<path d="M4 21a8 8 0 0 1 16 0"></path>
 				</svg>
-				Profile
+				@L["Profile"]
 			</a>
 		</li>
 		<li>
@@ -100,7 +100,7 @@
 					<path d="M3 3v5h5"></path>
 					<path d="M12 7v5l3 2"></path>
 				</svg>
-				Contributions
+				@L["Contributions"]
 				<span class="profile-tab-count">@Stats.EditCount.ToString("N0", CultureInfo.CurrentCulture)</span>
 			</a>
 		</li>
@@ -111,7 +111,7 @@
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
 					</svg>
-					Bookmarks
+					@L["Bookmarks"]
 					@if (Header.BookmarkCount is { } BookmarkCount)
 					{
 						<span class="profile-tab-count">@BookmarkCount.ToString("N0", CultureInfo.CurrentCulture)</span>
@@ -126,18 +126,18 @@
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"></path>
 					</svg>
-					Messages
+					@L["Messages"]
 				</a>
 			</li>
 			@* Watchlists have no storage yet; the tab previews the planned section without linking anywhere. *@
 			<li>
-				<span class="profile-tab-soon" aria-disabled="true" title="Watchlists are coming soon">
+				<span class="profile-tab-soon" aria-disabled="true" title="@L["Watchlists are coming soon"]">
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
 						<circle cx="12" cy="12" r="3"></circle>
 					</svg>
-					Watchlist
-					<span class="profile-tab-count">Soon</span>
+					@L["Watchlist"]
+					<span class="profile-tab-count">@L["Soon"]</span>
 				</span>
 			</li>
 			<li>
@@ -145,7 +145,7 @@
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"></path>
 					</svg>
-					Settings
+					@L["Settings"]
 				</a>
 			</li>
 		}

@@ -1,32 +1,33 @@
 @model ProfileActivityCalendar
 @{
-	string FirstDayText = Model.FirstDay.ToString("d MMMM yyyy", CultureInfo.CurrentCulture);
-	string LastDayText = Model.LastDay.ToString("d MMMM yyyy", CultureInfo.CurrentCulture);
-	string Summary = $"{Model.TotalCount.ToString("N0", CultureInfo.CurrentCulture)} {(Model.TotalCount == 1 ? "edit" : "edits")} on {Model.ActiveDayCount.ToString("N0", CultureInfo.CurrentCulture)} {(Model.ActiveDayCount == 1 ? "day" : "days")} between {FirstDayText} and {LastDayText}.";
+	string FirstDayText = UiFormat.Format(Model.FirstDay, "d MMMM yyyy", CultureInfo.CurrentCulture, "D");
+	string LastDayText = UiFormat.Format(Model.LastDay, "d MMMM yyyy", CultureInfo.CurrentCulture, "D");
+	string Summary = SharedResource.Format("{0} on {1} between {2} and {3}.",
+		SharedResource.Plural("Calendar.Edits", Model.TotalCount), SharedResource.Plural("Calendar.Days", Model.ActiveDayCount), FirstDayText, LastDayText);
 
-	static string DayCount(int Days) => Days == 1 ? "1 day" : $"{Days.ToString("N0", CultureInfo.CurrentCulture)} days";
+	static string DayCount(int Days) => SharedResource.Plural("Calendar.Days", Days);
 }
 <section class="profile-card profile-calendar" aria-labelledby="profile-calendar-title">
 	<header class="profile-card-head">
-		<h2 class="profile-card-title" id="profile-calendar-title">Activity</h2>
-		<p class="profile-card-note">Past 12 months</p>
+		<h2 class="profile-card-title" id="profile-calendar-title">@L["Activity"]</h2>
+		<p class="profile-card-note">@L["Past 12 months"]</p>
 	</header>
 
 	<dl class="profile-calendar-stats">
 		<div>
-			<dt>Edits</dt>
+			<dt>@L["Edits"]</dt>
 			<dd>@Model.TotalCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
 		</div>
 		<div>
-			<dt>Active days</dt>
+			<dt>@L["Active days"]</dt>
 			<dd>@Model.ActiveDayCount.ToString("N0", CultureInfo.CurrentCulture)</dd>
 		</div>
 		<div>
-			<dt>Best streak</dt>
+			<dt>@L["Best streak"]</dt>
 			<dd>@DayCount(Model.LongestStreakDays)</dd>
 		</div>
 		<div>
-			<dt>Current streak</dt>
+			<dt>@L["Current streak"]</dt>
 			<dd>@DayCount(Model.CurrentStreakDays)</dd>
 		</div>
 	</dl>
@@ -38,7 +39,7 @@
 		{
 			ProfileActivityWeek Week = Model.Weeks[w];
 			<div class="profile-calendar-week">
-				<span class="profile-calendar-month">@(Week.MonthStart?.ToString("MMM", CultureInfo.CurrentCulture))</span>
+				<span class="profile-calendar-month">@(Week.MonthStart is { } MonthStart ? UiFormat.Format(MonthStart, "MMM", CultureInfo.CurrentCulture, "MMM") : null)</span>
 				@foreach (ProfileActivityDay Day in Week.Days)
 				{
 					if (Day.IsFuture)
@@ -47,7 +48,7 @@
 					}
 					else
 					{
-						<span class="profile-calendar-day" data-level="@Day.Level" title="@(Day.Count == 0 ? "No edits" : Day.Count == 1 ? "1 edit" : $"{Day.Count.ToString("N0", CultureInfo.CurrentCulture)} edits") · @Day.Date.ToString("ddd d MMM yyyy", CultureInfo.CurrentCulture)"></span>
+						<span class="profile-calendar-day" data-level="@Day.Level" title="@(Day.Count == 0 ? L["No edits"].Value : SharedResource.Plural("Calendar.Edits", Day.Count)) · @UiFormat.Format(Day.Date, "ddd d MMM yyyy", CultureInfo.CurrentCulture, "D")"></span>
 					}
 				}
 			</div>
@@ -55,12 +56,12 @@
 	</div>
 
 	<p class="profile-calendar-legend" aria-hidden="true">
-		<span>Less</span>
+		<span>@L["Less"]</span>
 		<span class="profile-calendar-day" data-level="0"></span>
 		<span class="profile-calendar-day" data-level="1"></span>
 		<span class="profile-calendar-day" data-level="2"></span>
 		<span class="profile-calendar-day" data-level="3"></span>
 		<span class="profile-calendar-day" data-level="4"></span>
-		<span>More</span>
+		<span>@L["More"]</span>
 	</p>
 </section>

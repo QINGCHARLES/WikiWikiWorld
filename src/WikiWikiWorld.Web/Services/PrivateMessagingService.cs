@@ -36,20 +36,20 @@ public sealed class PrivateMessagingService(WikiWikiWorldDbContext Context, User
 		ValidateText(Subject, MaxSubjectLength, "Subject");
 		ValidateText(Text, MaxMessageLength, "Message");
 		ArgumentException.ThrowIfNullOrWhiteSpace(Recipients);
-		if (Recipients.Length > 2000) throw new ArgumentException("Recipient list is too long.");
-		if (!await Context.Users.AnyAsync(u => u.Id == SenderId, CancellationToken)) throw new ArgumentException("Sender account is unavailable.");
+		if (Recipients.Length > 2000) throw new ArgumentException(SharedResource.Text("Recipient list is too long."));
+		if (!await Context.Users.AnyAsync(u => u.Id == SenderId, CancellationToken)) throw new ArgumentException(SharedResource.Text("Sender account is unavailable."));
 
 		string[] Names = Recipients.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-		if (Names.Length > MaxRecipients) throw new ArgumentException($"Choose at most {MaxRecipients} recipients.");
+		if (Names.Length > MaxRecipients) throw new ArgumentException(SharedResource.Format("Choose at most {0} recipients.", MaxRecipients));
 		HashSet<Guid> ParticipantIds = [SenderId];
 		foreach (string Name in Names)
 		{
 			CancellationToken.ThrowIfCancellationRequested();
 			User? Recipient = await UserManager.FindByNameAsync(Name.TrimStart('@'));
-			if (Recipient is null) throw new ArgumentException($"Recipient '{Name}' was not found.");
+			if (Recipient is null) throw new ArgumentException(SharedResource.Format("Recipient '{0}' was not found.", Name));
 			ParticipantIds.Add(Recipient.Id);
 		}
-		if (ParticipantIds.Count < 2) throw new ArgumentException("Choose at least one other recipient.");
+		if (ParticipantIds.Count < 2) throw new ArgumentException(SharedResource.Text("Choose at least one other recipient."));
 
 		Guid ConversationId = Guid.NewGuid();
 		await ExecuteTransactionAsync(async Token =>
@@ -162,11 +162,11 @@ public sealed class PrivateMessagingService(WikiWikiWorldDbContext Context, User
 	/// <summary>Rejects invalid text at the service boundary, including callers that bypass form validation.</summary>
 	/// <param name="Text">Submitted field.</param>
 	/// <param name="Limit">Maximum character count.</param>
-	/// <param name="Label">User-facing field name.</param>
+	/// <param name="Label">User-facing field name in English; it is translated for the message (l10n: "Subject", "Message").</param>
 	/// <exception cref="ArgumentException">The field is blank or too long.</exception>
 	private static void ValidateText(string Text, int Limit, string Label)
 	{
-		if (string.IsNullOrWhiteSpace(Text) || Text.Length > Limit) throw new ArgumentException($"{Label} must contain 1–{Limit} characters.");
+		if (string.IsNullOrWhiteSpace(Text) || Text.Length > Limit) throw new ArgumentException(SharedResource.Format("{0} must contain 1–{1} characters.", SharedResource.Text(Label), Limit));
 	}
 
 	/// <summary>Commits one private-message operation; detaches rolled-back private entities before SQLite lock retries.</summary>

@@ -11,9 +11,9 @@
 	// Owners always get the sidebar because "New list" lives there; visitors only need it to choose between lists.
 	bool ShowLists = IsOwner ? List is not null : Model.Lists.Count > 1;
 	int FirstNumber = ((Entries.PageNumber - 1) * BookmarkService.PageSize) + 1;
-	string RangeText = Entries.TotalCount == 0 ? "No entries"
-		: Entries.PageCount == 1 ? (Entries.TotalCount == 1 ? "1 article" : $"{Entries.TotalCount} articles")
-		: $"Showing {FirstNumber}–{FirstNumber + Entries.Items.Count - 1} of {Entries.TotalCount}";
+	string RangeText = Entries.TotalCount == 0 ? L["No entries"].Value
+		: Entries.PageCount == 1 ? SharedResource.Plural("Bookmarks.Articles", Entries.TotalCount)
+		: L["Showing {0}–{1} of {2}", FirstNumber, FirstNumber + Entries.Items.Count - 1, Entries.TotalCount].Value;
 	string ProfilePath = $"/@{Uri.EscapeDataString(Model.Header.UserName)}";
 }
 <div id="bookmark-content" class="bookmark-layout" data-url="@Model.CurrentUrl"
@@ -22,7 +22,7 @@
 	{
 		<nav class="profile-card bookmark-lists" aria-labelledby="bookmark-lists-title">
 			<header class="profile-card-head">
-				<h2 class="profile-card-title" id="bookmark-lists-title">Lists</h2>
+				<h2 class="profile-card-title" id="bookmark-lists-title">@L["Lists"]</h2>
 				<p class="profile-card-note">@Model.Lists.Count</p>
 			</header>
 			<ul>
@@ -33,9 +33,9 @@
 							<span class="bookmark-lists-name">@Choice.Name</span>
 							@if (IsOwner && Choice.IsPublic)
 							{
-								<span class="bookmark-pill">Public</span>
+								<span class="bookmark-pill">@L["Public"]</span>
 							}
-							<span class="bookmark-lists-count" aria-label="@Choice.Count entries">@Choice.Count</span>
+							<span class="bookmark-lists-count" aria-label="@SharedResource.Plural("Bookmarks.Entries", Choice.Count)">@Choice.Count</span>
 						</a>
 					</li>
 				}
@@ -44,7 +44,7 @@
 			{
 				<button type="button" class="bookmark-new-button" commandfor="bookmark-new-list" command="show-modal">
 					<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" /></svg>
-					New list
+					@L["New list"]
 				</button>
 			}
 		</nav>
@@ -53,12 +53,12 @@
 	<section class="profile-card bookmark-main" aria-labelledby="bookmark-title">
 		<header class="bookmark-head">
 			<div class="bookmark-head-text">
-				<p class="profile-card-title">Bookmarks</p>
-				<h2 class="bookmark-title" id="bookmark-title" tabindex="-1">@(List?.Name ?? "Bookmarks")</h2>
+				<p class="profile-card-title">@L["Bookmarks"]</p>
+				<h2 class="bookmark-title" id="bookmark-title" tabindex="-1">@(List?.Name ?? L["Bookmarks"].Value)</h2>
 				@if (List is not null && IsOwner)
 				{
 					<p class="bookmark-meta">
-						<span class="bookmark-pill" data-public="@(List.IsPublic ? "true" : "false")">@(List.IsPublic ? "Public" : "Private · Only you")</span>
+						<span class="bookmark-pill" data-public="@(List.IsPublic ? "true" : "false")">@(List.IsPublic ? L["Public"] : L["Private · Only you"])</span>
 						<span id="bookmark-range">@RangeText</span>
 					</p>
 				}
@@ -70,7 +70,7 @@
 						{
 							<img src="@Model.Header.AvatarPath" alt="" width="22" height="22" />
 						}
-						<span>A list by <a href="@ProfilePath">@Model.Header.UserName</a></span>
+						<span>@HL["A list by {0}", UiFormat.Link(ProfilePath, Model.Header.UserName)]</span>
 						<span aria-hidden="true">·</span>
 						<span id="bookmark-range">@RangeText</span>
 					</p>
@@ -82,11 +82,11 @@
 					<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 						<input type="hidden" name="operation" value="visibility" />
 						<input type="hidden" name="ispublic" value="@(List.IsPublic ? "false" : "true")" />
-						<button type="submit" class="profile-list-action bookmark-quiet-action">@(List.IsPublic ? "Make private" : "Make public…")</button>
+						<button type="submit" class="profile-list-action bookmark-quiet-action">@(List.IsPublic ? L["Make private"] : L["Make public…"])</button>
 					</form>
 					<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 						<input type="hidden" name="operation" value="delete" />
-						<button type="submit" class="profile-list-action">@(List.IsDefault ? "Clear list…" : "Delete list…")</button>
+						<button type="submit" class="profile-list-action">@(List.IsDefault ? L["Clear list…"] : L["Delete list…"])</button>
 					</form>
 				</div>
 			}
@@ -101,7 +101,7 @@
 					<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 						<input type="hidden" name="operation" value="undo" />
 						<input type="hidden" name="token" value="@UndoToken" />
-						<button type="submit" class="profile-list-action bookmark-quiet-action">Undo</button>
+						<button type="submit" class="profile-list-action bookmark-quiet-action">@L["Undo"]</button>
 					</form>
 				}
 			</div>
@@ -110,32 +110,36 @@
 		@if (Model.PendingOperation is { } Pending && List is not null)
 		{
 			<div class="bookmark-confirmation" role="region" aria-labelledby="bookmark-confirm-title">
-				<h3 id="bookmark-confirm-title">@(Pending == "visibility" ? "Make this list public?" : List.IsDefault ? "Clear this list?" : "Delete this list?")</h3>
+				<h3 id="bookmark-confirm-title">@(Pending == "visibility" ? L["Make this list public?"] : List.IsDefault ? L["Clear this list?"] : L["Delete this list?"])</h3>
 				@{
-					string EntryCount = Model.AffectedCount == 1 ? "1 entry" : $"{Model.AffectedCount} entries";
+					string EntryCount = SharedResource.Plural("Bookmarks.Entries", Model.AffectedCount);
 				}
 				<p>
 					@if (Pending == "visibility")
 					{
-						List<string> Parts = [EntryCount];
-						if (!string.IsNullOrWhiteSpace(Model.SelectedDetails?.Description))
-							Parts.Add("introduction");
-						if (Model.AffectedNotesCount > 0)
-							Parts.Add(Model.AffectedNotesCount == 1 ? "1 note" : $"{Model.AffectedNotesCount} notes");
-						string What = Parts.Count == 1 ? Parts[0] : $"{string.Join(", ", Parts[..^1])} and {Parts[^1]}";
-						<text>Anyone will be able to see “@List.Name” and its @What.@(Model.AffectedNotesCount > 0 ? " Notes you wrote while it was private become public too." : "")</text>
+						// One whole sentence per combination, so each language can word the list of what becomes public.
+						bool HasIntroduction = !string.IsNullOrWhiteSpace(Model.SelectedDetails?.Description);
+						string NoteCount = SharedResource.Plural("Bookmarks.Notes", Model.AffectedNotesCount);
+						string Sentence = (HasIntroduction, Model.AffectedNotesCount > 0) switch
+						{
+							(false, false) => L["Anyone will be able to see “{0}” and its {1}.", List.Name, EntryCount].Value,
+							(true, false) => L["Anyone will be able to see “{0}” and its {1} and introduction.", List.Name, EntryCount].Value,
+							(false, true) => L["Anyone will be able to see “{0}” and its {1} and {2}.", List.Name, EntryCount, NoteCount].Value,
+							(true, true) => L["Anyone will be able to see “{0}” and its {1}, introduction and {2}.", List.Name, EntryCount, NoteCount].Value
+						};
+						<text>@Sentence@(Model.AffectedNotesCount > 0 ? " " + L["Notes you wrote while it was private become public too."] : "")</text>
 					}
 					else
 					{
-						<text>This removes @EntryCount from “@List.Name”@(List.IsDefault ? "" : " and deletes the list"). Your other lists stay untouched. There is no undo.</text>
+						<text>@(List.IsDefault ? L["This removes {0} from “{1}”. Your other lists stay untouched. There is no undo.", EntryCount, List.Name] : L["This removes {0} from “{1}” and deletes the list. Your other lists stay untouched. There is no undo.", EntryCount, List.Name])</text>
 					}
 				</p>
 				<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 					<input type="hidden" name="operation" value="@Pending" />
 					<input type="hidden" name="confirmed" value="true" />
 					<input type="hidden" name="ispublic" value="true" />
-					<button type="submit" class="profile-card-button @(Pending == "visibility" ? "profile-action-accent" : "bookmark-danger-action")">@(Pending == "visibility" ? "Make public" : List.IsDefault ? "Clear list" : "Delete list")</button>
-					<a href="@Model.CurrentUrl">Cancel</a>
+					<button type="submit" class="profile-card-button @(Pending == "visibility" ? "profile-action-accent" : "bookmark-danger-action")">@(Pending == "visibility" ? L["Make public"] : List.IsDefault ? L["Clear list"] : L["Delete list"])</button>
+					<a href="@Model.CurrentUrl">@L["Cancel"]</a>
 				</form>
 			</div>
 		}
@@ -149,7 +153,7 @@
 					<p class="bookmark-intro-edit">
 						<button type="button" class="bookmark-text-button" commandfor="bookmark-intro-dialog" command="show-modal">
 							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Edit"></use></svg>
-							Edit introduction
+							@L["Edit introduction"]
 						</button>
 					</p>
 				}
@@ -160,30 +164,30 @@
 			<p class="bookmark-intro-empty">
 				<button type="button" class="bookmark-text-button" commandfor="bookmark-intro-dialog" command="show-modal">
 					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Add"></use></svg>
-					Add an introduction
+					@L["Add an introduction"]
 				</button>
 			</p>
 		}
 
 		@if (List is null)
 		{
-			<p class="profile-card-empty">This contributor has no public bookmark lists.</p>
+			<p class="profile-card-empty">@L["This contributor has no public bookmark lists."]</p>
 		}
 		else
 		{
 			@if (Entries.TotalCount > 1)
 			{
-				<nav class="bookmark-toolbar" aria-label="Sort entries">
-					<span class="profile-card-note">Sort</span>
+				<nav class="bookmark-toolbar" aria-label="@L["Sort entries"]">
+					<span class="profile-card-note">@L["Sort"]</span>
 					<div class="profile-segments">
-						<a href="@Model.ListUrl(List, "recent")" data-bookmark-navigation="true" aria-current="@(Model.Sort == "recent" ? "page" : null)">Recently saved</a>
-						<a href="@Model.ListUrl(List, "name")" data-bookmark-navigation="true" aria-current="@(Model.Sort == "name" ? "page" : null)">Name A–Z</a>
+						<a href="@Model.ListUrl(List, "recent")" data-bookmark-navigation="true" aria-current="@(Model.Sort == "recent" ? "page" : null)">@L["Recently saved"]</a>
+						<a href="@Model.ListUrl(List, "name")" data-bookmark-navigation="true" aria-current="@(Model.Sort == "name" ? "page" : null)">@L["Name A–Z"]</a>
 					</div>
 				</nav>
 			}
 			@if (Entries.Items.Count == 0)
 			{
-				<p class="profile-card-empty bookmark-empty">@(IsOwner ? "Nothing saved here in this language yet. Use the bookmark button on any article to add it to this list." : "This list has no articles in this language.")</p>
+				<p class="profile-card-empty bookmark-empty">@(IsOwner ? L["Nothing saved here in this language yet. Use the bookmark button on any article to add it to this list."] : L["This list has no articles in this language."])</p>
 			}
 			else
 			{
@@ -203,7 +207,7 @@
 									@if (IsLongNote)
 									{
 										<p class="bookmark-note-more">
-											<button type="button" class="bookmark-text-button" aria-expanded="false" aria-controls="bookmark-note-@Item.Id" data-bookmark-note-expand="true">Read more</button>
+											<button type="button" class="bookmark-text-button" aria-expanded="false" aria-controls="bookmark-note-@Item.Id" data-bookmark-note-expand="true">@L["Read more"]</button>
 										</p>
 									}
 								}
@@ -213,30 +217,30 @@
 									<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true" class="bookmark-note-editor" id="@EditorId" hidden>
 										<input type="hidden" name="operation" value="notes" />
 										<input type="hidden" name="bookmarkid" value="@Item.Id" />
-										<label class="visually-hidden" for="@EditorId-text">Note for @Item.Title</label>
+										<label class="visually-hidden" for="@EditorId-text">@L["Note for {0}", Item.Title]</label>
 										<textarea id="@EditorId-text" name="notes" maxlength="@Bookmark.MaxNotesLength" rows="3"
-											placeholder="Why is this in “@List.Name”?" aria-describedby="@EditorId-help">@Item.Notes</textarea>
+											placeholder="@L["Why is this in “{0}”?", List.Name]" aria-describedby="@EditorId-help">@Item.Notes</textarea>
 										<p class="bookmark-editor-help" id="@EditorId-help">
-											<span>Markdown supported</span>
+											<span>@L["Markdown supported"]</span>
 											<span class="bookmark-editor-count" data-count-for="@EditorId-text" aria-hidden="true"></span>
 										</p>
 										<div class="bookmark-editor-actions">
 											<span class="bookmark-editor-visibility" data-public="@(List.IsPublic ? "true" : "false")">
 												<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
-												@(List.IsPublic ? "Public" : "Private")<span class="visually-hidden"> list. @(List.IsPublic ? "Anyone can read this." : "Only you can see this.")</span>
+												@(List.IsPublic ? L["Public"] : L["Private"])<span class="visually-hidden">@(List.IsPublic ? L["NoteEditor.PublicSuffix"] : L["NoteEditor.PrivateSuffix"])</span>
 											</span>
-											<button type="button" class="bookmark-editor-button" data-bookmark-note-cancel="true">Cancel</button>
-											<button type="submit" class="bookmark-editor-button" data-variant="primary">Save note</button>
+											<button type="button" class="bookmark-editor-button" data-bookmark-note-cancel="true">@L["Cancel"]</button>
+											<button type="submit" class="bookmark-editor-button" data-variant="primary">@L["Save note"]</button>
 										</div>
 									</form>
 								}
 								<p class="profile-list-meta">
-									Saved <time datetime="@Item.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)">@ProfileFormatting.ToRelativeTime(Item.DateCreated, Now)</time>
+									@HL["Saved {0}", new Microsoft.AspNetCore.Html.HtmlContentBuilder().AppendHtml($"<time datetime=\"{Item.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)}\">").Append(ProfileFormatting.ToRelativeTime(Item.DateCreated, Now)).AppendHtml("</time>")]
 									@if (IsOwner)
 									{
 										<span class="bookmark-meta-dot" aria-hidden="true">·</span>
 										<button type="button" class="bookmark-text-button" aria-expanded="false" aria-controls="@EditorId" data-bookmark-note-edit="true"
-											aria-label="@(HasNote ? "Edit note for" : "Add a note to") @Item.Title">@(HasNote ? "Edit note" : "Add note")</button>
+											aria-label="@(HasNote ? L["Edit note for {0}", Item.Title] : L["Add a note to {0}", Item.Title])">@(HasNote ? L["Edit note"] : L["Add note"])</button>
 									}
 								</p>
 							</div>
@@ -245,7 +249,7 @@
 								<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true" class="profile-list-form">
 									<input type="hidden" name="operation" value="remove" />
 									<input type="hidden" name="bookmarkid" value="@Item.Id" />
-									<button type="submit" class="profile-list-action" aria-label="Remove @Item.Title from this list">Remove</button>
+									<button type="submit" class="profile-list-action" aria-label="@L["Remove {0} from this list", Item.Title]">@L["Remove"]</button>
 								</form>
 							}
 						</li>
@@ -254,10 +258,10 @@
 			}
 			@if (Entries.PageCount > 1)
 			{
-				<nav class="profile-pager" aria-label="Bookmark pages">
+				<nav class="profile-pager" aria-label="@L["Bookmark pages"]">
 					@if (Entries.PageNumber > 1)
 					{
-						<a href="@Model.ListUrl(List, Model.Sort, Entries.PageNumber - 1)" data-bookmark-navigation="true" rel="prev">Previous</a>
+						<a href="@Model.ListUrl(List, Model.Sort, Entries.PageNumber - 1)" data-bookmark-navigation="true" rel="prev">@L["Previous"]</a>
 					}
 					@for (int i = 1; i <= Entries.PageCount; i++)
 					{
@@ -272,7 +276,7 @@
 					}
 					@if (Entries.PageNumber < Entries.PageCount)
 					{
-						<a href="@Model.ListUrl(List, Model.Sort, Entries.PageNumber + 1)" data-bookmark-navigation="true" rel="next">Next</a>
+						<a href="@Model.ListUrl(List, Model.Sort, Entries.PageNumber + 1)" data-bookmark-navigation="true" rel="next">@L["Next"]</a>
 					}
 				</nav>
 			}
@@ -288,33 +292,33 @@
 			<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 				<input type="hidden" name="operation" value="description" />
 				<div class="bookmark-editor-head">
-					<p class="bookmark-editor-eyebrow">Introduction · @List.Name</p>
+					<p class="bookmark-editor-eyebrow">@L["Introduction · {0}", List.Name]</p>
 					<span class="bookmark-editor-visibility" id="bookmark-intro-visibility" data-public="@(List.IsPublic ? "true" : "false")">
 						<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><use href="@IconSpriteUrl#@(List.IsPublic ? "Globe" : "Lock")"></use></svg>
-						@(List.IsPublic ? "Public" : "Private")<span class="visually-hidden"> list. @(List.IsPublic ? "Anyone can read this." : "Only you can see this, until you make the list public.")</span>
+						@(List.IsPublic ? L["Public"] : L["Private"])<span class="visually-hidden">@(List.IsPublic ? L["NoteEditor.PublicSuffix"] : L["IntroEditor.PrivateSuffix"])</span>
 					</span>
 				</div>
-				<h2 class="bookmark-editor-title" id="bookmark-intro-title">@(string.IsNullOrWhiteSpace(Introduction) ? "Introduce this list" : "Edit introduction")</h2>
-				<div class="bookmark-editor-tabs" role="tablist" aria-label="Editor mode" hidden>
-					<button type="button" role="tab" aria-selected="true" aria-controls="bookmark-intro-text" data-bookmark-intro-tab="write">Write</button>
-					<button type="button" role="tab" aria-selected="false" aria-controls="bookmark-intro-preview" data-bookmark-intro-tab="preview">Preview</button>
+				<h2 class="bookmark-editor-title" id="bookmark-intro-title">@(string.IsNullOrWhiteSpace(Introduction) ? L["Introduce this list"] : L["Edit introduction"])</h2>
+				<div class="bookmark-editor-tabs" role="tablist" aria-label="@L["Editor mode"]" hidden>
+					<button type="button" role="tab" aria-selected="true" aria-controls="bookmark-intro-text" data-bookmark-intro-tab="write">@L["Write"]</button>
+					<button type="button" role="tab" aria-selected="false" aria-controls="bookmark-intro-preview" data-bookmark-intro-tab="preview">@L["Preview"]</button>
 				</div>
-				<label class="visually-hidden" for="bookmark-intro-text">Introduction</label>
+				<label class="visually-hidden" for="bookmark-intro-text">@L["Introduction"]</label>
 				<textarea id="bookmark-intro-text" name="description" autofocus maxlength="@BookmarkList.MaxDescriptionLength" rows="6"
-					placeholder="What is this list for? Readers see this above the entries."
+					placeholder="@L["What is this list for? Readers see this above the entries."]"
 					aria-describedby="bookmark-intro-help bookmark-intro-visibility">@Introduction</textarea>
 				<div class="bookmark-markdown bookmark-intro-preview" id="bookmark-intro-preview" role="tabpanel" aria-live="polite" hidden></div>
 				<p class="bookmark-editor-help" id="bookmark-intro-help">
-					<span>Markdown supported · Blank line for new paragraph</span>
+					<span>@L["Markdown supported · Blank line for new paragraph"]</span>
 					<span class="bookmark-editor-count" data-count-for="bookmark-intro-text" aria-hidden="true"></span>
 				</p>
 				<div class="bookmark-editor-actions">
 					@if (!string.IsNullOrWhiteSpace(Introduction))
 					{
-						<button type="button" class="bookmark-editor-button" data-variant="danger-quiet" data-bookmark-intro-remove="true">Remove introduction</button>
+						<button type="button" class="bookmark-editor-button" data-variant="danger-quiet" data-bookmark-intro-remove="true">@L["Remove introduction"]</button>
 					}
-					<button type="button" class="bookmark-editor-button" commandfor="bookmark-intro-dialog" command="close">Cancel</button>
-					<button type="submit" class="bookmark-editor-button" data-variant="primary">Save introduction</button>
+					<button type="button" class="bookmark-editor-button" commandfor="bookmark-intro-dialog" command="close">@L["Cancel"]</button>
+					<button type="submit" class="bookmark-editor-button" data-variant="primary">@L["Save introduction"]</button>
 				</div>
 			</form>
 		</dialog>
@@ -323,32 +327,32 @@
 		<dialog id="bookmark-new-list" class="bookmark-dialog" aria-labelledby="bookmark-new-list-title" closedby="any" open="@(Model.Error is not null)">
 			<form method="post" action="@Model.CurrentUrl" asp-antiforgery="true">
 				<input type="hidden" name="operation" value="create" />
-				<h2 class="bookmark-dialog-title" id="bookmark-new-list-title">New list</h2>
-				<label for="bookmark-list-name">Name</label>
+				<h2 class="bookmark-dialog-title" id="bookmark-new-list-title">@L["New list"]</h2>
+				<label for="bookmark-list-name">@L["Name"]</label>
 				<input id="bookmark-list-name" name="name" value="@Model.NewListName" required autofocus autocomplete="off"
-					maxlength="@BookmarkService.MaxListNameLength" placeholder="e.g. Ones to read next"
+					maxlength="@BookmarkService.MaxListNameLength" placeholder="@L["e.g. Ones to read next"]"
 					aria-invalid="@(Model.Error is not null ? "true" : null)" aria-describedby="@(Model.Error is not null ? "bookmark-list-error" : null)" />
 				@if (Model.Error is not null)
 				{
 					<p class="bookmark-error" id="bookmark-list-error" role="alert">@Model.Error</p>
 				}
 				<fieldset>
-					<legend>Who can see it?</legend>
+					<legend>@L["Who can see it?"]</legend>
 					<div class="profile-theme-options">
 						<label>
 							<input type="radio" name="ispublic" value="false" checked="@(!Model.NewListIsPublic)" />
-							<span><strong>Private</strong><small>Only you</small></span>
+							<span><strong>@L["Private"]</strong><small>@L["Only you"]</small></span>
 						</label>
 						<label>
 							<input type="radio" name="ispublic" value="true" checked="@Model.NewListIsPublic" />
-							<span><strong>Public</strong><small>Anyone with the link or your profile</small></span>
+							<span><strong>@L["Public"]</strong><small>@L["Anyone with the link or your profile"]</small></span>
 						</label>
 					</div>
 				</fieldset>
 				<div class="bookmark-dialog-actions">
 					@* Not a submit button: Enter in the name field must create the list, not cancel. *@
-					<button type="button" commandfor="bookmark-new-list" command="close" class="profile-list-action bookmark-quiet-action">Cancel</button>
-					<button type="submit" class="profile-action-accent profile-card-button">Create list</button>
+					<button type="button" commandfor="bookmark-new-list" command="close" class="profile-list-action bookmark-quiet-action">@L["Cancel"]</button>
+					<button type="submit" class="profile-action-accent profile-card-button">@L["Create list"]</button>
 				</div>
 			</form>
 		</dialog>

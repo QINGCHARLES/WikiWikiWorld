@@ -128,7 +128,7 @@ public sealed class BookmarksModel(
 					NewListIsPublic = IsPublic;
 					return Page();
 				}
-				Notice = "List created.";
+				Notice = SharedResource.Text("List created.");
 				return LocalRedirect(ListUrl(new(CreatedId, Name!, false, IsPublic, 0)));
 			case "visibility":
 			case "delete":
@@ -144,8 +144,8 @@ public sealed class BookmarksModel(
 					: SelectedId == 0 || await BookmarkService.DeleteOrClearListAsync(SelectedId, Header.UserId, CancellationToken);
 				if (!Changed)
 					return NotFound();
-				Notice = Operation == "visibility" ? (IsPublic ? "List is now public." : "List is now private.")
-					: SelectedList.IsDefault ? "Default list cleared." : "List deleted.";
+				Notice = Operation == "visibility" ? (IsPublic ? SharedResource.Text("List is now public.") : SharedResource.Text("List is now private."))
+					: SelectedList.IsDefault ? SharedResource.Text("Default list cleared.") : SharedResource.Text("List deleted.");
 				UndoToken = null;
 				return LocalRedirect(Operation == "delete" ? ListUrl(null) : CurrentUrl);
 			case "description":
@@ -153,7 +153,7 @@ public sealed class BookmarksModel(
 					return BadRequest();
 				if (!await BookmarkService.SetListDescriptionAsync(SelectedId, Description, Header.UserId, SiteId, CancellationToken))
 					return NotFound();
-				Notice = string.IsNullOrWhiteSpace(Description) ? "Introduction removed." : "Introduction saved.";
+				Notice = string.IsNullOrWhiteSpace(Description) ? SharedResource.Text("Introduction removed.") : SharedResource.Text("Introduction saved.");
 				UndoToken = null;
 				return LocalRedirect(CurrentUrl);
 			case "notes":
@@ -161,12 +161,12 @@ public sealed class BookmarksModel(
 					return BadRequest();
 				if (!Entries.Items.Any(e => e.Id == BookmarkId))
 				{
-					Notice = "That entry is no longer in this list, so the note was not saved.";
+					Notice = SharedResource.Text("That entry is no longer in this list, so the note was not saved.");
 					return LocalRedirect(CurrentUrl);
 				}
 				if (!await BookmarkService.SetBookmarkNotesAsync(BookmarkId, Notes, Header.UserId, CancellationToken))
 					return NotFound();
-				Notice = string.IsNullOrWhiteSpace(Notes) ? "Note removed." : "Note saved.";
+				Notice = string.IsNullOrWhiteSpace(Notes) ? SharedResource.Text("Note removed.") : SharedResource.Text("Note saved.");
 				UndoToken = null;
 				return LocalRedirect($"{CurrentUrl}#bookmark-{BookmarkId.ToString(CultureInfo.InvariantCulture)}");
 			case "remove":
@@ -174,17 +174,17 @@ public sealed class BookmarksModel(
 				if (DeletedAt is { } Deleted)
 				{
 					UndoToken = Protector().Protect($"{Header.UserId:D}|{SelectedId}|{BookmarkId}|{Deleted:O}", TimeSpan.FromMinutes(5));
-					Notice = "Removed from this list. You can undo this for five minutes.";
+					Notice = SharedResource.Text("Removed from this list. You can undo this for five minutes.");
 				}
 				else
 				{
-					Notice = "This entry was already removed.";
+					Notice = SharedResource.Text("This entry was already removed.");
 				}
 				return LocalRedirect(CurrentUrl);
 			case "undo":
 				bool Restored = await UndoAsync(SelectedId, Token, CancellationToken);
 				UndoToken = null;
-				Notice = Restored ? "Bookmark restored." : "Undo expired or the list has changed.";
+				Notice = Restored ? SharedResource.Text("Bookmark restored.") : SharedResource.Text("Undo expired or the list has changed.");
 				return LocalRedirect(CurrentUrl);
 			default:
 				return BadRequest();

@@ -3,7 +3,7 @@
 @{
 	ProfileHeader Header = Model.Header;
 	ProfileContributionPage Contributions = Model.Contributions;
-	ViewData["Title"] = $"{Header.UserName} · Contributions";
+	ViewData["Title"] = L["{0} · Contributions", Header.UserName];
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
 	string BasePath = $"/@{Header.UserName}/contributions";
 	int FirstNumber = ((Contributions.PageNumber - 1) * ContributionsModel.PageSize) + 1;
@@ -17,11 +17,11 @@
 
 		<section class="profile-card" aria-labelledby="profile-history-title">
 			<header class="profile-card-head">
-				<h2 class="profile-card-title" id="profile-history-title">Edit history</h2>
+				<h2 class="profile-card-title" id="profile-history-title">@L["Edit history"]</h2>
 				@if (Contributions.Items.Count > 0)
 				{
 					<p class="profile-card-note">
-						@FirstNumber.ToString("N0", CultureInfo.CurrentCulture)–@((FirstNumber + Contributions.Items.Count - 1).ToString("N0", CultureInfo.CurrentCulture)) of @Header.Stats.EditCount.ToString("N0", CultureInfo.CurrentCulture)
+						@L["{0}–{1} of {2}", FirstNumber.ToString("N0", CultureInfo.CurrentCulture), (FirstNumber + Contributions.Items.Count - 1).ToString("N0", CultureInfo.CurrentCulture), Header.Stats.EditCount.ToString("N0", CultureInfo.CurrentCulture)]
 					</p>
 				}
 			</header>
@@ -31,11 +31,11 @@
 				<p class="profile-card-empty">
 					@if (Contributions.PageNumber > 1)
 					{
-						<text>There are no older edits. <a href="@BasePath">Back to the newest</a>.</text>
+						@HL["There are no older edits. {0}.", UiFormat.Link(BasePath, L["Back to the newest"])]
 					}
 					else
 					{
-						<text>@(Header.IsOwner ? "You haven't" : $"{Header.UserName} hasn't") edited any articles yet.</text>
+						@(Header.IsOwner ? L["You haven't edited any articles yet."] : L["{0} hasn't edited any articles yet.", Header.UserName])
 					}
 				</p>
 			}
@@ -44,12 +44,12 @@
 				@foreach (IGrouping<(int Year, int Month), ProfileActivityItem> Month in Contributions.Items.GroupBy(i => (i.Date.UtcDateTime.Year, i.Date.UtcDateTime.Month)))
 				{
 					DateTime MonthStart = new(Month.Key.Year, Month.Key.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-					<h3 class="profile-month">@MonthStart.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</h3>
+					<h3 class="profile-month">@UiFormat.Format(MonthStart, "MMMM yyyy", CultureInfo.CurrentCulture, "Y")</h3>
 					<ol class="profile-list">
 						@foreach (ProfileActivityItem Item in Month)
 						{
 							<li class="profile-list-row">
-								<span class="profile-kind" data-kind="@Item.Kind.ToString().ToLowerInvariant()">@(Item.Kind == ProfileActivityKind.Created ? "Created" : "Edited")</span>
+								<span class="profile-kind" data-kind="@Item.Kind.ToString().ToLowerInvariant()">@(Item.Kind == ProfileActivityKind.Created ? L["Created"] : L["Edited"])</span>
 								<div class="profile-list-main">
 									<a class="profile-list-title" href="@Item.Path" rel="nofollow">@Item.Title</a>
 									@if (!string.IsNullOrWhiteSpace(Item.Summary))
@@ -57,7 +57,7 @@
 										<p class="profile-list-meta">@Item.Summary</p>
 									}
 								</div>
-								<time class="profile-list-time" datetime="@Item.Date.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@Item.Date.UtcDateTime.ToString("f", CultureInfo.CurrentCulture) UTC">@ProfileFormatting.ToRelativeTime(Item.Date, Now)</time>
+								<time class="profile-list-time" datetime="@Item.Date.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@UiFormat.Format(Item.Date.UtcDateTime, "f", CultureInfo.CurrentCulture, "f") UTC">@ProfileFormatting.ToRelativeTime(Item.Date, Now)</time>
 							</li>
 						}
 					</ol>
@@ -66,15 +66,15 @@
 
 			@if (Contributions.PageNumber > 1 || Contributions.HasNextPage)
 			{
-				<nav class="profile-pager" aria-label="Edit history pages">
+				<nav class="profile-pager" aria-label="@L["Edit history pages"]">
 					@if (Contributions.PageNumber > 1)
 					{
-						<a href="@(Contributions.PageNumber == 2 ? BasePath : $"{BasePath}?pagenumber={(Contributions.PageNumber - 1).ToString(CultureInfo.InvariantCulture)}")" rel="prev"><span aria-hidden="true">←</span> Newer</a>
+						<a href="@(Contributions.PageNumber == 2 ? BasePath : $"{BasePath}?pagenumber={(Contributions.PageNumber - 1).ToString(CultureInfo.InvariantCulture)}")" rel="prev"><span aria-hidden="true">@L["Arrow.Back"]</span> @L["Newer"]</a>
 					}
-					<span class="profile-pager-current">Page @Contributions.PageNumber.ToString("N0", CultureInfo.CurrentCulture)</span>
+					<span class="profile-pager-current">@L["Page {0}", Contributions.PageNumber.ToString("N0", CultureInfo.CurrentCulture)]</span>
 					@if (Contributions.HasNextPage)
 					{
-						<a href="@BasePath?pagenumber=@((Contributions.PageNumber + 1).ToString(CultureInfo.InvariantCulture))" rel="next">Older <span aria-hidden="true">→</span></a>
+						<a href="@BasePath?pagenumber=@((Contributions.PageNumber + 1).ToString(CultureInfo.InvariantCulture))" rel="next">@L["Older"] <span aria-hidden="true">@L["Arrow.Forward"]</span></a>
 					}
 				</nav>
 			}

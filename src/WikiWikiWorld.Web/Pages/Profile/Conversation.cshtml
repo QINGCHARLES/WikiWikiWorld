@@ -3,7 +3,7 @@
 @inject IMarkdownPipelineFactory Markdown
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
-	ViewData["Title"] = "Private conversation";
+	ViewData["Title"] = L["Private conversation"];
 	string ConversationPath = $"/message/{Model.ConversationId:D}";
 	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
 	DateTimeOffset Now = DateTimeOffset.UtcNow;
@@ -13,10 +13,10 @@
 }
 <div class="profile profile-narrow">
 	<header class="message-head">
-		<a class="message-back" href="/@@@Model.ViewerName/messages"><span aria-hidden="true">←</span> Messages</a>
-		<p class="profile-card-title">Private conversation</p>
+		<a class="message-back" href="/@@@Model.ViewerName/messages"><span aria-hidden="true">@L["Arrow.Back"]</span> @L["Messages"]</a>
+		<p class="profile-card-title">@L["Private conversation"]</p>
 		<h1 id="conversation-title" class="message-title">@Model.Thread.Subject</h1>
-		<ul class="message-participants" aria-label="Participants">
+		<ul class="message-participants" aria-label="@L["Participants"]">
 			@foreach (PrivateParticipant Participant in Model.Thread.Participants)
 			{
 				<li>
@@ -24,12 +24,12 @@
 					@Participant.UserName
 					@if (IsViewer(Participant.UserName))
 					{
-						<small>(you)</small>
+						<small>@L["(you)"]</small>
 					}
 				</li>
 			}
 		</ul>
-		<p class="message-footnote">Everyone listed can read and reply. Participants are fixed when the conversation starts.</p>
+		<p class="message-footnote">@L["Everyone listed can read and reply. Participants are fixed when the conversation starts."]</p>
 	</header>
 
 	<ol class="message-thread" aria-labelledby="conversation-title">
@@ -40,8 +40,8 @@
 				<span class="avatar" aria-hidden="true"><span>@Initial(Message.AuthorName)</span></span>
 				<article>
 					<header>
-						<strong>@(IsViewer(Message.AuthorName) ? "You" : Message.AuthorName)</strong>
-						<time datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@Message.DateCreated.UtcDateTime.ToString("f", CultureInfo.CurrentCulture) UTC">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
+						<strong>@(IsViewer(Message.AuthorName) ? L["You"].Value : Message.AuthorName)</strong>
+						<time datetime="@Message.DateCreated.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@UiFormat.Format(Message.DateCreated.UtcDateTime, "f", CultureInfo.CurrentCulture, "f") UTC">@ProfileFormatting.ToRelativeTime(Message.DateCreated, Now)</time>
 					</header>
 					<div class="bookmark-markdown private-message-body">@Html.Raw(Markdown.RenderUserContentMarkdown(Message.Text))</div>
 				</article>
@@ -51,34 +51,34 @@
 
 	@if (Model.Thread.PageCount > 1)
 	{
-		<nav class="profile-pager" aria-label="Conversation pages">
+		<nav class="profile-pager" aria-label="@L["Conversation pages"]">
 			@if (Model.Thread.PageNumber > 1)
 			{
-				<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber - 1)" rel="prev"><span aria-hidden="true">←</span> Earlier</a>
+				<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber - 1)" rel="prev"><span aria-hidden="true">@L["Arrow.Back"]</span> @L["Earlier"]</a>
 			}
-			<span class="profile-pager-current">Page @Model.Thread.PageNumber of @Model.Thread.PageCount</span>
+			<span class="profile-pager-current">@L["Page {0} of {1}", Model.Thread.PageNumber, Model.Thread.PageCount]</span>
 			@if (Model.Thread.PageNumber < Model.Thread.PageCount)
 			{
-				<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber + 1)" rel="next">Later <span aria-hidden="true">→</span></a>
+				<a href="@ConversationPath?pagenumber=@(Model.Thread.PageNumber + 1)" rel="next">@L["Later"] <span aria-hidden="true">@L["Arrow.Forward"]</span></a>
 			}
 		</nav>
 	}
 
 	<form method="post" action="@ConversationPath" asp-antiforgery="true" class="profile-card message-form">
 		<div class="message-field">
-			<label asp-for="Input.Text">Reply</label>
+			<label asp-for="Input.Text">@L["Reply"]</label>
 			<textarea asp-for="Input.Text" rows="5" required maxlength="@PrivateMessagingService.MaxMessageLength" aria-describedby="reply-help reply-error"></textarea>
 			<p class="bookmark-editor-help" id="reply-help">
-				<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>, a blank line for a new paragraph.</span>
+				<span>@HL["Markdown: {0}, {1}, {2}, a blank line for a new paragraph.", new Microsoft.AspNetCore.Html.HtmlString("<code>**bold**</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>_italic_</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>[links](https://…)</code>")]</span>
 			</p>
 			<span asp-validation-for="Input.Text" id="reply-error" class="bookmark-error"></span>
 		</div>
 		<div class="bookmark-editor-actions">
 			<span class="bookmark-editor-visibility">
 				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg>
-				Only the participants can read this.
+				@L["Only the participants can read this."]
 			</span>
-			<button type="submit" class="bookmark-editor-button" data-variant="primary">Send reply</button>
+			<button type="submit" class="bookmark-editor-button" data-variant="primary">@L["Send reply"]</button>
 		</div>
 	</form>
 </div>

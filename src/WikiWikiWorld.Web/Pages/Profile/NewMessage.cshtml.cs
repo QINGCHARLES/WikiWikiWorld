@@ -42,7 +42,7 @@ public sealed class NewMessageModel(PrivateMessagingService Messaging, UserManag
 		if (!string.IsNullOrWhiteSpace(Recipient))
 		{
 			User? Account = await UserManager.FindByNameAsync(Recipient.Trim().TrimStart('@'));
-			if (Account is null) ErrorMessage = "That recipient was not found. Choose another account below.";
+			if (Account is null) ErrorMessage = SharedResource.Text("That recipient was not found. Choose another account below.");
 			else if (Account.Id != Sender.Id)
 			{
 				HasPresetRecipient = true;

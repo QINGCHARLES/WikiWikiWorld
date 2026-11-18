@@ -85,6 +85,10 @@ public sealed record class ProfileBadge
 /// </summary>
 public static class ProfileBadgeCatalog
 {
+	// Rank and badge names and descriptions are English translation keys; the profile pages show them through L[...].
+	// l10n: "Masthead", "Archivist", "Regular", "Contributor", "Reader", "Debut", "Byline", "Editor at Large", "Columnist", "Polymath", "On Deadline", "Anniversary", "Veteran"
+	// l10n: "Published a first edit.", "Made 50 edits.", "Made 500 edits.", "Made 2,500 edits.", "Started a first article.", "Started 25 articles.", "Wrote 10 talk posts.", "Edited articles in 10 categories.", "Edited 7 days in a row.", "A member for a year.", "A member for five years."
+
 	/// <summary>
 	/// Edit counts at which each rank begins, highest first.
 	/// </summary>

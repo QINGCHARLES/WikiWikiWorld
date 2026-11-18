@@ -1,7 +1,7 @@
 @page
 @model WikiWikiWorld.Web.Pages.Profile.MessagesModel
 @{
-	ViewData["Title"] = $"{Model.Header.UserName} · Messages";
+	ViewData["Title"] = L["{0} · Messages", Model.Header.UserName];
 	string BasePath = $"/@{Model.Header.UserName}/messages";
 	bool IsSentFolder = Model.Tab == "sent";
 	string FolderPath = IsSentFolder ? $"{BasePath}/sent" : BasePath;
@@ -12,18 +12,18 @@
 	<div class="profile-stack">
 		<section class="profile-card" aria-labelledby="messages-title">
 			<header class="profile-card-head profile-card-head-wrap">
-				<h2 id="messages-title" class="profile-card-title">Private messages</h2>
-				<a href="/message/new" class="button profile-card-button profile-action-accent">New conversation</a>
+				<h2 id="messages-title" class="profile-card-title">@L["Private messages"]</h2>
+				<a href="/message/new" class="button profile-card-button profile-action-accent">@L["New conversation"]</a>
 			</header>
-			<nav class="message-toolbar" aria-label="Message folders">
+			<nav class="message-toolbar" aria-label="@L["Message folders"]">
 				<div class="profile-segments">
-					<a href="@BasePath" aria-current="@(IsSentFolder ? null : "page")">Inbox</a>
-					<a href="@BasePath/sent" aria-current="@(IsSentFolder ? "page" : null)">Started by you</a>
+					<a href="@BasePath" aria-current="@(IsSentFolder ? null : "page")">@L["Inbox"]</a>
+					<a href="@BasePath/sent" aria-current="@(IsSentFolder ? "page" : null)">@L["Started by you"]</a>
 				</div>
 			</nav>
 			@if (Model.Folder.Items.Count == 0)
 			{
-				<p class="profile-card-empty message-empty">@(IsSentFolder ? "You haven't started any conversations yet." : "Nobody has started a conversation with you yet.")</p>
+				<p class="profile-card-empty message-empty">@(IsSentFolder ? L["You haven't started any conversations yet."] : L["Nobody has started a conversation with you yet."])</p>
 			}
 			else
 			{
@@ -35,28 +35,28 @@
 							<span class="avatar" aria-hidden="true"><span>@Initial</span></span>
 							<div class="profile-list-main">
 								<a class="profile-list-title" href="/message/@Conversation.Id.ToString("D")">@Conversation.Subject</a>
-								<p class="profile-list-meta">@(IsSentFolder ? "Started by you" : $"Started by {Conversation.CreatorName}")</p>
+								<p class="profile-list-meta">@(IsSentFolder ? L["Started by you"] : L["Started by {0}", Conversation.CreatorName])</p>
 							</div>
-							<time class="profile-list-time" datetime="@Conversation.LastMessageDate.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@Conversation.LastMessageDate.UtcDateTime.ToString("f", CultureInfo.CurrentCulture) UTC">@ProfileFormatting.ToRelativeTime(Conversation.LastMessageDate, Now)</time>
+							<time class="profile-list-time" datetime="@Conversation.LastMessageDate.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)" title="@UiFormat.Format(Conversation.LastMessageDate.UtcDateTime, "f", CultureInfo.CurrentCulture, "f") UTC">@ProfileFormatting.ToRelativeTime(Conversation.LastMessageDate, Now)</time>
 						</li>
 					}
 				</ul>
 			}
 			@if (Model.Folder.PageCount > 1)
 			{
-				<nav class="profile-pager" aria-label="Message folder pages">
+				<nav class="profile-pager" aria-label="@L["Message folder pages"]">
 					@if (Model.Folder.PageNumber > 1)
 					{
-						<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber - 1)" rel="prev">Previous</a>
+						<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber - 1)" rel="prev">@L["Previous"]</a>
 					}
-					<span class="profile-pager-current">Page @Model.Folder.PageNumber of @Model.Folder.PageCount</span>
+					<span class="profile-pager-current">@L["Page {0} of {1}", Model.Folder.PageNumber, Model.Folder.PageCount]</span>
 					@if (Model.Folder.PageNumber < Model.Folder.PageCount)
 					{
-						<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber + 1)" rel="next">Next</a>
+						<a href="@FolderPath?pagenumber=@(Model.Folder.PageNumber + 1)" rel="next">@L["Next"]</a>
 					}
 				</nav>
 			}
-			<p class="message-footnote">Only participants can open a conversation. Public user-page discussions are separate.</p>
+			<p class="message-footnote">@L["Only participants can open a conversation. Public user-page discussions are separate."]</p>
 		</section>
 	</div>
 </div>

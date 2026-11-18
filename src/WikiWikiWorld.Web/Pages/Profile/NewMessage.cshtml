@@ -2,16 +2,16 @@
 @model WikiWikiWorld.Web.Pages.Profile.NewMessageModel
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
-	ViewData["Title"] = Model.HasPresetRecipient ? $"Message to {Model.RecipientDisplayName}" : "New conversation";
+	ViewData["Title"] = Model.HasPresetRecipient ? L["Message to {0}", Model.RecipientDisplayName ?? string.Empty] : L["New conversation"];
 	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
 	string CancelUrl = Model.HasPresetRecipient ? $"/@{Model.Recipient}/profile" : $"/@{User.Identity?.Name}/messages";
 }
 
 <div class="profile profile-narrow">
 	<header class="message-head">
-		<a class="message-back" href="/@@@User.Identity?.Name/messages"><span aria-hidden="true">←</span> Messages</a>
-		<p class="profile-card-title">Private messages</p>
-		<h1 class="message-title">@(Model.HasPresetRecipient ? $"Message {Model.RecipientDisplayName}" : "New conversation")</h1>
+		<a class="message-back" href="/@@@User.Identity?.Name/messages"><span aria-hidden="true">@L["Arrow.Back"]</span> @L["Messages"]</a>
+		<p class="profile-card-title">@L["Private messages"]</p>
+		<h1 class="message-title">@(Model.HasPresetRecipient ? L["Message {0}", Model.RecipientDisplayName ?? string.Empty] : L["New conversation"])</h1>
 	</header>
 
 	<form method="post" action="/message/new" asp-antiforgery="true" class="profile-card message-form">
@@ -22,29 +22,29 @@
 		<div asp-validation-summary="ModelOnly" class="bookmark-error"></div>
 
 		<div class="message-field">
-			<label for="recipient-input">To</label>
+			<label for="recipient-input">@L["To"]</label>
 			<div class="autocomplete-wrapper">
 				<input asp-for="Input.Recipients" id="recipient-input" autocomplete="off" autocapitalize="none" spellcheck="false" required maxlength="2000"
-					placeholder="Usernames, separated by commas" data-avatar-base="/sitefiles/@Model.SiteId/profilepics/" aria-describedby="recipient-help recipient-error" />
+					placeholder="@L["Usernames, separated by commas"]" data-avatar-base="/sitefiles/@Model.SiteId/profilepics/" aria-describedby="recipient-help recipient-error" />
 				<div id="autocomplete-list" class="autocomplete-items"></div>
 			</div>
 			<p class="bookmark-editor-help" id="recipient-help">
-				<span>Up to @PrivateMessagingService.MaxRecipients people. Everyone listed can read and reply; participants cannot be changed later.</span>
+				<span>@L["Up to {0} people. Everyone listed can read and reply; participants cannot be changed later.", PrivateMessagingService.MaxRecipients]</span>
 			</p>
 			<span asp-validation-for="Input.Recipients" id="recipient-error" class="bookmark-error"></span>
 		</div>
 
 		<div class="message-field">
-			<label asp-for="Input.Subject">Subject</label>
+			<label asp-for="Input.Subject">@L["Subject"]</label>
 			<input asp-for="Input.Subject" required maxlength="@PrivateMessagingService.MaxSubjectLength" aria-describedby="subject-error" />
 			<span asp-validation-for="Input.Subject" id="subject-error" class="bookmark-error"></span>
 		</div>
 
 		<div class="message-field">
-			<label asp-for="Input.Message">Message</label>
+			<label asp-for="Input.Message">@L["Message"]</label>
 			<textarea asp-for="Input.Message" rows="8" required maxlength="@PrivateMessagingService.MaxMessageLength" aria-describedby="message-help message-error"></textarea>
 			<p class="bookmark-editor-help" id="message-help">
-				<span>Markdown: <code>**bold**</code>, <code>_italic_</code>, <code>[links](https://…)</code>, a blank line for a new paragraph.</span>
+				<span>@HL["Markdown: {0}, {1}, {2}, a blank line for a new paragraph.", new Microsoft.AspNetCore.Html.HtmlString("<code>**bold**</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>_italic_</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>[links](https://…)</code>")]</span>
 			</p>
 			<span asp-validation-for="Input.Message" id="message-error" class="bookmark-error"></span>
 		</div>
@@ -52,10 +52,10 @@
 		<div class="bookmark-editor-actions">
 			<span class="bookmark-editor-visibility">
 				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg>
-				Only the people you list can read this.
+				@L["Only the people you list can read this."]
 			</span>
-			<a href="@CancelUrl" class="bookmark-editor-button">Cancel</a>
-			<button type="submit" class="bookmark-editor-button" data-variant="primary">Send message</button>
+			<a href="@CancelUrl" class="bookmark-editor-button">@L["Cancel"]</a>
+			<button type="submit" class="bookmark-editor-button" data-variant="primary">@L["Send message"]</button>
 		</div>
 	</form>
 </div>
