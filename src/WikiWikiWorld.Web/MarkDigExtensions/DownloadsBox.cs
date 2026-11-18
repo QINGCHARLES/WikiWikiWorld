@@ -119,7 +119,7 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         }
         else
         {
-            Renderer.Write("<p>Download file not available.</p>");
+            Renderer.Write($"<p>{HtmlEscape(SharedResource.Text("Download file not available."))}</p>");
         }
 
         Renderer.Write("</aside>");
@@ -149,7 +149,7 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         if (!String.IsNullOrWhiteSpace(UploadedByUserName))
         {
             String EscapedUserName = HtmlEscape(UploadedByUserName);
-            Renderer.Write($"<p class=\"provider\">Provided by <a href=\"/@{EscapedUserName}\">@{EscapedUserName}</a></p>");
+            Renderer.Write($"<p class=\"provider\">{SharedResource.FormatHtml("Provided by {0}", $"<a href=\"/@{EscapedUserName}\">@{EscapedUserName}</a>")}</p>");
         }
         Renderer.Write("</div>");
         Renderer.Write("</div>");
@@ -161,7 +161,7 @@ public class DownloadsBoxBlockRenderer : HtmlObjectRenderer<DownloadsBoxBlock>
         Renderer.Write("<path d=\"M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2\" />");
         Renderer.Write("<path d=\"M7 11l5 5l5 -5\" />");
         Renderer.Write("<path d=\"M12 4l0 12\" />");
-        Renderer.Write("</svg>Download</a>");
+        Renderer.Write($"</svg>{HtmlEscape(SharedResource.Text("Download"))}</a>");
     }
 
     /// <summary>

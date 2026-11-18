@@ -13,15 +13,16 @@
 		<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 			<use href="@IconSpriteUrl#Add"></use>
 		</svg>
-		<span>New list…</span>
+		<span>@L["New list…"]</span>
 	</button>
 	<div id="article-bookmark-new-list-field" hidden>
-		<input type="text" name="BookmarkListName" maxlength="@WikiWikiWorld.Web.Services.BookmarkService.MaxListNameLength" placeholder="List name" aria-label="New list name" autocomplete="off"
+		<input type="text" name="BookmarkListName" maxlength="@WikiWikiWorld.Web.Services.BookmarkService.MaxListNameLength" placeholder="@L["List name"]" aria-label="@L["New list name"]" autocomplete="off"
 			data-on:keydown="evt.key === 'Enter' &amp;&amp; (evt.preventDefault(), el.nextElementSibling.click())" />
 		<button type="button" disabled
 			data-url="@($"{Model.ArticlePath}?handler=CreateBookmarkList")"
 			data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
-			data-on:click="$_bookmarkError = ''; @@post(el.dataset.url, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not create the list. Reload to check your lists before trying again.' })"
-			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not create the list. Reload to check your lists before trying again.'">Create</button>
+			data-error-text="@L["Could not create the list. Reload to check your lists before trying again."]"
+			data-on:click="$_bookmarkError = ''; @@post(el.dataset.url, {contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = el.dataset.errorText })"
+			data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = el.dataset.errorText">@L["Create"]</button>
 	</div>
 </div>

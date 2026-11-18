@@ -8,10 +8,11 @@
 <button id="article-bookmark-toggle" type="button" aria-pressed="@(Model.IsBookmarked ? "true" : "false")" disabled
 	data-url="@($"{Model.ArticlePath}?handler=SetBookmark&saved={(Model.IsBookmarked ? "false" : "true")}")"
 	data-indicator="_bookmarkPending" data-attr:disabled="$_bookmarkPending"
-	data-on:click="$_bookmarkError = ''; @@post(el.dataset.url,{contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.' })"
-	data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = 'Could not save. Reload to check your bookmark before trying again.'">
+	data-error-text="@L["Could not save. Reload to check your bookmark before trying again."]"
+	data-on:click="$_bookmarkError = ''; @@post(el.dataset.url,{contentType: 'form', retry: 'never', retryMaxCount: 0}).catch(() => { $_bookmarkError = el.dataset.errorText })"
+	data-on:datastar-fetch__document="if (evt.detail.el === el &amp;&amp; evt.detail.type === 'error') $_bookmarkError = el.dataset.errorText">
 	<svg viewBox="0 0 24 24" width="16" height="16" fill="@(Model.IsBookmarked ? "currentColor" : "none")" aria-hidden="true">
 		<use href="@IconSpriteUrl#Bookmark"></use>
 	</svg>
-	<span>@(Model.IsBookmarked ? "Bookmarked" : "Bookmark")</span>
+	<span>@(Model.IsBookmarked ? L["Bookmarked"] : L["Bookmark"])</span>
 </button>

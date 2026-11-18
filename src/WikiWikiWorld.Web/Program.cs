@@ -322,7 +322,10 @@ Builder.Services.AddRazorPages(options =>
     options.Conventions.AddPageRoute("/Profile/NewMessage", "message/new");
     options.Conventions.AddPageRoute("/Profile/NewMessage", "@{Recipient}/message/new");
     options.Conventions.AddPageRoute("/Profile/Conversation", "message/{ConversationId:guid}");
-});
+}).AddViewLocalization();
+
+// Shared UI text lives in Resources/SharedResource.*.resx, keyed by the English text; see SharedResource.
+Builder.Services.AddLocalization(Options => Options.ResourcesPath = "Resources");
 
 // Catch-all article routing (article view, /edit, /history, /talk, /revision, /links, /languages, 404:)
 Builder.Services.AddSingleton<ArticleRouteTransformer>();
@@ -477,6 +480,9 @@ App.UseHttpsRedirection();
 // Canonical host redirects (www strip, domain mappings, unknown hosts) and the
 // culture-selector root-domain rewrite. Config-driven via DomainRedirects + SiteConfiguration.
 App.UseMiddleware<CanonicalDomainMiddleware>();
+
+// UI text follows the host's culture subdomain (only CurrentUICulture; formatting culture is unchanged).
+App.UseMiddleware<UiCultureMiddleware>();
 
 App.UseRouting();
 

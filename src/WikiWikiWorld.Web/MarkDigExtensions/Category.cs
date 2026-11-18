@@ -7,6 +7,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Web.Helpers;
+using System.Net;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -189,7 +190,7 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 		if (Categories.Count == 0) return;
 
 		Renderer.WriteLine("<div class=\"article-categories\">");
-		Renderer.WriteLine("<h2 class=\"categories-label\">Categories</h2>");
+		Renderer.WriteLine($"<h2 class=\"categories-label\">{WebUtility.HtmlEncode(SharedResource.Text("Categories"))}</h2>");
 		RenderList(Renderer, Categories.Take(CategoryExtension.InitialVisibleCategoryCount));
 
 		int RemainingCount = Categories.Count - CategoryExtension.InitialVisibleCategoryCount;
@@ -197,8 +198,8 @@ public sealed class CategoriesRenderer : HtmlObjectRenderer<CategoriesBlock>
 		{
 			Renderer.WriteLine("<details class=\"categories-disclosure\">");
 			Renderer.Write("<summary class=\"categories-toggle\"><span class=\"categories-show-more\">");
-			Renderer.Write($"… Show {RemainingCount} more");
-			Renderer.WriteLine("</span><span class=\"categories-show-fewer\">Show fewer</span></summary>");
+			Renderer.Write(WebUtility.HtmlEncode(SharedResource.Format("… Show {0} more", RemainingCount)));
+			Renderer.WriteLine($"</span><span class=\"categories-show-fewer\">{WebUtility.HtmlEncode(SharedResource.Text("Show fewer"))}</span></summary>");
 			RenderList(Renderer, Categories.Skip(CategoryExtension.InitialVisibleCategoryCount));
 			Renderer.WriteLine("</details>");
 		}

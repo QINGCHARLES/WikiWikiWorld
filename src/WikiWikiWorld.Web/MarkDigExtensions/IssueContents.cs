@@ -4,6 +4,7 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using System.Text;
+using System.Net;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -85,7 +86,7 @@ public sealed class IssueContentsRenderer : HtmlObjectRenderer<IssueContentsBloc
 			Renderer.Write("<pre class=\"issue-contents-error\">").WriteEscape(Source).WriteLine("</pre>");
 			return;
 		}
-		Renderer.WriteLine("<section class=\"issue-contents\"><h2>In This Issue</h2>");
+		Renderer.WriteLine($"<section class=\"issue-contents\"><h2>{WebUtility.HtmlEncode(SharedResource.Text("In This Issue"))}</h2>");
 		Renderer.WriteLine("<div>");
 		foreach (IssueContentsGroup Group in Groups)
 		{

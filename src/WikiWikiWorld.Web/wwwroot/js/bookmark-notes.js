@@ -21,7 +21,9 @@ if (Dialog) {
 		const ListName = Button.dataset.listName ?? "";
 		Form.elements.BookmarkId.value = Button.dataset.bookmarkId;
 		Dialog.querySelector("#article-note-eyebrow").textContent = ListName;
-		Dialog.querySelector("#article-note-title").textContent = Notes.trim() ? "Edit note" : "Add a note";
+		// The heading carries both translated labels (data-edit-text / data-add-text) from the server.
+		const Title = Dialog.querySelector("#article-note-title");
+		Title.textContent = Notes.trim() ? Title.dataset.editText : Title.dataset.addText;
 		Dialog.querySelector("#article-note-visibility").dataset.public = Button.dataset.public;
 		Dialog.querySelector("[data-bookmark-note-delete]").hidden = !Notes.trim();
 		Text.value = Notes;

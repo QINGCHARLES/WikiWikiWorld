@@ -93,6 +93,8 @@ public sealed class EyebrowExtension : IMarkdownExtension
 	/// <summary>
 	/// Maps each <see cref="EyebrowType"/> to its human-readable display label.
 	/// </summary>
+	// The labels are translation keys (Enrich looks them up); listed for scripts/localization.py:
+	// l10n: "Magazine", "Magazine Issue", "Franchise", "Zine", "Journal", "Person", "Publisher", "Organization", "Zine Issue", "Journal Issue", "Newsletter", "Newsletter Issue", "Movie", "Short Film", "Series", "Episode", "Studio", "Distributor", "Festival", "Award"
 	private static readonly FrozenDictionary<EyebrowType, string> DisplayLabels = new Dictionary<EyebrowType, string>
 	{
 		[EyebrowType.Magazine] = "Magazine",
@@ -146,7 +148,8 @@ public sealed class EyebrowExtension : IMarkdownExtension
 		EyebrowBlock? Block = Document.Descendants<EyebrowBlock>().FirstOrDefault(x => !x.IsMalformed);
 		if (Block is not null && DisplayLabels.TryGetValue(Block.Type, out string? Label))
 		{
-			Document.SetData(DocumentKey, Label);
+			// The stored label is for display, so it is in the request's UI language (the English label is the key).
+			Document.SetData(DocumentKey, SharedResource.Text(Label));
 			Document.SetData(TypeDocumentKey, Block.Type);
 		}
 	}

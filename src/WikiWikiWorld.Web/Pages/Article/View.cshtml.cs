@@ -242,12 +242,9 @@ public sealed class ViewModel(
 		? ArticleUrlHelper.BuildRelativePath(Article, "talk") : string.Empty;
 
 	/// <summary>Gets the discussion action label: an invitation ("Discuss") when there are no threads yet, otherwise the thread count.</summary>
-	public string TalkLabel => ThreadCount switch
-	{
-		0 => "Discuss",
-		1 => "1 Thread",
-		_ => $"{ThreadCount} Threads"
-	};
+	public string TalkLabel => ThreadCount == 0
+		? SharedResource.Text("Discuss")
+		: SharedResource.Plural("Talk.Threads", ThreadCount);
 
     /// <summary>
     /// Gets a value indicating whether to render the publication-upload call-to-action aside.
@@ -541,7 +538,7 @@ public sealed class ViewModel(
         bool Applied = await BookmarkService.SetBookmarkInListAsync(BookmarkListId, Current.CanonicalArticleId, CurrentUser.Id, SiteId, Saved, CancellationToken);
         if (!Applied)
         {
-            return Partial("_BookmarkStatus", "That list no longer exists. Reload to see your lists.");
+            return Partial("_BookmarkStatus", SharedResource.Text("That list no longer exists. Reload to see your lists."));
         }
 
         return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
@@ -567,17 +564,17 @@ public sealed class ViewModel(
         string Name = (BookmarkListName ?? string.Empty).Trim();
         if (Name.Length == 0)
         {
-            return Partial("_BookmarkStatus", "Enter a name for the list.");
+            return Partial("_BookmarkStatus", SharedResource.Text("Enter a name for the list."));
         }
         if (Name.Length > BookmarkService.MaxListNameLength)
         {
-            return Partial("_BookmarkStatus", $"List names can be up to {BookmarkService.MaxListNameLength} characters.");
+            return Partial("_BookmarkStatus", SharedResource.Format("List names can be up to {0} characters.", BookmarkService.MaxListNameLength));
         }
 
         BookmarkListCreateResult Result = await BookmarkService.CreateListWithBookmarkAsync(Name, Current.CanonicalArticleId, CurrentUser.Id, SiteId, CancellationToken);
         if (Result is BookmarkListCreateResult.LimitReached)
         {
-            return Partial("_BookmarkStatus", $"You can have up to {BookmarkService.MaxListsPerUser} lists.");
+            return Partial("_BookmarkStatus", SharedResource.Format("You can have up to {0} lists.", BookmarkService.MaxListsPerUser));
         }
 
         return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken);
@@ -602,15 +599,15 @@ public sealed class ViewModel(
         }
         if ((Notes?.Length ?? 0) > Bookmark.MaxNotesLength)
         {
-            return Partial("_BookmarkStatus", $"Notes can be up to {Bookmark.MaxNotesLength:N0} characters.");
+            return Partial("_BookmarkStatus", SharedResource.Format("Notes can be up to {0:N0} characters.", Bookmark.MaxNotesLength));
         }
 
         IReadOnlyList<BookmarkListMembership> Before = await BookmarkService.GetListMembershipsAsync(Current.CanonicalArticleId, CurrentUser.Id, CancellationToken);
         BookmarkListMembership? Target = Before.FirstOrDefault(l => l.BookmarkId == BookmarkId);
         bool Saved = Target is not null && await BookmarkService.SetBookmarkNotesAsync(BookmarkId, Notes, CurrentUser.Id, CancellationToken);
         string Message = !Saved
-            ? "That bookmark was removed, so the note was not saved. Reload to see your lists."
-            : string.IsNullOrWhiteSpace(Notes) ? $"Note removed from {Target!.Name}." : $"Note saved to {Target!.Name}.";
+            ? SharedResource.Text("That bookmark was removed, so the note was not saved. Reload to see your lists.")
+            : string.IsNullOrWhiteSpace(Notes) ? SharedResource.Format("Note removed from {0}.", Target!.Name) : SharedResource.Format("Note saved to {0}.", Target!.Name);
 
         return await BookmarkStateResultAsync(CurrentUser, Current, CancellationToken, Message);
     }
@@ -631,7 +628,7 @@ public sealed class ViewModel(
         }
         if (!(User.Identity?.IsAuthenticated ?? false))
         {
-            return (Partial("_BookmarkStatus", "Sign in to bookmark articles."), null, null);
+            return (Partial("_BookmarkStatus", SharedResource.Text("Sign in to bookmark articles.")), null, null);
         }
 
         if (SiteId < 1 || string.IsNullOrWhiteSpace(UrlSlug))
@@ -642,7 +639,7 @@ public sealed class ViewModel(
         User? CurrentUser = await UserManager.GetUserAsync(User);
         if (CurrentUser is null)
         {
-            return (Partial("_BookmarkStatus", "Sign in to bookmark articles."), null, null);
+            return (Partial("_BookmarkStatus", SharedResource.Text("Sign in to bookmark articles.")), null, null);
         }
 
         string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);

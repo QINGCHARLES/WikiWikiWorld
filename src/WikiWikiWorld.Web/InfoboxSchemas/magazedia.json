@@ -30,7 +30,7 @@
 				{
 					"Key": "PublicationFormats",
 					"Description": "Formats currently or last published: Print, Digital.",
-					"Labels": { "en": "Publication Formats", "ja": "発行形態" }
+					"Labels": { "en": "Publication Formats", "ja": "発行形態", "ar": "أشكال النشر" }
 				},
 				{
 					"Key": "FirstIssue",
@@ -92,17 +92,17 @@
 				{
 					"Key": "CoverDate",
 					"Description": "Date printed on the cover, kept as printed: March 1980, Winter 1984–85.",
-					"Labels": { "en": "Cover Date", "ja": "表紙の日付" }
+					"Labels": { "en": "Cover Date", "ja": "表紙の日付", "ar": "تاريخ الغلاف" }
 				},
 				{
 					"Key": "PrintPublicationDate",
 					"Description": "Date the print edition went on sale, only when a source gives it.",
-					"Labels": { "en": "Print Publication Date", "ja": "発売日" }
+					"Labels": { "en": "Print Publication Date", "ja": "発売日", "ar": "تاريخ صدور النسخة المطبوعة" }
 				},
 				{
 					"Key": "ElectronicPublicationDate",
 					"Description": "Date the digital edition was released, only when a source gives it.",
-					"Labels": { "en": "Electronic Publication Date" }
+					"Labels": { "en": "Electronic Publication Date", "ja": "電子版配信日", "ar": "تاريخ صدور النسخة الإلكترونية" }
 				},
 				{
 					"Key": "Editor",
@@ -114,13 +114,13 @@
 					"Key": "CoverSubject",
 					"Repeatable": true,
 					"Description": "Person or subject on the cover. Repeat for alternate covers.",
-					"Labels": { "en": "Cover Subject" }
+					"Labels": { "en": "Cover Subject", "ja": "表紙の人物・題材", "ar": "موضوع الغلاف" }
 				},
 				{
 					"Key": "CoverPhotographer",
 					"Repeatable": true,
 					"Description": "Cover photographer or artist as credited in the issue.",
-					"Labels": { "en": "Cover Photographer" }
+					"Labels": { "en": "Cover Photographer", "ja": "表紙撮影", "ar": "مصوّر الغلاف" }
 				},
 				{
 					"Key": "Pages",
@@ -136,7 +136,7 @@
 				{
 					"Key": "PublicationFormats",
 					"Description": "Formats this issue appeared in: Print, Digital.",
-					"Labels": { "en": "Publication Formats", "ja": "発行形態" }
+					"Labels": { "en": "Publication Formats", "ja": "発行形態", "ar": "أشكال النشر" }
 				},
 				{
 					"Key": "ISSN",
@@ -146,17 +146,17 @@
 				{
 					"Key": "PrintEAN-13",
 					"Description": "13-digit barcode number printed on the cover.",
-					"Labels": { "en": "Print EAN-13" }
+					"Labels": { "en": "Print EAN-13", "ja": "EAN-13（印刷版）", "ar": "رمز EAN-13 للمطبوع" }
 				},
 				{
 					"Key": "PrintEAN-2",
 					"Description": "2-digit add-on to the EAN-13 barcode, usually the issue number.",
-					"Labels": { "en": "Print EAN-2" }
+					"Labels": { "en": "Print EAN-2", "ja": "EAN-2（印刷版）", "ar": "رمز EAN-2 للمطبوع" }
 				},
 				{
 					"Key": "UPC",
 					"Description": "UPC barcode number printed on the cover (North American issues).",
-					"Labels": { "en": "UPC" }
+					"Labels": { "en": "UPC", "ja": "UPC", "ar": "UPC" }
 				}
 			]
 		}

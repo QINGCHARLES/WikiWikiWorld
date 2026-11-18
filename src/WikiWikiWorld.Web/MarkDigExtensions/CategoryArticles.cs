@@ -5,6 +5,7 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+using System.Net;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -106,11 +107,11 @@ public sealed class CategoryArticlesRenderer : HtmlObjectRenderer<CategoryArticl
 	{
 		if (Block.Path is null)
 		{
-			Renderer.WriteLine("<p>{{CategoryArticles}} is available on category articles.</p>");
+			Renderer.WriteLine($"<p>{WebUtility.HtmlEncode(SharedResource.Text("{{CategoryArticles}} is available on category articles."))}</p>");
 			return;
 		}
-		Renderer.WriteLine("<div class=\"category-articles\"><h2>Articles in this category</h2>");
-		if (Block.Items.Count == 0) Renderer.WriteLine("<p>No articles are currently listed in this category.</p>");
+		Renderer.WriteLine($"<div class=\"category-articles\"><h2>{WebUtility.HtmlEncode(SharedResource.Text("Articles in this category"))}</h2>");
+		if (Block.Items.Count == 0) Renderer.WriteLine($"<p>{WebUtility.HtmlEncode(SharedResource.Text("No articles are currently listed in this category."))}</p>");
 		else
 		{
 			Renderer.WriteLine("<ul>");
@@ -126,10 +127,10 @@ public sealed class CategoryArticlesRenderer : HtmlObjectRenderer<CategoryArticl
 		}
 		if (Block.PageCount > 1)
 		{
-			Renderer.WriteLine("<nav aria-label=\"Category articles\">");
-			if (Block.Page > 1) WritePageLink(Renderer, Block.Path, Block.Page - 1, "Previous");
-			Renderer.Write(FormattableString.Invariant($" <span>Page {Block.Page} of {Block.PageCount}</span> "));
-			if (Block.Page < Block.PageCount) WritePageLink(Renderer, Block.Path, Block.Page + 1, "Next");
+			Renderer.WriteLine($"<nav aria-label=\"{WebUtility.HtmlEncode(SharedResource.Text("Category articles"))}\">");
+			if (Block.Page > 1) WritePageLink(Renderer, Block.Path, Block.Page - 1, SharedResource.Text("Previous"));
+			Renderer.Write($" <span>{WebUtility.HtmlEncode(SharedResource.Format("Page {0} of {1}", Block.Page, Block.PageCount))}</span> ");
+			if (Block.Page < Block.PageCount) WritePageLink(Renderer, Block.Path, Block.Page + 1, SharedResource.Text("Next"));
 			Renderer.WriteLine("</nav>");
 		}
 		Renderer.WriteLine("</div>");

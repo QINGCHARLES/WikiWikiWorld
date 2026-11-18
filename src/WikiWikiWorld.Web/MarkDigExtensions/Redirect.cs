@@ -146,7 +146,7 @@ public sealed class RedirectRenderer : HtmlObjectRenderer<RedirectBlock>
 		if (!Block.IsValid || string.IsNullOrWhiteSpace(Block.TargetSlug))
 		{
 			Renderer.WriteLine("<div class=\"revision-notice redirect-notice\">");
-			Renderer.WriteLine("<strong>Redirect page:</strong> Invalid redirect target directive.");
+			Renderer.WriteLine($"<strong>{WebUtility.HtmlEncode(SharedResource.Text("Redirect page:"))}</strong> {WebUtility.HtmlEncode(SharedResource.Text("Invalid redirect target directive."))}");
 			Renderer.WriteLine("</div>");
 			return;
 		}
@@ -163,16 +163,13 @@ public sealed class RedirectRenderer : HtmlObjectRenderer<RedirectBlock>
 			: Block.TargetSlug);
 
 		Renderer.WriteLine("<div class=\"revision-notice redirect-notice\">");
-		Renderer.Write($"<strong>Redirect page:</strong> This page redirects to <a href=\"{Href}\">{Label}</a>");
-		if (Block.TargetIsRedirect)
-		{
-			Renderer.Write(" (target is also a redirect and cannot be chained)");
-		}
-		else if (!Block.TargetExists)
-		{
-			Renderer.Write(" (target page does not exist yet)");
-		}
-		Renderer.WriteLine(".");
+		string TargetLink = $"<a href=\"{Href}\">{Label}</a>";
+		string Sentence = Block.TargetIsRedirect
+			? SharedResource.FormatHtml("This page redirects to {0} (target is also a redirect and cannot be chained).", TargetLink)
+			: !Block.TargetExists
+				? SharedResource.FormatHtml("This page redirects to {0} (target page does not exist yet).", TargetLink)
+				: SharedResource.FormatHtml("This page redirects to {0}.", TargetLink);
+		Renderer.WriteLine($"<strong>{WebUtility.HtmlEncode(SharedResource.Text("Redirect page:"))}</strong> {Sentence}");
 		Renderer.WriteLine("</div>");
 	}
 }

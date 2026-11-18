@@ -4,6 +4,7 @@ using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
+using System.Net;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -111,36 +112,31 @@ public sealed class StubRenderer : HtmlObjectRenderer<StubBlock>
 		Renderer.WriteLine("<div class=\"stub-banner\" role=\"note\">");
 		Renderer.Write("  <span class=\"stub-banner__icon\" aria-hidden=\"true\"></span>");
 		Renderer.Write("  <p>");
-		Renderer.Write("This article is a ");
-		Renderer.Write("<a href=\"/wiki:stub\">stub</a>");
-		Renderer.Write(". You can improve ");
+		// One translated sentence with three placeholders, so each language can order them as it needs.
+		string StubLink = $"<a href=\"/wiki:stub\">{WebUtility.HtmlEncode(SharedResource.Text("stub"))}</a>";
+		string SiteText = !string.IsNullOrEmpty(SiteName)
+			? $"<strong>{WebUtility.HtmlEncode(SiteName)}</strong>"
+			: WebUtility.HtmlEncode(SharedResource.Text("this wiki"));
+		string ImproveText = WebUtility.HtmlEncode(SharedResource.Text("adding missing information"));
+		string ImproveLink = !string.IsNullOrEmpty(EditUrl)
+			? $"<a href=\"{EscapeUrl(EditUrl)}\">{ImproveText}</a>"
+			: ImproveText;
 
-		if (!string.IsNullOrEmpty(SiteName))
-		{
-			Renderer.Write("<strong>");
-			Renderer.WriteEscape(SiteName);
-			Renderer.Write("</strong>");
-		}
-		else
-		{
-			Renderer.Write("this wiki");
-		}
-
-		Renderer.Write(" by ");
-
-		if (!string.IsNullOrEmpty(EditUrl))
-		{
-			Renderer.Write("<a href=\"");
-			Renderer.WriteEscapeUrl(EditUrl);
-			Renderer.Write("\">");
-		}
-
-		Renderer.Write("adding missing information");
-
-		if (!string.IsNullOrEmpty(EditUrl))
-			Renderer.Write("</a>");
-
-		Renderer.Write(".</p>");
+		Renderer.Write(SharedResource.FormatHtml("This article is a {0}. You can improve {1} by {2}.", StubLink, SiteText, ImproveLink));
+		Renderer.Write("</p>");
 		Renderer.WriteLine("</div>");
+	}
+
+	/// <summary>
+	/// Escapes a URL for an <c>href</c> exactly as <see cref="HtmlRenderer.WriteEscapeUrl(string?)"/> does, so the link can be
+	/// built as a string and placed into the translated sentence.
+	/// </summary>
+	/// <param name="Url">The edit URL.</param>
+	/// <returns>The escaped URL.</returns>
+	private static string EscapeUrl(string Url)
+	{
+		using StringWriter Writer = new();
+		new HtmlRenderer(Writer).WriteEscapeUrl(Url);
+		return Writer.ToString();
 	}
 }

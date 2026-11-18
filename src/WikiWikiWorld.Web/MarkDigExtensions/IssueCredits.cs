@@ -5,6 +5,7 @@ using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using System.Text;
+using System.Net;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
 
@@ -110,7 +111,7 @@ public sealed class IssueCreditsRenderer(MarkdownPipeline NamePipeline) : HtmlOb
 		}
 
 		Renderer.WriteLine("<aside class=\"issue-credits\">");
-		Renderer.WriteLine("<h2>Credits</h2>");
+		Renderer.WriteLine($"<h2>{WebUtility.HtmlEncode(SharedResource.Text("Credits"))}</h2>");
 		foreach (IssueCreditGroup Group in Groups)
 		{
 			Renderer.Write(Group.Featured

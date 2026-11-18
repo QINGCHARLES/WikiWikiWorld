@@ -205,7 +205,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 
 		Renderer.Write("<div class=\"citations\">");
 		Renderer.Write("<hr />");
-		Renderer.Write("<h2>Citations</h2>");
+		Renderer.Write("<h2>").WriteEscape(SharedResource.Text("Citations")).Write("</h2>");
 		Renderer.Write("<ol class=\"citation-list\">");
 
 		foreach (Citation Citation in Block.Citations.Values.OrderBy(c => c.Number))
@@ -217,7 +217,7 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 			if (Citation.ReferencedBy.Count > 0)
 			{
 				Renderer.Write("<div class=\"citation-references\">");
-				Renderer.Write("Referenced by: ");
+				Renderer.WriteEscape(SharedResource.Text("Referenced by:")).Write(" ");
 
 				for (int i = 0; i < Citation.ReferencedBy.Count; i++)
 				{

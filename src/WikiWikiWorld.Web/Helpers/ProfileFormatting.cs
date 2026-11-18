@@ -45,11 +45,7 @@ public static class ProfileFormatting
 	/// </summary>
 	/// <param name="When">The past instant.</param>
 	/// <param name="Now">The current instant.</param>
-	/// <returns>A lower-case relative phrase.</returns>
-	public static string ToRelativeTime(DateTimeOffset When, DateTimeOffset Now)
-	{
-		const string Prefix = "Updated ";
-		string Text = TimeAgo.GetDetailedTimeAgoString(Now, When > Now ? Now : When);
-		return Text.StartsWith(Prefix, StringComparison.Ordinal) ? Text[Prefix.Length..] : Text;
-	}
+	/// <returns>A relative phrase in the current UI language; English is lower case.</returns>
+	public static string ToRelativeTime(DateTimeOffset When, DateTimeOffset Now) =>
+		TimeAgo.GetRelativeTime(Now, When > Now ? Now : When);
 }

@@ -284,7 +284,7 @@ public sealed class CoverGridExtension : IMarkdownExtension
 			{
 				if (!ArticleLookup.TryGetValue(UrlSlug, out (string Title, string Text) Article))
 				{
-					Block.CachedCoverImages.Add(($"/sitefiles/{SiteId}/cover-missing.png", "Missing Article", UrlSlug));
+					Block.CachedCoverImages.Add(($"/sitefiles/{SiteId}/cover-missing.png", SharedResource.Text("Missing Article"), UrlSlug));
 					continue;
 				}
 

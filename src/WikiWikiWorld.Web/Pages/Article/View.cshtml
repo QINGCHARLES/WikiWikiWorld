@@ -3,16 +3,16 @@
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @{
 	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
-	ViewData["Title"] = !string.IsNullOrWhiteSpace(Model.PlainTextTitle) ? Model.PlainTextTitle : "Article Not Found";
+	ViewData["Title"] = !string.IsNullOrWhiteSpace(Model.PlainTextTitle) ? Model.PlainTextTitle : L["Article Not Found"];
 }
 @functions {
 	static string FormatFileSize(long SizeBytes)
 	{
 		return SizeBytes switch
 		{
-			>= 1_048_576 => $"{SizeBytes / 1_048_576.0:F1} MB",
-			>= 1_024 => $"{SizeBytes / 1_024.0:F1} KB",
-			_ => $"{SizeBytes} bytes"
+			>= 1_048_576 => SharedResource.Format("{0} MB", (SizeBytes / 1_048_576.0).ToString("F1", CultureInfo.CurrentCulture)),
+			>= 1_024 => SharedResource.Format("{0} KB", (SizeBytes / 1_024.0).ToString("F1", CultureInfo.CurrentCulture)),
+			_ => SharedResource.Format("{0} bytes", SizeBytes)
 		};
 	}
 }
@@ -38,57 +38,53 @@
 @if (!string.IsNullOrWhiteSpace(Model.RedirectedFromTitle))
 {
 	<div class="revision-notice redirect-notice" role="status">
-		Redirected from <strong>@Model.RedirectedFromTitle</strong>.
+		@HL["Redirected from {0}.", UiFormat.Strong(Model.RedirectedFromTitle)]
 	</div>
 }
 
 @if (Model.InfoboxWarnings.Count > 0)
 {
 	<div class="revision-notice infobox-warnings" role="status">
-		<strong>Saved, but the infobox needs attention.</strong> Only you see this message.
+		<strong>@L["Saved, but the infobox needs attention."]</strong> @L["Only you see this message."]
 		<ul>
 			@foreach (string Warning in Model.InfoboxWarnings)
 			{
 				<li>@Warning</li>
 			}
 		</ul>
-		<a href="@($"{Model.CurrentArticlePath}/edit")" rel="nofollow">Edit the article</a>
+		<a href="@($"{Model.CurrentArticlePath}/edit")" rel="nofollow">@L["Edit the article"]</a>
 	</div>
 }
 
 @if (Model.IsViewingCurrentRevision && Model.Revision is not null)
 {
 	<div class="revision-notice">
-		<strong>You are viewing the current revision of this article.</strong><br>
-		To see the canonical URL, visit:
-		<a href="@Model.CurrentArticlePath">Go to Latest Version</a>
+		<strong>@L["You are viewing the current revision of this article."]</strong><br>
+		@L["To see the canonical URL, visit:"]
+		<a href="@Model.CurrentArticlePath">@L["Go to Latest Version"]</a>
 	</div>
 }
 
 @if (Model.IsPriorRevision && Model.DisplayedRevision is not null && Model.CurrentRevision is not null)
 {
 	<div class="revision-notice">
-		<strong>You're viewing a prior revision.</strong><br>
-		This revision was published on <strong>@Model.DisplayedRevision.DateCreated.ToString("dd MMMM yyyy HH:mm")</strong>.<br>
-		The current version was published on <strong>@Model.CurrentRevision.DateCreated.ToString("dd MMMM yyyy HH:mm")</strong>.
-		<a href="@Model.CurrentArticlePath">View Current</a>
+		<strong>@L["You're viewing a prior revision."]</strong><br>
+		@HL["This revision was published on {0}.", UiFormat.Strong(UiFormat.Date(Model.DisplayedRevision.DateCreated, "dd MMMM yyyy HH:mm"))]<br>
+		@HL["The current version was published on {0}.", UiFormat.Strong(UiFormat.Date(Model.CurrentRevision.DateCreated, "dd MMMM yyyy HH:mm"))]
+		<a href="@Model.CurrentArticlePath">@L["View Current"]</a>
 
 		@if (Model.HasTitleChanged)
 		{
 			<p>
-				<strong>Note:</strong> The title of this article has changed from
-				"<strong>@Model.DisplayedRevision.Title</strong>" to
-				"<strong>@Model.CurrentRevision.Title</strong>".
+				<strong>@L["Note:"]</strong> @HL["The title of this article has changed from \"{0}\" to \"{1}\".", UiFormat.Strong(Model.DisplayedRevision.Title), UiFormat.Strong(Model.CurrentRevision.Title)]
 			</p>
 		}
 
 		@if (Model.HasUrlSlugChanged)
 		{
 			<p>
-				<strong>Note:</strong> The URL of this article has changed from
-				"<strong>@Model.DisplayedCanonicalUrlSlug</strong>" to
-				"<strong>@Model.CurrentCanonicalUrlSlug</strong>".<br>
-				<a href="@Model.CurrentArticlePath">Go to New URL</a>
+				<strong>@L["Note:"]</strong> @HL["The URL of this article has changed from \"{0}\" to \"{1}\".", UiFormat.Strong(Model.DisplayedCanonicalUrlSlug), UiFormat.Strong(Model.CurrentCanonicalUrlSlug)]<br>
+				<a href="@Model.CurrentArticlePath">@L["Go to New URL"]</a>
 			</p>
 		}
 	</div>
@@ -101,11 +97,11 @@ else if(Model.DisplayedRevision is not null)
 			ArticleAuthor PrimaryAuthor = Model.RecentAuthors[0];
 			<div class="editor-authors">
 				<dl>
-					<dt>@(Model.RecentAuthors.Count == 1 ? "Created by" : "Improved by")</dt>
+					<dt>@(Model.RecentAuthors.Count == 1 ? L["Created by"] : L["Improved by"])</dt>
 					<dd>
 						<a href="/@@@PrimaryAuthor.UserName">@PrimaryAuthor.UserName</a>@if (Model.RecentAuthors.Count > 1)
 						{
-							<span> &amp; others</span>
+							<span> @L["& others"]</span>
 						}
 					</dd>
 				</dl>
@@ -135,21 +131,18 @@ else if(Model.DisplayedRevision is not null)
 			</div>
 		}
 		@{
-			string RawTimeAgo = WikiWikiWorld.Web.Helpers.TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, Model.DisplayedRevision.DateCreated);
-			string RelativeTimeText = RawTimeAgo.StartsWith("Updated ", StringComparison.OrdinalIgnoreCase)
-				? RawTimeAgo["Updated ".Length..]
-				: RawTimeAgo;
+			string RelativeTimeText = WikiWikiWorld.Web.Helpers.TimeAgo.GetRelativeTime(DateTimeOffset.UtcNow, Model.DisplayedRevision.DateCreated);
 			if (RelativeTimeText.Length > 0)
 			{
 				RelativeTimeText = char.ToUpperInvariant(RelativeTimeText[0]) + RelativeTimeText[1..];
 			}
 		}
 		<dl>
-			<dt>Last Updated</dt>
+			<dt>@L["Last Updated"]</dt>
 			<dd><time datetime="@Model.DisplayedRevision.DateCreated.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@RelativeTimeText</time></dd>
 		</dl>
 	</div>
-	<div class="article-actions" role="toolbar" aria-label="Article actions">
+	<div class="article-actions" role="toolbar" aria-label="@L["Article actions"]">
 		<partial name="_Bookmark" model="Model.BookmarkControl" />
 		<a href="@Model.TalkPath" class="article-action-talk" rel="nofollow">
 			<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
@@ -162,10 +155,10 @@ else if(Model.DisplayedRevision is not null)
 				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 					<use href="@IconSpriteUrl#Edit"></use>
 				</svg>
-				<span>Edit<span class="action-label-extra"> article</span></span>
+				<span>@L["Edit"]<span class="action-label-extra">@L["EditArticle.Suffix"]</span></span>
 			</a>
 			<details name="site-menu" class="dropdown-menu">
-				<summary aria-label="More article actions">
+				<summary aria-label="@L["More article actions"]">
 					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 						<use href="@IconSpriteUrl#More"></use>
 					</svg>
@@ -177,45 +170,45 @@ else if(Model.DisplayedRevision is not null)
 							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 								<use href="@IconSpriteUrl#Upload"></use>
 							</svg>
-							<span>Upload new file version</span>
+							<span>@L["Upload new file version"]</span>
 						</a>
 					}
 					<a href="@($"{Model.DisplayedArticlePath}/history")" rel="nofollow">
 						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 							<use href="@IconSpriteUrl#History"></use>
 						</svg>
-						<span>View history</span>
+						<span>@L["View history"]</span>
 					</a>
 					<a href="#">
 						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 							<use href="@IconSpriteUrl#Watch"></use>
 						</svg>
-						<span>Watch article</span>
+						<span>@L["Watch article"]</span>
 					</a>
 					<a href="@($"{Model.DisplayedArticlePath}/links")" rel="nofollow">
 						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 							<use href="@IconSpriteUrl#Links"></use>
 						</svg>
-						<span>What links here</span>
+						<span>@L["What links here"]</span>
 					</a>
 					<a href="@($"{Model.DisplayedArticlePath}/languages")" rel="nofollow">
 						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 							<use href="@IconSpriteUrl#Languages"></use>
 						</svg>
-						<span>Other languages</span>
+						<span>@L["Other languages"]</span>
 					</a>
 					<a href="#">
 						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 							<use href="@IconSpriteUrl#Report"></use>
 						</svg>
-						<span>Report article</span>
+						<span>@L["Report article"]</span>
 					</a>
 					<hr />
 					<a href="#" class="menu-item-danger">
 						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 							<use href="@IconSpriteUrl#Delete"></use>
 						</svg>
-						<span>Delete article</span>
+						<span>@L["Delete article"]</span>
 					</a>
 				</div>
 			</details>
@@ -227,9 +220,9 @@ else if(Model.DisplayedRevision is not null)
 {
 	<aside class="publication-upload-cta">
 		<p>
-			Have a copy of this publication you can legally share?
+			@L["Have a copy of this publication you can legally share?"]
 			<a href="/wiki:upload?ArticleSlug=@(Model.DisplayedRevision.UrlSlug)" rel="nofollow">
-				Submit it now
+				@L["Submit it now"]
 			</a>
 		</p>
 	</aside>
@@ -265,35 +258,35 @@ else if(Model.DisplayedRevision is not null)
 				</figure>
 				<dl>
 					<div>
-						<dt>Filename</dt>
+						<dt>@L["Filename"]</dt>
 						<dd>@Model.FileOriginalFilename</dd>
 					</div>
 					<div>
-						<dt>Type</dt>
+						<dt>@L["Type"]</dt>
 						<dd>@Model.FileMimeType</dd>
 					</div>
 					@if (!string.IsNullOrWhiteSpace(Model.FileCodec))
 					{
 						<div>
-							<dt>Codec</dt>
+							<dt>@L["Codec"]</dt>
 							<dd>@Model.FileCodec</dd>
 						</div>
 					}
 					@if (Model.FileWidthPx > 0 && Model.FileHeightPx > 0)
 					{
 						<div>
-							<dt>Dimensions</dt>
-							<dd>@Model.FileWidthPx &times; @Model.FileHeightPx px</dd>
+							<dt>@L["Dimensions"]</dt>
+							<dd>@L["{0} × {1} px", Model.FileWidthPx, Model.FileHeightPx]</dd>
 						</div>
 					}
 				<div>
-					<dt>Size</dt>
+					<dt>@L["Size"]</dt>
 					<dd>@FormatFileSize(Model.FileSizeBytes)</dd>
 				</div>
 				@if (!string.IsNullOrWhiteSpace(Model.FileSourceText))
 				{
 					<div class="file-source">
-						<dt>Source</dt>
+						<dt>@L["Source"]</dt>
 						<dd>
 							@if (!string.IsNullOrWhiteSpace(Model.FileSourceUrl) && Model.FileSourceText == Model.FileSourceUrl)
 							{
@@ -322,7 +315,7 @@ else if(Model.DisplayedRevision is not null)
 						<polyline points="15 3 21 3 21 9"></polyline>
 						<line x1="10" y1="14" x2="21" y2="3"></line>
 					</svg>
-					<span>View Full Resolution</span>
+					<span>@L["View Full Resolution"]</span>
 				</a>
 				@if (User.Identity?.IsAuthenticated == true)
 				{
@@ -332,7 +325,7 @@ else if(Model.DisplayedRevision is not null)
 							<polyline points="17 8 12 3 7 8"></polyline>
 							<line x1="12" y1="3" x2="12" y2="15"></line>
 						</svg>
-						<span>Upload New Version</span>
+						<span>@L["Upload New Version"]</span>
 					</a>
 				}
 			</footer>
@@ -343,11 +336,9 @@ else if(Model.DisplayedRevision is not null)
 				<section id="file-history-panel">
 					<header>
 						<div>
-							<h2>File History</h2>
+							<h2>@L["File History"]</h2>
 							<p>
-								@(Model.FileRevisionHistory.Count == 1
-									? "1 version recorded for this file."
-									: $"{Model.FileRevisionHistory.Count} versions recorded for this file.")
+								@SharedResource.Plural("FileHistory.VersionsRecorded", Model.FileRevisionHistory.Count)
 							</p>
 						</div>
 						@if (User.Identity?.IsAuthenticated == true)
@@ -358,7 +349,7 @@ else if(Model.DisplayedRevision is not null)
 									<polyline points="17 8 12 3 7 8"></polyline>
 									<line x1="12" y1="3" x2="12" y2="15"></line>
 								</svg>
-								<span>Upload a new version of this file</span>
+								<span>@L["Upload a new version of this file"]</span>
 							</a>
 						}
 					</header>
@@ -367,45 +358,45 @@ else if(Model.DisplayedRevision is not null)
 						@foreach (FileRevisionHistoryItem Rev in Model.FileRevisionHistory)
 						{
 							<article class="file-history-item @(Rev.IsCurrent ? "is-current" : "")">
-								<a href="@Rev.FileImageUrl" target="_blank" rel="noopener" title="View full resolution for revision @Rev.Id">
+								<a href="@Rev.FileImageUrl" target="_blank" rel="noopener" title="@L["View full resolution for revision {0}", Rev.Id]">
 									<img src="@Rev.FileImageUrl"
-										 alt="@Model.PlainTextTitle (Revision @Rev.Id)"
+										 alt="@L["{0} (Revision {1})", Model.PlainTextTitle ?? string.Empty, Rev.Id]"
 
 										 loading="lazy" />
 								</a>
 								<div>
 									<header>
 										<span class="file-history-badge">
-											@(Rev.IsCurrent ? "Current version" : "Previous version")
+											@(Rev.IsCurrent ? L["Current version"] : L["Previous version"])
 										</span>
-										<time datetime="@Rev.DateCreated.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@Rev.DateCreated.ToString("dd MMMM yyyy, HH:mm")</time>
+										<time datetime="@Rev.DateCreated.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@UiFormat.Date(Rev.DateCreated, "dd MMMM yyyy, HH:mm")</time>
 										@if (!string.IsNullOrWhiteSpace(Rev.CreatedByUserName))
 										{
 											<span class="file-history-author">
-												by <a href="/@@@Rev.CreatedByUserName">@Rev.CreatedByUserName</a>
+												@HL["by {0}", UiFormat.Link($"/@{Rev.CreatedByUserName}", Rev.CreatedByUserName)]
 											</span>
 										}
 									</header>
 
 									<dl>
 										<div>
-											<dt>Dimensions</dt>
+											<dt>@L["Dimensions"]</dt>
 											<dd>
 												@(Rev.ImageWidthPixels.HasValue && Rev.ImageHeightPixels.HasValue
-													? $"{Rev.ImageWidthPixels.Value} \u00d7 {Rev.ImageHeightPixels.Value} px"
-													: "Unknown")
+													? L["{0} × {1} px", Rev.ImageWidthPixels.Value, Rev.ImageHeightPixels.Value].Value
+													: L["Unknown"].Value)
 											</dd>
 										</div>
 										<div>
-											<dt>Codec / Format</dt>
+											<dt>@L["Codec / Format"]</dt>
 											<dd>@Rev.Codec (@Rev.MimeType)</dd>
 										</div>
 										<div>
-											<dt>File Size</dt>
+											<dt>@L["File Size"]</dt>
 											<dd>@FormatFileSize(Rev.FileSizeBytes)</dd>
 										</div>
 										<div>
-											<dt>Filename</dt>
+											<dt>@L["Filename"]</dt>
 											<dd>@Rev.Filename</dd>
 										</div>
 									</dl>
@@ -413,7 +404,7 @@ else if(Model.DisplayedRevision is not null)
 									@if (!string.IsNullOrWhiteSpace(Rev.RevisionReason))
 									{
 										<div class="file-history-comment">
-											<strong>Comment:</strong>
+											<strong>@L["Comment:"]</strong>
 											@Rev.RevisionReason
 										</div>
 									}
@@ -431,7 +422,7 @@ else if(Model.DisplayedRevision is not null)
 		{
 			<p>
 				<small>
-					Published on: @Model.DisplayedRevision?.DateCreated.ToString("dd MMMM yyyy HH:mm")
+					@L["Published on: {0}", Model.DisplayedRevision is null ? string.Empty : UiFormat.Date(Model.DisplayedRevision.DateCreated, "dd MMMM yyyy HH:mm")]
 				</small>
 			</p>
 		}
@@ -439,6 +430,6 @@ else if(Model.DisplayedRevision is not null)
 	}
 	else
 	{
-		<p>Article not found.</p>
+		<p>@L["Article not found."]</p>
 	}
 </article>

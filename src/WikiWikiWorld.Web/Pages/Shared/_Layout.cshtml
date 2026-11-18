@@ -1,4 +1,4 @@
-@model BasePageModel
+﻿@model BasePageModel
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
 @using Microsoft.AspNetCore.Identity
 @using WikiWikiWorld.Data.Models
@@ -74,10 +74,10 @@
 				<img class="logo-svg" src="/sitefiles/@(Model.SiteId > 0 ? Model.SiteId : 1)/logo.svg" alt="@(!string.IsNullOrWhiteSpace(Model.SiteName) ? Model.SiteName : "Magazedia")" />
 			</a>
 			<form class="search-form" action="/Search" method="get" role="search">
-				<button class="search-submit" type="submit" aria-label="Search articles">
+				<button class="search-submit" type="submit" aria-label="@L["Search articles"]">
 					<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16.5 16.5 4 4" /></svg>
 				</button>
-				<input id="header-search-input" type="search" name="q" aria-label="Search articles" enterkeyhint="search" autocomplete="off"
+				<input id="header-search-input" type="search" name="q" aria-label="@L["Search articles"]" enterkeyhint="search" autocomplete="off"
 					data-on:input__debounce.180ms="el.value.trim().length >= 2 &amp;&amp; @@get('/Search?handler=suggestions&amp;q=' + encodeURIComponent(el.value.trim()), {filterSignals: {include: /^$/}, retry: 'never', retryMaxCount: 0})" />
 				<div id="search-suggestions" class="search-suggestions" data-ignore="true" hidden></div>
 				<span id="search-suggestions-status" class="visually-hidden" role="status"></span>
@@ -101,7 +101,7 @@
 						? char.ToUpperInvariant(UserName[0]).ToString()
 						: "?";
 					<details name="site-menu" class="dropdown-menu account-menu">
-						<summary class="account-menu-trigger" aria-label="Account menu for @UserName">
+						<summary class="account-menu-trigger" aria-label="@L["Account menu for {0}", UserName]">
 							<span class="avatar header-avatar" aria-hidden="true">
 								@if (!string.IsNullOrWhiteSpace(AvatarPath))
 								{
@@ -125,23 +125,23 @@
 									<span class="avatar-initials">@AvatarInitial</span>
 								}
 							</span>
-								<span class="account-menu-profile">View My Profile<small>@UserName</small></span>
+								<span class="account-menu-profile">@L["View My Profile"]<small>@UserName</small></span>
 							</a>
-							<a href="@($"/@{UserName}/contributions")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Contributions"></use></svg><span>My Contributions</span></a>
-							<a href="@($"/@{UserName}/bookmarks")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Bookmarks"></use></svg><span>My Bookmarks</span></a>
-							<a href="@($"/@{UserName}/messages")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Messages"></use></svg><span>Messages</span></a>
-							<a href="@($"/@{UserName}/notifications")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Notifications"></use></svg><span>Notifications</span></a>
+							<a href="@($"/@{UserName}/contributions")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Contributions"></use></svg><span>@L["My Contributions"]</span></a>
+							<a href="@($"/@{UserName}/bookmarks")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Bookmarks"></use></svg><span>@L["My Bookmarks"]</span></a>
+							<a href="@($"/@{UserName}/messages")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Messages"></use></svg><span>@L["Messages"]</span></a>
+							<a href="@($"/@{UserName}/notifications")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Notifications"></use></svg><span>@L["Notifications"]</span></a>
 							<hr />
-							<a href="@($"/@{Uri.EscapeDataString(UserName)}/settings")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Settings"></use></svg><span>Settings</span></a>
+							<a href="@($"/@{Uri.EscapeDataString(UserName)}/settings")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Settings"></use></svg><span>@L["Settings"]</span></a>
 							<hr />
-							<a href="/Account/Logout"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#LogOut"></use></svg><span>Log Out</span></a>
+							<a href="/Account/Logout"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#LogOut"></use></svg><span>@L["Log Out"]</span></a>
 						</div>
 					</details>
 				}
 				else
 				{
-					<a class="button" href="/Account/Login" data-button-variant="naked">Log In</a>
-					<a class="button" href="/Account/Register">Contribute</a>
+					<a class="button" href="/Account/Login" data-button-variant="naked">@L["Log In"]</a>
+					<a class="button" href="/Account/Register">@L["Contribute"]</a>
 				}
 @* 				<partial name="_LoginPartial" /> *@
 			</div>
@@ -154,7 +154,7 @@
 		<nav>
 			<ul class="footer-columns">
 				<li class="footer-column">
-					Magazedia is the world's largest encyclopedia of magazines, fanzines, journals, mooks and newsletters<br />
+					@L["Magazedia is the world's largest encyclopedia of magazines, fanzines, journals, mooks and newsletters"]<br />
 					@*https://github.com/tabler/tabler-icons*@
 
 					<a href="https://x.com/magazedia">
@@ -228,11 +228,11 @@
 				</li>
 				<li class="footer-column">
 					<ul>
-						<li><a href="/dmca:">Copyright & DMCA </a></li>
-						<li><a href="/terms:">Terms of Use</a></li>
-						<li><a href="/privacy-policy:">Privacy Policy</a></li>
-						<li><a href="/info:sitemap">Sitemap</a></li>
-						<li><a href="@(User?.Identity is { IsAuthenticated: true, Name: { } SettingsUserName } ? $"/@{Uri.EscapeDataString(SettingsUserName)}/settings" : "/settings/theme:")">Theme</a></li>
+						<li><a href="/dmca:">@L["Copyright & DMCA"] </a></li>
+						<li><a href="/terms:">@L["Terms of Use"]</a></li>
+						<li><a href="/privacy-policy:">@L["Privacy Policy"]</a></li>
+						<li><a href="/info:sitemap">@L["Sitemap"]</a></li>
+						<li><a href="@(User?.Identity is { IsAuthenticated: true, Name: { } SettingsUserName } ? $"/@{Uri.EscapeDataString(SettingsUserName)}/settings" : "/settings/theme:")">@L["Theme"]</a></li>
 					</ul>
 				</li>
 				<li class="footer-column">
@@ -248,7 +248,7 @@
 						@: <a href="https://xx-test.@Helpers.GetDomainAndPortFromHostname(Hostname.ToString())/">xx</a> / <a href="/DbHelper">DbHelper</a>
 					}
  *@
-					Content is available under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> unless otherwise noted.<br />
+					@HL["Content is available under {0} unless otherwise noted.", new Microsoft.AspNetCore.Html.HtmlString("<a href=\"https://creativecommons.org/licenses/by-sa/4.0/\">CC BY-SA 4.0</a>")]<br />
 					&copy; 2021-@DateTime.UtcNow.Year Magazedia
 				</li>
 			</ul>

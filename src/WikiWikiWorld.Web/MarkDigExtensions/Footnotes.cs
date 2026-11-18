@@ -142,7 +142,7 @@ public sealed class FootnotesBlockRenderer : HtmlObjectRenderer<FootnotesBlock>
 		{
 			Renderer.Write("<div class=\"footnotes\">");
 			Renderer.Write("<hr />");
-			Renderer.Write("<h2>Footnotes</h2>");
+			Renderer.Write("<h2>").WriteEscape(SharedResource.Text("Footnotes")).Write("</h2>");
 			Renderer.Write("<ol class=\"footnote-list\">");
 			Renderer.WriteChildren(Block);
 			Renderer.Write("</ol>");

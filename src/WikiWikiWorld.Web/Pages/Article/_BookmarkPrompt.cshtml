@@ -7,13 +7,13 @@
 	{
 		@if (string.IsNullOrWhiteSpace(Saved.Notes))
 		{
-			<span>Saved to @Saved.Name.</span>
-			<button type="button" data-bookmark-note-for="@Saved.BookmarkListId">Add a note</button>
+			<span>@L["Saved to {0}.", Saved.Name]</span>
+			<button type="button" data-bookmark-note-for="@Saved.BookmarkListId">@L["Add a note"]</button>
 		}
 		else
 		{
-			<span>Saved to @Saved.Name. Your earlier note is back.</span>
-			<button type="button" data-bookmark-note-for="@Saved.BookmarkListId">Edit note</button>
+			<span>@L["Saved to {0}. Your earlier note is back.", Saved.Name]</span>
+			<button type="button" data-bookmark-note-for="@Saved.BookmarkListId">@L["Edit note"]</button>
 		}
 	}
 </div>

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Bookmark.ListsSavedInOther|one" xml:space="preserve"><value>Bookmark lists, saved in {0} other list</value></data>
+  <data name="Bookmark.ListsSavedInOther|other" xml:space="preserve"><value>Bookmark lists, saved in {0} other lists</value></data>
+  <data name="EditArticle.Suffix" xml:space="preserve"><value> article</value></data>
+  <data name="FileHistory.VersionsRecorded|one" xml:space="preserve"><value>{0} version recorded for this file.</value></data>
+  <data name="FileHistory.VersionsRecorded|other" xml:space="preserve"><value>{0} versions recorded for this file.</value></data>
+  <data name="NoteVisibility.PrivateSuffix" xml:space="preserve"><value> list. Only you can see this note.</value></data>
+  <data name="NoteVisibility.PublicSuffix" xml:space="preserve"><value> list. Anyone can read this note.</value></data>
+  <data name="Talk.Threads|one" xml:space="preserve"><value>{0} Thread</value></data>
+  <data name="Talk.Threads|other" xml:space="preserve"><value>{0} Threads</value></data>
+  <data name="TimeAgo.Day|one" xml:space="preserve"><value>{0} day</value></data>
+  <data name="TimeAgo.Day|other" xml:space="preserve"><value>{0} days</value></data>
+  <data name="TimeAgo.Hour|one" xml:space="preserve"><value>{0} hour</value></data>
+  <data name="TimeAgo.Hour|other" xml:space="preserve"><value>{0} hours</value></data>
+  <data name="TimeAgo.Minute|one" xml:space="preserve"><value>{0} minute</value></data>
+  <data name="TimeAgo.Minute|other" xml:space="preserve"><value>{0} minutes</value></data>
+  <data name="TimeAgo.Month|one" xml:space="preserve"><value>{0} month</value></data>
+  <data name="TimeAgo.Month|other" xml:space="preserve"><value>{0} months</value></data>
+  <data name="TimeAgo.Second|one" xml:space="preserve"><value>{0} second</value></data>
+  <data name="TimeAgo.Second|other" xml:space="preserve"><value>{0} seconds</value></data>
+  <data name="TimeAgo.Week|one" xml:space="preserve"><value>{0} week</value></data>
+  <data name="TimeAgo.Week|other" xml:space="preserve"><value>{0} weeks</value></data>
+  <data name="TimeAgo.Year|one" xml:space="preserve"><value>{0} year</value></data>
+  <data name="TimeAgo.Year|other" xml:space="preserve"><value>{0} years</value></data>
+</root>

@@ -161,14 +161,14 @@ public class ImageInlineRenderer : HtmlObjectRenderer<ImageInline>
         if (Article is null)
         {
             Renderer.Write($"<!-- Article not found for UrlSlug: {InlineElement.UrlSlug}  -->");
-            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"Missing Image\" />");
+            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"{WebUtility.HtmlEncode(SharedResource.Text("Missing Image"))}\" />");
             return;
         }
 
         if (Article.CanonicalFileId is null)
         {
             Renderer.Write($"<!-- Article has no CanonicalFileId: {InlineElement.UrlSlug} -->");
-            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"Missing Image\" />");
+            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"{WebUtility.HtmlEncode(SharedResource.Text("Missing Image"))}\" />");
             return;
         }
 
@@ -177,7 +177,7 @@ public class ImageInlineRenderer : HtmlObjectRenderer<ImageInline>
         if (File is null)
         {
             Renderer.Write($"<!-- File not found for CanonicalFileId: {Article.CanonicalFileId} -->");
-            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"Missing Image\" />");
+            Renderer.Write($"<img src=\"/sitefiles/{InlineElement.SiteId}/missing-image.png\" alt=\"{WebUtility.HtmlEncode(SharedResource.Text("Missing Image"))}\" />");
             return;
         }
 
