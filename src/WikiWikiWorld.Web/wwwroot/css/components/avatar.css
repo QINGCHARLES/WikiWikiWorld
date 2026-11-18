@@ -38,7 +38,7 @@ a.avatar:hover {
     filter: grayscale(100%);
 
     & + .avatar {
-        margin-left: calc(var(--avatar-size) * -0.32);
+        margin-inline-start: calc(var(--avatar-size) * -0.32);
     }
 }
 
@@ -90,7 +90,7 @@ a.avatar:hover {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    text-align: right;
+    text-align: end;
     gap: 0.18em;
     line-height: 1.2;
 }
