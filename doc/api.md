@@ -96,7 +96,7 @@ Base Path: `/api/article`
   - `Source` (optional string): Used only if `Type` is `"File"`.
   - `File` (required file): The image file (required if `Type` is `"File"`, ignored otherwise).
 - **Responses**:
-  - `200 OK`: Article created successfully.
+  - `200 OK`: `{"Message": "Article created successfully.", "Warnings": []}`. `Warnings` lists problems in the article's infoboxes, such as a key the site's infobox schema does not define; they never stop the save. See [MARKDIG_EXTENSIONS.md](../MARKDIG_EXTENSIONS.md#warnings).
   - `400 Bad Request`: Missing slug, invalid parameters, missing file for File type.
   - `401 Unauthorized`: Missing or invalid token.
   - `409 Conflict`: An article with the slug already exists.
@@ -120,7 +120,7 @@ Base Path: `/api/article`
   ```
 - **Renaming**: Set `NewUrlSlug` to move the article to a new address. The new revision keeps the same `CanonicalArticleId`, so history, discussions and bookmarks follow it; earlier revisions keep the old slug. Omit it or leave it empty to keep the current slug. A `file:` prefix is ignored, as for lookups. Afterwards the old address answers with a temporary `302` redirect to the new one, unless another current article takes the old slug, which then wins. (It is not a `301`, because browsers cache those and slugs can be reused.) Links to the old slug in other articles' text, including `file:` references and `{{CoverGrid}}` lists, are not rewritten; `file:` and CoverGrid lookups do not follow the redirect.
 - **Responses**:
-  - `200 OK`: Article revision updated successfully.
+  - `200 OK`: `{"Message": "Article revision updated successfully.", "Warnings": []}`, with `Warnings` as for create.
   - `400 Bad Request`: Missing slug or invalid parameters, or `NewUrlSlug` is a reserved system path.
   - `401 Unauthorized`: Missing or invalid token.
   - `404 Not Found`: Article does not exist.
