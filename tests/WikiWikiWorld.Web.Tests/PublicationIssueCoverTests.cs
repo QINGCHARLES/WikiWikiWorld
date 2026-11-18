@@ -12,18 +12,19 @@ namespace WikiWikiWorld.Web.Tests;
 public sealed class PublicationIssueCoverTests
 {
 	/// <summary>
-	/// Ensures the infobox renders publication facts only, with no cover carousel or image chrome.
+	/// Ensures the infobox renders publication facts only, with no cover carousel or image chrome. No schema is
+	/// attached here, so labels are the raw keys in written order.
 	/// </summary>
 	[Fact]
 	public void InfoboxRendersFactsOnly()
 	{
 		MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
-			.Use(new PublicationIssueInfoboxExtension()).Build();
+			.Use(new InfoboxExtension()).Build();
 		string Html = Markdown.ToHtml(
 			"{{PublicationIssueInfobox CoverDate=1993-01 |#| Editor=Alice |#| Editor=Bob}}",
 			Pipeline);
 
-		Assert.Contains("<dt>Cover Date</dt><dd>1993-01</dd>", Html);
+		Assert.Contains("<dt>CoverDate</dt><dd>1993-01</dd>", Html);
 		Assert.Contains("<dt>Editor</dt><dd>Alice</dd><dt>Editor</dt><dd>Bob</dd>", Html);
 		Assert.DoesNotContain("<img", Html);
 		Assert.DoesNotContain("carousel", Html);

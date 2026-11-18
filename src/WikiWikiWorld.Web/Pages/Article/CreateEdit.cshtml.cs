@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Web.Services;
+using WikiWikiWorld.Web.MarkdigExtensions;
+using Markdig;
+using Markdig.Syntax;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
@@ -21,13 +24,17 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="ArticleRevisionService">The article revision workflow service.</param>
 /// <param name="FileUploadStorageService">The file upload storage service.</param>
+/// <param name="MarkdownPipelineFactory">Parses saved text to check its infoboxes.</param>
+/// <param name="InfoboxSchemas">The site infobox schemas the checks compare against.</param>
 [Authorize]
 public sealed class CreateEditModel(
     WikiWikiWorldDbContext Context,
     UserManager<User> UserManager,
     SiteResolverService SiteResolverService,
     ArticleRevisionService ArticleRevisionService,
-    FileUploadStorageService FileUploadStorageService)
+    FileUploadStorageService FileUploadStorageService,
+    IMarkdownPipelineFactory MarkdownPipelineFactory,
+    InfoboxSchemaCatalog InfoboxSchemas)
     : BasePageModel(SiteResolverService)
 {
     private static readonly HashSet<string> AllowedImageExtensions = ImageValidationHelper.AllowedImageExtensions;
@@ -236,6 +243,24 @@ public sealed class CreateEditModel(
 	}
 
     /// <summary>
+    /// Redirects to the article just saved. When its infoboxes have problems against the site's schemas, they are
+    /// left in <see cref="Microsoft.AspNetCore.Mvc.RazorPages.PageModel.TempData"/> so the article page shows them,
+    /// once, to the editor who saved. Problems never block the save.
+    /// </summary>
+    /// <returns>A redirect to the saved article.</returns>
+    private RedirectResult RedirectToSavedArticle()
+    {
+        MarkdownDocument Document = Markdown.Parse(ArticleText, MarkdownPipelineFactory.GetPipeline());
+        IReadOnlyList<string> Problems = InfoboxExtension.FindProblems(Document, InfoboxSchemas, SiteId);
+        if (Problems.Count > 0)
+        {
+            TempData[ViewModel.InfoboxWarningsTempDataKey] = Problems.ToArray();
+            TempData[ViewModel.InfoboxWarningsSlugTempDataKey] = UrlSlug;
+        }
+        return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+    }
+
+    /// <summary>
     /// Handles the creation of a new article.
     /// </summary>
     /// <param name="CurrentUserId">The ID of the current user.</param>
@@ -385,7 +410,7 @@ public sealed class CreateEditModel(
                 }
             }
 
-            return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+            return RedirectToSavedArticle();
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {
@@ -427,7 +452,7 @@ public sealed class CreateEditModel(
                     CreatedByUserId: CurrentUserId);
 
                 await ArticleRevisionService.UpdateArticleAsync(Command, CancellationToken);
-                return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+                return RedirectToSavedArticle();
             }
             catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
             {
@@ -609,7 +634,7 @@ public sealed class CreateEditModel(
                 }
             }
 
-            return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
+            return RedirectToSavedArticle();
         }
         catch (InvalidOperationException Ex) when (Ex.Message.Contains("URL slug already exists"))
         {

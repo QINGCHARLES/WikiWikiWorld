@@ -26,6 +26,7 @@
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*FileRevisionStagingUploadId*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*PrivateMessaging*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="../../src/WikiWikiWorld.Data/SqliteScripts/*SitemapIndexes*.sql" Link="SqliteScripts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="../../src/WikiWikiWorld.Web/InfoboxSchemas/*.json" Link="InfoboxSchemas/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

@@ -64,7 +64,7 @@ public sealed class CategoryArticlesTests
 		{
 			Type = ArticleType.Category, Text = "{{CategoryArticles}}"
 		};
-		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())), Options.Create(new SiteConfiguration()));
+		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())), Options.Create(new SiteConfiguration()), TestInfoboxSchemas.Catalog);
 		string First = (await Renderer.RenderAsync(Category, 1, "en", "/edit", CancellationToken.None)).Html;
 		Assert.DoesNotContain("Excluded", First);
 		Assert.Contains("&lt;script&gt;", First);
@@ -90,7 +90,7 @@ public sealed class CategoryArticlesTests
 		await using SqliteConnection Connection = new("Data Source=:memory:");
 		await Connection.OpenAsync();
 		await using WikiWikiWorldDbContext Context = new(new DbContextOptionsBuilder<WikiWikiWorldDbContext>().UseSqlite(Connection).Options);
-		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())), Options.Create(new SiteConfiguration()));
+		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())), Options.Create(new SiteConfiguration()), TestInfoboxSchemas.Catalog);
 		Assert.Contains("available on category articles", (await Renderer.RenderAsync(CreateRevision("plain", "Plain") with { Text = "{{CategoryArticles}}" }, 1, "en", "/edit", CancellationToken.None)).Html);
 		Assert.Contains("Ordinary text", (await Renderer.RenderAsync(CreateRevision("category:plain", "Plain") with { Type = ArticleType.Category }, 1, "en", "/edit", CancellationToken.None)).Html);
 	}

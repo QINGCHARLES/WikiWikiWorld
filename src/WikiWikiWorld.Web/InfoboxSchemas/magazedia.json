@@ -1,0 +1,164 @@
+{
+	"SiteId": 1,
+	"Types": {
+		"Publication": {
+			"Description": "Facts about a whole publication: magazine, zine, journal, newsletter or mook. Covers the run as a whole; changes over time go in the history section.",
+			"Fields": [
+				{
+					"Key": "Publisher",
+					"Repeatable": true,
+					"Description": "Publisher or parent company. Repeat for successive publishers, with years: Petersen Publishing (1963–1996).",
+					"Labels": { "en": "Publisher", "ja": "出版社", "ar": "الناشر" }
+				},
+				{
+					"Key": "Founder",
+					"Repeatable": true,
+					"Description": "Person or company that founded the publication.",
+					"Labels": { "en": "Founder", "ja": "創刊者", "ar": "المؤسس" }
+				},
+				{
+					"Key": "Editor",
+					"Repeatable": true,
+					"Description": "Current editor, or the final editor of a closed title. Earlier editors go in the article text.",
+					"Labels": { "en": "Editor", "ja": "編集長", "ar": "رئيس التحرير" }
+				},
+				{
+					"Key": "Frequency",
+					"Description": "Current or final schedule in plain words: Monthly, Every two months, Quarterly, Two issues a year.",
+					"Labels": { "en": "Frequency", "ja": "発行頻度", "ar": "دورية الصدور" }
+				},
+				{
+					"Key": "PublicationFormats",
+					"Description": "Formats currently or last published: Print, Digital.",
+					"Labels": { "en": "Publication Formats", "ja": "発行形態" }
+				},
+				{
+					"Key": "FirstIssue",
+					"Description": "Designation of the first issue as printed: March 1980, No. 1 (Winter 2000/2001).",
+					"Labels": { "en": "First Issue", "ja": "創刊号", "ar": "العدد الأول" }
+				},
+				{
+					"Key": "FinalIssue",
+					"Description": "Designation of the final issue. Leave out unless closure is established.",
+					"Labels": { "en": "Final Issue", "ja": "終刊号", "ar": "العدد الأخير" }
+				},
+				{
+					"Key": "Country",
+					"Description": "Country of publication.",
+					"Labels": { "en": "Country", "ja": "国", "ar": "البلد" }
+				},
+				{
+					"Key": "BasedIn",
+					"Description": "City where the editorial office is or was.",
+					"Labels": { "en": "Based In", "ja": "所在地", "ar": "المقر" }
+				},
+				{
+					"Key": "Language",
+					"Repeatable": true,
+					"Description": "Language of the editorial content.",
+					"Labels": { "en": "Language", "ja": "言語", "ar": "اللغة" }
+				},
+				{
+					"Key": "Circulation",
+					"Description": "A cited figure with its year and what it measures: 55,000 print run (2016).",
+					"Labels": { "en": "Circulation", "ja": "発行部数", "ar": "التوزيع" }
+				},
+				{
+					"Key": "ISSN",
+					"Repeatable": true,
+					"Description": "ISSN, with the medium when there are several: 0198-1056 (print).",
+					"Labels": { "en": "ISSN", "ja": "ISSN", "ar": "ISSN" }
+				},
+				{
+					"Key": "Website",
+					"Description": "Official website as a Markdown link.",
+					"Labels": { "en": "Website", "ja": "ウェブサイト", "ar": "الموقع الإلكتروني" }
+				}
+			]
+		},
+		"PublicationIssue": {
+			"Description": "Facts about one issue of a publication.",
+			"Fields": [
+				{
+					"Key": "Publication",
+					"Description": "Link to the publication's article: [*Cinefex*](/cinefex).",
+					"Labels": { "en": "Publication", "ja": "誌名", "ar": "الدورية" }
+				},
+				{
+					"Key": "Issue",
+					"Description": "Volume and number as printed: No. 1, Volume 3 - Issue 2.",
+					"Labels": { "en": "Issue", "ja": "号数", "ar": "العدد" }
+				},
+				{
+					"Key": "CoverDate",
+					"Description": "Date printed on the cover, kept as printed: March 1980, Winter 1984–85.",
+					"Labels": { "en": "Cover Date", "ja": "表紙の日付" }
+				},
+				{
+					"Key": "PrintPublicationDate",
+					"Description": "Date the print edition went on sale, only when a source gives it.",
+					"Labels": { "en": "Print Publication Date", "ja": "発売日" }
+				},
+				{
+					"Key": "ElectronicPublicationDate",
+					"Description": "Date the digital edition was released, only when a source gives it.",
+					"Labels": { "en": "Electronic Publication Date" }
+				},
+				{
+					"Key": "Editor",
+					"Repeatable": true,
+					"Description": "Editor credited in this issue's masthead.",
+					"Labels": { "en": "Editor", "ja": "編集長", "ar": "رئيس التحرير" }
+				},
+				{
+					"Key": "CoverSubject",
+					"Repeatable": true,
+					"Description": "Person or subject on the cover. Repeat for alternate covers.",
+					"Labels": { "en": "Cover Subject" }
+				},
+				{
+					"Key": "CoverPhotographer",
+					"Repeatable": true,
+					"Description": "Cover photographer or artist as credited in the issue.",
+					"Labels": { "en": "Cover Photographer" }
+				},
+				{
+					"Key": "Pages",
+					"Description": "Printed page count including covers, when counted or stated.",
+					"Labels": { "en": "Pages", "ja": "ページ数", "ar": "عدد الصفحات" }
+				},
+				{
+					"Key": "CoverPrice",
+					"Repeatable": true,
+					"Description": "Price printed on the cover. Repeat for each currency: US$4.95, £3.50.",
+					"Labels": { "en": "Cover Price", "ja": "定価", "ar": "السعر" }
+				},
+				{
+					"Key": "PublicationFormats",
+					"Description": "Formats this issue appeared in: Print, Digital.",
+					"Labels": { "en": "Publication Formats", "ja": "発行形態" }
+				},
+				{
+					"Key": "ISSN",
+					"Description": "ISSN printed on this issue.",
+					"Labels": { "en": "ISSN", "ja": "ISSN", "ar": "ISSN" }
+				},
+				{
+					"Key": "PrintEAN-13",
+					"Description": "13-digit barcode number printed on the cover.",
+					"Labels": { "en": "Print EAN-13" }
+				},
+				{
+					"Key": "PrintEAN-2",
+					"Description": "2-digit add-on to the EAN-13 barcode, usually the issue number.",
+					"Labels": { "en": "Print EAN-2" }
+				},
+				{
+					"Key": "UPC",
+					"Description": "UPC barcode number printed on the cover (North American issues).",
+					"Labels": { "en": "UPC" }
+				}
+			]
+		}
+	}
+}

@@ -9,6 +9,9 @@ using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using WikiWikiWorld.Web.Services;
+using WikiWikiWorld.Web.MarkdigExtensions;
+using Markdig;
+using Markdig.Syntax;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
@@ -19,6 +22,8 @@ namespace WikiWikiWorld.Web.Controllers.Api;
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="ArticleRevisionService">The article revision workflow service.</param>
 /// <param name="FileUploadStorageService">The file upload storage service.</param>
+/// <param name="MarkdownPipelineFactory">Parses saved text to check its infoboxes.</param>
+/// <param name="InfoboxSchemas">The site infobox schemas the checks compare against.</param>
 [Route("api/article")]
 [ApiController]
 [Produces("application/json")]
@@ -26,7 +31,9 @@ public class ArticleApiController(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     ArticleRevisionService ArticleRevisionService,
-    FileUploadStorageService FileUploadStorageService) : ControllerBase
+    FileUploadStorageService FileUploadStorageService,
+    IMarkdownPipelineFactory MarkdownPipelineFactory,
+    InfoboxSchemaCatalog InfoboxSchemas) : ControllerBase
 {
     /// <summary>
     /// Gets an article revision.
@@ -85,7 +92,7 @@ public class ArticleApiController(
     [HttpPut("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Consumes("application/json")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ArticleSaveResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
@@ -151,7 +158,7 @@ public class ArticleApiController(
             return BadRequest(Ex.Message);
         }
 
-        return Ok("Article revision updated successfully.");
+        return Ok(new ArticleSaveResult("Article revision updated successfully.", FindInfoboxProblems(Model.Text, SiteId)));
     }
 
     /// <summary>
@@ -170,7 +177,7 @@ public class ArticleApiController(
     [HttpPost("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Consumes("multipart/form-data")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ArticleSaveResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
@@ -324,7 +331,7 @@ public class ArticleApiController(
                     // The article is committed and the staged file is recoverable, so this
                     // is a success: startup recovery finalizes the file. Reporting an error
                     // here would invite a duplicate-create retry.
-                    return Ok("Article created successfully. The uploaded file is awaiting filesystem recovery.");
+                    return Ok(new ArticleSaveResult("Article created successfully. The uploaded file is awaiting filesystem recovery.", FindInfoboxProblems(Text, SiteId)));
                 }
             }
         }
@@ -339,7 +346,7 @@ public class ArticleApiController(
             throw;
         }
 
-        return Ok("Article created successfully.");
+        return Ok(new ArticleSaveResult("Article created successfully.", FindInfoboxProblems(Text, SiteId)));
     }
 
     /// <summary>
@@ -430,7 +437,29 @@ public class ArticleApiController(
 
         return Ok("Article deleted successfully.");
     }
+
+    /// <summary>
+    /// Parses saved text and lists problems in its infoboxes against this site's schemas, so API authors such as
+    /// agents learn about a misspelt key or an undefined type. Runs after the save succeeds and never blocks it.
+    /// </summary>
+    /// <param name="Text">The text that was saved.</param>
+    /// <param name="SiteId">The site the article belongs to.</param>
+    /// <returns>The problems found; empty when there are none or the text is blank.</returns>
+    private IReadOnlyList<string> FindInfoboxProblems(string? Text, int SiteId)
+    {
+        if (string.IsNullOrWhiteSpace(Text)) return [];
+        MarkdownDocument Document = Markdown.Parse(Text, MarkdownPipelineFactory.GetPipeline());
+        return InfoboxExtension.FindProblems(Document, InfoboxSchemas, SiteId);
+    }
 }
+
+/// <summary>
+/// The body of a successful article save.
+/// </summary>
+/// <param name="Message">What was done.</param>
+/// <param name="Warnings">Problems the author should fix that did not stop the save, such as infobox keys the
+/// site's schema does not define. Empty when there are none.</param>
+public sealed record ArticleSaveResult(string Message, IReadOnlyList<string> Warnings);
 
 /// <summary>
 /// DTO for article revision history entries.

@@ -98,7 +98,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 		FootnoteExtension FootnoteExt = new();
 		CitationExtension CitationExt = new(ApprovedLinkDomains);
 
-		PublicationIssueInfoboxExtension PublicationIssueInfoboxExt = new();
+		InfoboxExtension InfoboxExt = new();
 		CoverGridExtension CoverGridExt = new();
 		CoverCarouselExtension CoverCarouselExt = new();
 		TimelineExtension TimelineExt = new();
@@ -120,7 +120,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(new CategoryArticlesExtension())
 			.Use(FootnoteExt)
 			.Use(CitationExt)
-			.Use(PublicationIssueInfoboxExt)
+			.Use(InfoboxExt)
 			.Use(CoverGridExt)
 			.Use(CoverCarouselExt)
 			.Use(TimelineExt)

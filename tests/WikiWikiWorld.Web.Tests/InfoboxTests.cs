@@ -11,14 +11,17 @@ using Xunit;
 
 namespace WikiWikiWorld.Web.Tests;
 
-/// <summary>Verifies infobox values through the production Markdown pipeline and shared note processing.</summary>
-public sealed class PublicationIssueInfoboxTests
+/// <summary>
+/// Verifies infobox values through the production Markdown pipeline and shared note processing, with the site's
+/// real schema attached. Some cases keep the legacy <c>{{PublicationIssueInfobox</c> name to cover the alias.
+/// </summary>
+public sealed class InfoboxTests
 {
 	/// <summary>Checks inline formatting without introducing paragraphs or parsing property names as Markdown.</summary>
 	[Fact]
 	public void FormatsValuesAndEscapesLabels()
 	{
-		string Html = Render("{{PublicationIssueInfobox CoverDate=*January* **1993** |#| Editor=[Jane](/jane) |#| **Custom**=<script>alert(1)</script> |#| Formats=***Print*** and `digital`}}");
+		string Html = Render("{{Infobox PublicationIssue CoverDate=*January* **1993** |#| Editor=[Jane](/jane) |#| **Custom**=<script>alert(1)</script> |#| Formats=***Print*** and `digital`}}");
 		using IDocument Document = new HtmlParser().ParseDocument(Html);
 		Assert.Equal("January", Document.QuerySelector("dd em")!.TextContent);
 		Assert.Equal("1993", Document.QuerySelector("dd strong")!.TextContent);
@@ -28,7 +31,7 @@ public sealed class PublicationIssueInfoboxTests
 		Assert.Contains("<dt>**Custom**</dt>", Html);
 		Assert.Null(Document.QuerySelector("script"));
 		Assert.Null(Document.QuerySelector("dd p"));
-		Assert.DoesNotContain("{{PublicationIssueInfobox", Html);
+		Assert.DoesNotContain("{{Infobox", Html);
 	}
 
 	/// <summary>Ensures nested notes share numbering, formatted bodies, and functioning backlinks with prose.</summary>
@@ -38,7 +41,7 @@ public sealed class PublicationIssueInfoboxTests
 		string Html = Render("""
 			Before.{{Footnote First note.}}
 
-			{{PublicationIssueInfobox
+			{{Infobox PublicationIssue
 			CoverDate=1993{{Footnote Sold in **1992**.}} |#|
 			Editor=Jane{{Footnote See *Archive*.}}
 			}}
@@ -64,7 +67,7 @@ public sealed class PublicationIssueInfoboxTests
 	public void ResolvesStandardFootnotesAndReferenceLinks()
 	{
 		string Html = Render("""
-			{{PublicationIssueInfobox Editor=[Jane][editor][^archive]}}
+			{{Infobox PublicationIssue Editor=[Jane][editor][^archive]}}
 
 			[editor]: /jane
 			[^archive]: From the *archive*.
@@ -96,7 +99,7 @@ public sealed class PublicationIssueInfoboxTests
 		Assert.Equal(2, Document.QuerySelectorAll("a[href='#cit:1']").Length);
 	}
 
-	/// <summary>Ignores outer-looking delimiters inside code spans and escaped punctuation.</summary>
+	/// <summary>Ignores outer-looking delimiters inside code spans and escaped punctuation, in an untyped infobox that keeps written order.</summary>
 	/// <param name="Value">Inline Markdown containing literal directive punctuation.</param>
 	/// <param name="Expected">Its visible plain-text result.</param>
 	[Theory]
@@ -106,7 +109,7 @@ public sealed class PublicationIssueInfoboxTests
 	[InlineData("Unmatched `tick", "Unmatched `tick")]
 	public void PreservesLiteralDelimiters(string Value, string Expected)
 	{
-		string Html = Render("{{PublicationIssueInfobox Fact=" + Value + " |#| Editor=Jane}}");
+		string Html = Render("{{Infobox Fact=" + Value + " |#| Editor=Jane}}");
 		using IDocument Document = new HtmlParser().ParseDocument(Html);
 		Assert.Equal(2, Document.QuerySelectorAll("dd").Length);
 		Assert.Equal(Expected, Document.QuerySelectorAll("dd")[0].TextContent);
@@ -118,7 +121,7 @@ public sealed class PublicationIssueInfoboxTests
 	public void SupportsCodeAndCitationsInsideInfoboxNotes()
 	{
 		string Html = Render("""
-			{{PublicationIssueInfobox Editor=Jane{{Footnote Literal `}} |#|` and {{Citation title=Archive |#| year=1993}}.}} |#| CoverDate=1993}}
+			{{Infobox PublicationIssue Editor=Jane{{Footnote Literal `}} |#|` and {{Citation title=Archive |#| year=1993}}.}} |#| CoverDate=1993}}
 
 			{{Footnotes}}
 
@@ -131,12 +134,12 @@ public sealed class PublicationIssueInfoboxTests
 		Assert.DoesNotContain("fnref:?", Html);
 	}
 
-	/// <summary>Retains grouping, repeated values, and empty fields.</summary>
+	/// <summary>Retains grouping, repeated values, and empty fields, with schema fields first in schema order and unknown keys after.</summary>
 	[Fact]
 	public void PreservesExistingFactBehavior()
 	{
 		string Html = Render("{{PublicationIssueInfobox Editor=*Alice* |#| CoverDate=1993 |#| editor=**Bob** |#| Empty=}}");
-		Assert.Contains("<dt>Editor</dt><dd><em>Alice</em></dd><dt>Editor</dt><dd><strong>Bob</strong></dd><dt>Cover Date</dt>", Html);
+		Assert.Contains("<dt>Cover Date</dt><dd>1993</dd><dt>Editor</dt><dd><em>Alice</em></dd><dt>Editor</dt><dd><strong>Bob</strong></dd><dt>Empty</dt>", Html);
 		Assert.Contains("<dt>Empty</dt><dd></dd>", Html);
 		Assert.DoesNotContain("fnref:", Html);
 	}
@@ -145,7 +148,7 @@ public sealed class PublicationIssueInfoboxTests
 	[Fact]
 	public void AppliesArticleLinkPolicy()
 	{
-		string Html = Render("{{PublicationIssueInfobox Source=[Archive](https://example.org/archive)}}");
+		string Html = Render("{{Infobox PublicationIssue Source=[Archive](https://example.org/archive)}}");
 		using IDocument Document = new HtmlParser().ParseDocument(Html);
 		Assert.Equal("nofollow noopener", Document.QuerySelector("dd a")!.GetAttribute("rel"));
 	}
@@ -175,13 +178,13 @@ public sealed class PublicationIssueInfoboxTests
 	/// <param name="ExpectedCount">The number of infoboxes recognized in the document.</param>
 	[Theory]
 	[InlineData("{{PublicationIssueInfobox Editor=Jane}}", 1)]
-	[InlineData("{{PublicationIssueInfobox\r\nEditor=Jane\r\n}}", 1)]
+	[InlineData("{{Infobox PublicationIssue\r\nEditor=Jane\r\n}}", 1)]
 	[InlineData("{{PublicationIssueInfoboxExtra Editor=Jane}}", 0)]
-	[InlineData("    {{PublicationIssueInfobox Editor=Jane}}", 0)]
+	[InlineData("    {{Infobox PublicationIssue Editor=Jane}}", 0)]
 	[InlineData("```\n{{PublicationIssueInfobox Editor=Jane}}\n```", 0)]
-	[InlineData("`{{PublicationIssueInfobox Editor=Jane}}`", 0)]
+	[InlineData("`{{Infobox PublicationIssue Editor=Jane}}`", 0)]
 	[InlineData("> {{PublicationIssueInfobox\n> Editor=Jane\n> }}", 1)]
-	[InlineData("- {{PublicationIssueInfobox\n  Editor=Jane\n  }}", 1)]
+	[InlineData("- {{Infobox PublicationIssue\n  Editor=Jane\n  }}", 1)]
 	public void RecognizesDirectiveBoundaries(string Source, int ExpectedCount)
 	{
 		string Html = Render(Source);
@@ -194,20 +197,21 @@ public sealed class PublicationIssueInfoboxTests
 	[Fact]
 	public void KeepsBlockSyntaxAsInlineText()
 	{
-		string Html = Render("{{PublicationIssueInfobox Fact=# Heading\n- List item}}");
+		string Html = Render("{{Infobox PublicationIssue Fact=# Heading\n- List item}}");
 		using IDocument Document = new HtmlParser().ParseDocument(Html);
 		Assert.Null(Document.QuerySelector(".infobox h1, .infobox ul, .infobox p"));
 		Assert.Contains("# Heading", Document.QuerySelector("dd")!.TextContent);
 		Assert.Contains("- List item", Document.QuerySelector("dd")!.TextContent);
 	}
 
-	/// <summary>Runs the same parsing and shared custom-note passes used by the article renderer.</summary>
+	/// <summary>Runs the same parsing, schema attachment and shared custom-note passes used by the article renderer.</summary>
 	/// <param name="Source">The article Markdown to render.</param>
 	/// <returns>HTML produced by the production pipeline before page-level layout processing.</returns>
 	private static string Render(string Source)
 	{
 		MarkdownPipeline Pipeline = new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())).GetPipeline();
 		MarkdownDocument Document = Markdown.Parse(Source, Pipeline);
+		InfoboxExtension.Enrich(Document, TestInfoboxSchemas.Catalog, TestInfoboxSchemas.SiteId, "en");
 		FootnoteExtension.ReprocessFootnotes(Document, Pipeline);
 		CitationExtension.ReprocessCitations(Document);
 		using StringWriter Writer = new();

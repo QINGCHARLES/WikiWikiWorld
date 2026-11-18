@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +77,16 @@ Builder.Services.AddSingleton(new SiteStylesheetCatalog(
 	Builder.Environment.WebRootFileProvider,
 	(Builder.Configuration.GetSection("SiteConfiguration").Get<SiteConfiguration>() ?? new()).Sites.Select(Site => Site.SiteId)));
 Builder.Services.Configure<DomainRedirectOptions>(Builder.Configuration.GetSection(DomainRedirectOptions.SectionName));
+Builder.Services.AddSingleton(Services =>
+{
+	IWebHostEnvironment Environment = Services.GetRequiredService<IWebHostEnvironment>();
+	int[] ConfiguredSiteIds = [.. Services.GetRequiredService<IOptions<SiteConfiguration>>().Value.Sites.Select(Site => Site.SiteId)];
+	return InfoboxSchemaCatalog.Load(
+		Path.Combine(Environment.ContentRootPath, InfoboxSchemaCatalog.FolderName),
+		ConfiguredSiteIds,
+		RejectUnconfiguredSites: Environment.IsProduction(),
+		Services.GetRequiredService<ILogger<InfoboxSchemaCatalog>>());
+});
 
 // Add memory cache service
 Builder.Services.AddMemoryCache();
@@ -341,6 +352,9 @@ if (!App.Environment.IsDevelopment())
 }
 
 App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
+
+// Load the infobox schemas now so a malformed or conflicting file stops startup instead of the first article render.
+App.Services.GetRequiredService<InfoboxSchemaCatalog>();
 
 using (IServiceScope StartupScope = App.Services.CreateScope())
 {

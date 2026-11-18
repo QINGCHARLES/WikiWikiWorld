@@ -146,7 +146,7 @@ Directives that embed interactive or rich media into article content:
 ### Publication Displays
 Components specifically tailored for magazine archives:
 
-* [**Publication Issue Infobox** `{{PublicationIssueInfobox}}`](/wiki:infobox) — Sidebar infobox detailing publication date, price, ISSN, and barcode.
+* [**Infobox** `{{Infobox Publication}}` / `{{Infobox PublicationIssue}}`](/wiki:infobox) — Sidebar facts box for a publication or one of its issues.
 * [**Cover Carousel** `{{CoverCarousel}}`](/wiki:cover-carousel) — Standalone multi-cover slide carousel.
 * [**Cover Grid** `{{CoverGrid}}`](/wiki:cover-grid) — Visual gallery grid linking to individual publication issue articles.
 
@@ -542,57 +542,96 @@ To contribute a magazine download scan or link, visit the [Upload Tool](/wiki:up
     },
     {
         "slug": "wiki:infobox",
-        "title": "Wiki: Publication Issue Infobox Directive",
-        "display_title": "Wiki: Publication Issue Infobox Directive",
-        "text": """The `{{PublicationIssueInfobox}}` directive renders a structured magazine issue sidebar on the right side of the page, displaying publication facts. Use a separate `{{CoverCarousel}}` block for cover images.
+        "title": "Wiki: Infobox Directive",
+        "display_title": "Wiki: Infobox Directive",
+        "text": """The `{{Infobox}}` directive renders a facts box at the side of the page. The word after `Infobox` says what kind of facts it holds, and that sets which fields it has, their order and their labels. Use a separate `{{CoverCarousel}}` block for cover images.
 
-## Syntax
+Magazedia has two infobox types:
+
+* `{{Infobox Publication}}` for an article about a whole publication: magazine, zine, journal, newsletter or mook. The eyebrow says which kind it is.
+* `{{Infobox PublicationIssue}}` for an article about one issue.
+
+## Publication
 
 ```markdown
-{{PublicationIssueInfobox
-CoverDate=1993-01 |#|
-CoverPrice=$4.95 |#|
-PublicationFormats=Print |#|
-PrintPublicationDate=1993-01-02 |#|
-ElectronicPublicationDate=1993-01-02 |#|
-PrintEAN-13=9771059102003 |#|
-ISSN=1059-1028
+{{Infobox Publication
+Publisher=Petersen Publishing (1963–1996) |#|
+Publisher=Source Interlink (1996–2014) |#|
+Editor=[Jane Smith](/jane-smith) |#|
+Frequency=Monthly |#|
+FirstIssue=No. 1 (March 1980) |#|
+Country=United States |#|
+Language=English |#|
+ISSN=0198-1056 (print)
 }}
 ```
 
-## Standard Fact Keys
+| Key | Label | Repeats | What goes in it |
+| :--- | :--- | :--- | :--- |
+| `Publisher` | Publisher | Yes | Publisher or parent company. Repeat for successive publishers, with years. |
+| `Founder` | Founder | Yes | Person or company that founded the publication. |
+| `Editor` | Editor | Yes | Current editor, or the final editor of a closed title. Earlier editors go in the article text. |
+| `Frequency` | Frequency | | Current or final schedule in plain words: *Monthly*, *Every two months*, *Quarterly*. |
+| `PublicationFormats` | Publication Formats | | Formats currently or last published: *Print, Digital*. |
+| `FirstIssue` | First Issue | | The first issue's designation as printed. |
+| `FinalIssue` | Final Issue | | The final issue's designation. Leave out unless closure is established. |
+| `Country` | Country | | Country of publication. |
+| `BasedIn` | Based In | | City where the editorial office is or was. |
+| `Language` | Language | Yes | Language of the editorial content. |
+| `Circulation` | Circulation | | A cited figure with its year and what it measures. |
+| `ISSN` | ISSN | Yes | With the medium when there are several: *0198-1056 (print)*. |
+| `Website` | Website | | Official website as a link. |
 
-The following canonical keys automatically receive human-friendly display labels:
+## PublicationIssue
 
-| Key | Rendered Label | Description |
-| :--- | :--- | :--- |
-| `CoverDate` | **Cover Date** | Issue date as printed on the cover (e.g. `September 1975`). |
-| `CoverPrice` | **Cover Price** | Newsstand cover price (e.g. `$1.50`, `£0.95`). |
-| `PublicationFormats` | **Publication Formats** | Format medium (e.g. `Print`, `Digital`). |
-| `PrintPublicationDate` | **Print Publication Date** | Physical publication date (ISO or text). |
-| `ElectronicPublicationDate` | **Electronic Publication Date** | Digital release date. |
-| `ISSN` | **ISSN** | International Standard Serial Number. |
-| `PrintEAN-13` | **Print EAN-13** | 13-digit retail barcode. |
-| `PrintEAN-2` | **Print EAN-2** | 2-digit supplemental issue barcode. |
+```markdown
+{{Infobox PublicationIssue
+Publication=[*Cinefex*](/cinefex) |#|
+Issue=No. 1 |#|
+CoverDate=March 1980 |#|
+CoverPrice=US$4.95 |#|
+CoverPrice=£3.50 |#|
+UPC=0 74470 01234 5
+}}
+```
 
-## Custom Keys
+| Key | Label | Repeats | What goes in it |
+| :--- | :--- | :--- | :--- |
+| `Publication` | Publication | | Link to the publication's article. |
+| `Issue` | Issue | | Volume and number as printed: *No. 1*, *Volume 3 - Issue 2*. |
+| `CoverDate` | Cover Date | | Date printed on the cover, kept as printed: *Winter 1984–85*. |
+| `PrintPublicationDate` | Print Publication Date | | On-sale date of the print edition, only when a source gives it. |
+| `ElectronicPublicationDate` | Electronic Publication Date | | Release date of the digital edition, only when a source gives it. |
+| `Editor` | Editor | Yes | Editor credited in this issue's masthead. |
+| `CoverSubject` | Cover Subject | Yes | Person or subject on the cover. Repeat for alternate covers. |
+| `CoverPhotographer` | Cover Photographer | Yes | Cover photographer or artist as credited. |
+| `Pages` | Pages | | Printed page count including covers. |
+| `CoverPrice` | Cover Price | Yes | Price printed on the cover. Repeat for each currency. |
+| `PublicationFormats` | Publication Formats | | Formats this issue appeared in. |
+| `ISSN` | ISSN | | ISSN printed on this issue. |
+| `PrintEAN-13` | Print EAN-13 | | 13-digit barcode number. |
+| `PrintEAN-2` | Print EAN-2 | | 2-digit add-on to the EAN-13 barcode. |
+| `UPC` | UPC | | UPC barcode number (North American issues). |
 
-Any additional `Key=Value` pair is accepted and rendered as a definition row in the infobox, allowing custom facts such as `Editor=John Doe` or `Circulation=120,000`.
+The older name `{{PublicationIssueInfobox}}` still works and means the same as `{{Infobox PublicationIssue}}`.
+
+## Other keys and mistakes
+
+Leave out any field you can't support with a source; every field is optional. Fields appear in the order of the tables above, whatever order you write them in. Any other `Key=Value` pair still appears, after the listed fields and with the key as its label, but it is reported as a problem.
+
+When you save, the wiki points out an infobox with no type, a type that doesn't exist, a key the type doesn't define, a field that doesn't repeat but is written twice, and an infobox that isn't closed. Saving still succeeds. The message appears once on the saved article, and only you see it.
 
 ## Formatting and Notes
 
-Values support inline Markdown: `*italic*`, `**bold**`, combined emphasis, links, and inline code. Property labels remain plain text. Use ordinary article content for headings, lists, and other block layouts.
+Values support inline Markdown: `*italic*`, `**bold**`, combined emphasis, links, and inline code. Labels remain plain text. Use ordinary article content for headings, lists, and other block layouts.
 
 ```markdown
-{{PublicationIssueInfobox
+{{Infobox PublicationIssue
 CoverDate=*January* **1993**{{Footnote Released in **December 1992**.}} |#|
-Editor=[Jane Smith](/jane-smith) |#|
-Source=Archive{{Citation title=Archive Quarterly |#| year=1993}}
+Editor=[Jane Smith](/jane-smith)
 }}
 
 {{Footnotes}}
-
-{{Citations}}
 ```
 
 Custom notes share the article's numbering and backlinks in rendered fact order. Standard `[^label]` notes and reference links also work with definitions elsewhere in the article; standard notes retain their separate Markdig list. Citations join the article bibliography.
@@ -604,7 +643,7 @@ Only outer `|#|` tokens split facts, so notes and citations can contain their ow
 Cite where each fact came from, such as the print edition cover for a cover price or barcode. Identical citations merge into one bibliography entry with a back-link for every use, so repeat the same citation on each fact it supports:
 
 ```markdown
-{{PublicationIssueInfobox
+{{Infobox PublicationIssue
 CoverDate=Fall/Winter 2014 |#|
 CoverPrice=$12.99 (US){{Citation title=GQ Style (USA), Fall/Winter 2014: print edition front cover |#| publisher=Condé Nast |#| year=2014}} |#|
 UPC=0 75490 08758 9{{Citation title=GQ Style (USA), Fall/Winter 2014: print edition front cover |#| publisher=Condé Nast |#| year=2014}}

@@ -169,7 +169,7 @@ public sealed class MarkdownSafetyTests
 	{
 		IOptions<SiteConfiguration> Configuration = Options.Create(new SiteConfiguration());
 		await using WikiWikiWorldDbContext Context = new(new DbContextOptionsBuilder<WikiWikiWorldDbContext>().UseSqlite("Data Source=:memory:").Options);
-		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration);
+		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration, TestInfoboxSchemas.Catalog);
 		ArticleRevision Revision = new()
 		{
 			CanonicalArticleId = Guid.NewGuid(), SiteId = 1, Culture = "en", Title = "Safety test", UrlSlug = "safety-test", RevisionReason = "In-memory fixture",

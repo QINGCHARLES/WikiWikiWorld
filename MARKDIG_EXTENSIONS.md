@@ -47,7 +47,7 @@ Directive names are case-sensitive. Named properties are generally case-insensit
 | `Footnote` / `Footnotes` | `FootnoteExtension` | Inline + block | Inline notes and collected note list |
 | `Citation` / `Citations` | `CitationExtension` | Inline + block | Bibliographic references and bibliography |
 | `Category` / `Categories` | `CategoryExtension` | Inline + block | Article categories and category link list |
-| `PublicationIssueInfobox` | `PublicationIssueInfoboxExtension` | Container block | Publication issue facts |
+| `Infobox` (legacy `PublicationIssueInfobox`) | `InfoboxExtension` | Container block | Facts box whose fields, order and labels come from the site's infobox schema |
 | `CoverGrid` | `CoverGridExtension` | Container block | Grid of publication issue covers |
 | `CoverCarousel` | `CoverCarouselExtension` | Container block | Standalone cover carousel |
 | `Timeline` | `TimelineExtension` | Container block | Chronological milestone list |
@@ -365,50 +365,55 @@ The publication began in 1993.{{Citation author=Smith, Jane |#| author=Doe, John
 
 Container directives may be written on one line, but the multi-line forms are easier to maintain.
 
-### `PublicationIssueInfobox`
+### `Infobox`
 
-Renders an `<aside class="infobox">` containing a definition list of publication properties. Use a separate `CoverCarousel` for covers.
+Renders an `<aside class="infobox">` containing a definition list of facts. The word after `Infobox` names a type from the site's infobox schema, which sets the fields, their order and their labels. Use a separate `CoverCarousel` for covers.
 
 ```markdown
-{{PublicationIssueInfobox
-CoverDate=1993-01 |#|
-CoverPrice=$4.95 |#|
-PublicationFormats=Print |#|
-PrintPublicationDate=1993-01-02 |#|
-ElectronicPublicationDate=1993-01-02 |#|
-PrintEAN-13=1234567890123 |#|
-PrintEAN-2=01 |#|
-ISSN=1059-1028
+{{Infobox Publication
+Publisher=Petersen Publishing (1963–1996) |#|
+Frequency=Monthly |#|
+FirstIssue=No. 1 (March 1980) |#|
+ISSN=0198-1056 (print)
+}}
+
+{{Infobox PublicationIssue
+Publication=[*Cinefex*](/cinefex) |#|
+Issue=No. 1 |#|
+CoverDate=March 1980 |#|
+CoverPrice=US$4.95 |#|
+CoverPrice=£3.50
 }}
 ```
 
-| Property | Required | Features |
-| --- | --- | --- |
-| Any `Key=Value` | No | Repeatable fact rendered as a `<dt>`/`<dd>` pair; values support inline Markdown |
+#### Schemas
 
-Friendly display labels are defined for these canonical keys:
+Each site's types are defined in one JSON file in `src/WikiWikiWorld.Web/InfoboxSchemas/`, read once at startup. The file names its site by `SiteId`; the file name is only for people. Magazedia (`magazedia.json`, site 1) defines two types:
 
-| Key | Label |
-| --- | --- |
-| `CoverPrice` | Cover Price |
-| `PublicationFormats` | Publication Formats |
-| `CoverDate` | Cover Date |
-| `PrintPublicationDate` | Print Publication Date |
-| `ElectronicPublicationDate` | Electronic Publication Date |
-| `PrintEAN-13` | Print EAN-13 |
-| `PrintEAN-2` | Print EAN-2 |
-| `ISSN` | ISSN |
+- `Publication`: a whole publication, whether magazine, zine, journal, newsletter or mook. The eyebrow says which.
+- `PublicationIssue`: one issue of a publication.
 
-- Keys are collected case-insensitively, but use the canonical casing above to receive the friendly label.
-- Unknown keys are displayed verbatim and are therefore supported as additional facts.
-- Repeated non-image properties render as repeated definition rows.
+Each field has a `Key`, optional `Repeatable` and `Description`, and `Labels` keyed by culture. An `en` label is required, and other cultures fall back to it. The file itself is the reference for each type's fields and what goes in them.
+
+The app refuses to start when a schema file is malformed, has an unknown or missing property, defines a type or field twice (ignoring case), lacks an `en` label, or claims a site another file already claims. A file naming a site that is not configured stops production and is skipped with a warning elsewhere. A site with no file renders every infobox with raw keys.
+
+#### Rendering
+
+- Schema fields render first, in schema order, with the page culture's label (or the English one). Other keys follow in the order written, labelled with the raw key.
+- `{{Infobox}}` with no type, a type the site does not define, or a render without a schema (such as a pipeline used outside `ArticleRenderer`) shows every fact in written order with raw keys.
+- `{{PublicationIssueInfobox` is a legacy name for `{{Infobox PublicationIssue` and renders identically.
+- A first word containing `=` is a fact, not a type: `{{Infobox Editor=Jane}}` is an untyped infobox. `{{InfoboxExtra` is not an infobox.
+- Keys are matched case-insensitively. Repeated keys render as repeated rows.
 - Values support `*italic*`, `**bold**`, combined emphasis, links (including reference links), and inline code through the article's normal Markdown pipeline. Labels remain plain text. Headings, lists, and other block layouts are not parsed inside values; raw HTML follows the article pipeline's disabled-HTML policy.
 - Custom `{{Footnote ...}}` notes in values share numbering, the `{{Footnotes}}` list, and backlinks with the surrounding article, in rendered fact order. Standard `[^label]` notes also work with definitions elsewhere in the article and retain their separate Markdig footnote list. Citations in values join the article's `{{Citations}}` bibliography.
 - Only outer `|#|` tokens separate infobox properties. Nested footnotes and citations may contain their own properties. Place literal `}}`, `{{`, or `|#|` inside a Markdown code span, or escape their punctuation with backslashes. Incomplete infoboxes remain visible as escaped source.
-- Covers belong in a separate `{{CoverCarousel}}` block, with `|~|` between cover entries.
+
+#### Warnings
+
+Saving never fails because of an infobox, but problems are reported: an unclosed infobox, a missing or undefined type, a key the type does not define, and a non-repeatable field written more than once. The API returns them in `Warnings` on a successful POST or PUT (`{"Message": "...", "Warnings": [...]}`). The web editor shows them once, on the saved article, to the person who saved it. Sites without a schema file report only unclosed infoboxes.
 
 ```markdown
-{{PublicationIssueInfobox
+{{Infobox PublicationIssue
 CoverDate=*January* **1993**{{Footnote Released in **December 1992**.}} |#|
 Editor=[Jane Smith](/jane-smith) |#|
 Source=Archive{{Citation title=Archive Quarterly |#| year=1993}}

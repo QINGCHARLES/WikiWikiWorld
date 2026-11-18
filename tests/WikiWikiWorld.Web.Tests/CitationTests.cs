@@ -181,7 +181,7 @@ public sealed class CitationTests
 		const string Payload = "<svg onload=\"document.documentElement.dataset.citationProbe='integration'\"></svg>";
 		IOptions<SiteConfiguration> Configuration = Options.Create(new SiteConfiguration());
 		await using WikiWikiWorldDbContext Context = new(new DbContextOptionsBuilder<WikiWikiWorldDbContext>().UseSqlite("Data Source=:memory:").Options);
-		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration);
+		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration, TestInfoboxSchemas.Catalog);
 		ArticleRevision Revision = new()
 		{
 			CanonicalArticleId = Guid.NewGuid(), SiteId = 1, Culture = "en", Title = "Citation test", UrlSlug = "citation-test",

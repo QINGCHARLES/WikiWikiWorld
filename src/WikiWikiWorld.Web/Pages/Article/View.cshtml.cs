@@ -130,6 +130,21 @@ public sealed class ViewModel(
     public string? RedirectedFromTitle { get; private set; }
 
     /// <summary>
+    /// TempData key storing infobox problems found when the editor last saved, shown once on the saved article.
+    /// </summary>
+    public const string InfoboxWarningsTempDataKey = "InfoboxWarnings";
+
+    /// <summary>
+    /// TempData key storing the slug the infobox problems belong to, so they show only on that article.
+    /// </summary>
+    public const string InfoboxWarningsSlugTempDataKey = "InfoboxWarningsSlug";
+
+    /// <summary>
+    /// Gets infobox problems from the save that led here; empty unless this viewer just saved this article.
+    /// </summary>
+    public IReadOnlyList<string> InfoboxWarnings { get; private set; } = [];
+
+    /// <summary>
     /// Gets or sets the list of recent authors.
     /// </summary>
     public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = [];
@@ -372,6 +387,7 @@ public sealed class ViewModel(
         }
 
         ConsumeRedirectNotice(DisplayedRevision);
+        ConsumeInfoboxWarnings(DisplayedRevision);
 
         // Fetch recent authors (username and profile pic GUID) for this article.
         DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
@@ -781,6 +797,30 @@ public sealed class ViewModel(
         }
 
         RedirectedFromTitle = FromTitle;
+    }
+
+    /// <summary>
+    /// Reads and consumes infobox problems left by the editor's save, exposing them only when the displayed
+    /// revision is the current revision of the article that was saved.
+    /// </summary>
+    /// <param name="Displayed">The revision currently being rendered.</param>
+    private void ConsumeInfoboxWarnings(ArticleRevision Displayed)
+    {
+        if (TempData is null || !TempData.ContainsKey(InfoboxWarningsTempDataKey))
+        {
+            return;
+        }
+
+        string? SavedSlug = TempData[InfoboxWarningsSlugTempDataKey] as string;
+        if (TempData[InfoboxWarningsTempDataKey] is not string[] Warnings
+            || !string.IsNullOrWhiteSpace(Revision)
+            || string.IsNullOrWhiteSpace(SavedSlug)
+            || !SavedSlug.Equals(Displayed.UrlSlug, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        InfoboxWarnings = Warnings;
     }
 }
 

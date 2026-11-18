@@ -42,6 +42,20 @@
 	</div>
 }
 
+@if (Model.InfoboxWarnings.Count > 0)
+{
+	<div class="revision-notice infobox-warnings" role="status">
+		<strong>Saved, but the infobox needs attention.</strong> Only you see this message.
+		<ul>
+			@foreach (string Warning in Model.InfoboxWarnings)
+			{
+				<li>@Warning</li>
+			}
+		</ul>
+		<a href="@($"{Model.CurrentArticlePath}/edit")" rel="nofollow">Edit the article</a>
+	</div>
+}
+
 @if (Model.IsViewingCurrentRevision && Model.Revision is not null)
 {
 	<div class="revision-notice">

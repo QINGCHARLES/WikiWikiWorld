@@ -101,7 +101,8 @@ public sealed record class RenderedArticle
 public sealed class ArticleRenderer(
 	WikiWikiWorldDbContext Context,
 	IMarkdownPipelineFactory MarkdownPipelineFactory,
-	IOptions<SiteConfiguration> SiteConfiguration) : IArticleRenderer
+	IOptions<SiteConfiguration> SiteConfiguration,
+	InfoboxSchemaCatalog InfoboxSchemas) : IArticleRenderer
 {
 	/// <inheritdoc/>
 	public async Task<RenderedArticle> RenderAsync(
@@ -118,6 +119,7 @@ public sealed class ArticleRenderer(
 		EyebrowExtension.Enrich(Document);
 		SubtitleExtension.Enrich(Document);
 		SourceExtension.Enrich(Document);
+		InfoboxExtension.Enrich(Document, InfoboxSchemas, SiteId, Culture);
 		await CategoryArticlesExtension.EnrichAsync(Document, Context, Revision, SiteId, Culture, CategoryPage, CancellationToken);
 		await ImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await HeaderImageExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);

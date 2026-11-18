@@ -339,7 +339,7 @@ public sealed class RedirectTests : IDisposable
 		DefaultHttpContext Http = CreateHttpContext();
 		SiteResolverService Resolver = new(Configuration, new HttpContextAccessor { HttpContext = Http });
 		ArticleRevisionService Revisions = new(Context, NullLogger<ArticleRevisionService>.Instance);
-		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration);
+		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration, TestInfoboxSchemas.Catalog);
 		ViewModel Viewer = new(Context, Resolver, Users, Renderer, Revisions, new(Context)) { UrlSlug = Slug };
 		Viewer.PageContext = new() { HttpContext = Http, RouteData = new(), ActionDescriptor = new() };
 		Viewer.TempData = new TempDataDictionary(Http, TempDataStore);
@@ -359,7 +359,9 @@ public sealed class RedirectTests : IDisposable
 			Users,
 			Resolver,
 			new(Context, NullLogger<ArticleRevisionService>.Instance),
-			new(Context, Options.Create(new FileStorageOptions { SiteFilesPath = StorageRoot })))
+			new(Context, Options.Create(new FileStorageOptions { SiteFilesPath = StorageRoot })),
+			new MarkdownPipelineFactory(Configuration),
+			TestInfoboxSchemas.Catalog)
 		{
 			UrlSlug = Slug
 		};
