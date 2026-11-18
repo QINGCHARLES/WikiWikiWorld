@@ -132,7 +132,6 @@ public sealed class RedirectTests : IDisposable
 		ViewModel UnrelatedViewer = CreateViewer("other-article", TempDataStore);
 		Assert.IsType<PageResult>(await UnrelatedViewer.OnGetAsync(default));
 		Assert.Null(UnrelatedViewer.RedirectedFromTitle);
-		Assert.Null(UnrelatedViewer.RedirectedFromEditPath);
 
 		// Re-run redirect cleanly and follow to destination /1994.
 		RedirectViewer = CreateViewer("1984", TempDataStore);
@@ -142,7 +141,6 @@ public sealed class RedirectTests : IDisposable
 		ViewModel TargetViewer = CreateViewer("1994", TempDataStore);
 		Assert.IsType<PageResult>(await TargetViewer.OnGetAsync(default));
 		Assert.Equal("1984", TargetViewer.RedirectedFromTitle);
-		Assert.Equal("/1984/edit", TargetViewer.RedirectedFromEditPath);
 		TargetViewer.TempData.Save();
 
 		// Refreshing or visiting /1994 again does not repeat the flash banner.

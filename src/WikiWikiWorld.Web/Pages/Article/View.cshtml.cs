@@ -115,11 +115,6 @@ public sealed class ViewModel(
     public string CurrentCanonicalUrlSlug => CurrentRevision is null ? string.Empty : ArticleUrlHelper.BuildCanonicalSlug(CurrentRevision.UrlSlug, CurrentRevision.Type);
 
     /// <summary>
-    /// TempData key storing the source slug of a completed redirect.
-    /// </summary>
-    public const string RedirectedFromSlugTempDataKey = "RedirectedFromSlug";
-
-    /// <summary>
     /// TempData key storing the source title of a completed redirect.
     /// </summary>
     public const string RedirectedFromTitleTempDataKey = "RedirectedFromTitle";
@@ -133,11 +128,6 @@ public sealed class ViewModel(
     /// Gets the title of the redirect page that forwarded the visitor here, if any.
     /// </summary>
     public string? RedirectedFromTitle { get; private set; }
-
-    /// <summary>
-    /// Gets the editor URL for the redirect page that forwarded the visitor here, if any.
-    /// </summary>
-    public string? RedirectedFromEditPath { get; private set; }
 
     /// <summary>
     /// Gets or sets the list of recent authors.
@@ -367,7 +357,6 @@ public sealed class ViewModel(
             {
                 if (TempData is not null)
                 {
-                    TempData[RedirectedFromSlugTempDataKey] = DisplayedRevision.UrlSlug;
                     TempData[RedirectedFromTitleTempDataKey] = DisplayedRevision.Title;
                     TempData[RedirectedToSlugTempDataKey] = TargetRevision.UrlSlug;
                 }
@@ -780,20 +769,18 @@ public sealed class ViewModel(
         }
 
         string? ExpectedTargetSlug = TempData[RedirectedToSlugTempDataKey] as string;
-        string? FromSlug = TempData[RedirectedFromSlugTempDataKey] as string;
         string? FromTitle = TempData[RedirectedFromTitleTempDataKey] as string;
 
         if (!string.IsNullOrWhiteSpace(Revision)
             || Displayed.Type == ArticleType.Redirect
             || string.IsNullOrWhiteSpace(ExpectedTargetSlug)
-            || string.IsNullOrWhiteSpace(FromSlug)
+            || string.IsNullOrWhiteSpace(FromTitle)
             || !ExpectedTargetSlug.Equals(Displayed.UrlSlug, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        RedirectedFromTitle = !string.IsNullOrWhiteSpace(FromTitle) ? FromTitle : FromSlug;
-        RedirectedFromEditPath = $"{ArticleUrlHelper.BuildArticlePath(FromSlug, ArticleType.Redirect)}/edit";
+        RedirectedFromTitle = FromTitle;
     }
 }
 

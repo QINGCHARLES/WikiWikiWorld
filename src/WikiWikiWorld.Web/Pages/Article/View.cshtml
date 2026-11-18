@@ -35,11 +35,10 @@
 	}
 </hgroup>
 
-@if (!string.IsNullOrWhiteSpace(Model.RedirectedFromTitle) && !string.IsNullOrWhiteSpace(Model.RedirectedFromEditPath))
+@if (!string.IsNullOrWhiteSpace(Model.RedirectedFromTitle))
 {
 	<div class="revision-notice redirect-notice" role="status">
-		Redirected from <strong>@Model.RedirectedFromTitle</strong>
-		(<a href="@Model.RedirectedFromEditPath">edit redirect</a>).
+		Redirected from <strong>@Model.RedirectedFromTitle</strong>.
 	</div>
 }
 
