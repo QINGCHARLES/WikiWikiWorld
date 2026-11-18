@@ -173,7 +173,11 @@ public sealed partial class ArticleSearchService(WikiWikiWorldDbContext Context)
 				: EF.Functions.Like(R.Title, PrefixPattern, LikeEscape) ? 1
 				: EF.Functions.Like(R.Title, WordStartPattern, LikeEscape) || EF.Functions.Like(R.Title, BracketedWordStartPattern, LikeEscape) ? 2
 				: 3)
-			.ThenBy(R => R.Type == ArticleType.Article ? 0 : R.Type == ArticleType.Category ? 1 : R.Type == ArticleType.File ? 2 : 3)
+			.ThenBy(R => R.Type == ArticleType.Article ? 0
+				: R.Type == ArticleType.Redirect ? 1
+				: R.Type == ArticleType.Category ? 2
+				: R.Type == ArticleType.File ? 3
+				: 4)
 			.ThenBy(R => R.Title.Length)
 			.ThenBy(R => EF.Functions.Collate(R.Title, "NOCASE"))
 			.ThenBy(R => R.Id);
@@ -203,6 +207,7 @@ public sealed partial class ArticleSearchService(WikiWikiWorldDbContext Context)
 			.AsNoTracking()
 			.Where(R => R.IsCurrent
 				&& R.Type != ArticleType.User
+				&& R.Type != ArticleType.Redirect
 				&& !EF.Functions.Like(R.Title, ContainsPattern, LikeEscape)
 				&& EF.Functions.Like(R.Text, ContainsPattern, LikeEscape))
 			.OrderBy(R => R.Type == ArticleType.Article ? 0 : R.Type == ArticleType.Category ? 1 : R.Type == ArticleType.File ? 2 : 3)

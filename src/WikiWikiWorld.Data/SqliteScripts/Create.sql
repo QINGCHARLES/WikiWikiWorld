@@ -107,6 +107,8 @@ CREATE TABLE ArticleRevisions (
 CREATE INDEX IX_ArticleRevisions_CreatedByUserId ON ArticleRevisions (CreatedByUserId);
 CREATE INDEX IX_ArticleRevisions_SiteId_Culture_UrlSlug_DateCreated ON ArticleRevisions (SiteId, Culture, UrlSlug, DateCreated);
 CREATE INDEX IX_ArticleRevisions_SiteId_Culture_UrlSlug_IsCurrent ON ArticleRevisions (SiteId, Culture, UrlSlug, IsCurrent);
+CREATE INDEX IX_ArticleRevisions_Sitemap_Html ON ArticleRevisions (SiteId, Culture, Type, Title COLLATE NOCASE, Id, UrlSlug, DisplayTitle) WHERE IsCurrent AND DateDeleted IS NULL;
+CREATE INDEX IX_ArticleRevisions_Sitemap_Xml ON ArticleRevisions (SiteId, Culture, Type, Id, UrlSlug, DateCreated) WHERE IsCurrent AND DateDeleted IS NULL;
 
 CREATE TABLE ArticleCategoryMemberships (
     ArticleRevisionId INTEGER NOT NULL,

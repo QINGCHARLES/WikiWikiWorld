@@ -124,6 +124,7 @@ public sealed class ArticleRenderer(
 		await CoverGridExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await CoverCarouselExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		await DownloadsBoxExtension.EnrichAsync(Document, Context, SiteId, CancellationToken);
+		await RedirectExtension.EnrichAsync(Document, Context, SiteId, Culture, CancellationToken);
 		SiteInfo? CurrentSite = SiteConfiguration.Value.Sites.FirstOrDefault(Site => Site.SiteId == SiteId);
 		string SiteName = CurrentSite?.SiteName ?? string.Empty;
 		StubExtension.Enrich(Document, SiteName, EditUrl);

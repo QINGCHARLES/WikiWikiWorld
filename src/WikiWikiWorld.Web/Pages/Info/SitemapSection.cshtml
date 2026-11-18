@@ -1,0 +1,139 @@
+@page
+@model WikiWikiWorld.Web.Pages.Info.SitemapSectionModel
+@using WikiWikiWorld.Web.Pages.Info
+@{
+	HtmlSitemapSectionPage SectionPage = Model.SectionPage;
+}
+
+<div class="sitemap-page">
+	<nav class="sitemap-breadcrumb" aria-label="Breadcrumb">
+		<a href="/info:sitemap">Sitemap</a>
+		<span aria-hidden="true">/</span>
+		@if (SectionPage.ActiveBucket is not null || SectionPage.PageNumber > 1)
+		{
+			<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, null)">@SectionPage.Section.Title</a>
+		}
+		else
+		{
+			<span aria-current="page">@SectionPage.Section.Title</span>
+		}
+		@if (SectionPage.ActiveBucket is not null)
+		{
+			<span aria-hidden="true">/</span>
+			if (SectionPage.PageNumber > 1)
+			{
+				<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket.Slug)">@SectionPage.ActiveBucket.Label</a>
+			}
+			else
+			{
+				<span aria-current="page">@SectionPage.ActiveBucket.Label</span>
+			}
+		}
+		@if (SectionPage.PageNumber > 1)
+		{
+			<span aria-hidden="true">/</span>
+			<span aria-current="page">Page @SectionPage.PageNumber</span>
+		}
+	</nav>
+
+	<header class="sitemap-header">
+		<div class="sitemap-section-head">
+			<div>
+				<h1>
+					@SectionPage.Section.Title
+					@if (SectionPage.ActiveBucket is not null)
+					{
+						<span class="sitemap-bucket-tag">— @SectionPage.ActiveBucket.Label</span>
+					}
+				</h1>
+				<p class="sitemap-subtitle">
+					@SectionPage.TotalItems.ToString("N0") @(SectionPage.TotalItems == 1 ? "entry" : "entries")
+					@if (SectionPage.TotalPages > 1)
+					{
+						<span>&middot; Page @SectionPage.PageNumber of @SectionPage.TotalPages</span>
+					}
+				</p>
+			</div>
+		</div>
+
+		<nav class="sitemap-buckets" aria-label="Filter by starting letter">
+			@if (SectionPage.ActiveBucket is null)
+			{
+				<span class="sitemap-bucket sitemap-bucket-all is-active" aria-current="page">All</span>
+			}
+			else
+			{
+				<a class="sitemap-bucket sitemap-bucket-all" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, null)">All</a>
+			}
+
+			@foreach (SitemapBucketLink Bucket in SectionPage.Buckets)
+			{
+				if (SectionPage.ActiveBucket?.Slug == Bucket.Slug)
+				{
+					<span class="sitemap-bucket is-active" aria-current="page">@Bucket.Label</span>
+				}
+				else if (Bucket.HasEntries)
+				{
+					<a class="sitemap-bucket" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, Bucket.Slug)">@Bucket.Label</a>
+				}
+				else
+				{
+					<span class="sitemap-bucket is-empty" aria-disabled="true">@Bucket.Label</span>
+				}
+			}
+		</nav>
+	</header>
+
+	@if (SectionPage.Entries.Count == 0)
+	{
+		<p class="sitemap-empty">No entries found for this filter.</p>
+	}
+	else
+	{
+		<ul class="sitemap-link-grid">
+			@foreach (HtmlSitemapEntry Entry in SectionPage.Entries)
+			{
+				<li><a href="@Entry.Path">@Entry.Title</a></li>
+			}
+		</ul>
+	}
+
+	@if (SectionPage.TotalPages > 1)
+	{
+		<nav class="sitemap-pagination" aria-label="Sitemap pagination">
+			<div class="sitemap-page-step">
+				@if (SectionPage.PageNumber > 1)
+				{
+					<a rel="prev" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, SectionPage.PageNumber - 1)">&larr; Previous</a>
+				}
+			</div>
+
+			<ol class="sitemap-page-numbers">
+				@foreach (int? Token in Model.PaginationTokens)
+				{
+					if (Token is null)
+					{
+						<li class="sitemap-ellipsis" aria-hidden="true">&hellip;</li>
+					}
+					else if (Token.Value == SectionPage.PageNumber)
+					{
+						<li><span class="is-current" aria-current="page">@Token.Value</span></li>
+					}
+					else
+					{
+						<li>
+							<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, Token.Value)">@Token.Value</a>
+						</li>
+					}
+				}
+			</ol>
+
+			<div class="sitemap-page-step">
+				@if (SectionPage.PageNumber < SectionPage.TotalPages)
+				{
+					<a rel="next" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, SectionPage.PageNumber + 1)">Next &rarr;</a>
+				}
+			</div>
+		</nav>
+	}
+</div>

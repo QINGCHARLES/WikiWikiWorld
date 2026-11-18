@@ -22,6 +22,10 @@ else
         {
             <li class="search-result-item">
                 <a href="@result.Path">@Html.Raw(Model.HighlightTerm(result.Title))</a>
+                @if (result.Type == ArticleType.Redirect)
+                {
+                    <span class="search-suggestion-type">Redirect</span>
+                }
                 @if (!result.IsTitleMatch && !string.IsNullOrWhiteSpace(result.Snippet))
                 {
                     <p class="search-snippet">@Html.Raw(Model.HighlightTerm(result.Snippet))</p>

@@ -118,5 +118,10 @@ public enum ArticleType
     /// <summary>
     /// An information page.
     /// </summary>
-    Info
+    Info,
+
+    /// <summary>
+    /// A redirect page pointing to another article.
+    /// </summary>
+    Redirect
 }

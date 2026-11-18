@@ -44,6 +44,7 @@ public sealed class CategoryMembershipSaveTests : IDisposable
 	[InlineData(ArticleType.File, true)]
 	[InlineData(ArticleType.User, false)]
 	[InlineData(ArticleType.Info, true)]
+	[InlineData(ArticleType.Redirect, false)]
 	public async Task NewRevisionStoresOnlyDistinctParsedSlugs(ArticleType Type, bool UseAsync)
 	{
 		using WikiWikiWorldDbContext Context = CreateContext();

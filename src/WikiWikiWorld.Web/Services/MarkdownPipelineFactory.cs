@@ -105,6 +105,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 		YouTubeExtension YouTubeExt = new();
 		StubExtension StubExt = new();
 		SourceExtension SourceExt = new();
+		RedirectExtension RedirectExt = new();
 
 		ApprovedNoFollowLinksExtension LinksExt = new(ApprovedLinkDomains);
 
@@ -114,6 +115,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(HeaderImageExt)
 			.Use(EyebrowExt)
 			.Use(SubtitleExt)
+			.Use(RedirectExt)
 			.Use(CategoryExt)
 			.Use(new CategoryArticlesExtension())
 			.Use(FootnoteExt)

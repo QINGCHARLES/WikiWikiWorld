@@ -202,6 +202,10 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.DateCreated });
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.UrlSlug, e.IsCurrent }).HasFilter("IsCurrent = 1 AND DateDeleted IS NULL");
+			b.HasIndex(e => new { e.SiteId, e.Culture, e.Type, e.Title, e.Id, e.UrlSlug, e.DisplayTitle }, "IX_ArticleRevisions_Sitemap_Html")
+				.HasFilter("IsCurrent AND DateDeleted IS NULL");
+			b.HasIndex(e => new { e.SiteId, e.Culture, e.Type, e.Id, e.UrlSlug, e.DateCreated }, "IX_ArticleRevisions_Sitemap_Xml")
+				.HasFilter("IsCurrent AND DateDeleted IS NULL");
 		});
 
 		Builder.Entity<ArticleCategoryMembership>(b =>

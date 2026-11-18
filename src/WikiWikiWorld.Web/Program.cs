@@ -157,7 +157,7 @@ Builder.Services.AddScoped<FileMigrationService>();
 Builder.Services.AddScoped<ArticleDomainRedirectService>();
 Builder.Services.AddScoped<ArticleLanguageService>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
-Builder.Services.AddTransient<ISitemapService, SitemapService>();
+Builder.Services.AddScoped<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
 
 // ✅ Register Identity with EF Core
@@ -295,6 +295,11 @@ Builder.Services.AddRazorPages(options =>
     options.Conventions.AddPageRoute("/Settings/Theme", "@{Username}/settings");
     options.Conventions.AddPageRoute("/Article/Firehose", "firehose:");
     options.Conventions.AddPageRoute("/Search", "search:");
+    options.Conventions.AddPageRoute("/Info/Sitemap", "info:sitemap");
+    options.Conventions.AddPageRoute("/Info/SitemapSection", "info:sitemap/{section}");
+    options.Conventions.AddPageRoute("/Info/SitemapSection", "info:sitemap/{section}/page/{pageNumber:int}");
+    options.Conventions.AddPageRoute("/Info/SitemapSection", "info:sitemap/{section}/{bucket}");
+    options.Conventions.AddPageRoute("/Info/SitemapSection", "info:sitemap/{section}/{bucket}/page/{pageNumber:int}");
     // Note: "create:" is routed by ArticleRouteTransformer, not a page route convention.
     // A page targeted by the dynamic transformer must keep a single conventional route,
     // otherwise dynamic matches become ambiguous (CreateEdit is also the /edit target).
@@ -351,14 +356,37 @@ App.MapControllers();
 App.MapOpenApi();
 App.MapScalarApiReference("/wiki:api-docs");
 
-Func<ISitemapService, Task<IResult>> SitemapHandler = async (ISitemapService SitemapService) =>
+App.MapGet("/sitemap.xml", async (ISitemapService SitemapService, HttpContext HttpContext, CancellationToken CancellationToken) =>
 {
-    string Sitemap = await SitemapService.GenerateSitemapAsync();
-    return Results.Content(Sitemap, "application/xml");
-};
+    string Sitemap = await SitemapService.GenerateSitemapAsync(CancellationToken);
+    HttpContext.Response.Headers.CacheControl = "public, max-age=3600";
+    return Results.Content(Sitemap, "application/xml; charset=utf-8");
+}).ExcludeFromDescription();
 
-App.MapGet("/sitemap.xml", SitemapHandler).ExcludeFromDescription();
-App.MapGet("/info:sitemap", SitemapHandler).ExcludeFromDescription();
+App.MapGet("/sitemaps/static.xml", async (ISitemapService SitemapService, HttpContext HttpContext, CancellationToken CancellationToken) =>
+{
+    string? Sitemap = await SitemapService.GenerateStaticSitemapAsync(CancellationToken);
+    if (Sitemap is null)
+    {
+        return Results.NotFound();
+    }
+
+    HttpContext.Response.Headers.CacheControl = "public, max-age=3600";
+    return Results.Content(Sitemap, "application/xml; charset=utf-8");
+}).ExcludeFromDescription();
+
+App.MapGet("/sitemaps/{section}-{pageNumber:int}.xml", async (string Section, int PageNumber, ISitemapService SitemapService, HttpContext HttpContext, CancellationToken CancellationToken) =>
+{
+    string? Sitemap = await SitemapService.GenerateSectionSitemapAsync(Section, PageNumber, CancellationToken);
+    if (Sitemap is null)
+    {
+        return Results.NotFound();
+    }
+
+    HttpContext.Response.Headers.CacheControl = "public, max-age=3600";
+    return Results.Content(Sitemap, "application/xml; charset=utf-8");
+}).ExcludeFromDescription();
+
 
 App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context) =>
 {

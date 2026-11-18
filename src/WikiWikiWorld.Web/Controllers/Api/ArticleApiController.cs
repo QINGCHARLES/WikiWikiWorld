@@ -210,6 +210,7 @@ public class ArticleApiController(
         try
         {
             await ArticleRevisionService.EnsureMayCreateAsync(UrlSlug, Type, ParsedUserId, CancellationToken);
+            await ArticleRevisionService.EnsureValidRedirectAsync(UrlSlug, Type, Text, CancellationToken);
         }
         catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
         {

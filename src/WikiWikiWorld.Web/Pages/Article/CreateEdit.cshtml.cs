@@ -243,10 +243,17 @@ public sealed class CreateEditModel(
     /// <returns>A redirect to the new article or a page with errors.</returns>
     private async Task<IActionResult> HandleCreateAsync(Guid CurrentUserId, CancellationToken CancellationToken)
     {
-        // Creation writes its own revision, so it applies the shared user-page rules explicitly.
+        // Creation writes its own revision, so it applies the shared user-page and redirect rules explicitly.
+        if (SelectedType == ArticleType.Redirect && UploadedFile is { Length: > 0 })
+        {
+            ErrorMessage = "Redirect pages cannot have an attached file.";
+            return Page();
+        }
+
         try
         {
             await ArticleRevisionService.EnsureMayCreateAsync(UrlSlug!, SelectedType, CurrentUserId, CancellationToken);
+            await ArticleRevisionService.EnsureValidRedirectAsync(UrlSlug!, SelectedType, ArticleText, CancellationToken);
         }
         catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
         {
@@ -442,6 +449,13 @@ public sealed class CreateEditModel(
                 await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
                 return Page();
             }
+        }
+
+        if (SelectedType == ArticleType.Redirect)
+        {
+            ErrorMessage = "Redirect pages cannot have an attached file.";
+            await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
+            return Page();
         }
 
         if (!IsValidImageFile(UploadedFile, out string ValidationError))

@@ -115,6 +115,31 @@ public sealed class ViewModel(
     public string CurrentCanonicalUrlSlug => CurrentRevision is null ? string.Empty : ArticleUrlHelper.BuildCanonicalSlug(CurrentRevision.UrlSlug, CurrentRevision.Type);
 
     /// <summary>
+    /// TempData key storing the source slug of a completed redirect.
+    /// </summary>
+    public const string RedirectedFromSlugTempDataKey = "RedirectedFromSlug";
+
+    /// <summary>
+    /// TempData key storing the source title of a completed redirect.
+    /// </summary>
+    public const string RedirectedFromTitleTempDataKey = "RedirectedFromTitle";
+
+    /// <summary>
+    /// TempData key storing the resolved destination slug so the banner renders only on the target page.
+    /// </summary>
+    public const string RedirectedToSlugTempDataKey = "RedirectedToSlug";
+
+    /// <summary>
+    /// Gets the title of the redirect page that forwarded the visitor here, if any.
+    /// </summary>
+    public string? RedirectedFromTitle { get; private set; }
+
+    /// <summary>
+    /// Gets the editor URL for the redirect page that forwarded the visitor here, if any.
+    /// </summary>
+    public string? RedirectedFromEditPath { get; private set; }
+
+    /// <summary>
     /// Gets or sets the list of recent authors.
     /// </summary>
     public IReadOnlyList<ArticleAuthor> RecentAuthors { get; set; } = [];
@@ -327,6 +352,38 @@ public sealed class ViewModel(
             }
         }
 
+        if (string.IsNullOrWhiteSpace(Revision)
+            && DisplayedRevision.Type == ArticleType.Redirect
+            && RedirectExtension.TryExtractTarget(DisplayedRevision.Text, out string RedirectTargetSlug, out string? RedirectFragment)
+            && !RedirectTargetSlug.Equals(DisplayedRevision.UrlSlug, StringComparison.OrdinalIgnoreCase))
+        {
+            ArticleRevisionsBySlugSpec TargetSpec = new(RedirectTargetSlug, IsCurrent: true);
+            ArticleRevision? TargetRevision = await Context.ArticleRevisions
+                .AsNoTracking()
+                .WithSpecification(TargetSpec)
+                .FirstOrDefaultAsync(CancellationToken);
+
+            if (TargetRevision is not null && TargetRevision.Type != ArticleType.Redirect)
+            {
+                if (TempData is not null)
+                {
+                    TempData[RedirectedFromSlugTempDataKey] = DisplayedRevision.UrlSlug;
+                    TempData[RedirectedFromTitleTempDataKey] = DisplayedRevision.Title;
+                    TempData[RedirectedToSlugTempDataKey] = TargetRevision.UrlSlug;
+                }
+
+                string TargetPath = ArticleUrlHelper.BuildArticlePath(TargetRevision);
+                if (!string.IsNullOrEmpty(RedirectFragment))
+                {
+                    TargetPath = $"{TargetPath}#{RedirectFragment}";
+                }
+
+                return Redirect(TargetPath);
+            }
+        }
+
+        ConsumeRedirectNotice(DisplayedRevision);
+
         // Fetch recent authors (username and profile pic GUID) for this article.
         DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
         RecentAuthors = await ArticleRevisionService.GetRecentAuthorsAsync(DisplayedRevision.CanonicalArticleId, MaxRevisionDate, CancellationToken);
@@ -344,7 +401,7 @@ public sealed class ViewModel(
         }
         else
         {
-             AllowSearchEngineIndexingOfPage = true;
+            AllowSearchEngineIndexingOfPage = DisplayedRevision?.Type != ArticleType.Redirect;
         }
 
         ArticleRevision RevisionToRender = DisplayedRevision ?? throw new InvalidOperationException("Displayed revision was not loaded.");
@@ -708,6 +765,35 @@ public sealed class ViewModel(
                 _ => string.IsNullOrWhiteSpace(MimeType) ? "Unknown" : MimeType
             }
         };
+    }
+
+    /// <summary>
+    /// Reads and consumes any pending redirect-origin flash state in <see cref="Microsoft.AspNetCore.Mvc.RazorPages.PageModel.TempData"/>
+    /// and exposes it when the displayed revision is its intended destination.
+    /// </summary>
+    /// <param name="Displayed">The revision currently being rendered.</param>
+    private void ConsumeRedirectNotice(ArticleRevision Displayed)
+    {
+        if (TempData is null || !TempData.ContainsKey(RedirectedToSlugTempDataKey))
+        {
+            return;
+        }
+
+        string? ExpectedTargetSlug = TempData[RedirectedToSlugTempDataKey] as string;
+        string? FromSlug = TempData[RedirectedFromSlugTempDataKey] as string;
+        string? FromTitle = TempData[RedirectedFromTitleTempDataKey] as string;
+
+        if (!string.IsNullOrWhiteSpace(Revision)
+            || Displayed.Type == ArticleType.Redirect
+            || string.IsNullOrWhiteSpace(ExpectedTargetSlug)
+            || string.IsNullOrWhiteSpace(FromSlug)
+            || !ExpectedTargetSlug.Equals(Displayed.UrlSlug, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        RedirectedFromTitle = !string.IsNullOrWhiteSpace(FromTitle) ? FromTitle : FromSlug;
+        RedirectedFromEditPath = $"{ArticleUrlHelper.BuildArticlePath(FromSlug, ArticleType.Redirect)}/edit";
     }
 }
 

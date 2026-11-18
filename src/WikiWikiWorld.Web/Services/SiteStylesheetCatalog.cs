@@ -39,6 +39,7 @@ public sealed class SiteStylesheetCatalog
 		"pages/profile.css",
 		"pages/languages.css",
 		"pages/firehose.css",
+		"pages/sitemap.css",
 		"pages/header-helper.css",
 	];
 

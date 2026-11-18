@@ -5,6 +5,7 @@ using WikiWikiWorld.Data;
 using WikiWikiWorld.Data.Extensions;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
+using WikiWikiWorld.Web.MarkdigExtensions;
 
 namespace WikiWikiWorld.Web.Services;
 
@@ -49,6 +50,56 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 		else if (Type == ArticleType.User)
 		{
 			throw ArticleRevisionWorkflowException.Invalid("Only @username user pages can use the User article type.");
+		}
+	}
+
+	/// <summary>
+	/// Validates that a <see cref="ArticleType.Redirect"/> article contains a valid <c>{{Redirect ...}}</c>
+	/// directive that does not target itself or chain directly to another redirect page.
+	/// Does nothing when <paramref name="Type"/> is not <see cref="ArticleType.Redirect"/>.
+	/// </summary>
+	/// <param name="UrlSlug">The slug of the redirect article being created or updated.</param>
+	/// <param name="Type">The requested article type.</param>
+	/// <param name="MarkdownText">The submitted article markdown.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>A task that completes when the redirect target passes validation.</returns>
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown with <see cref="ArticleRevisionWorkflowFailureKind.Invalid"/> when the directive is missing, malformed, self-referential, or points to another redirect.</exception>
+	public async Task EnsureValidRedirectAsync(
+		string UrlSlug,
+		ArticleType Type,
+		string MarkdownText,
+		CancellationToken CancellationToken)
+	{
+		if (Type != ArticleType.Redirect)
+		{
+			return;
+		}
+
+		ArgumentException.ThrowIfNullOrWhiteSpace(UrlSlug);
+
+		if (!RedirectExtension.TryExtractTarget(MarkdownText, out string TargetSlug, out string? _))
+		{
+			throw ArticleRevisionWorkflowException.Invalid(
+				"A Redirect page must contain a valid {{Redirect target-slug}} directive.");
+		}
+
+		if (TargetSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase))
+		{
+			throw ArticleRevisionWorkflowException.Invalid(
+				"A redirect page cannot redirect to itself.");
+		}
+
+		ArticleRevisionsBySlugSpec TargetSpec = new(TargetSlug, IsCurrent: true);
+		ArticleType? TargetType = await Context.ArticleRevisions
+			.AsNoTracking()
+			.WithSpecification(TargetSpec)
+			.Select(R => (ArticleType?)R.Type)
+			.FirstOrDefaultAsync(CancellationToken);
+
+		if (TargetType == ArticleType.Redirect)
+		{
+			throw ArticleRevisionWorkflowException.Invalid(
+				$"Redirect target '{TargetSlug}' is itself a redirect. Point directly to the destination article instead.");
 		}
 	}
 
@@ -297,6 +348,8 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 			{
 				throw ArticleRevisionWorkflowException.Invalid("Only @username user pages can use the User article type.");
 			}
+
+			await EnsureValidRedirectAsync(Command.NewUrlSlug, Command.Type, Command.Text, CT);
 
 			if (!Command.OriginalUrlSlug.Equals(Command.NewUrlSlug, StringComparison.OrdinalIgnoreCase))
 			{
