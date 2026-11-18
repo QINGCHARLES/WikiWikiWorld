@@ -252,13 +252,20 @@ ul.categories a {
     gap: 2px;
 }
 
+/* The two halves are rounded on their outer (inline) sides only, written with logical corners so
+   the pill shape mirrors in right-to-left pages. */
 .article-actions .m3-split-button > :is(a, button) {
+    --split-inner-radius: 4px;
     gap: 0.48rem;
-    padding: 0 0.95rem 0 1.1rem;
-    border-radius: 9999px 4px 4px 9999px;
+    padding-block: 0;
+    padding-inline: 1.1rem 0.95rem;
+    border-start-start-radius: 9999px;
+    border-end-start-radius: 9999px;
+    border-start-end-radius: var(--split-inner-radius);
+    border-end-end-radius: var(--split-inner-radius);
 
     &:active {
-        border-radius: 9999px 8px 8px 9999px;
+        --split-inner-radius: 8px;
     }
 }
 
@@ -272,12 +279,16 @@ ul.categories a {
 
 .article-actions .m3-split-button > details > summary {
     width: calc(var(--action-height) * 1.05);
+    --split-inner-radius: 4px;
     padding: 0;
-    border-radius: 4px 9999px 9999px 4px;
+    border-start-start-radius: var(--split-inner-radius);
+    border-end-start-radius: var(--split-inner-radius);
+    border-start-end-radius: 9999px;
+    border-end-end-radius: 9999px;
     list-style: none;
 
     &:active {
-        border-radius: 8px 9999px 9999px 8px;
+        --split-inner-radius: 8px;
     }
 }
 

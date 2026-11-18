@@ -11,7 +11,9 @@
 	padding: 0.75rem 1rem;
 	border-inline-start: 4px solid var(--color-info);
 	background-color: var(--color-info-surface);
-	border-radius: 0 4px 4px 0;
+	/* Square on the accent-bar side, rounded on the far side, in either text direction. */
+	border-start-end-radius: 4px;
+	border-end-end-radius: 4px;
 	font-size: 0.9rem;
 	color: var(--color-info-text);
 }
