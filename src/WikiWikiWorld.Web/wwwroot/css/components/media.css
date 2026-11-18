@@ -22,11 +22,13 @@ figure:has(.hero-image) {
     --hero-max-width: calc(2 * var(--grid-max-width));
     --feather-size: clamp(0px, (100vw - var(--hero-max-width)) * 0.5, 6rem);
 
-    inline-size: min(100vw, var(--hero-max-width));
+    --hero-inline-size: min(100vw, var(--hero-max-width));
+
+    /* Centred on the text column with equal negative inline margins, like hgroup, so it mirrors in RTL. */
+    inline-size: var(--hero-inline-size);
     max-inline-size: none;
     position: relative;
-    inset-inline-start: 50%;
-    transform: translateX(-50%);
+    margin-inline: calc((100% - var(--hero-inline-size)) / 2);
     overflow: clip;
     mask-image:
         linear-gradient(
