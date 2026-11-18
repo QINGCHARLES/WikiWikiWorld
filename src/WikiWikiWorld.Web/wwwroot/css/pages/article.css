@@ -49,15 +49,15 @@ main > article {
 }
 
 article aside {
-    float: right;
-    clear: right;
+    float: inline-end;
+    clear: inline-end;
     width: 100%;
     background: var(--color-black);
     color: var(--color-white);
     max-width: 22rem;
-    margin-right: clamp(-20rem, var(--aside-outset), 0px);
+    margin-inline-end: clamp(-20rem, var(--aside-outset), 0px);
     background-position-x: var(--aside-outset);
-    margin-left: var(--grid-gutter);
+    margin-inline-start: var(--grid-gutter);
 }
 
 article > aside {
@@ -313,14 +313,14 @@ main > article > ul:not(.categories) {
 
 main > article > ul:not(.categories) > li {
     position: relative;
-    padding-left: 1.5em;
+    padding-inline-start: 1.5em;
     contain: content;
 }
 
 main > article > ul:not(.categories) > li::before {
     content: '';
     position: absolute;
-    left: 0;
+    inset-inline-start: 0;
     top: 0.7rem;
     width: .7rem;
     height: .7rem;
@@ -348,8 +348,7 @@ li > ul > li {
         float: none;
         width: 100%;
         max-width: 32rem;
-        margin-left: auto;
-        margin-right: auto;
+        margin-inline: auto;
 
         & ul {
             padding-bottom: var(--grid-gutter);
@@ -377,7 +376,7 @@ aside.publication-upload-cta p {
 
 aside.publication-upload-cta a {
     font-weight: 600;
-    margin-left: 0.25rem;
+    margin-inline-start: 0.25rem;
 }
 
 

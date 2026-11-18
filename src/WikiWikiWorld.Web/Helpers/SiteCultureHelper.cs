@@ -114,4 +114,27 @@ public static class SiteCultureHelper
 			return CultureCode;
 		}
 	}
+
+	/// <summary>
+	/// Determines whether a culture's script is written right to left, for the document's <c>dir</c> attribute.
+	/// </summary>
+	/// <param name="CultureCode">The culture code, such as <c>ar</c>; empty or unknown codes are treated as left to right.</param>
+	/// <returns><see langword="true"/> for right-to-left cultures such as Arabic; otherwise <see langword="false"/>.</returns>
+	/// <remarks>
+	/// Requires ICU, like <see cref="GetDisplayName"/>. Without it the lookup throws and every culture is treated as left to right.
+	/// </remarks>
+	public static bool IsRightToLeft(string? CultureCode)
+	{
+		if (string.IsNullOrWhiteSpace(CultureCode))
+			return false;
+
+		try
+		{
+			return CultureInfo.GetCultureInfo(CultureCode).TextInfo.IsRightToLeft;
+		}
+		catch (CultureNotFoundException)
+		{
+			return false;
+		}
+	}
 }

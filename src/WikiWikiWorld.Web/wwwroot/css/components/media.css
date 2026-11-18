@@ -5,15 +5,17 @@
     width: calc(100% + 2 * var(--grid-gutter));
 }
 
+/* The title block is wider than the text column and centred on it with equal negative inline
+   margins, which mirror correctly in right-to-left pages (a left offset plus translate does not). */
 hgroup {
-    display: block;
-    width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
+    --hgroup-width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
     calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter))
     );
+    display: block;
+    width: var(--hgroup-width);
     max-width: none;
+    margin-inline: calc((100% - var(--hgroup-width)) / 2);
     position: relative;
-    left: 50%;
-    transform: translateX(-50%);
 }
 
 figure:has(.hero-image) {

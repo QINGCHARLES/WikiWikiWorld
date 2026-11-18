@@ -14,9 +14,12 @@
 		"dark" => "dark",
 		_ => null
 	};
+	// The document language follows the culture subdomain; the culture-selector root has none and stays English.
+	string DocumentLanguage = string.IsNullOrWhiteSpace(Model.Culture) ? "en" : Model.Culture;
+	string? DocumentDirection = WikiWikiWorld.Web.Helpers.SiteCultureHelper.IsRightToLeft(DocumentLanguage) ? "rtl" : null;
 }
 <!doctype html>
-<html lang="en" data-theme="@DataTheme">
+<html lang="@DocumentLanguage" dir="@DocumentDirection" data-theme="@DataTheme">
 <head>
 
 <link rel="preload" href="/fonts/LyonTextWeb-RegularNoTwo.woff2" as="font" type="font/woff2" crossorigin>

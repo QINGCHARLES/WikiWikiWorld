@@ -1,4 +1,8 @@
-// Carousel navigation - scroll to next/prev slide
+// Carousel navigation - scroll to next/prev slide.
+// In right-to-left pages slides run leftwards and scrollLeft counts down from 0,
+// so horizontal offsets are negated there.
+const inlineSign = (slides) => getComputedStyle(slides).direction === 'rtl' ? -1 : 1;
+
 document.addEventListener('click', (e) => {
     // Arrow button navigation
     const navBtn = e.target.closest('.carousel .nav');
@@ -6,7 +10,7 @@ document.addEventListener('click', (e) => {
         const slides = navBtn.closest('.slides');
         const dir = parseInt(navBtn.dataset.dir, 10);
         const slideWidth = slides.querySelector('.slide').offsetWidth;
-        slides.scrollBy({ left: dir * slideWidth, behavior: 'smooth' });
+        slides.scrollBy({ left: inlineSign(slides) * dir * slideWidth, behavior: 'smooth' });
         return;
     }
     
@@ -17,7 +21,7 @@ document.addEventListener('click', (e) => {
         const slides = carousel.querySelector('.slides');
         const index = parseInt(dotBtn.dataset.index, 10);
         const slideWidth = slides.querySelector('.slide').offsetWidth;
-        slides.scrollTo({ left: index * slideWidth, behavior: 'smooth' });
+        slides.scrollTo({ left: inlineSign(slides) * index * slideWidth, behavior: 'smooth' });
     }
 });
 

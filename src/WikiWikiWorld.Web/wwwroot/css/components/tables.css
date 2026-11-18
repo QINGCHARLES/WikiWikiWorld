@@ -2,7 +2,7 @@
 
 table {
     border-collapse: collapse;
-    text-align: left;
+    text-align: start;
     width: 100%;
 }
 
@@ -10,6 +10,8 @@ th {
     background-color: var(--color-surface);
     color: var(--color-foreground);
     font-weight: bold;
+    /* Explicit, because the browser's default header centring applies when the table only says "start". */
+    text-align: start;
     padding: 0.625rem 0.9375rem;
     border-bottom: 0.125rem solid var(--color-border);
 }

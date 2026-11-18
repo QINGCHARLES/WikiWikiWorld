@@ -294,7 +294,7 @@ ul.categories a {
     display: none;
     position: absolute;
     top: calc(100% + 0.45rem);
-    right: 0;
+    inset-inline-end: 0;
     background-color: var(--color-white);
     min-width: 14.5rem;
     padding: 0.4rem 0;
