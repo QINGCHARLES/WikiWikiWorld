@@ -4,13 +4,57 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ArticleKind.Article" xml:space="preserve"><value>an article</value></data>
+  <data name="ArticleKind.Category" xml:space="preserve"><value>a category</value></data>
+  <data name="ArticleKind.File" xml:space="preserve"><value>a file</value></data>
+  <data name="ArticleKind.Info" xml:space="preserve"><value>an info</value></data>
+  <data name="ArticleKind.Redirect" xml:space="preserve"><value>a redirect</value></data>
+  <data name="ArticleKind.User" xml:space="preserve"><value>a user</value></data>
   <data name="Bookmark.ListsSavedInOther|one" xml:space="preserve"><value>Bookmark lists, saved in {0} other list</value></data>
   <data name="Bookmark.ListsSavedInOther|other" xml:space="preserve"><value>Bookmark lists, saved in {0} other lists</value></data>
   <data name="EditArticle.Suffix" xml:space="preserve"><value> article</value></data>
   <data name="FileHistory.VersionsRecorded|one" xml:space="preserve"><value>{0} version recorded for this file.</value></data>
   <data name="FileHistory.VersionsRecorded|other" xml:space="preserve"><value>{0} versions recorded for this file.</value></data>
+  <data name="Firehose.ChangesNewestFirst|one" xml:space="preserve"><value>{0} change · newest first</value></data>
+  <data name="Firehose.ChangesNewestFirst|other" xml:space="preserve"><value>{0} changes · newest first</value></data>
+  <data name="Firehose.ChangesUnit|one" xml:space="preserve"><value>change</value></data>
+  <data name="Firehose.ChangesUnit|other" xml:space="preserve"><value>changes</value></data>
+  <data name="Firehose.ChartLabel|one" xml:space="preserve"><value>{0} change in the last 24 hours. Hourly counts, oldest first: {1}.</value></data>
+  <data name="Firehose.ChartLabel|other" xml:space="preserve"><value>{0} changes in the last 24 hours. Hourly counts, oldest first: {1}.</value></data>
+  <data name="Firehose.Edits|one" xml:space="preserve"><value>{0} edit</value></data>
+  <data name="Firehose.Edits|other" xml:space="preserve"><value>{0} edits</value></data>
+  <data name="Firehose.HourBar|one" xml:space="preserve"><value>{1} UTC: {0} change</value></data>
+  <data name="Firehose.HourBar|other" xml:space="preserve"><value>{1} UTC: {0} changes</value></data>
+  <data name="Firehose.NewChanges|one" xml:space="preserve"><value>{0} new change — show latest ↑</value></data>
+  <data name="Firehose.NewChanges|other" xml:space="preserve"><value>{0} new changes — show latest ↑</value></data>
+  <data name="Firehose.OnThisPage|one" xml:space="preserve"><value>{0} on this page</value></data>
+  <data name="Firehose.OnThisPage|other" xml:space="preserve"><value>{0} on this page</value></data>
+  <data name="Firehose.RecentChanges" xml:space="preserve"><value>Recent changes</value></data>
+  <data name="History.BackToArticle" xml:space="preserve"><value>← Back to Article</value></data>
+  <data name="History.Revisions|one" xml:space="preserve"><value>{0} revision</value></data>
+  <data name="History.Revisions|other" xml:space="preserve"><value>{0} revisions</value></data>
+  <data name="LanguageLink.JoinedGroup|one" xml:space="preserve"><value>Linked to {1}, joining {0} article into this group.</value></data>
+  <data name="LanguageLink.JoinedGroup|other" xml:space="preserve"><value>Linked to {1}, joining {0} articles into this group.</value></data>
+  <data name="LanguageLink.MergedAndUnlinked|one" xml:space="preserve"><value>Linked to {1}. The groups were merged and {0} duplicate-language article was unlinked.</value></data>
+  <data name="LanguageLink.MergedAndUnlinked|other" xml:space="preserve"><value>Linked to {1}. The groups were merged and {0} duplicate-language articles were unlinked.</value></data>
+  <data name="Languages.AlsoAvailable|one" xml:space="preserve"><value>“{1}” is also available in {0} other language.</value></data>
+  <data name="Languages.AlsoAvailable|other" xml:space="preserve"><value>“{1}” is also available in {0} other languages.</value></data>
+  <data name="Link.History" xml:space="preserve"><value>History</value></data>
+  <data name="Link.LogIn" xml:space="preserve"><value>Log in</value></data>
   <data name="NoteVisibility.PrivateSuffix" xml:space="preserve"><value> list. Only you can see this note.</value></data>
   <data name="NoteVisibility.PublicSuffix" xml:space="preserve"><value> list. Anyone can read this note.</value></data>
+  <data name="Search.ResultsFound|one" xml:space="preserve"><value>Found {0} result for "{1}":</value></data>
+  <data name="Search.ResultsFound|other" xml:space="preserve"><value>Found {0} results for "{1}":</value></data>
+  <data name="Sitemap.Entries|one" xml:space="preserve"><value>{0} entry</value></data>
+  <data name="Sitemap.Entries|other" xml:space="preserve"><value>{0} entries</value></data>
+  <data name="Sitemap.OtherLanguages" xml:space="preserve"><value>Other Languages</value></data>
+  <data name="Sitemap.XmlSitemapLink" xml:space="preserve"><value>XML Sitemap</value></data>
+  <data name="Talk.Posts|one" xml:space="preserve"><value>{0} post</value></data>
+  <data name="Talk.Posts|other" xml:space="preserve"><value>{0} posts</value></data>
+  <data name="Talk.ShowNestedReplies|one" xml:space="preserve"><value>Show {0} nested reply</value></data>
+  <data name="Talk.ShowNestedReplies|other" xml:space="preserve"><value>Show {0} nested replies</value></data>
+  <data name="Talk.Subjects|one" xml:space="preserve"><value>{0} subject</value></data>
+  <data name="Talk.Subjects|other" xml:space="preserve"><value>{0} subjects</value></data>
   <data name="Talk.Threads|one" xml:space="preserve"><value>{0} Thread</value></data>
   <data name="Talk.Threads|other" xml:space="preserve"><value>{0} Threads</value></data>
   <data name="TimeAgo.Day|one" xml:space="preserve"><value>{0} day</value></data>
@@ -27,4 +71,6 @@
   <data name="TimeAgo.Week|other" xml:space="preserve"><value>{0} weeks</value></data>
   <data name="TimeAgo.Year|one" xml:space="preserve"><value>{0} year</value></data>
   <data name="TimeAgo.Year|other" xml:space="preserve"><value>{0} years</value></data>
+  <data name="Title.CreateAnAccount" xml:space="preserve"><value>Create an Account</value></data>
+  <data name="Title.DeleteArticle" xml:space="preserve"><value>Delete Article</value></data>
 </root>

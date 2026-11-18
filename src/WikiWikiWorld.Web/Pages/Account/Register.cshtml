@@ -1,14 +1,14 @@
 @page
 @model WikiWikiWorld.Web.Pages.Account.RegisterModel
 @{
-	ViewData["Title"] = "Create an Account";
+	ViewData["Title"] = L["Title.CreateAnAccount"];
 }
 
 <section class="auth" aria-labelledby="AuthTitle">
 	<header class="auth-header">
-		<p class="auth-eyebrow">Join the archive</p>
-		<h1 id="AuthTitle">Sign Up</h1>
-		<p class="auth-lede">Create an account to edit articles, upload covers and join the discussion.</p>
+		<p class="auth-eyebrow">@L["Join the archive"]</p>
+		<h1 id="AuthTitle">@L["Sign Up"]</h1>
+		<p class="auth-lede">@L["Create an account to edit articles, upload covers and join the discussion."]</p>
 	</header>
 
 	<form class="auth-card" method="post">
@@ -38,7 +38,7 @@
 				<label asp-for="Input.Password"></label>
 				<span class="md-line"></span>
 			</div>
-			<p id="PasswordHint" class="auth-hint">Use 8–100 characters, including uppercase and lowercase letters, a number and a symbol.</p>
+			<p id="PasswordHint" class="auth-hint">@L["Use 8–100 characters, including uppercase and lowercase letters, a number and a symbol."]</p>
 			<span asp-validation-for="Input.Password"></span>
 		</div>
 
@@ -51,10 +51,10 @@
 			<span asp-validation-for="Input.ConfirmPassword"></span>
 		</div>
 
-		<button type="submit" class="button auth-submit" data-button-variant="primary">Create Account</button>
+		<button type="submit" class="button auth-submit" data-button-variant="primary">@L["Create Account"]</button>
 	</form>
 
 	<p class="auth-switch">
-		Already have an account? <a asp-page="/Account/Login">Log in</a>
+		@L["Already have an account?"] <a asp-page="/Account/Login">@L["Link.LogIn"]</a>
 	</p>
 </section>

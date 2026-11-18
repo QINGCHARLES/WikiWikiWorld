@@ -74,7 +74,9 @@ public sealed class ConversationModel(PrivateMessagingService Messaging, UserMan
 	public sealed class ReplyInput
 	{
 		/// <summary>Markdown body rendered by the restricted discussion pipeline.</summary>
-		[Required, StringLength(PrivateMessagingService.MaxMessageLength)]
+		[Required(ErrorMessage = "The {0} field is required.")]
+		[StringLength(PrivateMessagingService.MaxMessageLength, ErrorMessage = "The field {0} must be a string with a maximum length of {1}.")]
+		[Display(Name = "Text")]
 		public string Text { get; set; } = string.Empty;
 	}
 }

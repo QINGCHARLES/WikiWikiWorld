@@ -175,6 +175,9 @@ public sealed class SitemapService : ISitemapService
 	private static readonly TimeSpan XmlCacheDuration = TimeSpan.FromHours(6);
 	private static readonly TimeSpan HtmlCacheDuration = TimeSpan.FromHours(1);
 
+	// Section titles, descriptions and link labels are English translation keys; pages show them through L[...].
+	// l10n: "Articles", "Encyclopedia articles and publication entries", "Categories", "Topic and index category pages", "Files", "Uploaded images, covers, and media pages", "Info Pages", "Reference, guide, and policy pages", "Redirects", "Redirect pages pointing to canonical articles"
+	// l10n: "Home", "HTML Sitemap", "Search", "Recent Changes", "Copyright & DMCA", "Terms of Use", "Privacy Policy", "Other"
 	private static readonly IReadOnlyList<SitemapSectionInfo> OrderedSections =
 	[
 		new("articles", "Articles", "Encyclopedia articles and publication entries", ArticleType.Article),

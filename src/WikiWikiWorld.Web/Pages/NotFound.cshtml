@@ -1,32 +1,32 @@
 @page
 @model WikiWikiWorld.Web.Pages.NotFoundModel
 @{
-    ViewData["Title"] = "Page Not Found";
+    ViewData["Title"] = L["Page Not Found"];
     Response.StatusCode = 404;
 }
 
 <div class="not-found-container">
     <div class="not-found-content">
         <h1 class="not-found-title">404</h1>
-        <h2 class="not-found-subtitle">Page Not Found</h2>
+        <h2 class="not-found-subtitle">@L["Page Not Found"]</h2>
         <p class="not-found-message">
-            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            @L["The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."]
         </p>
         
         @if (!string.IsNullOrWhiteSpace(Model.UrlSlug))
         {
             <div class="not-found-slug">
-                Requested: <code>@Model.UrlSlug</code>
+                @L["Requested:"] <code>@Model.UrlSlug</code>
             </div>
         }
 
         <div class="not-found-actions">
             @if (!string.IsNullOrWhiteSpace(Model.UrlSlug))
             {
-                <a href="/@Model.UrlSlug/edit" class="button button-primary" data-button-variant="primary">Create this Page</a>
+                <a href="/@Model.UrlSlug/edit" class="button button-primary" data-button-variant="primary">@L["Create this Page"]</a>
             }
-            <a href="/" class="button button-secondary" data-button-variant="ghost">Go Home</a>
-            <a href="javascript:history.back()" class="button button-secondary" data-button-variant="ghost">Go Back</a>
+            <a href="/" class="button button-secondary" data-button-variant="ghost">@L["Go Home"]</a>
+            <a href="javascript:history.back()" class="button button-secondary" data-button-variant="ghost">@L["Go Back"]</a>
         </div>
     </div>
 </div>

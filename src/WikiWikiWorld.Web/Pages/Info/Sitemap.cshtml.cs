@@ -29,6 +29,6 @@ public sealed class SitemapModel(
 			Request.Host.Port,
 			CancellationToken);
 
-		MetaDescription = $"Browse all sections, categories, files, and pages on {SiteName} ({Culture}).";
+		MetaDescription = SharedResource.Format("Browse all sections, categories, files, and pages on {0} ({1}).", SiteName, Culture);
 	}
 }

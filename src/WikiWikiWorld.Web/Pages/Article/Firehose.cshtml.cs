@@ -32,15 +32,9 @@ public sealed class FirehoseModel(FirehoseService Service, SiteResolverService S
 	public FirehoseActivity Activity { get; private set; } = new(0, 0, 0, new int[24], [], 0);
 	/// <summary>Gets the UTC instant used for all reporting windows.</summary>
 	public DateTimeOffset Now { get; } = DateTimeOffset.UtcNow;
-	/// <summary>Gets the readable language name, preserving unregistered test cultures.</summary>
-	public string Language
-	{
-		get
-		{
-			try { return CultureInfo.GetCultureInfo(Culture).EnglishName; }
-			catch (CultureNotFoundException) { return Culture; }
-		}
-	}
+	/// <summary>Gets the readable language name in the UI language, preserving unregistered test cultures.</summary>
+	// Revision types shown as labels in _FirehoseRows: l10n: "Article", "Category", "File", "User", "Info", "Redirect"
+	public string Language => UiFormat.LanguageName(Culture);
 
 	/// <summary>Loads the selected revision page and its activity summaries.</summary>
 	/// <param name="CancellationToken">Cancels request work.</param>

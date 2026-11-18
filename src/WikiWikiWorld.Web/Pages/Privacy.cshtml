@@ -1,12 +1,19 @@
 @page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
-    Model.MetaDescription = "Learn how we collect, use, and protect your personal information.";
+    ViewData["Title"] = L["Privacy Policy"];
+    Model.MetaDescription = L["Learn how we collect, use, and protect your personal information."];
+    // The policy itself is legal text and stays in English on every culture; other languages mark it as English
+    // (so it reads left to right and screen readers pronounce it correctly) and say so above it.
+    bool IsEnglishPage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is "en" or "iv";
 }
 
-<div class="static-page">
-    <h1>@ViewData["Title"]</h1>
+<div class="static-page" lang="@(IsEnglishPage ? null : "en")" dir="@(IsEnglishPage ? null : "ltr")">
+    <h1 lang="@(IsEnglishPage ? null : CultureInfo.CurrentUICulture.Name)" dir="@(IsEnglishPage ? null : "auto")">@ViewData["Title"]</h1>
+    @if (!IsEnglishPage)
+    {
+        <p lang="@CultureInfo.CurrentUICulture.Name" dir="auto">@L["This policy is published in English only."]</p>
+    }
     <p class="last-updated"><em>Last updated: January 2026</em></p>
 
     <section>

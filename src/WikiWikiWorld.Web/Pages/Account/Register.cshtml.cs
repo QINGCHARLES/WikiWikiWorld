@@ -53,7 +53,7 @@ public sealed class RegisterModel(
 
 		if (DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, Input.UserName, Input.Email))
 		{
-			ModelState.AddModelError(string.Empty, "This username or email is unavailable.");
+			ModelState.AddModelError(string.Empty, SharedResource.Text("This username or email is unavailable."));
 			return Page();
 		}
 
@@ -86,15 +86,15 @@ public sealed class RegisterModel(
 		/// <summary>
 		/// Gets or sets the username.
 		/// </summary>
-		[Required]
+		[Required(ErrorMessage = "The {0} field is required.")]
 		[Display(Name = "Username")]
 		public required string UserName { get; set; }
 
 		/// <summary>
 		/// Gets or sets the email address.
 		/// </summary>
-		[Required]
-		[EmailAddress]
+		[Required(ErrorMessage = "The {0} field is required.")]
+		[EmailAddress(ErrorMessage = "The {0} field is not a valid e-mail address.")]
 		[Display(Name = "Email")]
 		public required string Email { get; set; }
 
@@ -102,7 +102,7 @@ public sealed class RegisterModel(
 		/// Gets or sets the password, with an eight-character minimum matching the account policy.
 		/// Identity validates the required character types when creating the account.
 		/// </summary>
-		[Required]
+		[Required(ErrorMessage = "The {0} field is required.")]
 		[StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
 		[DataType(DataType.Password)]
 		[Display(Name = "Password")]

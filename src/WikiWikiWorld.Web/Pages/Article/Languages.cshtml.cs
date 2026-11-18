@@ -265,13 +265,13 @@ public sealed class LanguagesModel(
 			string? AddressCulture = GetCultureForHost(Address.Host);
 			if (AddressCulture is null)
 			{
-				Error = "That address isn't on this site.";
+				Error = SharedResource.Text("That address isn't on this site.");
 				return false;
 			}
 
 			if (SelectedCulture.Length > 0 && !SelectedCulture.Equals(AddressCulture, StringComparison.OrdinalIgnoreCase))
 			{
-				Error = $"That address is a {SiteCultureHelper.GetDisplayName(AddressCulture)} page, but {SiteCultureHelper.GetDisplayName(SelectedCulture)} is selected.";
+				Error = SharedResource.Format("That address is a {0} page, but {1} is selected.", SiteCultureHelper.GetDisplayName(AddressCulture), SiteCultureHelper.GetDisplayName(SelectedCulture));
 				return false;
 			}
 
@@ -282,7 +282,7 @@ public sealed class LanguagesModel(
 		Slug = Slug.Trim().Trim('/');
 		if (Culture.Length == 0 || Slug.Length == 0)
 		{
-			Error = "Choose a language and enter the other article's address.";
+			Error = SharedResource.Text("Choose a language and enter the other article's address.");
 			return false;
 		}
 
@@ -290,7 +290,7 @@ public sealed class LanguagesModel(
 		string? ConfiguredCulture = GetSiteCultures().FirstOrDefault(Code => Code.Equals(RequestedCulture, StringComparison.OrdinalIgnoreCase));
 		if (ConfiguredCulture is null)
 		{
-			Error = $"{RequestedCulture} is not one of this site's languages.";
+			Error = SharedResource.Format("{0} is not one of this site's languages.", RequestedCulture);
 			return false;
 		}
 

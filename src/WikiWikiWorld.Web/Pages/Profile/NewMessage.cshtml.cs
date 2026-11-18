@@ -93,13 +93,19 @@ public sealed class NewMessageModel(PrivateMessagingService Messaging, UserManag
 	public sealed class NewMessageInputModel
 	{
 		/// <summary>Comma-separated usernames; the sender is included automatically.</summary>
-		[Required, StringLength(2000)]
+		[Required(ErrorMessage = "The {0} field is required.")]
+		[StringLength(2000, ErrorMessage = "The field {0} must be a string with a maximum length of {1}.")]
+		[Display(Name = "Recipients")]
 		public string Recipients { get; set; } = string.Empty;
 		/// <summary>Plain-text title visible only to participants.</summary>
-		[Required, StringLength(PrivateMessagingService.MaxSubjectLength)]
+		[Required(ErrorMessage = "The {0} field is required.")]
+		[StringLength(PrivateMessagingService.MaxSubjectLength, ErrorMessage = "The field {0} must be a string with a maximum length of {1}.")]
+		[Display(Name = "Subject")]
 		public string Subject { get; set; } = string.Empty;
 		/// <summary>Initial body, rendered with the restricted discussion Markdown pipeline.</summary>
-		[Required, StringLength(PrivateMessagingService.MaxMessageLength)]
+		[Required(ErrorMessage = "The {0} field is required.")]
+		[StringLength(PrivateMessagingService.MaxMessageLength, ErrorMessage = "The field {0} must be a string with a maximum length of {1}.")]
+		[Display(Name = "Message")]
 		public string Message { get; set; } = string.Empty;
 	}
 }

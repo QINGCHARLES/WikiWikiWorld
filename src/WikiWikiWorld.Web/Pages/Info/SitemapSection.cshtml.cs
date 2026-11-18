@@ -79,10 +79,11 @@ public sealed class SitemapSectionModel(
 		SectionPage = LoadedPage;
 		PaginationTokens = BuildPaginationTokens(LoadedPage.PageNumber, LoadedPage.TotalPages);
 
-		string BucketSuffix = LoadedPage.ActiveBucket is not null ? $" ({LoadedPage.ActiveBucket.Label})" : string.Empty;
-		string PageSuffix = LoadedPage.PageNumber > 1 ? $" - Page {LoadedPage.PageNumber}" : string.Empty;
-		ViewData["Title"] = $"{LoadedPage.Section.Title}{BucketSuffix}{PageSuffix} - Sitemap";
-		MetaDescription = $"Browse {LoadedPage.Section.Title.ToLowerInvariant()}{BucketSuffix} on {SiteName} ({Culture}).";
+		string SectionTitle = SharedResource.Text(LoadedPage.Section.Title);
+		string BucketSuffix = LoadedPage.ActiveBucket is not null ? $" ({SharedResource.Text(LoadedPage.ActiveBucket.Label)})" : string.Empty;
+		string PageSuffix = LoadedPage.PageNumber > 1 ? " - " + SharedResource.Format("Page {0}", LoadedPage.PageNumber) : string.Empty;
+		ViewData["Title"] = SharedResource.Format("{0} - Sitemap", $"{SectionTitle}{BucketSuffix}{PageSuffix}");
+		MetaDescription = SharedResource.Format("Browse {0} on {1} ({2}).", $"{SectionTitle.ToLowerInvariant()}{BucketSuffix}", SiteName, Culture);
 
 		return Page();
 	}

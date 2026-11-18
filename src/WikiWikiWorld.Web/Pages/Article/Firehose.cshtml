@@ -2,94 +2,104 @@
 @model WikiWikiWorld.Web.Pages.Article.FirehoseModel
 @using WikiWikiWorld.Web.Pages.Article
 @{
-	ViewData["Title"] = "Firehose — Recent changes";
+	ViewData["Title"] = L["Firehose — Recent changes"];
+	// Text for firehose.js, which picks the plural form with Intl.PluralRules.
+	string ScriptText = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+	{
+		["checked"] = L["Checked {0} · checks every 30 seconds"].Value,
+		["newChanges"] = SharedResource.PluralForms("Firehose.NewChanges"),
+		["failed"] = L["Couldn't check for changes. Retrying in 30 seconds; you can also refresh the page."].Value,
+		["failedSince"] = L["Couldn't check for changes. Last checked {0}. Retrying in 30 seconds; you can also refresh the page."].Value,
+		["checking"] = L["Checking for new changes…"].Value,
+		["paused"] = L["Auto-update paused."].Value
+	});
 	int Peak = Math.Max(1, Model.Activity.Hours.Max());
 	string UpdatesUrl = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(Model.FeedUrl(),
 		new Dictionary<string, string?> { ["handler"] = "Updates", ["after"] = Model.Activity.LatestId.ToString() });
 }
-<div class="firehose" data-updates-url="@UpdatesUrl">
-	<div class="fh-breadcrumb"><a href="/">@Model.SiteName</a><span>/</span>Community<span>/</span>Recent changes</div>
+<div class="firehose" data-updates-url="@UpdatesUrl" data-text="@ScriptText">
+	<div class="fh-breadcrumb"><a href="/">@Model.SiteName</a><span>/</span>@L["Community"]<span>/</span>@L["Firehose.RecentChanges"]</div>
 	<header class="fh-heading">
-		<div><p class="fh-kicker">THE ENCYCLOPEDIA, IN THE MAKING</p><h1>Firehose<span aria-hidden="true">.</span></h1></div>
-		<p class="fh-intro">Every edit leaves a mark.<br />Follow the people building the encyclopedia, one page at a time.</p>
+		<div><p class="fh-kicker">@L["THE ENCYCLOPEDIA, IN THE MAKING"]</p><h1>@L["Firehose"]<span aria-hidden="true">.</span></h1></div>
+		<p class="fh-intro">@L["Every edit leaves a mark."]<br />@L["Follow the people building the encyclopedia, one page at a time."]</p>
 	</header>
 	<div class="fh-overview">
-		<div class="fh-scope"><span class="fh-dot" aria-hidden="true"></span><strong>@Model.Language edition</strong><span>Last 24 hours · selected filters</span></div>
+		<div class="fh-scope"><span class="fh-dot" aria-hidden="true"></span><strong>@L["{0} edition", Model.Language]</strong><span>@L["Last 24 hours · selected filters"]</span></div>
 		<dl class="fh-totals">
-			<div><dt>Changes</dt><dd>@Model.Activity.Changes.ToString("N0")</dd></div>
-			<div><dt>Contributors</dt><dd>@Model.Activity.Editors.ToString("N0")</dd></div>
-			<div><dt>Pages edited</dt><dd>@Model.Activity.Pages.ToString("N0")</dd></div>
+			<div><dt>@L["Changes"]</dt><dd>@Model.Activity.Changes.ToString("N0")</dd></div>
+			<div><dt>@L["Contributors"]</dt><dd>@Model.Activity.Editors.ToString("N0")</dd></div>
+			<div><dt>@L["Pages edited"]</dt><dd>@Model.Activity.Pages.ToString("N0")</dd></div>
 		</dl>
 	</div>
 	<div class="fh-layout">
-		<section class="fh-stream" aria-label="Revision feed">
-			<div class="fh-feed-top"><h2>The latest changes</h2><label class="fh-live" hidden><input type="checkbox" id="fh-live" /> Auto-update</label></div>
-			<nav class="fh-tabs" aria-label="Article type">
-				@foreach ((string Value, string Label) in new (string, string)[] { ("", "All changes"), ("Article", "Articles"), ("File", "Files"), ("Category", "Categories"), ("User", "User pages"), ("Info", "Info") })
+		<section class="fh-stream" aria-label="@L["Revision feed"]">
+			<div class="fh-feed-top"><h2>@L["The latest changes"]</h2><label class="fh-live" hidden><input type="checkbox" id="fh-live" /> @L["Auto-update"]</label></div>
+			<nav class="fh-tabs" aria-label="@L["Article type"]">
+				@foreach ((string Value, string Label) in new (string, string)[] { ("", L["All changes"].Value), ("Article", L["Articles"].Value), ("File", L["Files"].Value), ("Category", L["Categories"].Value), ("User", L["User pages"].Value), ("Info", L["Info"].Value) })
 				{
 					<a href="@Model.FeedUrl(SelectedType: Value)" aria-current="@(string.Equals(Model.Type ?? "", Value, StringComparison.OrdinalIgnoreCase) ? "page" : null)">@Label</a>
 				}
 			</nav>
 			<form method="get" action="/firehose:" class="fh-filters">
 				<input type="hidden" name="type" value="@Model.Type" />
-				<label class="fh-search"><span class="visually-hidden">Find a page title</span><input type="search" name="q" value="@Model.Search" placeholder="Find a page…" /></label>
-				<label><span class="visually-hidden">Contributor name</span><input name="editor" value="@Model.Editor" placeholder="Contributor" aria-label="Contributor name" /></label>
-				<label><span class="visually-hidden">Time period</span><select name="period" aria-label="Time period">
-					<option value="all" selected="@(Model.Period is null or "all")">Any time</option>
-					<option value="day" selected="@(Model.Period == "day")">Last 24 hours</option>
-					<option value="week" selected="@(Model.Period == "week")">Last 7 days</option>
+				<label class="fh-search"><span class="visually-hidden">@L["Find a page title"]</span><input type="search" name="q" value="@Model.Search" placeholder="@L["Find a page…"]" /></label>
+				<label><span class="visually-hidden">@L["Contributor name"]</span><input name="editor" value="@Model.Editor" placeholder="@L["Contributor"]" aria-label="@L["Contributor name"]" /></label>
+				<label><span class="visually-hidden">@L["Time period"]</span><select name="period" aria-label="@L["Time period"]">
+					<option value="all" selected="@(Model.Period is null or "all")">@L["Any time"]</option>
+					<option value="day" selected="@(Model.Period == "day")">@L["Last 24 hours"]</option>
+					<option value="week" selected="@(Model.Period == "week")">@L["Last 7 days"]</option>
 				</select></label>
-				<button type="submit">Apply</button>
+				<button type="submit">@L["Apply"]</button>
 			</form>
 			<div class="fh-update-status" role="status" aria-live="polite" hidden></div>
 			<a class="fh-new" href="@Model.FeedUrl()" hidden></a>
 			@if (Model.Before is not null)
 			{
-				<div class="fh-older-note">Browsing earlier changes <a href="@Model.FeedUrl()">Back to latest ↑</a></div>
+				<div class="fh-older-note">@L["Browsing earlier changes"] <a href="@Model.FeedUrl()">@L["Back to latest ↑"]</a></div>
 			}
 			@if (Model.Feed.Entries.Count == 0)
 			{
-				<div class="fh-empty"><h3>Nothing in this stream. Yet.</h3><p>No revisions match these filters. Try a wider time range or another page title.</p><a href="/firehose:">Show all changes →</a></div>
+				<div class="fh-empty"><h3>@L["Nothing in this stream. Yet."]</h3><p>@L["No revisions match these filters. Try a wider time range or another page title."]</p><a href="/firehose:">@L["Show all changes →"]</a></div>
 			}
 			else
 			{
 				<partial name="_FirehoseRows" model="Model" />
-				<nav class="fh-pagination" aria-label="Feed pagination">
-					<span>@Model.Feed.Entries.Count changes · newest first</span>
+				<nav class="fh-pagination" aria-label="@L["Feed pagination"]">
+					<span>@SharedResource.Plural("Firehose.ChangesNewestFirst", Model.Feed.Entries.Count)</span>
 					@if (Model.Feed.HasMore)
 					{
-						<a href="@Model.FeedUrl(Model.Feed.Entries[^1])">Earlier changes <span aria-hidden="true">↓</span></a>
+						<a href="@Model.FeedUrl(Model.Feed.Entries[^1])">@L["Earlier changes"] <span aria-hidden="true">↓</span></a>
 					}
-					else { <span>You’re all caught up.</span> }
+					else { <span>@L["You’re all caught up."]</span> }
 				</nav>
 			}
 		</section>
-		<aside class="fh-aside" aria-label="Activity context">
+		<aside class="fh-aside" aria-label="@L["Activity context"]">
 			<section class="fh-pulse">
-				<div class="fh-section-label"><h2>The pulse</h2><span>24 HOURS</span></div>
-				<p class="fh-pulse-number">@Model.Activity.Changes.ToString("N0")<span>changes</span></p>
-				<div class="fh-chart" role="img" aria-label="@($"{Model.Activity.Changes} changes in the last 24 hours. Hourly counts, oldest first: {string.Join(", ", Model.Activity.Hours)}.")">
+				<div class="fh-section-label"><h2>@L["The pulse"]</h2><span>@L["24 HOURS"]</span></div>
+				<p class="fh-pulse-number">@Model.Activity.Changes.ToString("N0")<span>@L[SharedResource.PluralPattern("Firehose.ChangesUnit", Model.Activity.Changes)]</span></p>
+				<div class="fh-chart" role="img" aria-label="@L[SharedResource.PluralPattern("Firehose.ChartLabel", Model.Activity.Changes), Model.Activity.Changes, string.Join(", ", Model.Activity.Hours)]">
 					@for (int i = 0; i < Model.Activity.Hours.Count; i++)
 					{
-						<div class="fh-bar-track"><span style="--bar-height: @((100.0 * Model.Activity.Hours[i] / Peak).ToString("0.##", CultureInfo.InvariantCulture))%" title="@(Model.Now.AddHours(i - 24).ToString("HH:mm")) UTC: @Model.Activity.Hours[i] changes"></span></div>
+						<div class="fh-bar-track"><span style="--bar-height: @((100.0 * Model.Activity.Hours[i] / Peak).ToString("0.##", CultureInfo.InvariantCulture))%" title="@L[SharedResource.PluralPattern("Firehose.HourBar", Model.Activity.Hours[i]), Model.Activity.Hours[i], Model.Now.AddHours(i - 24).ToString("HH:mm")]"></span></div>
 					}
 				</div>
-				<div class="fh-chart-axis"><span>24h ago</span><span>12h</span><span>Now</span></div>
-				<p class="fh-note">@(Model.Activity.Changes == 0 ? "A quiet day in this stream. The archive is here whenever inspiration strikes." : "Small corrections. New discoveries. A better archive with every contribution.")</p>
+				<div class="fh-chart-axis"><span>@L["24h ago"]</span><span>@L["12h"]</span><span>@L["Now"]</span></div>
+				<p class="fh-note">@(Model.Activity.Changes == 0 ? L["A quiet day in this stream. The archive is here whenever inspiration strikes."] : L["Small corrections. New discoveries. A better archive with every contribution."])</p>
 			</section>
 			<section class="fh-popular">
-				<div class="fh-section-label"><h2>In the spotlight</h2><span>7 DAYS</span></div>
-				<p class="fh-caption">Most edited pages in this stream</p>
+				<div class="fh-section-label"><h2>@L["In the spotlight"]</h2><span>@L["7 DAYS"]</span></div>
+				<p class="fh-caption">@L["Most edited pages in this stream"]</p>
 				<ol>
 					@foreach (FirehosePopularPage Page in Model.Activity.Popular)
 					{
-						<li><a href="@ArticleUrlHelper.BuildArticlePath(Page.UrlSlug, Page.Type)">@Page.Title</a><span>@Page.Count @(Page.Count == 1 ? "edit" : "edits")</span></li>
+						<li><a href="@ArticleUrlHelper.BuildArticlePath(Page.UrlSlug, Page.Type)">@Page.Title</a><span>@SharedResource.Plural("Firehose.Edits", Page.Count)</span></li>
 					}
 				</ol>
-				@if (Model.Activity.Popular.Count == 0) { <p class="fh-note">No matching edits this week.</p> }
+				@if (Model.Activity.Popular.Count == 0) { <p class="fh-note">@L["No matching edits this week."]</p> }
 			</section>
-			<section class="fh-about"><span class="fh-asterisk" aria-hidden="true">✳</span><h2>An archive<br />built together.</h2><p>A missing date. A forgotten cover. A story worth saving. Every contribution adds something.</p><a href="/create:">Start a page ↗</a></section>
-			<p class="fh-footnote">Article revisions · @Model.Language<br />Dates grouped in UTC. Updated @Model.Now.ToString("HH:mm") UTC.</p>
+			<section class="fh-about"><span class="fh-asterisk" aria-hidden="true">✳</span><h2>@L["An archive"]<br />@L["built together."]</h2><p>@L["A missing date. A forgotten cover. A story worth saving. Every contribution adds something."]</p><a href="/create:">@L["Start a page ↗"]</a></section>
+			<p class="fh-footnote">@L["Article revisions · {0}", Model.Language]<br />@L["Dates grouped in UTC. Updated {0} UTC.", Model.Now.ToString("HH:mm")]</p>
 		</aside>
 	</div>
 </div>

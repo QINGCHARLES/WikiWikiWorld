@@ -22,8 +22,10 @@ public sealed class IndexModel(
 	/// </summary>
 	/// <remarks>
 	/// Slugs are fixed rather than derived from titles, because titles such as "News &amp; Politics",
-	/// "Women's Interest" and "LGBTQ+" do not slugify cleanly. Titles are English on every culture for now.
+	/// "Women's Interest" and "LGBTQ+" do not slugify cleanly. Titles are translation keys: the home page shows
+	/// them in the request's UI language, while slugs stay the same on every culture.
 	/// </remarks>
+	// l10n: "News & Politics", "General Interest", "Ideas & Criticism", "Business & Finance", "Law & Justice", "Science & Nature", "Computing", "Technology", "Video Games", "Games & Puzzles", "History", "Military & Defence", "Art & Design", "Photography", "Architecture", "Music", "Film, TV & Radio", "Performing Arts", "Celebrity & Royalty", "Literature & Fiction", "Comics & Manga", "Humour & Satire", "True Crime", "Women's Interest", "Men's Interest", "LGBTQ+", "Fashion & Beauty", "Home & Garden", "Food & Drink", "Travel & Outdoors", "Health & Medicine", "Sport & Fitness", "Hunting, Shooting & Angling", "Transport & Vehicles", "Hobbies & Crafts", "Collecting & Antiques", "Pets & Animals", "Farming & Rural Life", "Children & Youth", "Family & Relationships", "Education & Careers", "Religion & Belief", "Paranormal & Esoteric", "Consumer & Shopping", "Trade & Professional", "Adult"
 	public static IReadOnlyList<HomeCategory> Categories { get; } =
 	[
 		new("News & Politics", "news-politics"),

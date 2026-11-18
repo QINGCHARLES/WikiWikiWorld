@@ -11,15 +11,15 @@
 	{
 		@if (Model.SearchResults.Count > 0)
 		{
-			<div id="search-suggestions-list" class="search-suggestions-list" role="listbox" aria-label="Search suggestions">
+			<div id="search-suggestions-list" class="search-suggestions-list" role="listbox" aria-label="@L["Search suggestions"]">
 				@foreach (ArticleSearchResult Result in Model.SearchResults)
 				{
 					string? TypeLabel = Result.Type switch
 					{
-						ArticleType.Category => "Category",
-						ArticleType.File => "File",
-						ArticleType.Info => "Info",
-						ArticleType.Redirect => "Redirect",
+						ArticleType.Category => L["Category"].Value,
+						ArticleType.File => L["File"].Value,
+						ArticleType.Info => L["Info"].Value,
+						ArticleType.Redirect => L["Redirect"].Value,
 						_ => null
 					};
 					<a id="search-suggestion-@OptionIndex" class="search-suggestion" role="option" aria-selected="false" tabindex="-1" href="@Result.Path">
@@ -39,8 +39,8 @@
 		}
 		else
 		{
-			<p class="search-suggestions-empty">No articles found for “@Query”.</p>
+			<p class="search-suggestions-empty">@L["No articles found for “{0}”.", Query]</p>
 		}
-		<a class="search-suggestions-all" href="/Search?q=@Uri.EscapeDataString(Query)" tabindex="-1">Search all articles for “<strong>@Query</strong>”</a>
+		<a class="search-suggestions-all" href="/Search?q=@Uri.EscapeDataString(Query)" tabindex="-1">@HL["Search all articles for “{0}”", UiFormat.Strong(Query)]</a>
 	}
 </div>

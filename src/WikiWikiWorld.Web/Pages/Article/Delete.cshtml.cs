@@ -36,7 +36,7 @@ public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverServi
 	{
 		if (string.IsNullOrWhiteSpace(UrlSlug))
 		{
-			ErrorMessage = "Invalid article identifier.";
+			ErrorMessage = SharedResource.Text("Invalid article identifier.");
 			return Page();
 		}
 

@@ -37,7 +37,7 @@ Patterns = [
 	re.compile(r'\bH?L\[\s*' + StringLiteral),
 	re.compile(r'SharedResource\.(?:Text|Format|FormatHtml)\(\s*' + StringLiteral),
 ]
-PluralPattern = re.compile(r'SharedResource\.Plural\(\s*' + StringLiteral)
+PluralPattern = re.compile(r'SharedResource\.Plural(?:Pattern|Forms)?\(\s*' + StringLiteral)
 Synthetic = re.compile(r'[A-Z][A-Za-z]*(\.[A-Z][A-Za-z]*)+')
 ScriptKeysPattern = re.compile(r'l10n:\s*(.+)$', re.MULTILINE)
 
@@ -115,8 +115,16 @@ def Check():
 			print(f"  empty:   {Key!r}")
 		for Key in Extra:
 			print(f"  unused:  {Key!r}")
+	# The resource compiler treats names case-insensitively and keeps only one of "Log In" and "Log in", so such
+	# pairs silently lose a translation. Give one of them a synthetic key instead.
+	ByFold = {}
+	for Key in Keys | Required["ar"]:
+		ByFold.setdefault(Key.casefold(), set()).add(Key)
+	Clashes = sorted(sorted(Group) for Group in ByFold.values() if len(Group) > 1)
+	for Group in Clashes:
+		print(f"  case clash: {Group}")
 	print(f"{len(Keys)} keys and {len(Stems)} plural stems used in code")
-	return 1 if Missing else 0
+	return 1 if Missing or Clashes else 0
 
 
 def Merge(Path_):

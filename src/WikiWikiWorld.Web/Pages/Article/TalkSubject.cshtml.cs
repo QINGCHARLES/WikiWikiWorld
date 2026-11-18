@@ -262,8 +262,9 @@ public sealed class TalkSubjectModel(
 		/// <summary>
 		/// Gets or sets the body of the new reply.
 		/// </summary>
-		[Required]
-		[StringLength(10_000, MinimumLength = 1)]
+		[Required(ErrorMessage = "The {0} field is required.")]
+		[StringLength(10_000, MinimumLength = 1, ErrorMessage = "The field {0} must be a string with a minimum length of {2} and a maximum length of {1}.")]
+		[Display(Name = "Text")]
 		public string Text { get; set; } = string.Empty;
 	}
 

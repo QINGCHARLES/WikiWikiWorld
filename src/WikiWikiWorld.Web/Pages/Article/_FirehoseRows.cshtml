@@ -2,18 +2,18 @@
 @using WikiWikiWorld.Web.Pages.Article
 @foreach (IGrouping<DateTime, FirehoseEntry> Day in Model.Feed.Entries.GroupBy(r => r.DateCreated.UtcDateTime.Date))
 {
-	string DayLabel = Day.Key == Model.Now.UtcDateTime.Date ? "Today" : Day.Key == Model.Now.UtcDateTime.Date.AddDays(-1) ? "Yesterday" : Day.Key.ToString("dddd", CultureInfo.InvariantCulture);
-	<div class="fh-day"><h3>@DayLabel <span>@Day.Key.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</span></h3><span>@Day.Count() on this page</span></div>
+	string DayLabel = Day.Key == Model.Now.UtcDateTime.Date ? L["Today"].Value : Day.Key == Model.Now.UtcDateTime.Date.AddDays(-1) ? L["Yesterday"].Value : UiFormat.Format(Day.Key, "dddd", CultureInfo.InvariantCulture, "dddd");
+	<div class="fh-day"><h3>@DayLabel <span>@UiFormat.Format(Day.Key, "dd MMM yyyy", CultureInfo.InvariantCulture, "d")</span></h3><span>@SharedResource.Plural("Firehose.OnThisPage", Day.Count())</span></div>
 	<ol class="fh-entries">
 		@foreach (FirehoseEntry Entry in Day)
 		{
 			Model.Feed.Contributors.TryGetValue(Entry.UserId, out FirehoseContributor? Contributor);
-			string Name = Contributor?.UserName ?? "Unknown contributor";
+			string Name = Contributor?.UserName ?? L["Unknown contributor"].Value;
 			string Path = ArticleUrlHelper.BuildArticlePath(Entry.UrlSlug, Entry.Type);
 			string RevisionPath = ArticleUrlHelper.BuildRelativePath(Entry.UrlSlug, Entry.Type, $"revision/{Entry.DateCreated.UtcDateTime.ToString("yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture)}");
 			<li class="fh-entry">
 				<div class="fh-time"><time datetime="@Entry.DateCreated.ToUniversalTime().ToString("O")" title="@Entry.DateCreated.UtcDateTime.ToString("dd MMM yyyy HH:mm:ss 'UTC'")">@Entry.DateCreated.UtcDateTime.ToString("HH:mm")</time><span>@ArticleHistoryModel.GetRelativeTime(Entry.DateCreated)</span></div>
-				<div class="fh-entry-main"><span class="fh-type" data-type="@Entry.Type">@Entry.Type</span><h4><a href="@Path">@Entry.Title</a></h4><p>@(string.IsNullOrWhiteSpace(Entry.Reason) ? "No edit summary supplied." : Entry.Reason)</p>
+				<div class="fh-entry-main"><span class="fh-type" data-type="@Entry.Type">@L[Entry.Type.ToString()]</span><h4><a href="@Path">@Entry.Title</a></h4><p>@(string.IsNullOrWhiteSpace(Entry.Reason) ? L["No edit summary supplied."].Value : Entry.Reason)</p>
 					<div class="fh-entry-bottom">
 						@if (Contributor?.UserName is not null)
 						{
@@ -24,7 +24,7 @@
 							</a>
 						}
 						else { <span>@Name</span> }
-						<div class="fh-entry-links"><a href="@RevisionPath">View revision ↗</a><a href="@ArticleUrlHelper.BuildRelativePath(Entry.UrlSlug, Entry.Type, "history")">History</a></div>
+						<div class="fh-entry-links"><a href="@RevisionPath">@L["View revision ↗"]</a><a href="@ArticleUrlHelper.BuildRelativePath(Entry.UrlSlug, Entry.Type, "history")">@L["Link.History"]</a></div>
 					</div>
 				</div>
 			</li>

@@ -6,33 +6,33 @@
 }
 
 <div class="sitemap-page">
-	<nav class="sitemap-breadcrumb" aria-label="Breadcrumb">
-		<a href="/info:sitemap">Sitemap</a>
+	<nav class="sitemap-breadcrumb" aria-label="@L["Breadcrumb"]">
+		<a href="/info:sitemap">@L["Sitemap"]</a>
 		<span aria-hidden="true">/</span>
 		@if (SectionPage.ActiveBucket is not null || SectionPage.PageNumber > 1)
 		{
-			<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, null)">@SectionPage.Section.Title</a>
+			<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, null)">@L[SectionPage.Section.Title]</a>
 		}
 		else
 		{
-			<span aria-current="page">@SectionPage.Section.Title</span>
+			<span aria-current="page">@L[SectionPage.Section.Title]</span>
 		}
 		@if (SectionPage.ActiveBucket is not null)
 		{
 			<span aria-hidden="true">/</span>
 			if (SectionPage.PageNumber > 1)
 			{
-				<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket.Slug)">@SectionPage.ActiveBucket.Label</a>
+				<a href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket.Slug)">@L[SectionPage.ActiveBucket.Label]</a>
 			}
 			else
 			{
-				<span aria-current="page">@SectionPage.ActiveBucket.Label</span>
+				<span aria-current="page">@L[SectionPage.ActiveBucket.Label]</span>
 			}
 		}
 		@if (SectionPage.PageNumber > 1)
 		{
 			<span aria-hidden="true">/</span>
-			<span aria-current="page">Page @SectionPage.PageNumber</span>
+			<span aria-current="page">@L["Page {0}", SectionPage.PageNumber]</span>
 		}
 	</nav>
 
@@ -40,45 +40,45 @@
 		<div class="sitemap-section-head">
 			<div>
 				<h1>
-					@SectionPage.Section.Title
+					@L[SectionPage.Section.Title]
 					@if (SectionPage.ActiveBucket is not null)
 					{
-						<span class="sitemap-bucket-tag">— @SectionPage.ActiveBucket.Label</span>
+						<span class="sitemap-bucket-tag">— @L[SectionPage.ActiveBucket.Label]</span>
 					}
 				</h1>
 				<p class="sitemap-subtitle">
-					@SectionPage.TotalItems.ToString("N0") @(SectionPage.TotalItems == 1 ? "entry" : "entries")
+					@L[SharedResource.PluralPattern("Sitemap.Entries", SectionPage.TotalItems), SectionPage.TotalItems.ToString("N0")]
 					@if (SectionPage.TotalPages > 1)
 					{
-						<span>&middot; Page @SectionPage.PageNumber of @SectionPage.TotalPages</span>
+						<span>&middot; @L["Page {0} of {1}", SectionPage.PageNumber, SectionPage.TotalPages]</span>
 					}
 				</p>
 			</div>
 		</div>
 
-		<nav class="sitemap-buckets" aria-label="Filter by starting letter">
+		<nav class="sitemap-buckets" aria-label="@L["Filter by starting letter"]">
 			@if (SectionPage.ActiveBucket is null)
 			{
-				<span class="sitemap-bucket sitemap-bucket-all is-active" aria-current="page">All</span>
+				<span class="sitemap-bucket sitemap-bucket-all is-active" aria-current="page">@L["All"]</span>
 			}
 			else
 			{
-				<a class="sitemap-bucket sitemap-bucket-all" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, null)">All</a>
+				<a class="sitemap-bucket sitemap-bucket-all" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, null)">@L["All"]</a>
 			}
 
 			@foreach (SitemapBucketLink Bucket in SectionPage.Buckets)
 			{
 				if (SectionPage.ActiveBucket?.Slug == Bucket.Slug)
 				{
-					<span class="sitemap-bucket is-active" aria-current="page">@Bucket.Label</span>
+					<span class="sitemap-bucket is-active" aria-current="page">@L[Bucket.Label]</span>
 				}
 				else if (Bucket.HasEntries)
 				{
-					<a class="sitemap-bucket" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, Bucket.Slug)">@Bucket.Label</a>
+					<a class="sitemap-bucket" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, Bucket.Slug)">@L[Bucket.Label]</a>
 				}
 				else
 				{
-					<span class="sitemap-bucket is-empty" aria-disabled="true">@Bucket.Label</span>
+					<span class="sitemap-bucket is-empty" aria-disabled="true">@L[Bucket.Label]</span>
 				}
 			}
 		</nav>
@@ -86,7 +86,7 @@
 
 	@if (SectionPage.Entries.Count == 0)
 	{
-		<p class="sitemap-empty">No entries found for this filter.</p>
+		<p class="sitemap-empty">@L["No entries found for this filter."]</p>
 	}
 	else
 	{
@@ -100,11 +100,11 @@
 
 	@if (SectionPage.TotalPages > 1)
 	{
-		<nav class="sitemap-pagination" aria-label="Sitemap pagination">
+		<nav class="sitemap-pagination" aria-label="@L["Sitemap pagination"]">
 			<div class="sitemap-page-step">
 				@if (SectionPage.PageNumber > 1)
 				{
-					<a rel="prev" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, SectionPage.PageNumber - 1)">&larr; Previous</a>
+					<a rel="prev" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, SectionPage.PageNumber - 1)">&larr; @L["Previous"]</a>
 				}
 			</div>
 
@@ -131,7 +131,7 @@
 			<div class="sitemap-page-step">
 				@if (SectionPage.PageNumber < SectionPage.TotalPages)
 				{
-					<a rel="next" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, SectionPage.PageNumber + 1)">Next &rarr;</a>
+					<a rel="next" href="@SitemapSectionModel.BuildPageUrl(SectionPage.Section.Slug, SectionPage.ActiveBucket?.Slug, SectionPage.PageNumber + 1)">@L["Next"] &rarr;</a>
 				}
 			</div>
 		</nav>

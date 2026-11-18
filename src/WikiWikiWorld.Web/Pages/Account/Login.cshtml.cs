@@ -60,14 +60,14 @@ public sealed class LoginModel(
 		User? TargetUser = await UserManager.FindByNameAsync(Input.UserName);
 		if (TargetUser is null)
 		{
-			ModelState.AddModelError(string.Empty, "Invalid username or password.");
+			ModelState.AddModelError(string.Empty, SharedResource.Text("Invalid username or password."));
 			return Page();
 		}
 
 		// Restrict DevvyTheBot and its legacy aliases to Development.
 		if (DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, TargetUser.UserName, TargetUser.Email))
 		{
-			ModelState.AddModelError(string.Empty, "Invalid username or password.");
+			ModelState.AddModelError(string.Empty, SharedResource.Text("Invalid username or password."));
 			return Page();
 		}
 
@@ -85,11 +85,11 @@ public sealed class LoginModel(
 		}
 		else if (Result.IsLockedOut)
 		{
-			ModelState.AddModelError("", "Your account is locked out.");
+			ModelState.AddModelError("", SharedResource.Text("Your account is locked out."));
 		}
 		else
 		{
-			ModelState.AddModelError("", "Invalid username or password.");
+			ModelState.AddModelError("", SharedResource.Text("Invalid username or password."));
 		}
 
 		return Page();
@@ -103,15 +103,16 @@ public sealed class LoginModel(
 		/// <summary>
 		/// Gets or sets the username.
 		/// </summary>
-		[Required]
+		[Required(ErrorMessage = "The {0} field is required.")]
 		[Display(Name = "Username")]
 		public required string UserName { get; set; }
 
 		/// <summary>
 		/// Gets or sets the password.
 		/// </summary>
-		[Required]
+		[Required(ErrorMessage = "The {0} field is required.")]
 		[DataType(DataType.Password)]
+		[Display(Name = "Password")]
 		public required string Password { get; set; }
 
 		/// <summary>

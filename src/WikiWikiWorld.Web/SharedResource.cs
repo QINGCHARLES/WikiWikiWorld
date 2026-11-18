@@ -18,6 +18,10 @@ namespace WikiWikiWorld.Web;
 /// which <see cref="Infrastructure.UiCultureMiddleware"/> sets from the request's site culture.
 /// </para>
 /// </remarks>
+// Keys used only in data-annotation attributes (ErrorMessage and Display names), listed for scripts/localization.py:
+// l10n: "The {0} field is required.", "The {0} field is not a valid e-mail address.", "The field {0} must be a string with a minimum length of {2} and a maximum length of {1}.", "The field {0} must be a string with a maximum length of {1}."
+// l10n: "The {0} must be at least {2} and at max {1} characters long.", "The password and confirmation password do not match."
+// l10n: "Username", "Password", "Remember me", "Email", "Confirm password", "Text", "Subject", "Recipients", "Message"
 public sealed class SharedResource
 {
 	/// <summary>
@@ -64,13 +68,41 @@ public sealed class SharedResource
 	/// <param name="BaseKey">The key stem; each form is stored as <c>{BaseKey}|{category}</c>.</param>
 	/// <param name="Count">The count that selects the form and replaces <c>{0}</c>.</param>
 	/// <returns>The formatted phrase. A missing category falls back to the <c>other</c> form.</returns>
-	public static string Plural(string BaseKey, int Count)
+	public static string Plural(string BaseKey, int Count) =>
+		string.Format(CultureInfo.CurrentCulture, PluralPattern(BaseKey, Count), Count);
+
+	/// <summary>
+	/// Gets the unformatted plural form of a counted phrase, for sentences with more placeholders than the count
+	/// (pass it to <c>HL[...]</c> with the count as <c>{0}</c> and the other values after it).
+	/// </summary>
+	/// <param name="BaseKey">The key stem; each form is stored as <c>{BaseKey}|{category}</c>.</param>
+	/// <param name="Count">The count that selects the form.</param>
+	/// <returns>The format string for the count's plural category, falling back to <c>other</c>, then to the stem.</returns>
+	public static string PluralPattern(string BaseKey, int Count)
 	{
 		string Category = PluralCategory(CultureInfo.CurrentUICulture, Count);
-		string? Pattern = Resources.GetString($"{BaseKey}|{Category}", CultureInfo.CurrentUICulture)
+		return Resources.GetString($"{BaseKey}|{Category}", CultureInfo.CurrentUICulture)
 			?? Resources.GetString($"{BaseKey}|other", CultureInfo.CurrentUICulture)
 			?? BaseKey;
-		return string.Format(CultureInfo.CurrentCulture, Pattern, Count);
+	}
+
+	/// <summary>
+	/// Gets every plural form of a counted phrase that the current UI culture defines, for scripts that choose the
+	/// form themselves with <c>Intl.PluralRules</c>.
+	/// </summary>
+	/// <param name="BaseKey">The key stem; each form is stored as <c>{BaseKey}|{category}</c>.</param>
+	/// <returns>The unformatted patterns keyed by CLDR category; <c>other</c> is always present.</returns>
+	public static IReadOnlyDictionary<string, string> PluralForms(string BaseKey)
+	{
+		Dictionary<string, string> Forms = [];
+		foreach (string Category in (string[])["zero", "one", "two", "few", "many", "other"])
+		{
+			if (Resources.GetString($"{BaseKey}|{Category}", CultureInfo.CurrentUICulture) is { } Pattern)
+				Forms[Category] = Pattern;
+		}
+
+		Forms.TryAdd("other", BaseKey);
+		return Forms;
 	}
 
 	/// <summary>

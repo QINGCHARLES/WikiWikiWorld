@@ -54,6 +54,44 @@ public static class UiFormat
 	}
 
 	/// <summary>
+	/// Formats a value with one format for English pages and another for other languages.
+	/// </summary>
+	/// <param name="Value">The date or number to format.</param>
+	/// <param name="EnglishFormat">The format English pages have always used.</param>
+	/// <param name="EnglishProvider">The provider English pages have always used, such as <see cref="CultureInfo.InvariantCulture"/>.</param>
+	/// <param name="OtherFormat">The format for other UI cultures, such as <c>d</c> or <c>dddd</c>.</param>
+	/// <returns>English output exactly as before; otherwise the value in the UI culture, on the Gregorian calendar.</returns>
+	public static string Format(IFormattable Value, string EnglishFormat, IFormatProvider EnglishProvider, string OtherFormat)
+	{
+		ArgumentNullException.ThrowIfNull(Value);
+		CultureInfo Ui = CultureInfo.CurrentUICulture;
+		return Ui.TwoLetterISOLanguageName is "en" or "iv"
+			? Value.ToString(EnglishFormat, EnglishProvider)
+			: Value.ToString(OtherFormat, Gregorian(Ui));
+	}
+
+	/// <summary>
+	/// Gets a culture's name for display in the UI language: the English name on English pages, the language's own
+	/// name elsewhere (so an Arabic page says "العربية", not "Arabic").
+	/// </summary>
+	/// <param name="CultureCode">The culture code.</param>
+	/// <returns>The name, or the code itself when it is not a real culture.</returns>
+	public static string LanguageName(string CultureCode)
+	{
+		if (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName is not ("en" or "iv"))
+			return SiteCultureHelper.GetDisplayName(CultureCode);
+
+		try
+		{
+			return CultureInfo.GetCultureInfo(CultureCode).EnglishName;
+		}
+		catch (CultureNotFoundException)
+		{
+			return CultureCode;
+		}
+	}
+
+	/// <summary>
 	/// Returns the culture itself when it already uses the Gregorian calendar, otherwise a copy switched to it.
 	/// </summary>
 	/// <param name="Culture">The UI culture.</param>

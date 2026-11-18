@@ -81,7 +81,7 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			{
 				AddLinks(Current.SiteId, Guid.CreateVersion7(), [Current.CanonicalArticleId, Target.CanonicalArticleId], UserId, Now);
 				await Context.SaveChangesAsync(CT);
-				return Linked($"Linked to {DescribeLanguage(Target)}.");
+				return Linked(SharedResource.Format("Linked to {0}.", DescribeLanguage(Target)));
 			}
 
 			if (CurrentGroupId == TargetGroupId)
@@ -89,7 +89,7 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 				return new ArticleLanguageResult
 				{
 					Outcome = ArticleLanguageOutcome.AlreadyLinked,
-					Message = $"“{Target.Title}” is already linked as the {SiteCultureHelper.GetDisplayName(Target.Culture)} version."
+					Message = SharedResource.Format("“{0}” is already linked as the {1} version.", Target.Title, SiteCultureHelper.GetDisplayName(Target.Culture))
 				};
 			}
 
@@ -105,7 +105,7 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 				{
 					AddLinks(Current.SiteId, GroupId, [Joining.CanonicalArticleId], UserId, Now);
 					await Context.SaveChangesAsync(CT);
-					return Linked($"Linked to {DescribeLanguage(Target)}.");
+					return Linked(SharedResource.Format("Linked to {0}.", DescribeLanguage(Target)));
 				}
 			}
 
@@ -145,14 +145,14 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			List<ArticleLanguageEntry> Members = GroupId is null ? [] : await GetGroupMembersAsync(GroupId.Value, CT);
 			ArticleLanguageEntry? Existing = Members.FirstOrDefault(Member => Member.Culture.Equals(Target.Culture, StringComparison.OrdinalIgnoreCase));
 			if (GroupId is null || Existing is null)
-				return ArticleLanguageResult.Refused($"This article has no {SiteCultureHelper.GetDisplayName(Target.Culture)} link to change. Use Add a language instead.");
+				return ArticleLanguageResult.Refused(SharedResource.Format("This article has no {0} link to change. Use Add a language instead.", SiteCultureHelper.GetDisplayName(Target.Culture)));
 
 			if (Existing.CanonicalArticleId == Target.CanonicalArticleId)
 			{
 				return new ArticleLanguageResult
 				{
 					Outcome = ArticleLanguageOutcome.AlreadyLinked,
-					Message = $"“{Target.Title}” is already the linked {SiteCultureHelper.GetDisplayName(Target.Culture)} version."
+					Message = SharedResource.Format("“{0}” is already the linked {1} version.", Target.Title, SiteCultureHelper.GetDisplayName(Target.Culture))
 				};
 			}
 
@@ -164,7 +164,7 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 					.Where(Member => Member.CanonicalArticleId != Target.CanonicalArticleId)
 					.Select(Member => SiteCultureHelper.GetDisplayName(Member.Culture)));
 				return ArticleLanguageResult.Refused(
-					$"“{Target.Title}” is already linked to other languages ({OtherLanguages}). Remove those links first, or use Add a language to merge the two groups.");
+					SharedResource.Format("“{0}” is already linked to other languages ({1}). Remove those links first, or use Add a language to merge the two groups.", Target.Title, OtherLanguages));
 			}
 
 			DateTimeOffset Now = DateTimeOffset.UtcNow;
@@ -175,7 +175,7 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			return new ArticleLanguageResult
 			{
 				Outcome = ArticleLanguageOutcome.Changed,
-				Message = $"The {SiteCultureHelper.GetDisplayName(Target.Culture)} version is now “{Target.Title}”."
+				Message = SharedResource.Format("The {0} version is now “{1}”.", SiteCultureHelper.GetDisplayName(Target.Culture), Target.Title)
 			};
 		}, CancellationToken);
 	}
@@ -203,7 +203,7 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			if (GroupId is null || !await Context.ArticleCultureLinks.AnyAsync(
 				Link => Link.ArticleCultureLinkGroupId == GroupId && Link.CanonicalArticleId == CanonicalArticleIdToRemove, CT))
 			{
-				return ArticleLanguageResult.Refused("That article is no longer linked here. The page has been refreshed.");
+				return ArticleLanguageResult.Refused(SharedResource.Text("That article is no longer linked here. The page has been refreshed."));
 			}
 
 			DateTimeOffset Now = DateTimeOffset.UtcNow;
@@ -221,8 +221,8 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			{
 				Outcome = ArticleLanguageOutcome.Removed,
 				Message = CanonicalArticleIdToRemove == Current.CanonicalArticleId
-					? "This article is no longer linked to any other language."
-					: "Link removed."
+					? SharedResource.Text("This article is no longer linked to any other language.")
+					: SharedResource.Text("Link removed.")
 			};
 		}, CancellationToken);
 	}
@@ -303,10 +303,10 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			{
 				Outcome = ArticleLanguageOutcome.NeedsMergeConfirmation,
 				Message = ConfirmMerge
-					? "Choose which article to keep for each language that both groups have."
+					? SharedResource.Text("Choose which article to keep for each language that both groups have.")
 					: JoinsTwoGroups
-						? $"“{Target.Title}” is already linked to other languages. Linking will merge the two groups."
-						: $"Linking “{Target.Title}” replaces an article that is already linked in its language.",
+						? SharedResource.Format("“{0}” is already linked to other languages. Linking will merge the two groups.", Target.Title)
+						: SharedResource.Format("Linking “{0}” replaces an article that is already linked in its language.", Target.Title),
 				JoinsTwoGroups = JoinsTwoGroups,
 				MergeMembers = [.. CurrentMembers.Concat(TargetMembers).Where(Member => Member.CanonicalArticleId != Current.CanonicalArticleId)],
 				Clashes = Clashes
@@ -343,9 +343,9 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 
 		return Linked(Dropped.Count switch
 		{
-			0 => $"Linked to {DescribeLanguage(Target)}, joining {TargetMembers.Count} articles into this group.",
-			1 => $"Linked to {DescribeLanguage(Target)}. “{Dropped[0].Title}” was unlinked.",
-			_ => $"Linked to {DescribeLanguage(Target)}. The groups were merged and {Dropped.Count} duplicate-language articles were unlinked."
+			0 => SharedResource.Format(SharedResource.PluralPattern("LanguageLink.JoinedGroup", TargetMembers.Count), TargetMembers.Count, DescribeLanguage(Target)),
+			1 => SharedResource.Format("Linked to {0}. “{1}” was unlinked.", DescribeLanguage(Target), Dropped[0].Title),
+			_ => SharedResource.Format(SharedResource.PluralPattern("LanguageLink.MergedAndUnlinked", Dropped.Count), Dropped.Count, DescribeLanguage(Target))
 		});
 	}
 
@@ -397,11 +397,11 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 		CancellationToken CancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(TargetCulture) || string.IsNullOrWhiteSpace(TargetSlug))
-			return (null, ArticleLanguageResult.Refused("Choose a language and enter the article's address."));
+			return (null, ArticleLanguageResult.Refused(SharedResource.Text("Choose a language and enter the article's address.")));
 
 		string LanguageName = SiteCultureHelper.GetDisplayName(TargetCulture);
 		if (TargetCulture.Equals(Current.Culture, StringComparison.OrdinalIgnoreCase))
-			return (null, ArticleLanguageResult.Refused($"This article is already the {LanguageName} version; choose another language."));
+			return (null, ArticleLanguageResult.Refused(SharedResource.Format("This article is already the {0} version; choose another language.", LanguageName)));
 
 		string LookupSlug = ArticleUrlHelper.NormalizeLookupSlug(TargetSlug.Trim());
 		ArticleLanguageEntry? Target = await Context.ArticleRevisions
@@ -412,10 +412,10 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 			.FirstOrDefaultAsync(CancellationToken);
 
 		if (Target is null)
-			return (null, ArticleLanguageResult.Refused($"There is no {LanguageName} article at “{LookupSlug}”."));
+			return (null, ArticleLanguageResult.Refused(SharedResource.Format("There is no {0} article at “{1}”.", LanguageName, LookupSlug)));
 
 		if (Target.Type != Current.Type)
-			return (null, ArticleLanguageResult.Refused($"“{Target.Title}” is {DescribeType(Target.Type)} page, but this is {DescribeType(Current.Type)} page. Only pages of the same kind can be linked."));
+			return (null, ArticleLanguageResult.Refused(SharedResource.Format("“{0}” is {1} page, but this is {2} page. Only pages of the same kind can be linked.", Target.Title, DescribeType(Target.Type), DescribeType(Current.Type))));
 
 		return (Target, null);
 	}
@@ -514,16 +514,13 @@ public sealed class ArticleLanguageService(WikiWikiWorldDbContext Context)
 	/// <param name="Entry">The article.</param>
 	/// <returns>Text such as <c>the 日本語 article “GQ Japan”</c>.</returns>
 	private static string DescribeLanguage(ArticleLanguageEntry Entry) =>
-		$"the {SiteCultureHelper.GetDisplayName(Entry.Culture)} article “{Entry.Title}”";
+		SharedResource.Format("the {0} article “{1}”", SiteCultureHelper.GetDisplayName(Entry.Culture), Entry.Title);
 
 	/// <summary>
-	/// Gets a lowercase reader-facing name for an article type, with its indefinite article.
+	/// Gets a reader-facing name for an article type in the UI language, as it reads inside a sentence.
 	/// </summary>
 	/// <param name="Type">The article type.</param>
-	/// <returns>The type's name in lowercase after "a" or "an", such as <c>a file</c> or <c>an article</c>.</returns>
-	private static string DescribeType(ArticleType Type)
-	{
-		string Name = Type.ToString().ToLowerInvariant();
-		return "aeiou".Contains(Name[0]) ? $"an {Name}" : $"a {Name}";
-	}
+	/// <returns>The <c>ArticleKind.{Type}</c> translation; in English, the lowercase name with its indefinite article, such as <c>a file</c>.</returns>
+	// l10n: "ArticleKind.Article", "ArticleKind.Category", "ArticleKind.File", "ArticleKind.User", "ArticleKind.Info", "ArticleKind.Redirect"
+	private static string DescribeType(ArticleType Type) => SharedResource.Text($"ArticleKind.{Type}");
 }

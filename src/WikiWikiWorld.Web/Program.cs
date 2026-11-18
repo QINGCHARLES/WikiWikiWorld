@@ -174,7 +174,8 @@ Builder.Services.AddHttpContextAccessor();
 // ✅ Register Identity with EF Core
 Builder.Services.AddIdentity<User, Role>()
     .AddEntityFrameworkStores<WikiWikiWorldDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddErrorDescriber<LocalizedIdentityErrorDescriber>();
 
 // ✅ Configure Identity Options (Modify as needed)
 Builder.Services.Configure<IdentityOptions>(options =>
@@ -322,7 +323,9 @@ Builder.Services.AddRazorPages(options =>
     options.Conventions.AddPageRoute("/Profile/NewMessage", "message/new");
     options.Conventions.AddPageRoute("/Profile/NewMessage", "@{Recipient}/message/new");
     options.Conventions.AddPageRoute("/Profile/Conversation", "message/{ConversationId:guid}");
-}).AddViewLocalization();
+}).AddViewLocalization()
+	// Data-annotation messages and display names are looked up in the same shared resources (keyed by their English text).
+	.AddDataAnnotationsLocalization(Options => Options.DataAnnotationLocalizerProvider = (_, Factory) => Factory.Create(typeof(SharedResource)));
 
 // Shared UI text lives in Resources/SharedResource.*.resx, keyed by the English text; see SharedResource.
 Builder.Services.AddLocalization(Options => Options.ResourcesPath = "Resources");

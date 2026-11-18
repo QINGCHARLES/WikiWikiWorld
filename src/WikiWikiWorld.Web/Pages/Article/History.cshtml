@@ -2,19 +2,19 @@
 @model ArticleHistoryModel
 @using WikiWikiWorld.Data.Models
 @{
-	ViewData["Title"] = $"Revision History: {Model.ArticleTitle}";
+	ViewData["Title"] = L["Revision History: {0}", Model.ArticleTitle];
 }
 
 <figure>
-	<h1>Revision History</h1>
+	<h1>@L["Revision History"]</h1>
 </figure>
 
 <article>
 	<div class="history-container">
 		<div class="history-header">
-			<a href="@Model.CanonicalArticlePath" class="back-link">← Back to Article</a>
+			<a href="@Model.CanonicalArticlePath" class="back-link">@L["History.BackToArticle"]</a>
 			<h2 class="article-title">@Model.ArticleTitle</h2>
-			<p class="revision-count">@Model.ArticleRevisions.Count @(Model.ArticleRevisions.Count == 1 ? "revision" : "revisions")</p>
+			<p class="revision-count">@SharedResource.Plural("History.Revisions", Model.ArticleRevisions.Count)</p>
 		</div>
 
 		@if (Model.ArticleRevisions.Count > 0)
@@ -27,7 +27,7 @@
 				{
 					string RevisionTimestamp = ArticleHistoryModel.FormatRevisionTimestamp(Revision.DateCreated);
 					string RevisionUrl = WikiWikiWorld.Web.Helpers.ArticleUrlHelper.BuildRevisionPath(Revision, RevisionTimestamp);
-					string RevisionDateFormatted = Revision.DateCreated.ToString("dd MMMM yyyy, HH:mm");
+					string RevisionDateFormatted = UiFormat.Date(Revision.DateCreated, "dd MMMM yyyy, HH:mm");
 					string RelativeTime = ArticleHistoryModel.GetRelativeTime(Revision.DateCreated);
 					string? Username = Model.UserNames.TryGetValue(Revision.CreatedByUserId, out string? name) ? name : null;
 					Guid? ProfilePic = Model.UserProfilePics.TryGetValue(Revision.CreatedByUserId, out Guid? pic) ? pic : null;
@@ -57,7 +57,7 @@
 								</a>
 								@if (IsFirstRow)
 								{
-									<span class="current-badge">Current</span>
+									<span class="current-badge">@L["Current"]</span>
 									IsFirstRow = false;
 								}
 							</div>
@@ -65,7 +65,7 @@
 								@if (Username is not null)
 								{
 									<span class="revision-author">
-										by <a href="/@@Username">@Username</a>
+										@HL["by {0}", UiFormat.Link($"/@{Username}", Username)]
 									</span>
 								}
 								<span class="revision-relative-time">@RelativeTime</span>
@@ -77,12 +77,12 @@
 							@if (Revision.Title != Model.ArticleTitle)
 							{
 								<p class="revision-title-change">
-									<span class="label">Title at this revision:</span> @Revision.Title
+									<span class="label">@L["Title at this revision:"]</span> @Revision.Title
 								</p>
 							}
 						</div>
 						<div class="revision-actions">
-							<a href="@RevisionUrl" class="btn-view">View</a>
+							<a href="@RevisionUrl" class="btn-view">@L["View"]</a>
 						</div>
 					</li>
 				}
@@ -91,7 +91,7 @@
 		else
 		{
 			<div class="empty-state">
-				<p>No revisions found for this article.</p>
+				<p>@L["No revisions found for this article."]</p>
 			</div>
 		}
 	</div>

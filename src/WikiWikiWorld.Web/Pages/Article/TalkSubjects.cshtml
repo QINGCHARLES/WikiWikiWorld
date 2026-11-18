@@ -5,7 +5,7 @@
 @inject SignInManager<User> SignInManager
 @model WikiWikiWorld.Web.Pages.Article.TalkSubjectsModel
 @{
-	ViewData["Title"] = (Model.Article?.Title ?? "Talk") + " — Talk";
+	ViewData["Title"] = L["{0} — Talk", Model.Article?.Title ?? L["Talk"]];
 	bool IsSignedIn = SignInManager.IsSignedIn(User);
 }
 
@@ -13,19 +13,19 @@
 	<div class="talk-layout">
 		<div class="talk-main">
 			<header class="talk-page-header">
-				<nav class="talk-breadcrumb" aria-label="Breadcrumb">
+				<nav class="talk-breadcrumb" aria-label="@L["Breadcrumb"]">
 					<a href="@Model.ArticlePath">@Model.Article?.Title</a>
 					<span aria-hidden="true">›</span>
-					<span>Talk</span>
+					<span>@L["Talk"]</span>
 				</nav>
-				<h1>Discussion: @Model.Article?.Title</h1>
-				<p>This discussion is public. Use <a href="/message/new">private messages</a> for a private conversation.</p>
-				<p class="talk-page-tag">@Model.Subjects.Count @(Model.Subjects.Count == 1 ? "subject" : "subjects")</p>
+				<h1>@L["Discussion: {0}", Model.Article?.Title ?? string.Empty]</h1>
+				<p>@HL["This discussion is public. Use {0} for a private conversation.", UiFormat.Link("/message/new", L["private messages"])]</p>
+				<p class="talk-page-tag">@SharedResource.Plural("Talk.Subjects", Model.Subjects.Count)</p>
 			</header>
 
 			@if (Model.Subjects.Count == 0)
 			{
-				<p class="talk-empty">No discussion subjects yet. Be the first to start one.</p>
+				<p class="talk-empty">@L["No discussion subjects yet. Be the first to start one."]</p>
 			}
 			else
 			{
@@ -33,15 +33,15 @@
 					@foreach (WikiWikiWorld.Web.Pages.Article.TalkSubjectsModel.SubjectRow Row in Model.Subjects)
 					{
 						string AuthorName = Model.Authors.TryGetValue(Row.CreatedByUserId, out User? AuthorUser)
-							? AuthorUser.UserName ?? "Unknown"
-							: "Unknown";
+							? AuthorUser.UserName ?? L["Unknown"].Value
+							: L["Unknown"].Value;
 						string SubjectUrl = $"{Model.TalkPath}/{Row.UrlSlug}";
 						<li class="talk-subject-row">
 							<a class="talk-subject-title" href="@SubjectUrl">@Row.Subject</a>
 							<div class="talk-subject-meta">
-								<span>@Row.PostCount @(Row.PostCount == 1 ? "post" : "posts")</span>
+								<span>@SharedResource.Plural("Talk.Posts", Row.PostCount)</span>
 								<span>•</span>
-								<span>by <a class="talk-subject-author" href="/@@@AuthorName/profile">@@@AuthorName</a></span>
+								<span>@HL["by {0}", new Microsoft.AspNetCore.Html.HtmlContentBuilder().AppendHtml("<a class=\"talk-subject-author\" href=\"").Append($"/@{AuthorName}/profile").AppendHtml("\">").Append($"@{AuthorName}").AppendHtml("</a>")]</span>
 								<span>•</span>
 								<time datetime="@Row.DateCreated.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">
 									@TimeAgo.GetDetailedTimeAgoString(DateTimeOffset.UtcNow, Row.DateCreated)
@@ -53,11 +53,11 @@
 			}
 
 			<section class="talk-new-subject">
-				<h2>Start a new subject</h2>
+				<h2>@L["Start a new subject"]</h2>
 				@if (!IsSignedIn)
 				{
 					<p>
-						<a class="button" href="/Account/Login">Sign in</a> to start a discussion.
+						@HL["{0} to start a discussion.", new Microsoft.AspNetCore.Html.HtmlString($"<a class=\"button\" href=\"/Account/Login\">{System.Net.WebUtility.HtmlEncode(L["Sign in"])}</a>")]
 					</p>
 				}
 				else
@@ -66,7 +66,7 @@
 						<div asp-validation-summary="ModelOnly" class="talk-validation"></div>
 
 						<div class="talk-form-field">
-							<label asp-for="Input.Subject">Subject</label>
+							<label asp-for="Input.Subject">@L["Subject"]</label>
 							<input type="text"
 							       asp-for="Input.Subject"
 							       maxlength="150"
@@ -75,7 +75,7 @@
 						</div>
 
 						<div class="talk-form-field">
-							<label asp-for="Input.Text">Your first post (Markdown supported)</label>
+							<label asp-for="Input.Text">@L["Your first post (Markdown supported)"]</label>
 							<textarea asp-for="Input.Text"
 							          rows="5"
 							          maxlength="10000"
@@ -83,7 +83,7 @@
 							<span asp-validation-for="Input.Text" class="talk-validation"></span>
 						</div>
 
-						<button type="submit" class="button">Post subject</button>
+						<button type="submit" class="button">@L["Post subject"]</button>
 					</form>
 				}
 			</section>

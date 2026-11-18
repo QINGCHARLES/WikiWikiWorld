@@ -1,7 +1,7 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = L["Home page"];
 }
 
 <style>
@@ -49,18 +49,18 @@
 	<h1>@Model.SiteName</h1>
 </figure>
 
-<nav class="home-categories" aria-label="Categories">
+<nav class="home-categories" aria-label="@L["Categories"]">
 	<ul class="home-category-list" role="list">
-		<li><a href="/" aria-current="page">All</a></li>
+		<li><a href="/" aria-current="page">@L["All"]</a></li>
 		@foreach (HomeCategory Category in IndexModel.Categories)
 		{
-			<li><a href="/category:@Category.Slug">@Category.Title</a></li>
+			<li><a href="/category:@Category.Slug">@L[Category.Title]</a></li>
 		}
 	</ul>
 	<details class="home-categories-toggle">
 		<summary>
-			<span class="home-categories-more">All categories</span>
-			<span class="home-categories-less">Show less</span>
+			<span class="home-categories-more">@L["All categories"]</span>
+			<span class="home-categories-less">@L["Show less"]</span>
 			<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" /></svg>
 		</summary>
 	</details>
@@ -81,11 +81,11 @@
 	}
 	else
 	{
-		<p>No articles with cover images found.</p>
+		<p>@L["No articles with cover images found."]</p>
 	}
 
 	<p style="margin-top: 2rem;">
-		<a href="/create:">Create New Article</a><br />
-		<a href="/firehose:">View the Firehose</a><br />
+		<a href="/create:">@L["Create New Article"]</a><br />
+		<a href="/firehose:">@L["View the Firehose"]</a><br />
 	</p>
 </article>

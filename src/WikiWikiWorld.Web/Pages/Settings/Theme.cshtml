@@ -1,7 +1,7 @@
 @page
 @model WikiWikiWorld.Web.Pages.Settings.ThemeModel
 @{
-	ViewData["Title"] = Model.Header is { } Header ? $"{Header.UserName} · Settings" : "Theme settings";
+	ViewData["Title"] = Model.Header is { } Header ? L["{0} · Settings", Header.UserName] : L["Theme settings"];
 	string Current = (ViewData["PreferredTheme"] as string) ?? "system";
 }
 
@@ -12,39 +12,39 @@
 	}
 	else
 	{
-		<h1>Theme settings</h1>
+		<h1>@L["Theme settings"]</h1>
 	}
 
 	<div class="profile-stack">
 		<section class="profile-card" aria-labelledby="profile-settings-title">
 			<header class="profile-card-head">
-				<h2 class="profile-card-title" id="profile-settings-title">Appearance</h2>
-				<p class="profile-card-note">On this device</p>
+				<h2 class="profile-card-title" id="profile-settings-title">@L["Appearance"]</h2>
+				<p class="profile-card-note">@L["On this device"]</p>
 			</header>
-			<p class="profile-settings-description" id="theme-description">Choose how the site looks on this device. Your preference is remembered in this browser.</p>
+			<p class="profile-settings-description" id="theme-description">@L["Choose how the site looks on this device. Your preference is remembered in this browser."]</p>
 			@if (TempData["ThemeSaved"] is true)
 			{
-				<p class="profile-settings-status" role="status">Theme saved.</p>
+				<p class="profile-settings-status" role="status">@L["Theme saved."]</p>
 			}
 			<form method="post" asp-antiforgery="true" class="profile-settings-form">
 				<fieldset aria-describedby="theme-description">
-					<legend>Theme</legend>
+					<legend>@L["Theme"]</legend>
 					<div class="profile-theme-options">
 						<label for="theme-system">
 							<input id="theme-system" type="radio" name="Theme" value="system" checked="@(Current == "system")" />
-							<span><strong>System</strong><small>Follow your device’s appearance.</small></span>
+							<span><strong>@L["System"]</strong><small>@L["Follow your device’s appearance."]</small></span>
 						</label>
 						<label for="theme-light">
 							<input id="theme-light" type="radio" name="Theme" value="light" checked="@(Current == "light")" />
-							<span><strong>Light</strong><small>A bright background for reading.</small></span>
+							<span><strong>@L["Light"]</strong><small>@L["A bright background for reading."]</small></span>
 						</label>
 						<label for="theme-dark">
 							<input id="theme-dark" type="radio" name="Theme" value="dark" checked="@(Current == "dark")" />
-							<span><strong>Dark</strong><small>A darker background for low light.</small></span>
+							<span><strong>@L["Dark"]</strong><small>@L["A darker background for low light."]</small></span>
 						</label>
 					</div>
 				</fieldset>
-				<button type="submit" class="profile-action-accent">Save theme</button>
+				<button type="submit" class="profile-action-accent">@L["Save theme"]</button>
 			</form>
 		</section>
 	</div>

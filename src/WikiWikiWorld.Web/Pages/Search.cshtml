@@ -1,22 +1,22 @@
 @page
 @model WikiWikiWorld.Web.Pages.SearchModel
 @{
-    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Q) ? "Search" : $"Search: {Model.Q}";
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Q) ? L["Search"] : L["Search: {0}", Model.Q];
 }
 
-<h1>Search</h1>
+<h1>@L["Search"]</h1>
 
 @if (string.IsNullOrWhiteSpace(Model.Q))
 {
-    <p>Enter a search term to find articles.</p>
+    <p>@L["Enter a search term to find articles."]</p>
 }
 else if (Model.SearchResults.Count == 0)
 {
-    <p>No results found for "<strong>@Model.Q</strong>".</p>
+    <p>@HL["No results found for \"{0}\".", UiFormat.Strong(Model.Q)]</p>
 }
 else
 {
-    <p>Found @Model.SearchResults.Count result(s) for "<strong>@Model.Q</strong>":</p>
+    <p>@HL[SharedResource.PluralPattern("Search.ResultsFound", Model.SearchResults.Count), Model.SearchResults.Count, UiFormat.Strong(Model.Q)]</p>
     <ul class="search-results">
         @foreach (ArticleSearchResult result in Model.SearchResults)
         {
@@ -24,7 +24,7 @@ else
                 <a href="@result.Path">@Html.Raw(Model.HighlightTerm(result.Title))</a>
                 @if (result.Type == ArticleType.Redirect)
                 {
-                    <span class="search-suggestion-type">Redirect</span>
+                    <span class="search-suggestion-type">@L["Redirect"]</span>
                 }
                 @if (!result.IsTitleMatch && !string.IsNullOrWhiteSpace(result.Snippet))
                 {

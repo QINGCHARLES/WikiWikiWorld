@@ -1,28 +1,27 @@
 @page
 @model WikiWikiWorld.Web.Pages.Info.SitemapModel
 @{
-	ViewData["Title"] = "Sitemap";
+	ViewData["Title"] = L["Sitemap"];
 }
 
 <div class="sitemap-page">
 	<header class="sitemap-header">
-		<h1>Sitemap</h1>
+		<h1>@L["Sitemap"]</h1>
 		<p class="sitemap-subtitle">
-			Browse @Model.Hub.TotalContentCount.ToString("N0") indexed entries on @Model.SiteName (@Model.Culture),
-			or fetch the machine-readable <a href="/sitemap.xml">XML sitemap</a>.
+			@HL["Browse {0} indexed entries on {1} ({2}), or fetch the machine-readable {3}.", Model.Hub.TotalContentCount.ToString("N0"), Model.SiteName, Model.Culture, UiFormat.Link("/sitemap.xml", L["XML sitemap"])]
 		</p>
 	</header>
 
 	<section class="sitemap-section" aria-labelledby="sitemap-site-pages">
 		<div class="sitemap-section-head">
-			<h2 id="sitemap-site-pages">Site Pages</h2>
+			<h2 id="sitemap-site-pages">@L["Site Pages"]</h2>
 		</div>
 		<ul class="sitemap-link-grid">
 			@foreach (SitemapStaticLink StaticLink in Model.Hub.StaticLinks)
 			{
-				<li><a href="@StaticLink.Path">@StaticLink.Label</a></li>
+				<li><a href="@StaticLink.Path">@L[StaticLink.Label]</a></li>
 			}
-			<li><a href="/sitemap.xml">XML Sitemap</a></li>
+			<li><a href="/sitemap.xml">@L["Sitemap.XmlSitemapLink"]</a></li>
 		</ul>
 	</section>
 
@@ -30,7 +29,7 @@
 	{
 		<section class="sitemap-section" aria-labelledby="sitemap-languages">
 			<div class="sitemap-section-head">
-				<h2 id="sitemap-languages">Other Languages</h2>
+				<h2 id="sitemap-languages">@L["Sitemap.OtherLanguages"]</h2>
 			</div>
 			<ul class="sitemap-pill-list">
 				@foreach (SitemapCultureLink CultureLink in Model.Hub.CultureLinks)
@@ -51,33 +50,33 @@
 			<div class="sitemap-section-head">
 				<div>
 					<h2 id="sitemap-section-@HubSection.Section.Slug">
-						<a href="/info:sitemap/@HubSection.Section.Slug">@HubSection.Section.Title</a>
+						<a href="/info:sitemap/@HubSection.Section.Slug">@L[HubSection.Section.Title]</a>
 					</h2>
-					<p class="sitemap-section-desc">@HubSection.Section.Description</p>
+					<p class="sitemap-section-desc">@L[HubSection.Section.Description]</p>
 				</div>
 				<span class="sitemap-count">@HubSection.TotalCount.ToString("N0")</span>
 			</div>
 
 			@if (HubSection.TotalCount > 0)
 			{
-				<nav class="sitemap-buckets" aria-label="@HubSection.Section.Title alphabetical index">
-					<a class="sitemap-bucket sitemap-bucket-all" href="/info:sitemap/@HubSection.Section.Slug">All</a>
+				<nav class="sitemap-buckets" aria-label="@L["{0} alphabetical index", L[HubSection.Section.Title]]">
+					<a class="sitemap-bucket sitemap-bucket-all" href="/info:sitemap/@HubSection.Section.Slug">@L["All"]</a>
 					@foreach (SitemapBucketLink Bucket in HubSection.Buckets)
 					{
 						if (Bucket.HasEntries)
 						{
-							<a class="sitemap-bucket" href="/info:sitemap/@HubSection.Section.Slug/@Bucket.Slug">@Bucket.Label</a>
+							<a class="sitemap-bucket" href="/info:sitemap/@HubSection.Section.Slug/@Bucket.Slug">@L[Bucket.Label]</a>
 						}
 						else
 						{
-							<span class="sitemap-bucket is-empty" aria-disabled="true">@Bucket.Label</span>
+							<span class="sitemap-bucket is-empty" aria-disabled="true">@L[Bucket.Label]</span>
 						}
 					}
 				</nav>
 			}
 			else
 			{
-				<p class="sitemap-empty">No entries published in this section yet.</p>
+				<p class="sitemap-empty">@L["No entries published in this section yet."]</p>
 			}
 		</section>
 	}

@@ -1,14 +1,14 @@
 @page
 @model WikiWikiWorld.Web.Pages.Account.LoginModel
 @{
-	ViewData["Title"] = "Log In";
+	ViewData["Title"] = L["Log In"];
 }
 
 <section class="auth" aria-labelledby="AuthTitle">
 	<header class="auth-header">
-		<p class="auth-eyebrow">Welcome back</p>
-		<h1 id="AuthTitle">Log In</h1>
-		<p class="auth-lede">Sign in to edit articles, upload covers and join the discussion.</p>
+		<p class="auth-eyebrow">@L["Welcome back"]</p>
+		<h1 id="AuthTitle">@L["Log In"]</h1>
+		<p class="auth-lede">@L["Sign in to edit articles, upload covers and join the discussion."]</p>
 	</header>
 
 	<form class="auth-card" method="post">
@@ -39,10 +39,10 @@
 			<span>@Html.DisplayNameFor(m => m.Input.RememberMe)</span>
 		</label>
 
-		<button type="submit" class="button auth-submit" data-button-variant="primary">Log In</button>
+		<button type="submit" class="button auth-submit" data-button-variant="primary">@L["Log In"]</button>
 	</form>
 
 	<p class="auth-switch">
-		New here? <a asp-page="/Account/Register">Create an account</a>
+		@L["New here?"] <a asp-page="/Account/Register">@L["Create an account"]</a>
 	</p>
 </section>

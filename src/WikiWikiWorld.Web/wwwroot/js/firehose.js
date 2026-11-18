@@ -5,6 +5,11 @@
     const Toggle = document.getElementById('fh-live');
     const Status = Feed.querySelector('.fh-update-status');
     const NewChanges = Feed.querySelector('.fh-new');
+    // Translated text from the page (data-text); counted phrases carry one pattern per CLDR plural category.
+    const Text = JSON.parse(Feed.dataset.text || '{}');
+    const Plurals = new Intl.PluralRules(document.documentElement.lang || undefined);
+    const Fill = (Pattern, Value) => Pattern.replace('{0}', Value);
+    const Counted = (Forms, Count) => Fill(Forms[Plurals.select(Count)] ?? Forms.other, Count);
     let Pending = false;
     let LastCheck = null;
     Toggle.closest('label').hidden = false;
@@ -21,18 +26,18 @@
             const Result = await Response.json();
             LastCheck = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             if (!Toggle.checked) return;
-            Status.textContent = `Checked ${LastCheck} · checks every 30 seconds`;
+            Status.textContent = Fill(Text.checked, LastCheck);
             NewChanges.hidden = Result.count === 0;
-            NewChanges.textContent = `${Result.count} new ${Result.count === 1 ? 'change' : 'changes'} — show latest ↑`;
+            NewChanges.textContent = Counted(Text.newChanges, Result.count);
         } catch {
-            if (Toggle.checked) Status.textContent = `Couldn't check for changes.${LastCheck ? ` Last checked ${LastCheck}.` : ''} Retrying in 30 seconds; you can also refresh the page.`;
+            if (Toggle.checked) Status.textContent = LastCheck ? Fill(Text.failedSince, LastCheck) : Text.failed;
         } finally {
             Pending = false;
         }
     }
     Toggle.addEventListener('change', () => {
         Status.hidden = false;
-        Status.textContent = Toggle.checked ? 'Checking for new changes…' : 'Auto-update paused.';
+        Status.textContent = Toggle.checked ? Text.checking : Text.paused;
         CheckUpdates();
     });
     document.addEventListener('visibilitychange', CheckUpdates);
