@@ -149,8 +149,11 @@
 			return;
 		}
 		const Count = Options().length;
+		// Counted announcement in the page language: one pattern per CLDR plural category, from the form's data-count-text.
+		const Forms = JSON.parse(Form.dataset.countText || "{}");
+		const Pattern = Forms[new Intl.PluralRules(document.documentElement.lang || undefined).select(Count)] ?? Forms.other;
 		Status.textContent = Count > 0
-			? `${Count} suggestion${Count === 1 ? "" : "s"} available. Use the arrow keys to choose.`
+			? (Pattern ? Pattern.replace("{0}", Count) : `${Count} suggestion${Count === 1 ? "" : "s"} available. Use the arrow keys to choose.`)
 			: (Current.querySelector(".search-suggestions-empty")?.textContent.trim() ?? "");
 	}).observe(Form, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
 })();

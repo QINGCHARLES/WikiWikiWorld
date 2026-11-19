@@ -40,7 +40,7 @@ document.addEventListener("click", function (Event) {
 	Iframe.className = "youtube-embed__frame";
 	Iframe.width = "480";
 	Iframe.height = "270";
-	Iframe.title = `YouTube video: ${VideoTitle}`;
+	Iframe.title = ActivationLink.dataset.frameTitle || `YouTube video: ${VideoTitle}`;
 	Iframe.loading = "lazy";
 	Iframe.referrerPolicy = "strict-origin-when-cross-origin";
 	Iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";

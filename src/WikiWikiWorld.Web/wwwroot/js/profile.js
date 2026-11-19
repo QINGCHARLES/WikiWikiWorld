@@ -55,11 +55,11 @@
 		try
 		{
 			await navigator.clipboard.writeText(ShareUrl);
-			Announce("Link copied");
+			Announce(ShareButton.dataset.copiedText ?? "Link copied");
 		}
 		catch
 		{
-			Announce("Copy failed");
+			Announce(ShareButton.dataset.copyFailedText ?? "Copy failed");
 		}
 	});
 

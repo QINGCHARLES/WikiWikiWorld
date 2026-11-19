@@ -512,9 +512,12 @@ public sealed class YouTubeBlockRenderer : HtmlObjectRenderer<YouTubeBlock>
 			Renderer.Write('"');
 		}
 
-		Renderer.Write(" aria-label=\"Play ");
-		Renderer.Write(EncodedTitle);
-		Renderer.Write(" on YouTube\">");
+		// The player's frame title is translated here because article-view.js builds the frame without server help.
+		Renderer.Write(" data-frame-title=\"");
+		Renderer.Write(WebUtility.HtmlEncode(SharedResource.Format("YouTube video: {0}", Block.Title)));
+		Renderer.Write("\" aria-label=\"");
+		Renderer.Write(SharedResource.FormatHtml("Play {0} on YouTube", EncodedTitle));
+		Renderer.Write("\">");
 		Renderer.Write("<span class=\"youtube-embed__play-icon\" aria-hidden=\"true\"></span>");
 		Renderer.Write("<span class=\"youtube-embed__title\">");
 		Renderer.Write(EncodedTitle);

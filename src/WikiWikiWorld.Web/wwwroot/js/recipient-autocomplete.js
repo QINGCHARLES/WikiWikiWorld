@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function ()
 	Input.setAttribute("aria-controls", "autocomplete-list");
 	Input.setAttribute("aria-expanded", "false");
 	List.setAttribute("role", "listbox");
-	List.setAttribute("aria-label", "Recipient suggestions");
+	List.setAttribute("aria-label", Input.dataset.suggestionsLabel ?? "Recipient suggestions");
 
 	/** Cancel pending work and invalidate even responses whose callbacks were queued before cancellation. */
 	function Dismiss()

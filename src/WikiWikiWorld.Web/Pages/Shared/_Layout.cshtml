@@ -73,7 +73,7 @@
 			<a class="logo" href="/">
 				<img class="logo-svg" src="/sitefiles/@(Model.SiteId > 0 ? Model.SiteId : 1)/logo.svg" alt="@(!string.IsNullOrWhiteSpace(Model.SiteName) ? Model.SiteName : "Magazedia")" />
 			</a>
-			<form class="search-form" action="/Search" method="get" role="search">
+			<form class="search-form" action="/Search" method="get" role="search" data-count-text="@System.Text.Json.JsonSerializer.Serialize(SharedResource.PluralForms("Search.SuggestionsAvailable"))">
 				<button class="search-submit" type="submit" aria-label="@L["Search articles"]">
 					<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16.5 16.5 4 4" /></svg>
 				</button>

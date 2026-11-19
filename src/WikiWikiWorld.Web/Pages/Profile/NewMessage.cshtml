@@ -25,7 +25,7 @@
 			<label for="recipient-input">@L["To"]</label>
 			<div class="autocomplete-wrapper">
 				<input asp-for="Input.Recipients" id="recipient-input" autocomplete="off" autocapitalize="none" spellcheck="false" required maxlength="2000"
-					placeholder="@L["Usernames, separated by commas"]" data-avatar-base="/sitefiles/@Model.SiteId/profilepics/" aria-describedby="recipient-help recipient-error" />
+					placeholder="@L["Usernames, separated by commas"]" data-avatar-base="/sitefiles/@Model.SiteId/profilepics/" data-suggestions-label="@L["Recipient suggestions"]" aria-describedby="recipient-help recipient-error" />
 				<div id="autocomplete-list" class="autocomplete-items"></div>
 			</div>
 			<p class="bookmark-editor-help" id="recipient-help">

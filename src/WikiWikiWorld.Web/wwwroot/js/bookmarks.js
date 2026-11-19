@@ -1,5 +1,7 @@
 const Browser = document.getElementById("bookmark-browser");
 const Status = document.getElementById("bookmark-navigation-status");
+// Translated messages rendered by the page into #bookmark-browser's data-text attribute.
+const UiText = JSON.parse(Browser?.dataset.text || "{}");
 let Pending = null;
 
 // Server-rendered canonical state is authoritative, including clamped page numbers.
@@ -13,7 +15,7 @@ if (Browser) {
 		Pending?.controller.abort();
 		const Request = { id: crypto.randomUUID(), controller: new AbortController() };
 		Pending = Request;
-		Status.textContent = "Loading bookmarks…";
+		Status.textContent = UiText.loading;
 		Browser.setAttribute("aria-busy", "true");
 
 		/** Reports a failed navigation without changing the current list or URL. */
@@ -26,7 +28,7 @@ if (Browser) {
 				location.reload();
 				return;
 			}
-			Status.textContent = "Could not load this list. Your current page is unchanged. Try the link again.";
+			Status.textContent = UiText.loadFailed;
 		}
 
 		/** Commits history only when the server's matching fragment is in the document. */
@@ -42,7 +44,7 @@ if (Browser) {
 			const Canonical = Updated.dataset.url;
 			if (FromHistory) history.replaceState(null, "", Canonical);
 			else if (location.pathname + location.search !== Canonical) history.pushState(null, "", Canonical);
-			Status.textContent = document.getElementById("bookmark-range")?.textContent.trim() ?? "List loaded.";
+			Status.textContent = document.getElementById("bookmark-range")?.textContent.trim() ?? UiText.loaded;
 			document.getElementById("bookmark-title")?.focus({ preventScroll: true });
 			Updated.scrollIntoView({ block: "start", behavior: "instant" });
 		}
@@ -118,19 +120,21 @@ if (Browser) {
 			return;
 		}
 		if (!Text.value.trim()) {
-			Panel.innerHTML = "<p>Nothing to preview yet.</p>";
+			Panel.replaceChildren(Object.assign(document.createElement("p"), { textContent: UiText.nothingToPreview }));
 			return;
 		}
-		Panel.textContent = "Loading preview…";
+		Panel.textContent = UiText.loadingPreview;
 		try {
 			const Url = new URL(Text.form.action, location.href);
 			Url.searchParams.set("handler", "Preview");
 			const Response = await fetch(Url, { method: "POST", body: new FormData(Text.form) });
 			if (!Response.ok) throw new Error(String(Response.status));
 			// Sanitized by the server's user-content renderer, the same output the saved introduction gets.
-			Panel.innerHTML = await Response.text() || "<p>Nothing to preview yet.</p>";
+			const Html = await Response.text();
+			if (Html) Panel.innerHTML = Html;
+			else Panel.replaceChildren(Object.assign(document.createElement("p"), { textContent: UiText.nothingToPreview }));
 		} catch {
-			Panel.textContent = "Could not load the preview. Your text is unchanged.";
+			Panel.textContent = UiText.previewFailed;
 		}
 	}
 
@@ -153,7 +157,7 @@ if (Browser) {
 			const Expanded = Expand.getAttribute("aria-expanded") !== "true";
 			Note.dataset.clamped = String(!Expanded);
 			Expand.setAttribute("aria-expanded", String(Expanded));
-			Expand.textContent = Expanded ? "Show less" : "Read more";
+			Expand.textContent = Expanded ? UiText.showLess : UiText.readMore;
 			return;
 		}
 		const IntroTab = Event.target.closest("[data-bookmark-intro-tab]");

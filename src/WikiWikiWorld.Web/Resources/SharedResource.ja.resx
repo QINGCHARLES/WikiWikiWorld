@@ -5,38 +5,60 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="&amp; others" xml:space="preserve"><value>ほか</value></data>
+  <data name="(you)" xml:space="preserve"><value>（あなた）</value></data>
   <data name="12h" xml:space="preserve"><value>12時間前</value></data>
   <data name="24 HOURS" xml:space="preserve"><value>24時間</value></data>
   <data name="24h ago" xml:space="preserve"><value>24時間前</value></data>
   <data name="7 DAYS" xml:space="preserve"><value>7日間</value></data>
+  <data name=": {0}" xml:space="preserve"><value>：{0}</value></data>
   <data name="A bright background for reading." xml:space="preserve"><value>読みやすい明るい背景。</value></data>
   <data name="A darker background for low light." xml:space="preserve"><value>暗い場所向けの暗い背景。</value></data>
+  <data name="A list by {0}" xml:space="preserve"><value>{0} のリスト</value></data>
+  <data name="A member for a year." xml:space="preserve"><value>メンバー歴1年。</value></data>
+  <data name="A member for five years." xml:space="preserve"><value>メンバー歴5年。</value></data>
   <data name="A missing date. A forgotten cover. A story worth saving. Every contribution adds something." xml:space="preserve"><value>欠けた日付。忘れられた表紙。残す価値のある物語。どの投稿も何かを加えます。</value></data>
   <data name="A quiet day in this stream. The archive is here whenever inspiration strikes." xml:space="preserve"><value>このストリームは今日は静かです。思い立ったときにいつでもどうぞ。</value></data>
   <data name="A space for contributors to coordinate edits, verify facts, and resolve citations." xml:space="preserve"><value>編集の調整、事実の確認、出典の解決のための投稿者向けスペースです。</value></data>
   <data name="About this talk page" xml:space="preserve"><value>このトークページについて</value></data>
   <data name="Account menu for {0}" xml:space="preserve"><value>{0} のアカウントメニュー</value></data>
+  <data name="Active days" xml:space="preserve"><value>活動日数</value></data>
+  <data name="Active {0}" xml:space="preserve"><value>最終活動 {0}</value></data>
+  <data name="Activity" xml:space="preserve"><value>アクティビティ</value></data>
   <data name="Activity context" xml:space="preserve"><value>活動の概要</value></data>
   <data name="Add a language" xml:space="preserve"><value>言語を追加</value></data>
   <data name="Add a note" xml:space="preserve"><value>メモを追加</value></data>
   <data name="Add a note for {0}" xml:space="preserve"><value>{0} にメモを追加</value></data>
+  <data name="Add a note to {0}" xml:space="preserve"><value>{0} にメモを追加</value></data>
+  <data name="Add an introduction" xml:space="preserve"><value>紹介文を追加</value></data>
+  <data name="Add note" xml:space="preserve"><value>メモを追加</value></data>
   <data name="adding missing information" xml:space="preserve"><value>足りない情報を加える</value></data>
   <data name="Adult" xml:space="preserve"><value>成人向け</value></data>
   <data name="After linking, this article and all of these will list each other as translations:" xml:space="preserve"><value>リンク後、この記事と以下の記事はすべて互いを翻訳として表示します：</value></data>
   <data name="All" xml:space="preserve"><value>すべて</value></data>
   <data name="All categories" xml:space="preserve"><value>すべてのカテゴリ</value></data>
   <data name="All changes" xml:space="preserve"><value>すべての変更</value></data>
+  <data name="All contributions" xml:space="preserve"><value>すべての投稿</value></data>
   <data name="almost {0} ago" xml:space="preserve"><value>{0}近く前</value></data>
   <data name="Already have an account?" xml:space="preserve"><value>すでにアカウントをお持ちですか？</value></data>
   <data name="already linked here" xml:space="preserve"><value>ここにリンク済み</value></data>
   <data name="An archive" xml:space="preserve"><value>みんなで</value></data>
   <data name="An error occurred while processing your request." xml:space="preserve"><value>リクエストの処理中にエラーが発生しました。</value></data>
   <data name="An unknown failure has occurred." xml:space="preserve"><value>不明なエラーが発生しました。</value></data>
+  <data name="Anniversary" xml:space="preserve"><value>記念日</value></data>
   <data name="Any time" xml:space="preserve"><value>全期間</value></data>
+  <data name="Anyone will be able to see “{0}” and its {1} and introduction." xml:space="preserve"><value>「{0}」と{1}、紹介文を誰でも見られるようになります。</value></data>
+  <data name="Anyone will be able to see “{0}” and its {1} and {2}." xml:space="preserve"><value>「{0}」と{1}、{2}を誰でも見られるようになります。</value></data>
+  <data name="Anyone will be able to see “{0}” and its {1}, introduction and {2}." xml:space="preserve"><value>「{0}」と{1}、紹介文、{2}を誰でも見られるようになります。</value></data>
+  <data name="Anyone will be able to see “{0}” and its {1}." xml:space="preserve"><value>「{0}」と{1}を誰でも見られるようになります。</value></data>
+  <data name="Anyone with the link or your profile" xml:space="preserve"><value>リンクやプロフィールを見た人なら誰でも</value></data>
   <data name="Appearance" xml:space="preserve"><value>表示</value></data>
   <data name="Apply" xml:space="preserve"><value>適用</value></data>
   <data name="Architecture" xml:space="preserve"><value>建築</value></data>
+  <data name="Archivist" xml:space="preserve"><value>アーキビスト</value></data>
   <data name="Are you sure you want to delete this article?" xml:space="preserve"><value>この記事を削除してもよろしいですか？</value></data>
+  <data name="Arriving with watchlists" xml:space="preserve"><value>ウォッチリストとともに登場予定</value></data>
+  <data name="Arrow.Back" xml:space="preserve"><value>←</value></data>
+  <data name="Arrow.Forward" xml:space="preserve"><value>→</value></data>
   <data name="Art &amp; Design" xml:space="preserve"><value>アート・デザイン</value></data>
   <data name="Article" xml:space="preserve"><value>記事</value></data>
   <data name="Article actions" xml:space="preserve"><value>記事の操作</value></data>
@@ -57,12 +79,20 @@
   <data name="Auto-update paused." xml:space="preserve"><value>自動更新を一時停止しました。</value></data>
   <data name="Award" xml:space="preserve"><value>賞</value></data>
   <data name="Back to latest ↑" xml:space="preserve"><value>最新に戻る ↑</value></data>
+  <data name="Back to the newest" xml:space="preserve"><value>最新に戻る</value></data>
+  <data name="Badges" xml:space="preserve"><value>バッジ</value></data>
   <data name="Be respectful of archivists and original contributors." xml:space="preserve"><value>アーキビストと最初の投稿者に敬意を払いましょう。</value></data>
+  <data name="Best streak" xml:space="preserve"><value>最長連続記録</value></data>
   <data name="Bookmark" xml:space="preserve"><value>ブックマーク</value></data>
   <data name="Bookmark lists" xml:space="preserve"><value>ブックマークリスト</value></data>
+  <data name="Bookmark pages" xml:space="preserve"><value>ブックマークのページ送り</value></data>
+  <data name="Bookmark restored." xml:space="preserve"><value>ブックマークを元に戻しました。</value></data>
   <data name="Bookmark.ListsSavedInOther|other" xml:space="preserve"><value>ブックマークリスト（ほかの{0}件のリストに保存済み）</value></data>
   <data name="Bookmarked" xml:space="preserve"><value>ブックマーク済み</value></data>
   <data name="Bookmarks" xml:space="preserve"><value>ブックマーク</value></data>
+  <data name="Bookmarks.Articles|other" xml:space="preserve"><value>{0}件の記事</value></data>
+  <data name="Bookmarks.Entries|other" xml:space="preserve"><value>{0}件</value></data>
+  <data name="Bookmarks.Notes|other" xml:space="preserve"><value>{0}件のメモ</value></data>
   <data name="Both groups have a {0} article. Keep which?" xml:space="preserve"><value>両方のグループに{0}の記事があります。どちらを残しますか？</value></data>
   <data name="Breadcrumb" xml:space="preserve"><value>パンくずリスト</value></data>
   <data name="Browse all sections, categories, files, and pages on {0} ({1})." xml:space="preserve"><value>{0}（{1}）のすべてのセクション、カテゴリ、ファイル、ページを閲覧できます。</value></data>
@@ -72,8 +102,13 @@
   <data name="built together." xml:space="preserve"><value>つくるアーカイブ。</value></data>
   <data name="Business &amp; Finance" xml:space="preserve"><value>ビジネス・金融</value></data>
   <data name="by {0}" xml:space="preserve"><value>{0} による</value></data>
+  <data name="Byline" xml:space="preserve"><value>署名記事</value></data>
+  <data name="Calendar.Days|other" xml:space="preserve"><value>{0}日</value></data>
+  <data name="Calendar.Edits|other" xml:space="preserve"><value>{0}回の編集</value></data>
   <data name="Cancel" xml:space="preserve"><value>キャンセル</value></data>
   <data name="Categories" xml:space="preserve"><value>カテゴリ</value></data>
+  <data name="Categories appear here once the articles you edit are categorised." xml:space="preserve"><value>編集した記事にカテゴリが付くと、ここに表示されます。</value></data>
+  <data name="Categories appear here once the articles {0} edits are categorised." xml:space="preserve"><value>{0} が編集した記事にカテゴリが付くと、ここに表示されます。</value></data>
   <data name="Category" xml:space="preserve"><value>カテゴリ</value></data>
   <data name="Category articles" xml:space="preserve"><value>カテゴリの記事</value></data>
   <data name="Celebrity &amp; Royalty" xml:space="preserve"><value>セレブ・王室</value></data>
@@ -84,15 +119,22 @@
   <data name="Children &amp; Youth" xml:space="preserve"><value>子ども・若者</value></data>
   <data name="Choose a language and enter the article's address." xml:space="preserve"><value>言語を選び、記事のアドレスを入力してください。</value></data>
   <data name="Choose a language and enter the other article's address." xml:space="preserve"><value>言語を選び、もう一方の記事のアドレスを入力してください。</value></data>
+  <data name="Choose at least one other recipient." xml:space="preserve"><value>ほかの宛先を1人以上選んでください。</value></data>
+  <data name="Choose at most {0} recipients." xml:space="preserve"><value>宛先は{0}人までです。</value></data>
   <data name="Choose how the site looks on this device. Your preference is remembered in this browser." xml:space="preserve"><value>この端末でのサイトの見た目を選びます。設定はこのブラウザに保存されます。</value></data>
   <data name="Choose which article to keep for each language that both groups have." xml:space="preserve"><value>両方のグループにある言語ごとに、残す記事を選んでください。</value></data>
   <data name="Choose…" xml:space="preserve"><value>選択…</value></data>
   <data name="Citations" xml:space="preserve"><value>出典</value></data>
   <data name="Cite primary sources where possible." xml:space="preserve"><value>可能な限り一次資料を引用しましょう。</value></data>
+  <data name="Clear list" xml:space="preserve"><value>リストを空にする</value></data>
+  <data name="Clear list…" xml:space="preserve"><value>リストを空にする…</value></data>
+  <data name="Clear this list?" xml:space="preserve"><value>このリストを空にしますか？</value></data>
   <data name="Codec" xml:space="preserve"><value>コーデック</value></data>
   <data name="Codec / Format" xml:space="preserve"><value>コーデック／形式</value></data>
   <data name="Collecting &amp; Antiques" xml:space="preserve"><value>コレクション・骨董</value></data>
+  <data name="Columnist" xml:space="preserve"><value>コラムニスト</value></data>
   <data name="Comics &amp; Manga" xml:space="preserve"><value>コミック・マンガ</value></data>
+  <data name="Coming soon" xml:space="preserve"><value>近日公開</value></data>
   <data name="Comment:" xml:space="preserve"><value>コメント：</value></data>
   <data name="Community" xml:space="preserve"><value>コミュニティ</value></data>
   <data name="Computing" xml:space="preserve"><value>コンピューター</value></data>
@@ -102,11 +144,16 @@
   <data name="Consumer &amp; Shopping" xml:space="preserve"><value>消費・ショッピング</value></data>
   <data name="Content is available under {0} unless otherwise noted." xml:space="preserve"><value>特記がない限り、コンテンツは {0} の下で利用できます。</value></data>
   <data name="Contribute" xml:space="preserve"><value>投稿する</value></data>
+  <data name="Contributions" xml:space="preserve"><value>投稿</value></data>
   <data name="Contributor" xml:space="preserve"><value>投稿者</value></data>
   <data name="Contributor name" xml:space="preserve"><value>投稿者名</value></data>
   <data name="Contributors" xml:space="preserve"><value>投稿者</value></data>
+  <data name="Conversation pages" xml:space="preserve"><value>会話のページ送り</value></data>
+  <data name="Copy failed" xml:space="preserve"><value>コピーできませんでした</value></data>
   <data name="Copyright &amp; DMCA" xml:space="preserve"><value>著作権とDMCA</value></data>
   <data name="Could not create the list. Reload to check your lists before trying again." xml:space="preserve"><value>リストを作成できませんでした。もう一度試す前に、ページを再読み込みしてリストを確認してください。</value></data>
+  <data name="Could not load the preview. Your text is unchanged." xml:space="preserve"><value>プレビューを読み込めませんでした。入力した文章はそのままです。</value></data>
+  <data name="Could not load this list. Your current page is unchanged. Try the link again." xml:space="preserve"><value>このリストを読み込めませんでした。現在のページはそのままです。もう一度リンクを試してください。</value></data>
   <data name="Could not save the note. Check your connection and try again." xml:space="preserve"><value>メモを保存できませんでした。接続を確認して、もう一度お試しください。</value></data>
   <data name="Could not save. Reload to check your bookmark before trying again." xml:space="preserve"><value>保存できませんでした。もう一度試す前に、ページを再読み込みしてブックマークを確認してください。</value></data>
   <data name="Could not save. Reload to check your lists before trying again." xml:space="preserve"><value>保存できませんでした。もう一度試す前に、ページを再読み込みしてリストを確認してください。</value></data>
@@ -117,31 +164,51 @@
   <data name="Create Account" xml:space="preserve"><value>アカウントを作成</value></data>
   <data name="Create an account" xml:space="preserve"><value>アカウントを作成</value></data>
   <data name="Create an account to edit articles, upload covers and join the discussion." xml:space="preserve"><value>アカウントを作成すると、記事の編集、表紙のアップロード、議論への参加ができます。</value></data>
+  <data name="Create list" xml:space="preserve"><value>リストを作成</value></data>
   <data name="Create New Article" xml:space="preserve"><value>新しい記事を作成</value></data>
   <data name="Create this Page" xml:space="preserve"><value>このページを作成</value></data>
+  <data name="Created" xml:space="preserve"><value>作成</value></data>
   <data name="Created by" xml:space="preserve"><value>作成者</value></data>
   <data name="Credits" xml:space="preserve"><value>クレジット</value></data>
   <data name="Current" xml:space="preserve"><value>現在</value></data>
+  <data name="Current streak" xml:space="preserve"><value>現在の連続記録</value></data>
   <data name="Current version" xml:space="preserve"><value>現在の版</value></data>
   <data name="Dark" xml:space="preserve"><value>ダーク</value></data>
   <data name="Dates grouped in UTC. Updated {0} UTC." xml:space="preserve"><value>日付はUTCでまとめています。{0} UTCに更新。</value></data>
+  <data name="Debut" xml:space="preserve"><value>デビュー</value></data>
+  <data name="Default list cleared." xml:space="preserve"><value>既定のリストを空にしました。</value></data>
   <data name="Delete article" xml:space="preserve"><value>記事を削除</value></data>
+  <data name="Delete list" xml:space="preserve"><value>リストを削除</value></data>
+  <data name="Delete list…" xml:space="preserve"><value>リストを削除…</value></data>
   <data name="Delete note" xml:space="preserve"><value>メモを削除</value></data>
+  <data name="Delete this list?" xml:space="preserve"><value>このリストを削除しますか？</value></data>
   <data name="Development Mode" xml:space="preserve"><value>開発モード</value></data>
   <data name="Dimensions" xml:space="preserve"><value>サイズ（ピクセル）</value></data>
   <data name="Discuss" xml:space="preserve"><value>ディスカッション</value></data>
+  <data name="Discussed" xml:space="preserve"><value>議論</value></data>
   <data name="Discussion: {0}" xml:space="preserve"><value>ディスカッション：{0}</value></data>
   <data name="Distributor" xml:space="preserve"><value>配給会社</value></data>
   <data name="Download" xml:space="preserve"><value>ダウンロード</value></data>
   <data name="Download file not available." xml:space="preserve"><value>ダウンロードファイルはありません。</value></data>
+  <data name="e.g. Ones to read next" xml:space="preserve"><value>例：次に読むもの</value></data>
+  <data name="Earlier" xml:space="preserve"><value>前へ</value></data>
   <data name="Earlier changes" xml:space="preserve"><value>以前の変更</value></data>
   <data name="Edit" xml:space="preserve"><value>編集</value></data>
+  <data name="Edit history" xml:space="preserve"><value>編集履歴</value></data>
+  <data name="Edit history pages" xml:space="preserve"><value>編集履歴のページ送り</value></data>
+  <data name="Edit introduction" xml:space="preserve"><value>紹介文を編集</value></data>
   <data name="Edit lists" xml:space="preserve"><value>リストを編集</value></data>
   <data name="Edit note" xml:space="preserve"><value>メモを編集</value></data>
   <data name="Edit note for {0}" xml:space="preserve"><value>{0} のメモを編集</value></data>
+  <data name="Edit profile" xml:space="preserve"><value>プロフィールを編集</value></data>
   <data name="Edit the article" xml:space="preserve"><value>記事を編集</value></data>
   <data name="EditArticle.Suffix" xml:space="preserve"><value></value></data>
-  <data name="edited" xml:space="preserve"><value>編集済み</value></data>
+  <data name="Edited" xml:space="preserve"><value>編集</value></data>
+  <data name="Edited 7 days in a row." xml:space="preserve"><value>7日連続で編集した。</value></data>
+  <data name="Edited articles in 10 categories." xml:space="preserve"><value>10カテゴリの記事を編集した。</value></data>
+  <data name="Editor at Large" xml:space="preserve"><value>エディター・アット・ラージ</value></data>
+  <data name="Editor mode" xml:space="preserve"><value>エディターのモード</value></data>
+  <data name="Edits" xml:space="preserve"><value>編集数</value></data>
   <data name="Education &amp; Careers" xml:space="preserve"><value>教育・キャリア</value></data>
   <data name="Email" xml:space="preserve"><value>メールアドレス</value></data>
   <data name="Email '{0}' is already taken." xml:space="preserve"><value>メールアドレス「{0}」はすでに使われています。</value></data>
@@ -154,6 +221,7 @@
   <data name="Error" xml:space="preserve"><value>エラー</value></data>
   <data name="Error." xml:space="preserve"><value>エラー。</value></data>
   <data name="Every edit leaves a mark." xml:space="preserve"><value>どの編集も足跡を残します。</value></data>
+  <data name="Everyone listed can read and reply. Participants are fixed when the conversation starts." xml:space="preserve"><value>一覧の全員が読んで返信できます。参加者は会話の開始時に確定します。</value></data>
   <data name="Family &amp; Relationships" xml:space="preserve"><value>家族・人間関係</value></data>
   <data name="Farming &amp; Rural Life" xml:space="preserve"><value>農業・田舎暮らし</value></data>
   <data name="Fashion &amp; Beauty" xml:space="preserve"><value>ファッション・美容</value></data>
@@ -179,6 +247,7 @@
   <data name="Firehose.NewChanges|other" xml:space="preserve"><value>新しい変更が{0}件 — 最新を表示 ↑</value></data>
   <data name="Firehose.OnThisPage|other" xml:space="preserve"><value>このページに{0}件</value></data>
   <data name="Firehose.RecentChanges" xml:space="preserve"><value>最近の更新</value></data>
+  <data name="Focus areas" xml:space="preserve"><value>得意分野</value></data>
   <data name="Follow the people building the encyclopedia, one page at a time." xml:space="preserve"><value>百科事典を1ページずつ築く人たちを追いかけましょう。</value></data>
   <data name="Follow your device’s appearance." xml:space="preserve"><value>端末の表示設定に合わせます。</value></data>
   <data name="Food &amp; Drink" xml:space="preserve"><value>フード・ドリンク</value></data>
@@ -194,6 +263,7 @@
   <data name="Go to Latest Version" xml:space="preserve"><value>最新版へ移動</value></data>
   <data name="Go to New URL" xml:space="preserve"><value>新しいURLへ移動</value></data>
   <data name="Have a copy of this publication you can legally share?" xml:space="preserve"><value>合法的に共有できるこの刊行物のコピーをお持ちですか？</value></data>
+  <data name="Heads up" xml:space="preserve"><value>お知らせ</value></data>
   <data name="Health &amp; Medicine" xml:space="preserve"><value>健康・医学</value></data>
   <data name="History" xml:space="preserve"><value>歴史</value></data>
   <data name="History.BackToArticle" xml:space="preserve"><value>← 記事に戻る</value></data>
@@ -210,14 +280,23 @@
   <data name="Improved by" xml:space="preserve"><value>編集者</value></data>
   <data name="In the spotlight" xml:space="preserve"><value>注目</value></data>
   <data name="In This Issue" xml:space="preserve"><value>この号の内容</value></data>
+  <data name="Inbox" xml:space="preserve"><value>受信</value></data>
   <data name="Incorrect password." xml:space="preserve"><value>パスワードが正しくありません。</value></data>
   <data name="Info" xml:space="preserve"><value>情報</value></data>
   <data name="Info Pages" xml:space="preserve"><value>情報ページ</value></data>
+  <data name="Introduce this list" xml:space="preserve"><value>このリストを紹介</value></data>
+  <data name="Introduce yourself: your collection, the eras and titles you know best, and what you are working on. It uses the same wiki syntax as every article; add {0} for a masthead epigraph and {1} for a one-line bio." xml:space="preserve"><value>自己紹介を書きましょう。コレクション、詳しい時代やタイトル、取り組んでいることなど。どの記事とも同じウィキ記法が使えます。{0} で見出しのエピグラフ、{1} で1行の紹介文を設定できます。</value></data>
+  <data name="Introduction" xml:space="preserve"><value>紹介文</value></data>
+  <data name="Introduction removed." xml:space="preserve"><value>紹介文を削除しました。</value></data>
+  <data name="Introduction saved." xml:space="preserve"><value>紹介文を保存しました。</value></data>
+  <data name="Introduction · {0}" xml:space="preserve"><value>紹介文 · {0}</value></data>
+  <data name="IntroEditor.PrivateSuffix" xml:space="preserve"><value>のリスト。リストを公開するまで、あなただけが見られます。</value></data>
   <data name="Invalid article identifier." xml:space="preserve"><value>記事の識別子が無効です。</value></data>
   <data name="Invalid redirect target directive." xml:space="preserve"><value>リダイレクト先の指定が無効です。</value></data>
   <data name="Invalid username or password." xml:space="preserve"><value>ユーザー名またはパスワードが正しくありません。</value></data>
   <data name="It can result in displaying sensitive information from exceptions to end users." xml:space="preserve"><value>例外に含まれる機密情報がエンドユーザーに表示されるおそれがあります。</value></data>
   <data name="Join the archive" xml:space="preserve"><value>アーカイブに参加</value></data>
+  <data name="Joined {0}" xml:space="preserve"><value>{0}に参加</value></data>
   <data name="Journal" xml:space="preserve"><value>ジャーナル</value></data>
   <data name="Journal Issue" xml:space="preserve"><value>ジャーナルの号</value></data>
   <data name="just over {0} ago" xml:space="preserve"><value>{0}と少し前</value></data>
@@ -231,12 +310,15 @@
   <data name="Last 7 days" xml:space="preserve"><value>過去7日間</value></data>
   <data name="Last activity" xml:space="preserve"><value>最終活動</value></data>
   <data name="Last Updated" xml:space="preserve"><value>最終更新</value></data>
+  <data name="Later" xml:space="preserve"><value>次へ</value></data>
   <data name="Law &amp; Justice" xml:space="preserve"><value>法律・司法</value></data>
   <data name="Learn how we collect, use, and protect your personal information." xml:space="preserve"><value>個人情報の収集、利用、保護の方法について説明します。</value></data>
+  <data name="Less" xml:space="preserve"><value>少ない</value></data>
   <data name="less than a minute ago" xml:space="preserve"><value>1分以内</value></data>
   <data name="LGBTQ+" xml:space="preserve"><value>LGBTQ+</value></data>
   <data name="Light" xml:space="preserve"><value>ライト</value></data>
   <data name="Link" xml:space="preserve"><value>リンク</value></data>
+  <data name="Link copied" xml:space="preserve"><value>リンクをコピーしました</value></data>
   <data name="Link removed." xml:space="preserve"><value>リンクを解除しました。</value></data>
   <data name="Link.History" xml:space="preserve"><value>履歴</value></data>
   <data name="Link.LogIn" xml:space="preserve"><value>ログイン</value></data>
@@ -244,32 +326,60 @@
   <data name="Linked to {0}. “{1}” was unlinked." xml:space="preserve"><value>{0}にリンクしました。「{1}」のリンクは解除されました。</value></data>
   <data name="Linking “{0}” replaces an article that is already linked in its language." xml:space="preserve"><value>「{0}」をリンクすると、同じ言語ですでにリンクされている記事と置き換わります。</value></data>
   <data name="Links are shared by every language in the group: a change here also changes what the other languages' pages list." xml:space="preserve"><value>リンクはグループ内のすべての言語で共有されます。ここでの変更は、他の言語のページの一覧にも反映されます。</value></data>
+  <data name="List created." xml:space="preserve"><value>リストを作成しました。</value></data>
+  <data name="List deleted." xml:space="preserve"><value>リストを削除しました。</value></data>
+  <data name="List is now private." xml:space="preserve"><value>リストを非公開にしました。</value></data>
+  <data name="List is now public." xml:space="preserve"><value>リストを公開しました。</value></data>
+  <data name="List loaded." xml:space="preserve"><value>リストを読み込みました。</value></data>
   <data name="List name" xml:space="preserve"><value>リスト名</value></data>
   <data name="List names can be up to {0} characters." xml:space="preserve"><value>リスト名は{0}文字までです。</value></data>
+  <data name="Lists" xml:space="preserve"><value>リスト</value></data>
   <data name="Literature &amp; Fiction" xml:space="preserve"><value>文学・小説</value></data>
+  <data name="Loading bookmarks…" xml:space="preserve"><value>ブックマークを読み込んでいます…</value></data>
+  <data name="Loading preview…" xml:space="preserve"><value>プレビューを読み込んでいます…</value></data>
   <data name="Log In" xml:space="preserve"><value>ログイン</value></data>
   <data name="Log Out" xml:space="preserve"><value>ログアウト</value></data>
   <data name="Login here" xml:space="preserve"><value>こちらからログイン</value></data>
+  <data name="Made 2,500 edits." xml:space="preserve"><value>2,500回編集した。</value></data>
+  <data name="Made 50 edits." xml:space="preserve"><value>50回編集した。</value></data>
+  <data name="Made 500 edits." xml:space="preserve"><value>500回編集した。</value></data>
   <data name="Magazedia is the world's largest encyclopedia of magazines, fanzines, journals, mooks and newsletters" xml:space="preserve"><value>マガゼディアは、雑誌・ファンジン・ジャーナル・ムック・ニュースレターの世界最大の百科事典です</value></data>
   <data name="Magazine" xml:space="preserve"><value>雑誌</value></data>
   <data name="Magazine Issue" xml:space="preserve"><value>雑誌の号</value></data>
+  <data name="Make private" xml:space="preserve"><value>非公開にする</value></data>
+  <data name="Make public" xml:space="preserve"><value>公開する</value></data>
+  <data name="Make public…" xml:space="preserve"><value>公開する…</value></data>
+  <data name="Make this list public?" xml:space="preserve"><value>このリストを公開しますか？</value></data>
   <data name="Markdown supported" xml:space="preserve"><value>Markdown 対応</value></data>
+  <data name="Markdown supported · Blank line for new paragraph" xml:space="preserve"><value>Markdown 対応 · 空行で段落を分けます</value></data>
+  <data name="Markdown: {0}, {1}, {2}, a blank line for a new paragraph." xml:space="preserve"><value>Markdown：{0}、{1}、{2}、空行で段落を分けます。</value></data>
+  <data name="Masthead" xml:space="preserve"><value>マストヘッド</value></data>
   <data name="Men's Interest" xml:space="preserve"><value>男性向け</value></data>
   <data name="Merge two language groups?" xml:space="preserve"><value>2つの言語グループを統合しますか？</value></data>
   <data name="Message" xml:space="preserve"><value>メッセージ</value></data>
+  <data name="Message folder pages" xml:space="preserve"><value>フォルダーのページ送り</value></data>
+  <data name="Message folders" xml:space="preserve"><value>メッセージのフォルダー</value></data>
+  <data name="Message to {0}" xml:space="preserve"><value>{0} へのメッセージ</value></data>
+  <data name="Message {0}" xml:space="preserve"><value>{0} にメッセージ</value></data>
   <data name="Messages" xml:space="preserve"><value>メッセージ</value></data>
   <data name="Military &amp; Defence" xml:space="preserve"><value>軍事・防衛</value></data>
   <data name="Missing Article" xml:space="preserve"><value>記事がありません</value></data>
   <data name="Missing Image" xml:space="preserve"><value>画像がありません</value></data>
+  <data name="More" xml:space="preserve"><value>多い</value></data>
   <data name="More article actions" xml:space="preserve"><value>その他の記事の操作</value></data>
   <data name="Most edited pages in this stream" xml:space="preserve"><value>このストリームで最も編集されたページ</value></data>
   <data name="Movie" xml:space="preserve"><value>映画</value></data>
   <data name="Music" xml:space="preserve"><value>音楽</value></data>
   <data name="My Bookmarks" xml:space="preserve"><value>ブックマーク</value></data>
   <data name="My Contributions" xml:space="preserve"><value>自分の投稿</value></data>
+  <data name="Name" xml:space="preserve"><value>名前</value></data>
+  <data name="Name A–Z" xml:space="preserve"><value>名前順</value></data>
+  <data name="New conversation" xml:space="preserve"><value>新しい会話</value></data>
   <data name="New here?" xml:space="preserve"><value>はじめての方は</value></data>
+  <data name="New list" xml:space="preserve"><value>新しいリスト</value></data>
   <data name="New list name" xml:space="preserve"><value>新しいリストの名前</value></data>
   <data name="New list…" xml:space="preserve"><value>新しいリスト…</value></data>
+  <data name="Newer" xml:space="preserve"><value>新しい順へ</value></data>
   <data name="News &amp; Politics" xml:space="preserve"><value>ニュース・政治</value></data>
   <data name="Newsletter" xml:space="preserve"><value>ニュースレター</value></data>
   <data name="Newsletter Issue" xml:space="preserve"><value>ニュースレターの号</value></data>
@@ -278,29 +388,51 @@
   <data name="No articles are currently listed in this category." xml:space="preserve"><value>このカテゴリには現在記事がありません。</value></data>
   <data name="No articles found for “{0}”." xml:space="preserve"><value>「{0}」に一致する記事はありません。</value></data>
   <data name="No articles with cover images found." xml:space="preserve"><value>表紙画像のある記事はありません。</value></data>
+  <data name="No badges yet. The first arrives with the first edit." xml:space="preserve"><value>バッジはまだありません。最初の編集で1つ目がもらえます。</value></data>
   <data name="No discussion subjects yet. Be the first to start one." xml:space="preserve"><value>まだ話題はありません。最初の話題を始めましょう。</value></data>
   <data name="No edit summary supplied." xml:space="preserve"><value>編集の要約はありません。</value></data>
   <data name="No edit warring; resolve disputes here first." xml:space="preserve"><value>編集合戦はやめ、まずここで議論しましょう。</value></data>
+  <data name="No edits" xml:space="preserve"><value>編集なし</value></data>
+  <data name="No entries" xml:space="preserve"><value>項目なし</value></data>
   <data name="No entries found for this filter." xml:space="preserve"><value>この条件に一致する項目はありません。</value></data>
   <data name="No entries published in this section yet." xml:space="preserve"><value>このセクションにはまだ項目がありません。</value></data>
   <data name="No matching edits this week." xml:space="preserve"><value>今週は該当する編集がありません。</value></data>
   <data name="No pages currently link to this article." xml:space="preserve"><value>現在この記事にリンクしているページはありません。</value></data>
+  <data name="No profile article yet" xml:space="preserve"><value>プロフィール記事はまだありません</value></data>
   <data name="No results found for &quot;{0}&quot;." xml:space="preserve"><value>「{0}」の検索結果はありません。</value></data>
   <data name="No revisions found for this article." xml:space="preserve"><value>この記事の版はありません。</value></data>
   <data name="No revisions match these filters. Try a wider time range or another page title." xml:space="preserve"><value>この条件に一致する版はありません。期間を広げるか、別のページ名で試してください。</value></data>
+  <data name="Nobody has started a conversation with you yet." xml:space="preserve"><value>まだ誰からも会話は始まっていません。</value></data>
   <data name="Note" xml:space="preserve"><value>メモ</value></data>
+  <data name="Note for {0}" xml:space="preserve"><value>{0} のメモ</value></data>
   <data name="Note removed from {0}." xml:space="preserve"><value>{0} からメモを削除しました。</value></data>
+  <data name="Note removed." xml:space="preserve"><value>メモを削除しました。</value></data>
   <data name="Note saved to {0}." xml:space="preserve"><value>{0} にメモを保存しました。</value></data>
+  <data name="Note saved." xml:space="preserve"><value>メモを保存しました。</value></data>
   <data name="Note:" xml:space="preserve"><value>注：</value></data>
+  <data name="NoteEditor.PrivateSuffix" xml:space="preserve"><value>のリスト。あなただけが見られます。</value></data>
+  <data name="NoteEditor.PublicSuffix" xml:space="preserve"><value>のリスト。誰でも読めます。</value></data>
   <data name="Notes can be up to {0:N0} characters." xml:space="preserve"><value>メモは{0:N0}文字までです。</value></data>
+  <data name="Notes you wrote while it was private become public too." xml:space="preserve"><value>非公開の間に書いたメモも公開されます。</value></data>
   <data name="NoteVisibility.PrivateSuffix" xml:space="preserve"><value>のリスト。このメモはあなただけが見られます。</value></data>
   <data name="NoteVisibility.PublicSuffix" xml:space="preserve"><value>のリスト。このメモは誰でも読めます。</value></data>
   <data name="Nothing in this stream. Yet." xml:space="preserve"><value>このストリームはまだ空です。</value></data>
+  <data name="Nothing saved here in this language yet. Use the bookmark button on any article to add it to this list." xml:space="preserve"><value>この言語ではまだ何も保存されていません。記事のブックマークボタンでこのリストに追加できます。</value></data>
+  <data name="Nothing to preview yet." xml:space="preserve"><value>プレビューする内容はまだありません。</value></data>
+  <data name="Nothing yet. Edits and talk posts will appear here." xml:space="preserve"><value>まだありません。編集やトークの投稿がここに表示されます。</value></data>
   <data name="Notifications" xml:space="preserve"><value>通知</value></data>
   <data name="Now" xml:space="preserve"><value>現在</value></data>
+  <data name="Older" xml:space="preserve"><value>古い順へ</value></data>
+  <data name="On Deadline" xml:space="preserve"><value>締め切り厳守</value></data>
   <data name="On this device" xml:space="preserve"><value>この端末</value></data>
+  <data name="on {0}" xml:space="preserve"><value>{0} で</value></data>
   <data name="One topic per thread — fork if scope drifts." xml:space="preserve"><value>1スレッド1話題。話がそれたら新しいスレッドに分けましょう。</value></data>
+  <data name="Only participants can open a conversation. Public user-page discussions are separate." xml:space="preserve"><value>会話を開けるのは参加者だけです。利用者ページの公開ディスカッションとは別です。</value></data>
+  <data name="Only the participants can read this." xml:space="preserve"><value>参加者だけが読めます。</value></data>
+  <data name="Only the people you list can read this." xml:space="preserve"><value>宛先に指定した人だけが読めます。</value></data>
+  <data name="Only you" xml:space="preserve"><value>自分だけ</value></data>
   <data name="Only you see this message." xml:space="preserve"><value>このメッセージはあなたにだけ表示されています。</value></data>
+  <data name="Open as article" xml:space="preserve"><value>記事として開く</value></data>
   <data name="Organization" xml:space="preserve"><value>組織</value></data>
   <data name="Other" xml:space="preserve"><value>その他</value></data>
   <data name="Other languages" xml:space="preserve"><value>他の言語</value></data>
@@ -311,6 +443,7 @@
   <data name="Pages edited" xml:space="preserve"><value>編集されたページ</value></data>
   <data name="Pages that link to &quot;{0}&quot;" xml:space="preserve"><value>「{0}」へのリンク元</value></data>
   <data name="Paranormal &amp; Esoteric" xml:space="preserve"><value>超常現象・オカルト</value></data>
+  <data name="Participants" xml:space="preserve"><value>参加者</value></data>
   <data name="Password" xml:space="preserve"><value>パスワード</value></data>
   <data name="Passwords must be at least {0} characters." xml:space="preserve"><value>パスワードは{0}文字以上にしてください。</value></data>
   <data name="Passwords must have at least one digit ('0'-'9')." xml:space="preserve"><value>パスワードには数字（0〜9）を1文字以上含めてください。</value></data>
@@ -318,23 +451,43 @@
   <data name="Passwords must have at least one non alphanumeric character." xml:space="preserve"><value>パスワードには英数字以外の記号を1文字以上含めてください。</value></data>
   <data name="Passwords must have at least one uppercase ('A'-'Z')." xml:space="preserve"><value>パスワードには英大文字（A〜Z）を1文字以上含めてください。</value></data>
   <data name="Passwords must use at least {0} different characters." xml:space="preserve"><value>パスワードには{0}種類以上の文字を使ってください。</value></data>
+  <data name="Past 12 months" xml:space="preserve"><value>過去12か月</value></data>
   <data name="Performing Arts" xml:space="preserve"><value>舞台芸術</value></data>
   <data name="Person" xml:space="preserve"><value>人物</value></data>
   <data name="Pets &amp; Animals" xml:space="preserve"><value>ペット・動物</value></data>
   <data name="Photography" xml:space="preserve"><value>写真</value></data>
+  <data name="Play {0} on YouTube" xml:space="preserve"><value>YouTube で {0} を再生</value></data>
+  <data name="Polymath" xml:space="preserve"><value>博識家</value></data>
   <data name="Post reply" xml:space="preserve"><value>返信を投稿</value></data>
   <data name="Post subject" xml:space="preserve"><value>話題を投稿</value></data>
+  <data name="Preview" xml:space="preserve"><value>プレビュー</value></data>
   <data name="Previous" xml:space="preserve"><value>前へ</value></data>
   <data name="Previous image" xml:space="preserve"><value>前の画像</value></data>
   <data name="Previous version" xml:space="preserve"><value>以前の版</value></data>
   <data name="Privacy Policy" xml:space="preserve"><value>プライバシーポリシー</value></data>
   <data name="Private" xml:space="preserve"><value>非公開</value></data>
-  <data name="private messages" xml:space="preserve"><value>プライベートメッセージ</value></data>
+  <data name="Private conversation" xml:space="preserve"><value>非公開の会話</value></data>
+  <data name="Private messages" xml:space="preserve"><value>プライベートメッセージ</value></data>
+  <data name="Private · Only you" xml:space="preserve"><value>非公開 · 自分だけ</value></data>
+  <data name="Profile" xml:space="preserve"><value>プロフィール</value></data>
+  <data name="Profile article" xml:space="preserve"><value>プロフィール記事</value></data>
+  <data name="Profile sections" xml:space="preserve"><value>プロフィールのセクション</value></data>
+  <data name="Profile.ArticlesEdited|other" xml:space="preserve"><value>{0}件の記事を編集</value></data>
+  <data name="Profile.BadgesToEarn|other" xml:space="preserve"><value>未獲得 {0}個</value></data>
+  <data name="Profile.Categories|other" xml:space="preserve"><value>{0}カテゴリ</value></data>
   <data name="Provided by {0}" xml:space="preserve"><value>提供：{0}</value></data>
   <data name="Public" xml:space="preserve"><value>公開</value></data>
+  <data name="Published a first edit." xml:space="preserve"><value>初めての編集を公開した。</value></data>
   <data name="Published on: {0}" xml:space="preserve"><value>公開日時：{0}</value></data>
   <data name="Publisher" xml:space="preserve"><value>出版社</value></data>
+  <data name="Read more" xml:space="preserve"><value>続きを読む</value></data>
+  <data name="Reader" xml:space="preserve"><value>読者</value></data>
+  <data name="Recent activity" xml:space="preserve"><value>最近の活動</value></data>
   <data name="Recent Changes" xml:space="preserve"><value>最近の更新</value></data>
+  <data name="Recently saved" xml:space="preserve"><value>保存順</value></data>
+  <data name="Recipient '{0}' was not found." xml:space="preserve"><value>宛先「{0}」が見つかりません。</value></data>
+  <data name="Recipient list is too long." xml:space="preserve"><value>宛先が長すぎます。</value></data>
+  <data name="Recipient suggestions" xml:space="preserve"><value>宛先の候補</value></data>
   <data name="Recipients" xml:space="preserve"><value>宛先</value></data>
   <data name="Redirect" xml:space="preserve"><value>リダイレクト</value></data>
   <data name="Redirect page:" xml:space="preserve"><value>リダイレクトページ：</value></data>
@@ -343,9 +496,14 @@
   <data name="Redirects" xml:space="preserve"><value>リダイレクト</value></data>
   <data name="Reference, guide, and policy pages" xml:space="preserve"><value>参考資料・ガイド・方針のページ</value></data>
   <data name="Referenced by:" xml:space="preserve"><value>参照元：</value></data>
+  <data name="Regular" xml:space="preserve"><value>常連</value></data>
   <data name="Religion &amp; Belief" xml:space="preserve"><value>宗教・信仰</value></data>
   <data name="Remember me" xml:space="preserve"><value>ログイン状態を保持</value></data>
+  <data name="Remove" xml:space="preserve"><value>削除</value></data>
+  <data name="Remove introduction" xml:space="preserve"><value>紹介文を削除</value></data>
   <data name="Remove link" xml:space="preserve"><value>リンクを解除</value></data>
+  <data name="Remove {0} from this list" xml:space="preserve"><value>{0} をこのリストから削除</value></data>
+  <data name="Removed from this list. You can undo this for five minutes." xml:space="preserve"><value>このリストから削除しました。5分以内なら元に戻せます。</value></data>
   <data name="Replace a linked article?" xml:space="preserve"><value>リンク済みの記事を置き換えますか？</value></data>
   <data name="Replacement {0} article" xml:space="preserve"><value>置き換える{0}の記事</value></data>
   <data name="Replies" xml:space="preserve"><value>返信</value></data>
@@ -353,17 +511,21 @@
   <data name="Reply (Markdown supported)" xml:space="preserve"><value>返信（Markdown 対応）</value></data>
   <data name="Reply to this subject" xml:space="preserve"><value>この話題に返信</value></data>
   <data name="Report article" xml:space="preserve"><value>記事を報告</value></data>
+  <data name="Reputation" xml:space="preserve"><value>評価</value></data>
+  <data name="Reputation will grow as readers cite, thank and review your work, and unlock moderation tools along the way." xml:space="preserve"><value>読者があなたの仕事を引用し、感謝し、レビューするほど評価が上がり、やがてモデレーションツールが使えるようになります。</value></data>
   <data name="Request ID:" xml:space="preserve"><value>リクエストID：</value></data>
   <data name="Requested:" xml:space="preserve"><value>要求されたページ：</value></data>
   <data name="Return to Article" xml:space="preserve"><value>記事に戻る</value></data>
   <data name="Revision feed" xml:space="preserve"><value>版のフィード</value></data>
   <data name="Revision History" xml:space="preserve"><value>版の履歴</value></data>
   <data name="Revision History: {0}" xml:space="preserve"><value>版の履歴：{0}</value></data>
+  <data name="Save introduction" xml:space="preserve"><value>紹介文を保存</value></data>
   <data name="Save note" xml:space="preserve"><value>メモを保存</value></data>
   <data name="Save theme" xml:space="preserve"><value>テーマを保存</value></data>
   <data name="Save to lists" xml:space="preserve"><value>リストに保存</value></data>
   <data name="Saved to {0}." xml:space="preserve"><value>{0} に保存しました。</value></data>
   <data name="Saved to {0}. Your earlier note is back." xml:space="preserve"><value>{0} に保存しました。以前のメモも戻りました。</value></data>
+  <data name="Saved {0}" xml:space="preserve"><value>{0}に保存</value></data>
   <data name="Saved, but the infobox needs attention." xml:space="preserve"><value>保存しましたが、インフォボックスに確認が必要です。</value></data>
   <data name="Science &amp; Nature" xml:space="preserve"><value>科学・自然</value></data>
   <data name="Search" xml:space="preserve"><value>検索</value></data>
@@ -371,13 +533,19 @@
   <data name="Search articles" xml:space="preserve"><value>記事を検索</value></data>
   <data name="Search suggestions" xml:space="preserve"><value>検索候補</value></data>
   <data name="Search.ResultsFound|other" xml:space="preserve"><value>「{1}」の検索結果：{0}件</value></data>
+  <data name="Search.SuggestionsAvailable|other" xml:space="preserve"><value>候補が{0}件あります。矢印キーで選べます。</value></data>
   <data name="Search: {0}" xml:space="preserve"><value>検索：{0}</value></data>
+  <data name="Send message" xml:space="preserve"><value>メッセージを送信</value></data>
+  <data name="Send reply" xml:space="preserve"><value>返信を送信</value></data>
+  <data name="Sender account is unavailable." xml:space="preserve"><value>送信者のアカウントを利用できません。</value></data>
   <data name="Series" xml:space="preserve"><value>シリーズ</value></data>
   <data name="Settings" xml:space="preserve"><value>設定</value></data>
+  <data name="Share" xml:space="preserve"><value>共有</value></data>
   <data name="Short Film" xml:space="preserve"><value>短編映画</value></data>
   <data name="Show all changes →" xml:space="preserve"><value>すべての変更を表示 →</value></data>
   <data name="Show fewer" xml:space="preserve"><value>少なく表示</value></data>
   <data name="Show less" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Showing {0}–{1} of {2}" xml:space="preserve"><value>{2}件中 {0}〜{1}件を表示</value></data>
   <data name="Sign in" xml:space="preserve"><value>ログイン</value></data>
   <data name="Sign in to bookmark articles." xml:space="preserve"><value>記事をブックマークするにはログインしてください。</value></data>
   <data name="Sign in to edit articles, upload covers and join the discussion." xml:space="preserve"><value>ログインすると、記事の編集、表紙のアップロード、議論への参加ができます。</value></data>
@@ -390,10 +558,17 @@
   <data name="Sitemap.XmlSitemapLink" xml:space="preserve"><value>XMLサイトマップ</value></data>
   <data name="Size" xml:space="preserve"><value>サイズ</value></data>
   <data name="Small corrections. New discoveries. A better archive with every contribution." xml:space="preserve"><value>小さな修正、新しい発見。投稿のたびにアーカイブはより良くなります。</value></data>
+  <data name="Soon" xml:space="preserve"><value>近日</value></data>
+  <data name="Sort" xml:space="preserve"><value>並べ替え</value></data>
+  <data name="Sort entries" xml:space="preserve"><value>項目を並べ替え</value></data>
   <data name="Source" xml:space="preserve"><value>出典</value></data>
   <data name="Sport &amp; Fitness" xml:space="preserve"><value>スポーツ・フィットネス</value></data>
   <data name="Start a new subject" xml:space="preserve"><value>新しい話題を始める</value></data>
   <data name="Start a page ↗" xml:space="preserve"><value>ページを作る ↗</value></data>
+  <data name="Start writing" xml:space="preserve"><value>書き始める</value></data>
+  <data name="Started 25 articles." xml:space="preserve"><value>25件の記事を立ち上げた。</value></data>
+  <data name="Started a first article." xml:space="preserve"><value>初めての記事を立ち上げた。</value></data>
+  <data name="Started by you" xml:space="preserve"><value>自分が開始</value></data>
   <data name="Started by {0}" xml:space="preserve"><value>{0} が開始</value></data>
   <data name="stub" xml:space="preserve"><value>スタブ</value></data>
   <data name="Studio" xml:space="preserve"><value>スタジオ</value></data>
@@ -404,9 +579,11 @@
   <data name="Tag with the appropriate flair on creation." xml:space="preserve"><value>作成時に適切なタグを付けましょう。</value></data>
   <data name="Talk" xml:space="preserve"><value>トーク</value></data>
   <data name="Talk.Posts|other" xml:space="preserve"><value>{0}件の投稿</value></data>
+  <data name="Talk.PrivateMessagesLink" xml:space="preserve"><value>プライベートメッセージ</value></data>
   <data name="Talk.ShowNestedReplies|other" xml:space="preserve"><value>ネストされた返信を{0}件表示</value></data>
   <data name="Talk.Subjects|other" xml:space="preserve"><value>{0}件の話題</value></data>
   <data name="Talk.Threads|other" xml:space="preserve"><value>{0}件のスレッド</value></data>
+  <data name="TalkPost.Edited" xml:space="preserve"><value>編集済み</value></data>
   <data name="Technology" xml:space="preserve"><value>テクノロジー</value></data>
   <data name="Terms of Use" xml:space="preserve"><value>利用規約</value></data>
   <data name="Text" xml:space="preserve"><value>本文</value></data>
@@ -414,7 +591,9 @@
   <data name="That address isn't on this site." xml:space="preserve"><value>そのアドレスはこのサイトのものではありません。</value></data>
   <data name="That article is no longer linked here. The page has been refreshed." xml:space="preserve"><value>その記事はもうここにリンクされていません。ページを更新しました。</value></data>
   <data name="That bookmark was removed, so the note was not saved. Reload to see your lists." xml:space="preserve"><value>そのブックマークは削除されたため、メモは保存されませんでした。ページを再読み込みしてリストを確認してください。</value></data>
+  <data name="That entry is no longer in this list, so the note was not saved." xml:space="preserve"><value>その項目はもうこのリストにないため、メモは保存されませんでした。</value></data>
   <data name="That list no longer exists. Reload to see your lists." xml:space="preserve"><value>そのリストはもうありません。ページを再読み込みしてリストを確認してください。</value></data>
+  <data name="That recipient was not found. Choose another account below." xml:space="preserve"><value>その宛先は見つかりません。下で別のアカウントを選んでください。</value></data>
   <data name="The current version was published on {0}." xml:space="preserve"><value>現在の版は{0}に公開されました。</value></data>
   <data name="The Development environment shouldn't be enabled for deployed applications." xml:space="preserve"><value>デプロイしたアプリケーションでは Development 環境を有効にしないでください。</value></data>
   <data name="THE ENCYCLOPEDIA, IN THE MAKING" xml:space="preserve"><value>つくられていく百科事典</value></data>
@@ -436,6 +615,7 @@
   <data name="Theme" xml:space="preserve"><value>テーマ</value></data>
   <data name="Theme saved." xml:space="preserve"><value>テーマを保存しました。</value></data>
   <data name="Theme settings" xml:space="preserve"><value>テーマの設定</value></data>
+  <data name="There are no older edits. {0}." xml:space="preserve"><value>これより古い編集はありません。{0}。</value></data>
   <data name="There is no {0} article at “{1}”." xml:space="preserve"><value>「{1}」に{0}の記事はありません。</value></data>
   <data name="These will be unlinked, because one of the two articles you are linking takes their language's place:" xml:space="preserve"><value>リンクする2つの記事のどちらかが同じ言語の枠を使うため、次の記事のリンクは解除されます：</value></data>
   <data name="This article has no {0} link to change. Use Add a language instead." xml:space="preserve"><value>この記事には変更する{0}のリンクがありません。「言語を追加」を使ってください。</value></data>
@@ -443,12 +623,18 @@
   <data name="This article is already the {0} version; choose another language." xml:space="preserve"><value>この記事はすでに{0}版です。別の言語を選んでください。</value></data>
   <data name="This article is linked in every language this site has." xml:space="preserve"><value>この記事はこのサイトのすべての言語にリンクされています。</value></data>
   <data name="This article is no longer linked to any other language." xml:space="preserve"><value>この記事は他の言語とリンクされなくなりました。</value></data>
+  <data name="This contributor has no public bookmark lists." xml:space="preserve"><value>この投稿者には公開ブックマークリストがありません。</value></data>
   <data name="This discussion and its replies are public." xml:space="preserve"><value>このディスカッションと返信は公開されています。</value></data>
   <data name="This discussion is public. Use {0} for a private conversation." xml:space="preserve"><value>このディスカッションは公開されています。非公開で話すには{0}を使ってください。</value></data>
+  <data name="This entry was already removed." xml:space="preserve"><value>この項目はすでに削除されています。</value></data>
+  <data name="This is {0}, the first thing readers see here. Its {1} becomes your masthead epigraph and its {2} your one-line bio." xml:space="preserve"><value>これは{0}で、読者が最初に目にするものです。{1} が見出しのエピグラフに、{2} が1行の紹介文になります。</value></data>
+  <data name="This list has no articles in this language." xml:space="preserve"><value>このリストにはこの言語の記事がありません。</value></data>
   <data name="This page redirects to {0} (target is also a redirect and cannot be chained)." xml:space="preserve"><value>このページは{0}へ転送されます（転送先もリダイレクトのため、連鎖できません）。</value></data>
   <data name="This page redirects to {0} (target page does not exist yet)." xml:space="preserve"><value>このページは{0}へ転送されます（転送先のページはまだありません）。</value></data>
   <data name="This page redirects to {0}." xml:space="preserve"><value>このページは{0}へ転送されます。</value></data>
   <data name="This policy is published in English only." xml:space="preserve"><value>このポリシーは英語でのみ公開しています。</value></data>
+  <data name="This removes {0} from “{1}” and deletes the list. Your other lists stay untouched. There is no undo." xml:space="preserve"><value>「{1}」から{0}を削除し、リストも削除します。ほかのリストはそのままです。元に戻せません。</value></data>
+  <data name="This removes {0} from “{1}”. Your other lists stay untouched. There is no undo." xml:space="preserve"><value>「{1}」から{0}を削除します。ほかのリストはそのままです。元に戻せません。</value></data>
   <data name="This revision was published on {0}." xml:space="preserve"><value>この版は{0}に公開されました。</value></data>
   <data name="This subject has no posts." xml:space="preserve"><value>この話題には投稿がありません。</value></data>
   <data name="This username or email is unavailable." xml:space="preserve"><value>このユーザー名またはメールアドレスは使用できません。</value></data>
@@ -465,6 +651,7 @@
   <data name="Title at this revision:" xml:space="preserve"><value>この版のタイトル：</value></data>
   <data name="Title.CreateAnAccount" xml:space="preserve"><value>アカウントの作成</value></data>
   <data name="Title.DeleteArticle" xml:space="preserve"><value>記事の削除</value></data>
+  <data name="To" xml:space="preserve"><value>宛先</value></data>
   <data name="To see the canonical URL, visit:" xml:space="preserve"><value>正規URLを見るには：</value></data>
   <data name="Today" xml:space="preserve"><value>今日</value></data>
   <data name="Topic and index category pages" xml:space="preserve"><value>トピック別・索引のカテゴリページ</value></data>
@@ -474,9 +661,12 @@
   <data name="Travel &amp; Outdoors" xml:space="preserve"><value>旅行・アウトドア</value></data>
   <data name="True Crime" xml:space="preserve"><value>実録犯罪</value></data>
   <data name="Type" xml:space="preserve"><value>種類</value></data>
+  <data name="Undo" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="Undo expired or the list has changed." xml:space="preserve"><value>元に戻せる期限が過ぎたか、リストが変更されました。</value></data>
   <data name="Unknown" xml:space="preserve"><value>不明</value></data>
   <data name="Unknown contributor" xml:space="preserve"><value>不明な投稿者</value></data>
   <data name="Unlink this article from all languages" xml:space="preserve"><value>この記事をすべての言語からリンク解除</value></data>
+  <data name="Up to {0} people. Everyone listed can read and reply; participants cannot be changed later." xml:space="preserve"><value>最大{0}人まで。一覧の全員が読んで返信でき、参加者は後から変更できません。</value></data>
   <data name="Updated {0}" xml:space="preserve"><value>{0}に更新</value></data>
   <data name="Upload a new version of this file" xml:space="preserve"><value>このファイルの新しい版をアップロード</value></data>
   <data name="Upload new file version" xml:space="preserve"><value>ファイルの新しい版をアップロード</value></data>
@@ -488,6 +678,8 @@
   <data name="Username" xml:space="preserve"><value>ユーザー名</value></data>
   <data name="Username '{0}' is already taken." xml:space="preserve"><value>ユーザー名「{0}」はすでに使われています。</value></data>
   <data name="Username '{0}' is invalid, can only contain letters or digits." xml:space="preserve"><value>ユーザー名「{0}」は無効です。使えるのは英字と数字だけです。</value></data>
+  <data name="Usernames, separated by commas" xml:space="preserve"><value>ユーザー名（カンマ区切り）</value></data>
+  <data name="Veteran" xml:space="preserve"><value>ベテラン</value></data>
   <data name="Video Games" xml:space="preserve"><value>ビデオゲーム</value></data>
   <data name="View" xml:space="preserve"><value>表示</value></data>
   <data name="View Current" xml:space="preserve"><value>現在の版を見る</value></data>
@@ -498,18 +690,34 @@
   <data name="View revision ↗" xml:space="preserve"><value>版を表示 ↗</value></data>
   <data name="View the Firehose" xml:space="preserve"><value>ファイアホースを見る</value></data>
   <data name="Watch article" xml:space="preserve"><value>記事をウォッチ</value></data>
+  <data name="Watch the articles you care about and you'll hear here when they're edited, discussed or nominated for a feature." xml:space="preserve"><value>気になる記事をウォッチすると、編集・議論・特集候補になったときにここでお知らせします。</value></data>
+  <data name="Watchlist" xml:space="preserve"><value>ウォッチリスト</value></data>
+  <data name="Watchlist alerts" xml:space="preserve"><value>ウォッチリストの通知</value></data>
+  <data name="Watchlists are coming soon" xml:space="preserve"><value>ウォッチリストは近日公開</value></data>
   <data name="Welcome back" xml:space="preserve"><value>おかえりなさい</value></data>
+  <data name="What is this list for? Readers see this above the entries." xml:space="preserve"><value>このリストは何のためのものですか？ 読者には項目の上に表示されます。</value></data>
   <data name="What links here" xml:space="preserve"><value>リンク元</value></data>
+  <data name="Who can see it?" xml:space="preserve"><value>公開範囲</value></data>
+  <data name="Why is this in “{0}”?" xml:space="preserve"><value>なぜ「{0}」に入れたのですか？</value></data>
   <data name="Women's Interest" xml:space="preserve"><value>女性向け</value></data>
+  <data name="Write" xml:space="preserve"><value>書く</value></data>
+  <data name="Write your profile" xml:space="preserve"><value>プロフィールを書く</value></data>
+  <data name="Write your profile article" xml:space="preserve"><value>プロフィール記事を書きましょう</value></data>
+  <data name="Wrote 10 talk posts." xml:space="preserve"><value>トークに10回投稿した。</value></data>
   <data name="XML sitemap" xml:space="preserve"><value>XMLサイトマップ</value></data>
   <data name="Yes, Delete" xml:space="preserve"><value>削除する</value></data>
   <data name="Yesterday" xml:space="preserve"><value>昨日</value></data>
+  <data name="You" xml:space="preserve"><value>あなた</value></data>
   <data name="You are viewing the current revision of this article." xml:space="preserve"><value>この記事の現在の版を表示しています。</value></data>
   <data name="You can have up to {0} lists." xml:space="preserve"><value>リストは{0}件まで作成できます。</value></data>
+  <data name="You haven't edited any articles yet." xml:space="preserve"><value>まだ記事を編集していません。</value></data>
+  <data name="You haven't started any conversations yet." xml:space="preserve"><value>まだ会話を始めていません。</value></data>
   <data name="You must be logged in to delete articles. {0}." xml:space="preserve"><value>記事を削除するにはログインが必要です。{0}。</value></data>
   <data name="You're viewing a prior revision." xml:space="preserve"><value>以前の版を表示しています。</value></data>
   <data name="Your account is locked out." xml:space="preserve"><value>アカウントはロックされています。</value></data>
   <data name="Your first post (Markdown supported)" xml:space="preserve"><value>最初の投稿（Markdown 対応）</value></data>
+  <data name="your profile article" xml:space="preserve"><value>あなたのプロフィール記事</value></data>
+  <data name="YouTube video: {0}" xml:space="preserve"><value>YouTube 動画：{0}</value></data>
   <data name="You’re all caught up." xml:space="preserve"><value>すべて確認しました。</value></data>
   <data name="Zine" xml:space="preserve"><value>ジン</value></data>
   <data name="Zine Issue" xml:space="preserve"><value>ジンの号</value></data>
@@ -519,17 +727,28 @@
   <data name="{0} alphabetical index" xml:space="preserve"><value>{0}の五十音・アルファベット順索引</value></data>
   <data name="{0} bytes" xml:space="preserve"><value>{0} バイト</value></data>
   <data name="{0} edition" xml:space="preserve"><value>{0}版</value></data>
+  <data name="{0} hasn't edited any articles yet." xml:space="preserve"><value>{0} はまだ記事を編集していません。</value></data>
+  <data name="{0} hasn't written a profile article. Their contributions tell the story so far." xml:space="preserve"><value>{0} はまだプロフィール記事を書いていません。これまでの投稿が物語っています。</value></data>
   <data name="{0} is not one of this site's languages." xml:space="preserve"><value>{0}はこのサイトの言語ではありません。</value></data>
   <data name="{0} KB" xml:space="preserve"><value>{0} KB</value></data>
   <data name="{0} MB" xml:space="preserve"><value>{0} MB</value></data>
+  <data name="{0} must contain 1–{1} characters." xml:space="preserve"><value>{0}は1〜{1}文字にしてください。</value></data>
+  <data name="{0} of {1}" xml:space="preserve"><value>{1}個中{0}個</value></data>
+  <data name="{0} on {1} between {2} and {3}." xml:space="preserve"><value>{2}から{3}までの{1}で{0}。</value></data>
+  <data name="{0} progress: {1} of {2}" xml:space="preserve"><value>{0} の進捗：{2}中{1}</value></data>
   <data name="{0} to link this article to another language." xml:space="preserve"><value>この記事を他の言語にリンクするには{0}してください。</value></data>
   <data name="{0} to reply." xml:space="preserve"><value>返信するには{0}してください。</value></data>
   <data name="{0} to start a discussion." xml:space="preserve"><value>ディスカッションを始めるには{0}してください。</value></data>
+  <data name="{0} · Bookmarks" xml:space="preserve"><value>{0} · ブックマーク</value></data>
+  <data name="{0} · Contributions" xml:space="preserve"><value>{0} · 投稿</value></data>
+  <data name="{0} · Messages" xml:space="preserve"><value>{0} · メッセージ</value></data>
+  <data name="{0} · Profile" xml:space="preserve"><value>{0} · プロフィール</value></data>
   <data name="{0} · Settings" xml:space="preserve"><value>{0} · 設定</value></data>
   <data name="{0} × {1} px" xml:space="preserve"><value>{0} × {1} px</value></data>
   <data name="{0} — Other languages" xml:space="preserve"><value>{0} — 他の言語</value></data>
   <data name="{0} — Talk" xml:space="preserve"><value>{0} — トーク</value></data>
   <data name="{0}, {1}" xml:space="preserve"><value>{0}{1}</value></data>
+  <data name="{0}–{1} of {2}" xml:space="preserve"><value>{2}件中 {0}〜{1}</value></data>
   <data name="{{CategoryArticles}} is available on category articles." xml:space="preserve"><value>{{CategoryArticles}} はカテゴリ記事でのみ使えます。</value></data>
   <data name="“{0}” is already linked as the {1} version." xml:space="preserve"><value>「{0}」はすでに{1}版としてリンクされています。</value></data>
   <data name="“{0}” is already linked to other languages ({1}). Remove those links first, or use Add a language to merge the two groups." xml:space="preserve"><value>「{0}」はすでに他の言語（{1}）にリンクされています。先にそれらのリンクを解除するか、「言語を追加」で2つのグループを統合してください。</value></data>

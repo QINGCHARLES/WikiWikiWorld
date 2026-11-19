@@ -19,7 +19,7 @@
 					<span>@L["Talk"]</span>
 				</nav>
 				<h1>@L["Discussion: {0}", Model.Article?.Title ?? string.Empty]</h1>
-				<p>@HL["This discussion is public. Use {0} for a private conversation.", UiFormat.Link("/message/new", L["private messages"])]</p>
+				<p>@HL["This discussion is public. Use {0} for a private conversation.", UiFormat.Link("/message/new", L["Talk.PrivateMessagesLink"])]</p>
 				<p class="talk-page-tag">@SharedResource.Plural("Talk.Subjects", Model.Subjects.Count)</p>
 			</header>
 

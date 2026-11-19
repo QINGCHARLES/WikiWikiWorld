@@ -2,10 +2,22 @@
 @model WikiWikiWorld.Web.Pages.Profile.BookmarksModel
 @{
 	ViewData["Title"] = L["{0} · Bookmarks", Model.Header.UserName];
+	// Messages for bookmarks.js.
+	string ScriptText = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
+	{
+		["loading"] = L["Loading bookmarks…"],
+		["loadFailed"] = L["Could not load this list. Your current page is unchanged. Try the link again."],
+		["loaded"] = L["List loaded."],
+		["nothingToPreview"] = L["Nothing to preview yet."],
+		["loadingPreview"] = L["Loading preview…"],
+		["previewFailed"] = L["Could not load the preview. Your text is unchanged."],
+		["showLess"] = L["Show less"],
+		["readMore"] = L["Read more"]
+	});
 }
 <div class="profile">
 	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Model.Header, ProfileTab.Bookmarks)" />
-	<div id="bookmark-browser" class="profile-stack"
+	<div id="bookmark-browser" class="profile-stack" data-text="@ScriptText"
 		data-on:bookmark-load="@@get(evt.detail.url, {requestCancellation: evt.detail.controller, headers: {'X-Bookmark-Navigation': evt.detail.id}, filterSignals: {include: /^$/}, retry: 'never', retryMaxCount: 0}).then(evt.detail.complete).catch(evt.detail.fail)">
 		<div id="bookmark-navigation-status" role="status" class="bookmark-navigation-status"></div>
 		<partial name="_BookmarkBrowser" model="Model" />
