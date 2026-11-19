@@ -17,7 +17,7 @@
 	string UpdatesUrl = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(Model.FeedUrl(),
 		new Dictionary<string, string?> { ["handler"] = "Updates", ["after"] = Model.Activity.LatestId.ToString() });
 }
-<div class="firehose" data-updates-url="@UpdatesUrl" data-text="@ScriptText">
+<div class="firehose" data-updates-url="@UpdatesUrl" data-ui-text="@ScriptText">
 	<div class="fh-breadcrumb"><a href="/">@Model.SiteName</a><span>/</span>@L["Community"]<span>/</span>@L["Firehose.RecentChanges"]</div>
 	<header class="fh-heading">
 		<div><p class="fh-kicker">@L["THE ENCYCLOPEDIA, IN THE MAKING"]</p><h1>@L["Firehose"]<span aria-hidden="true">.</span></h1></div>

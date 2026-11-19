@@ -5,8 +5,8 @@
     const Toggle = document.getElementById('fh-live');
     const Status = Feed.querySelector('.fh-update-status');
     const NewChanges = Feed.querySelector('.fh-new');
-    // Translated text from the page (data-text); counted phrases carry one pattern per CLDR plural category.
-    const Text = JSON.parse(Feed.dataset.text || '{}');
+    // Translated text from the page (data-ui-text); counted phrases carry one pattern per CLDR plural category.
+    const Text = JSON.parse(Feed.dataset.uiText || '{}');
     const Plurals = new Intl.PluralRules(document.documentElement.lang || undefined);
     const Fill = (Pattern, Value) => Pattern.replace('{0}', Value);
     const Counted = (Forms, Count) => Fill(Forms[Plurals.select(Count)] ?? Forms.other, Count);
@@ -24,7 +24,7 @@
             });
             if (!Response.ok) throw new Error('Update check failed');
             const Result = await Response.json();
-            LastCheck = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            LastCheck = new Date().toLocaleTimeString(document.documentElement.lang || [], { hour: '2-digit', minute: '2-digit' });
             if (!Toggle.checked) return;
             Status.textContent = Fill(Text.checked, LastCheck);
             NewChanges.hidden = Result.count === 0;

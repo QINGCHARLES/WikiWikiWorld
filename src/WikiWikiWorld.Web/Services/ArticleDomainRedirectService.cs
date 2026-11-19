@@ -187,22 +187,22 @@ public sealed class ArticleDomainRedirectService
 
 		if (string.IsNullOrWhiteSpace(NormalizedDomain))
 		{
-			return (false, "Domain is required.");
+			return (false, SharedResource.Text("Domain is required."));
 		}
 
 		if (NormalizedDomain.Contains('/') || NormalizedDomain.Contains('?') || NormalizedDomain.Contains('#'))
 		{
-			return (false, "Domain must not contain paths, query parameters, or URL fragments.");
+			return (false, SharedResource.Text("Domain must not contain paths, query parameters, or URL fragments."));
 		}
 
 		if (string.IsNullOrWhiteSpace(Culture))
 		{
-			return (false, "Culture is required.");
+			return (false, SharedResource.Text("Culture is required."));
 		}
 
 		if (CanonicalArticleId == Guid.Empty)
 		{
-			return (false, "A target article must be selected.");
+			return (false, SharedResource.Text("A target article must be selected."));
 		}
 
 		// Check if domain is already mapped
@@ -212,7 +212,7 @@ public sealed class ArticleDomainRedirectService
 
 		if (Exists)
 		{
-			return (false, $"Domain '{NormalizedDomain}' is already configured as a redirect.");
+			return (false, SharedResource.Format("Domain '{0}' is already configured as a redirect.", NormalizedDomain));
 		}
 
 		// Verify target article exists
@@ -225,7 +225,7 @@ public sealed class ArticleDomainRedirectService
 
 		if (!ArticleExists)
 		{
-			return (false, "Selected article could not be found for the specified site and culture.");
+			return (false, SharedResource.Text("Selected article could not be found for the specified site and culture."));
 		}
 
 		ArticleDomainRedirect NewRedirect = new()

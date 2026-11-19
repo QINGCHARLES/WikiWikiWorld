@@ -108,14 +108,14 @@ public sealed class UploadModel(
 			|| !Uri.TryCreate(TrimmedUrl, UriKind.Absolute, out Uri? ParsedUrl)
 			|| (ParsedUrl.Scheme != Uri.UriSchemeHttp && ParsedUrl.Scheme != Uri.UriSchemeHttps))
 		{
-			ErrorMessage = "Please enter a valid http or https download URL.";
+			ErrorMessage = SharedResource.Text("Please enter a valid http or https download URL.");
 			return Page();
 		}
 
 		if (CopyrightExemptionId <= 0
 			|| !Exemptions.Any(E => E.Id == CopyrightExemptionId))
 		{
-			ErrorMessage = "Please choose the copyright exemption that applies.";
+			ErrorMessage = SharedResource.Text("Please choose the copyright exemption that applies.");
 			return Page();
 		}
 
@@ -125,7 +125,7 @@ public sealed class UploadModel(
 
 		if (SubmittedStatus is null)
 		{
-			ErrorMessage = "The ingestion queue is not configured correctly. Please contact a site administrator.";
+			ErrorMessage = SharedResource.Text("The ingestion queue is not configured correctly. Please contact a site administrator.");
 			return Page();
 		}
 

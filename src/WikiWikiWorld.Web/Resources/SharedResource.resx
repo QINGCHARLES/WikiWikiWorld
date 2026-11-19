@@ -24,7 +24,15 @@
   <data name="Calendar.Days|other" xml:space="preserve"><value>{0} days</value></data>
   <data name="Calendar.Edits|one" xml:space="preserve"><value>{0} edit</value></data>
   <data name="Calendar.Edits|other" xml:space="preserve"><value>{0} edits</value></data>
+  <data name="Crop.Height" xml:space="preserve"><value>Height</value></data>
+  <data name="Crop.Width" xml:space="preserve"><value>Width</value></data>
+  <data name="Crop.X" xml:space="preserve"><value>X</value></data>
+  <data name="Crop.Y" xml:space="preserve"><value>Y</value></data>
+  <data name="Device.Desktop" xml:space="preserve"><value>Desktop</value></data>
+  <data name="Device.Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Device.Tablet" xml:space="preserve"><value>Tablet</value></data>
   <data name="EditArticle.Suffix" xml:space="preserve"><value> article</value></data>
+  <data name="Editor.ArticleType" xml:space="preserve"><value>Article Type</value></data>
   <data name="FileHistory.VersionsRecorded|one" xml:space="preserve"><value>{0} version recorded for this file.</value></data>
   <data name="FileHistory.VersionsRecorded|other" xml:space="preserve"><value>{0} versions recorded for this file.</value></data>
   <data name="Firehose.ChangesNewestFirst|one" xml:space="preserve"><value>{0} change · newest first</value></data>

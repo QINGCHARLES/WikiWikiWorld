@@ -1,7 +1,7 @@
 const Browser = document.getElementById("bookmark-browser");
 const Status = document.getElementById("bookmark-navigation-status");
-// Translated messages rendered by the page into #bookmark-browser's data-text attribute.
-const UiText = JSON.parse(Browser?.dataset.text || "{}");
+// Translated messages rendered by the page into #bookmark-browser's data-ui-text attribute.
+const UiText = JSON.parse(Browser?.dataset.uiText || "{}");
 let Pending = null;
 
 // Server-rendered canonical state is authoritative, including clamped page numbers.

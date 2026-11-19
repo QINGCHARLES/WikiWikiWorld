@@ -131,7 +131,7 @@ public sealed class DomainRedirectsModel(
 			return Page();
 		}
 
-		SuccessMessage = $"Domain redirect for '{ArticleDomainRedirectService.NormalizeDomain(InputDomain)}' created successfully.";
+		SuccessMessage = SharedResource.Format("Domain redirect for '{0}' created successfully.", ArticleDomainRedirectService.NormalizeDomain(InputDomain));
 		return RedirectToPage();
 	}
 
@@ -147,11 +147,11 @@ public sealed class DomainRedirectsModel(
 
 		if (Deleted)
 		{
-			SuccessMessage = "Domain redirect deleted successfully.";
+			SuccessMessage = SharedResource.Text("Domain redirect deleted successfully.");
 		}
 		else
 		{
-			ErrorMessage = "Failed to delete domain redirect.";
+			ErrorMessage = SharedResource.Text("Failed to delete domain redirect.");
 		}
 
 		return RedirectToPage();

@@ -1,13 +1,14 @@
 @page
 @model WikiWikiWorld.Web.Pages.Article.CreateEditModel
 @{
-	ViewData["Title"] = Model.IsEditMode ? $"Editing: {Model.Title}" : "Create New Article";
+	ViewData["Title"] = Model.IsEditMode ? L["Editing: {0}", Model.Title ?? string.Empty] : L["Create New Article"];
 	Model.AllowSearchEngineIndexingOfPage = !Model.IsEditMode;
 }
 
+@* l10n: "You must be logged in to edit articles. {0}.", "You must be logged in to create articles. {0}.", "Editing User Home Page for {0}", "Creating User Home Page for {0}" *@
 <article class="article-editor">
 	<header class="editor-header">
-		<h1>@(Model.IsEditMode ? "Edit Article" : "Create a New Article")</h1>
+		<h1>@(Model.IsEditMode ? L["Edit Article"] : L["Create a New Article"])</h1>
 		@if (!string.IsNullOrEmpty(Model.ErrorMessage))
 		{
 			<div class="alert alert-error" role="alert">
@@ -29,7 +30,7 @@
 				<line x1="12" y1="9" x2="12" y2="13"></line>
 				<line x1="12" y1="17" x2="12.01" y2="17"></line>
 			</svg>
-			<span>You must be logged in to @(Model.IsEditMode ? "edit" : "create") articles. <a href="/login:">Login here</a>.</span>
+			<span>@HL[Model.IsEditMode ? "You must be logged in to edit articles. {0}." : "You must be logged in to create articles. {0}.", UiFormat.Link("/login:", L["Login here"])]</span>
 		</div>
 	}
 	else
@@ -50,7 +51,7 @@
 								<line x1="12" y1="16" x2="12" y2="12"></line>
 								<line x1="12" y1="8" x2="12.01" y2="8"></line>
 							</svg>
-							<span>@(Model.IsEditMode ? "Editing" : "Creating") User Home Page for <strong>@Model.UrlSlug</strong></span>
+							<span>@HL[Model.IsEditMode ? "Editing User Home Page for {0}" : "Creating User Home Page for {0}", UiFormat.Strong(Model.UrlSlug)]</span>
 						</div>
 						<input type="hidden" asp-for="Title" />
 						<input type="hidden" asp-for="UrlSlug" />
@@ -62,24 +63,24 @@
 					<div class="form-group-full">
 						<div class="md3-field md3-filled">
 							<input asp-for="Title" placeholder=" " />
-							<label asp-for="Title">Title</label>
+							<label asp-for="Title">@L["Title"]</label>
 							<span class="md-line"></span>
 						</div>
-						<span class="form-help">The main title of your article</span>
+						<span class="form-help">@L["The main title of your article"]</span>
 					</div>
 				}
 
 				<div class="form-group form-group-full">
 					<label for="DisplayTitle" class="form-label">
-						<span class="label-text">Display Title</span>
+						<span class="label-text">@L["Display Title"]</span>
 					</label>
 					<textarea 
 						id="DisplayTitle" 
 						asp-for="DisplayTitle" 
 						class="form-textarea" 
 						rows="3"
-						placeholder="Optional: Custom display title with formatting"></textarea>
-					<span class="form-help">Optional multi-line title with custom formatting</span>
+						placeholder="@L["Optional: Custom display title with formatting"]"></textarea>
+					<span class="form-help">@L["Optional multi-line title with custom formatting"]</span>
 				</div>
 
 				@if (Model.UrlSlug?.StartsWith('@') != true)
@@ -87,17 +88,17 @@
 					<div>
 						<div class="md3-field md3-filled">
 							<input asp-for="UrlSlug" placeholder=" " pattern="[a-z0-9\-]+" />
-							<label asp-for="UrlSlug">URL Slug</label>
+							<label asp-for="UrlSlug">@L["URL Slug"]</label>
 							<span class="md-line"></span>
 						</div>
-						<span class="form-help">Lowercase letters, numbers, and hyphens only</span>
+						<span class="form-help">@L["Lowercase letters, numbers, and hyphens only"]</span>
 					</div>
 
 					<div>
 						<div class="md3-field md3-filled">
-							<select asp-for="SelectedType" asp-items="@(new SelectList(Model.AvailableArticleTypes))">
+							<select asp-for="SelectedType" asp-items="@(Model.AvailableArticleTypes.Select(Type => new SelectListItem(L[Type.ToString()], Type.ToString())))">
 							</select>
-							<label asp-for="SelectedType">Article Type</label>
+							<label asp-for="SelectedType">@L["Editor.ArticleType"]</label>
 							<div class="md-icon">
 								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<path d="m6 9 6 6 6-6"/>
@@ -105,7 +106,7 @@
 							</div>
 							<span class="md-line"></span>
 						</div>
-						<span class="form-help">Category of the article</span>
+						<span class="form-help">@L["Category of the article"]</span>
 					</div>
 				}
 
@@ -113,7 +114,7 @@
 				{
 					<div class="form-group form-group-full">
 						<label for="UploadedFile" class="form-label">
-							<span class="label-text">Featured Image</span>
+							<span class="label-text">@L["Featured Image"]</span>
 						</label>
 						<input 
 							type="file" 
@@ -121,14 +122,14 @@
 							asp-for="UploadedFile" 
 							class="form-file"
 							accept="image/*" />
-						<span class="form-help">Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)</span>
+						<span class="form-help">@L["Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)"]</span>
 					</div>
 				}
 				else if (Model.SelectedType == WikiWikiWorld.Data.Models.ArticleType.File || Model.HasExistingFile)
 				{
 					<div class="form-group form-group-full" id="file-upload-section">
 						<label for="UploadedFile" class="form-label">
-							<span class="label-text">Replace Image</span>
+							<span class="label-text">@L["Replace Image"]</span>
 						</label>
 						@if (!string.IsNullOrWhiteSpace(Model.ExistingFileImageUrl))
 						{
@@ -137,18 +138,18 @@
 									<img src="@Model.ExistingFileImageUrl" alt="@Model.Title" class="current-file-thumb" />
 								</a>
 								<div class="current-file-info">
-									<p class="current-file-name"><strong>Current File:</strong> @Model.ExistingFileRevision?.Filename</p>
+									<p class="current-file-name"><strong>@L["Current File:"]</strong> @Model.ExistingFileRevision?.Filename</p>
 									<p class="current-file-meta">
 										@if (Model.ExistingFileRevision?.ImageWidthPixels > 0 && Model.ExistingFileRevision?.ImageHeightPixels > 0)
 										{
-											<span>@Model.ExistingFileRevision.ImageWidthPixels &times; @Model.ExistingFileRevision.ImageHeightPixels px</span>
+											<span>@L["{0} × {1} px", Model.ExistingFileRevision.ImageWidthPixels, Model.ExistingFileRevision.ImageHeightPixels]</span>
 											<span class="separator">&bull;</span>
 										}
 										<span>@Model.ExistingFileRevision?.MimeType</span>
 										@if (Model.ExistingFileRevision?.FileSizeBytes > 0)
 										{
 											<span class="separator">&bull;</span>
-											<span>@((Model.ExistingFileRevision.FileSizeBytes / 1024.0).ToString("F1")) KB</span>
+											<span>@L["{0} KB", (Model.ExistingFileRevision.FileSizeBytes / 1024.0).ToString("F1")]</span>
 										}
 									</p>
 								</div>
@@ -160,24 +161,24 @@
 							asp-for="UploadedFile" 
 							class="form-file"
 							accept="image/*" />
-						<span class="form-help">Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history.</span>
+						<span class="form-help">@L["Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history."]</span>
 					</div>
 				}
 
 				<div class="form-group form-group-full">
 					<label for="ArticleText" class="form-label">
-						<span class="label-text">Article Content</span>
-						<span class="label-required" aria-label="required">*</span>
+						<span class="label-text">@L["Article Content"]</span>
+						<span class="label-required" aria-label="@L["required"]">*</span>
 					</label>
 					<textarea 
 						id="ArticleText" 
 						asp-for="ArticleText" 
 						class="form-textarea form-textarea-large" 
 						rows="20"
-						placeholder="Write your article content here using Markdown..."
+						placeholder="@L["Write your article content here using Markdown..."]"
 						required></textarea>
-					<span class="form-help">Use Markdown formatting for rich text. Embed a video with <code>{{YouTube VIDEO_URL |#| Title=Video title}}</code>.</span>
-					<span class="form-help"><a href="/wiki:header-helper" target="_blank" rel="noopener">Prepare a header image</a> (opens in a new tab).</span>
+					<span class="form-help">@HL["Use Markdown formatting for rich text. Embed a video with {0}.", new Microsoft.AspNetCore.Html.HtmlString("<code>{{YouTube VIDEO_URL |#| Title=Video title}}</code>")]</span>
+					<span class="form-help">@HL["{0} (opens in a new tab).", new Microsoft.AspNetCore.Html.HtmlContentBuilder().AppendHtml("<a href=\"/wiki:header-helper\" target=\"_blank\" rel=\"noopener\">").Append(L["Prepare a header image"].Value).AppendHtml("</a>")]</span>
 				</div>
 			</div>
 
@@ -188,7 +189,7 @@
 						<polyline points="17 21 17 13 7 13 7 21"></polyline>
 						<polyline points="7 3 7 8 15 8"></polyline>
 					</svg>
-					<span>@(Model.IsEditMode ? "Save Changes" : "Create Article")</span>
+					<span>@(Model.IsEditMode ? L["Save Changes"] : L["Create Article"])</span>
 				</button>
 				
 				<a href="/@(Model.IsEditMode ? Model.OriginalUrlSlug : string.Empty)" class="button button-secondary" data-button-variant="ghost">
@@ -196,7 +197,7 @@
 						<line x1="18" y1="6" x2="6" y2="18"></line>
 						<line x1="6" y1="6" x2="18" y2="18"></line>
 					</svg>
-					<span>Cancel</span>
+					<span>@L["Cancel"]</span>
 				</a>
 			</div>
 		</form>
@@ -204,21 +205,21 @@
 		@if (Model.IsEditMode)
 		{
 			<div class="danger-zone">
-				<h2 class="danger-zone-title">Danger Zone</h2>
+				<h2 class="danger-zone-title">@L["Danger Zone"]</h2>
                 <div class="danger-zone-actions">
                     @if (Model.CanRevert)
                     {
                         <form method="post" asp-page-handler="Revert" class="danger-zone-form">
                             <input type="hidden" name="OriginalUrlSlug" value="@Model.OriginalUrlSlug" />
                             <div class="danger-zone-item">
-                                <button type="submit" class="button button-warning" data-button-variant="warning" onclick="return confirm('Are you sure you want to revert to the previous revision? This will discard your current changes.');">
+                                <button type="submit" class="button button-warning" data-button-variant="warning" data-confirm="@L["Are you sure you want to revert to the previous revision? This will discard your current changes."]" onclick="return confirm(this.dataset.confirm);">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="1 4 1 10 7 10"></polyline>
                                         <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                     </svg>
-                                    <span>Revert to Previous Revision</span>
+                                    <span>@L["Revert to Previous Revision"]</span>
                                 </button>
-                                <p class="danger-zone-description">Reverts the article to the revision before the current one. The current revision will be soft-deleted.</p>
+                                <p class="danger-zone-description">@L["Reverts the article to the revision before the current one. The current revision will be soft-deleted."]</p>
                             </div>
                         </form>
                     }
@@ -233,9 +234,9 @@
                                     <line x1="10" y1="11" x2="10" y2="17"></line>
                                     <line x1="14" y1="11" x2="14" y2="17"></line>
                                 </svg>
-                                <span>Delete Article</span>
+                                <span>@L["Title.DeleteArticle"]</span>
                             </button>
-                            <p class="danger-zone-description">Once you delete an article, there is no going back. Please be certain.</p>
+                            <p class="danger-zone-description">@L["Once you delete an article, there is no going back. Please be certain."]</p>
                         </div>
                     </form>
                 </div>

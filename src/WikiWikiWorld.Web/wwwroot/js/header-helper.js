@@ -9,13 +9,16 @@ const CropBox = Get('CropBox');
 const Coordinates = ['X', 'Y', 'Width', 'Height'];
 const Supported = Boolean(globalThis.Worker && globalThis.OffscreenCanvas && globalThis.createImageBitmap && globalThis.WebAssembly);
 let PreviewFrame = 0;
-const LinkHelp = 'Some websites block direct image imports. Download the picture, then choose Open image or drag it here. The picture stays in your browser until you choose to upload the finished header.';
+// Translations from the page's data-ui-text, keyed by English; T() fills {0}, {1} and falls back to the English text.
+const Texts = JSON.parse(Root?.dataset.uiText || '{}');
+const T = (English, ...Values) => Values.reduce((Text, Value, Index) => Text.replace(`{${Index}}`, Value), Texts[English] ?? English);
+const LinkHelp = T('Some websites block direct image imports. Download the picture, then choose Open image or drag it here. The picture stays in your browser until you choose to upload the finished header.');
 
 /** Format a byte count in binary units, switching to KiB below 1 MiB so small headers do not read as 0.00 MiB. */
 function FormatBytes(SizeBytes) { return SizeBytes < 1048576 ? `${Math.max(1, Math.round(SizeBytes / 1024))} KiB` : `${(SizeBytes / 1048576).toFixed(2)} MiB`; }
 
 /** Display operation failures without discarding the user's existing crop. */
-function ShowError(Message) { Get('HelperError').textContent = Message; Get('HelperError').hidden = !Message; }
+function ShowError(Message) { Get('HelperError').textContent = Message ? T(Message) : ''; Get('HelperError').hidden = !Message; }
 
 /** Keep controls consistent while an import or encode is running. */
 function SetBusy(Value) {
@@ -34,7 +37,7 @@ function RunWorker(Request, Transfers = []) {
         RejectOperation = Reject;
         Worker = new globalThis.Worker(Root.dataset.workerUrl, { type: 'module' });
         Worker.onmessage = ({ data: Response }) => Response.Error ? Reject(new Error(Response.Error)) : Resolve(Response.Result);
-        Worker.onerror = () => Reject(new Error('The image processor could not start. Reload the page and try again.'));
+        Worker.onerror = () => Reject(new Error(T('The image processor could not start. Reload the page and try again.')));
         Worker.postMessage(Request, Transfers);
     }).finally(() => { Worker?.terminate(); Worker = null; RejectOperation = null; });
 }
@@ -42,13 +45,13 @@ function RunWorker(Request, Transfers = []) {
 /** Bound network input before constructing a blob; the timeout includes body reads. */
 async function ReadUrl() {
     const Url = new URL(Get('SourceUrl').value);
-    if (!['https:', 'http:'].includes(Url.protocol)) throw new Error('Enter an HTTP or HTTPS image URL.');
+    if (!['https:', 'http:'].includes(Url.protocol)) throw new Error(T('Enter an HTTP or HTTPS image URL.'));
     Abort = new AbortController();
     const Timer = setTimeout(() => Abort?.abort(), 45000);
     try {
         const Response = await fetch(Url, { credentials: 'omit', signal: Abort.signal });
         if (!Response.ok || !Response.headers.get('content-type')?.startsWith('image/')) throw new Error(LinkHelp);
-        if (Number(Response.headers.get('content-length')) > MaxInputBytes) throw new Error('Choose an image smaller than 50 MiB.');
+        if (Number(Response.headers.get('content-length')) > MaxInputBytes) throw new Error(T('Choose an image smaller than 50 MiB.'));
         const Reader = Response.body.getReader();
         const Parts = [];
         let SizeBytes = 0;
@@ -57,7 +60,7 @@ async function ReadUrl() {
                 const { done: Done, value: Part } = await Reader.read();
                 if (Done) break;
                 SizeBytes += Part.byteLength;
-                if (SizeBytes > MaxInputBytes) throw new Error('Choose an image smaller than 50 MiB.');
+                if (SizeBytes > MaxInputBytes) throw new Error(T('Choose an image smaller than 50 MiB.'));
                 Parts.push(Part);
             }
         } finally { await Reader.cancel(); }
@@ -72,10 +75,10 @@ async function ReadUrl() {
 async function LoadImage(File, FromUrl = false) {
     if (Busy || !Supported) return;
     SetBusy(true); ShowError('');
-    Get('HelperStatus').textContent = 'Opening picture…';
+    Get('HelperStatus').textContent = T('Opening picture…');
     try {
         if (FromUrl) File = await ReadUrl();
-        if (!File || File.size > MaxInputBytes) throw new Error('Choose an image smaller than 50 MiB.');
+        if (!File || File.size > MaxInputBytes) throw new Error(T('Choose an image smaller than 50 MiB.'));
         const Bitmap = await RunWorker({ Operation: 'decode', File });
         Source?.close(); Source = Bitmap;
         Get('EditorViewport').hidden = false;
@@ -85,10 +88,10 @@ async function LoadImage(File, FromUrl = false) {
         SourceCanvas.width = Math.round(Source.width * Scale); SourceCanvas.height = Math.round(Source.height * Scale);
         SourceCanvas.getContext('2d').drawImage(Source, 0, 0, SourceCanvas.width, SourceCanvas.height);
         Reset();
-        Get('HelperStatus').textContent = 'Picture ready. Adjust the crop and check the previews.';
+        Get('HelperStatus').textContent = T('Picture ready. Adjust the crop and check the previews.');
     } catch (Error) {
-        ShowError(Error.name === 'AbortError' ? 'Opening cancelled or timed out. Try a local file.' : Error.message);
-        Get('HelperStatus').textContent = 'Picture was not replaced.';
+        ShowError(Error.name === 'AbortError' ? T('Opening cancelled or timed out. Try a local file.') : Error.message);
+        Get('HelperStatus').textContent = T('Picture was not replaced.');
     } finally { SetBusy(false); Get('SourceFile').value = ''; }
 }
 
@@ -98,7 +101,7 @@ function Slug(Text) { return Text.trim().toLowerCase().replace(/[^\p{L}\p{Nd}]+/
 /** Require an explicitly entered article reference before encoding, downloading or copying. */
 function ValidateArticleSlug() {
     const Valid = Boolean(Slug(Get('ArticleSlug').value));
-    Get('ArticleSlugError').textContent = Valid ? '' : 'Enter the article slug before downloading the header or copying markup.';
+    Get('ArticleSlugError').textContent = Valid ? '' : T('Enter the article slug before downloading the header or copying markup.');
     Get('ArticleSlugError').hidden = Valid;
     Get('ArticleSlug').setAttribute('aria-invalid', String(!Valid));
     if (!Valid) Get('ArticleSlug').focus();
@@ -139,7 +142,7 @@ function SetCrop(Next) {
     Crop = Next; Invalidate();
     for (const Name of Coordinates) Get(`Crop${Name}`).value = Crop[Name];
     Object.assign(CropBox.style, { left: `${Crop.X / Source.width * 100}%`, top: `${Crop.Y / Source.height * 100}%`, width: `${Crop.Width / Source.width * 100}%`, height: `${Crop.Height / Source.height * 100}%` });
-    Get('OutputInfo').textContent = `${Crop.Width} × ${Crop.Height} px · Native resolution, no upscaling.${Crop.Width < 1500 ? ' Width below 1,500 px may look soft on wide screens.' : ''}${Crop.Height > Crop.Width ? ' Portrait crop: check desktop framing.' : ''}`;
+    Get('OutputInfo').textContent = T('{0} × {1} px · Native resolution, no upscaling.', Crop.Width, Crop.Height) + (Crop.Width < 1500 ? ' ' + T('Width below 1,500 px may look soft on wide screens.') : '') + (Crop.Height > Crop.Width ? ' ' + T('Portrait crop: check desktop framing.') : '');
     UpdateMarkup(); SchedulePreviews();
 }
 
@@ -230,7 +233,7 @@ function DrawPreviews() {
         if (Get('ShowTitle').checked) {
             const TitleSize = Math.max(56, Math.min(ViewWidth * .1, ViewHeight * .14, 120));
             Context.fillStyle = Dark ? DarkInk : LightInk; Context.font = `900 ${TitleSize}px Georgia`; Context.textAlign = 'center';
-            Context.fillText('Article title', Width / 2, Height - TitleSize * .1, Width - 32);
+            Context.fillText(T('Article title'), Width / 2, Height - TitleSize * .1, Width - 32);
         }
     }
 }
@@ -249,19 +252,19 @@ async function DownloadHeader() {
 /** Encode on explicit request, avoiding repeated expensive encodes during crop dragging. */
 async function Export() {
     SetBusy(true); ShowError(''); Invalidate();
-    Get('HelperStatus').textContent = 'Making your header on your device… Large pictures can take a while.';
+    Get('HelperStatus').textContent = T('Making your header on your device… Large pictures can take a while.');
     try {
         const Bitmap = await createImageBitmap(Source, Crop.X, Crop.Y, Crop.Width, Crop.Height);
-        if (Cancelled) { Bitmap.close(); throw new Error('Processing cancelled.'); }
+        if (Cancelled) { Bitmap.close(); throw new Error(T('Processing cancelled.')); }
         const Bytes = await RunWorker({ Operation: 'encode', Bitmap, Quality: Number(Get('Quality').value) }, [Bitmap]);
         const BlobResult = new Blob([Bytes], { type: 'image/avif' });
         DownloadUrl = URL.createObjectURL(BlobResult); DownloadSizeBytes = BlobResult.size;
         Get('DownloadImage').href = DownloadUrl; Get('DownloadImage').hidden = false;
         UpdateMarkup();
-        Get('HelperStatus').textContent = `Header ready · ${FormatBytes(BlobResult.size)}.`;
+        Get('HelperStatus').textContent = T('Header ready · {0}.', FormatBytes(BlobResult.size));
         // Not downloaded automatically: the wiki would reject it, though the link still lets the user keep it.
         if (BlobResult.size > UploadLimitBytes) ShowError('This header exceeds the wiki’s 10 MiB upload limit. Lower the quality or choose a smaller crop, then download it again.');
-    } catch (Error) { ShowError(Error.message); Get('HelperStatus').textContent = 'No new header was created.'; }
+    } catch (Error) { ShowError(Error.message); Get('HelperStatus').textContent = T('No new header was created.'); }
     finally { SetBusy(false); }
 }
 
@@ -326,11 +329,11 @@ Get('Quality').addEventListener('input', () => { Get('QualityValue').value = Get
 Get('ExportImage').addEventListener('click', DownloadHeader);
 Get('CopyMarkup').addEventListener('click', async () => {
     if (!ValidateArticleSlug()) return;
-    try { await navigator.clipboard.writeText(Get('WikiText').value); Get('HelperStatus').textContent = 'Wiki markup copied.'; }
-    catch { Get('WikiText').focus(); Get('WikiText').select(); Get('HelperStatus').textContent = 'Copy the selected markup with Ctrl+C / ⌘C.'; }
+    try { await navigator.clipboard.writeText(Get('WikiText').value); Get('HelperStatus').textContent = T('Wiki markup copied.'); }
+    catch { Get('WikiText').focus(); Get('WikiText').select(); Get('HelperStatus').textContent = T('Copy the selected markup with Ctrl+C / ⌘C.'); }
 });
 if (!Supported) {
-    Get('HelperStatus').textContent = 'This editor requires a current browser with WebAssembly and OffscreenCanvas. Try an up-to-date Chrome, Edge, Firefox, or Safari.';
+    Get('HelperStatus').textContent = T('This editor requires a current browser with WebAssembly and OffscreenCanvas. Try an up-to-date Chrome, Edge, Firefox, or Safari.');
 } else {
-    SetBusy(false); Get('HelperStatus').textContent = 'Open, drop, or paste a picture to begin. Pictures stay on your device.';
+    SetBusy(false); Get('HelperStatus').textContent = T('Open, drop, or paste a picture to begin. Pictures stay on your device.');
 }

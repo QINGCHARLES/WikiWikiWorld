@@ -2,25 +2,21 @@
 @using WikiWikiWorld.Web.Services
 @model WikiWikiWorld.Web.Pages.Admin.MigrateFilesModel
 @{
-	ViewData["Title"] = "Migrate Files";
+	ViewData["Title"] = L["Migrate Files"];
 }
 
 <figure>
-	<h1>Migrate Legacy Image Files</h1>
+	<h1>@L["Migrate Legacy Image Files"]</h1>
 </figure>
 
 <article>
 	<p>
-		Moves legacy files (<code>images/{CanonicalFileId}.ext</code>) into the
-		revision-keyed layout (<code>images/{CanonicalFileId}/{RevisionId}.ext</code>).
-		Scanning is read-only; nothing moves until you press <strong>Migrate</strong>.
-		No database changes are required &mdash; URLs are derived from the existing
-		revision id and filename.
+		@HL["Moves legacy files ({0}) into the revision-keyed layout ({1}). Scanning is read-only; nothing moves until you press {2}. No database changes are required — URLs are derived from the existing revision id and filename.", new Microsoft.AspNetCore.Html.HtmlString("<code>images/{CanonicalFileId}.ext</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>images/{CanonicalFileId}/{RevisionId}.ext</code>"), UiFormat.Strong(L["Migrate"])]
 	</p>
 
 	@if (Model.Report is null)
 	{
-		<div class="alert alert-danger">Unable to load the migration report.</div>
+		<div class="alert alert-danger">@L["Unable to load the migration report."]</div>
 		return;
 	}
 
@@ -29,7 +25,7 @@
 		<div class="alert @(Model.MigrationRan ? "alert-success" : "alert-info")">@Model.ResultMessage</div>
 	}
 
-	<p><small>Scanned root: <code>@Model.Report.RootPath</code></small></p>
+	<p><small>@L["Scanned root:"] <code>@Model.Report.RootPath</code></small></p>
 
 	@{
 		int ReadyCount = Model.Report.Items.Count(I => I.Status == FileMigrationStatus.ReadyToMove);
@@ -39,18 +35,16 @@
 	@if (Model.Report.LostHistory.Count > 0)
 	{
 		<div class="alert alert-warning">
-			<strong>&#9888; Lost revision history detected.</strong>
-			The following canonical files have more revisions in the database than surviving
-			files on disk. Older revisions were overwritten under the legacy layout and their
-			bytes cannot be recovered.
+			<strong>&#9888; @L["Lost revision history detected."]</strong>
+			@L["The following canonical files have more revisions in the database than surviving files on disk. Older revisions were overwritten under the legacy layout and their bytes cannot be recovered."]
 		</div>
 		<table class="table">
 			<thead>
 				<tr>
-					<th>Canonical File Id</th>
-					<th>DB Revisions</th>
-					<th>Surviving Files</th>
-					<th>Lost</th>
+					<th>@L["Canonical File Id"]</th>
+					<th>@L["DB Revisions"]</th>
+					<th>@L["Surviving Files"]</th>
+					<th>@L["Lost"]</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -69,19 +63,18 @@
 
 	@if (Model.Report.Items.Count == 0)
 	{
-		<div class="alert alert-success">No legacy-layout files found. Nothing to migrate.</div>
+		<div class="alert alert-success">@L["No legacy-layout files found. Nothing to migrate."]</div>
 	}
 	else
 	{
 		<p>
-			Found <strong>@Model.Report.Items.Count</strong> legacy file(s):
-			<strong>@ReadyCount</strong> ready to move, <strong>@OrphanCount</strong> orphaned (no DB match).
+			@HL["Found {0} legacy file(s): {1} ready to move, {2} orphaned (no DB match).", UiFormat.Strong(Model.Report.Items.Count.ToString(CultureInfo.CurrentCulture)), UiFormat.Strong(ReadyCount.ToString(CultureInfo.CurrentCulture)), UiFormat.Strong(OrphanCount.ToString(CultureInfo.CurrentCulture))]
 		</p>
 
 		@if (ReadyCount > 0)
 		{
-			<form method="post" asp-page-handler="Migrate" onsubmit="return confirm('Move @ReadyCount file(s) into the revision-keyed layout?');">
-				<button type="submit" class="btn btn-primary">Migrate @ReadyCount file(s)</button>
+			<form method="post" asp-page-handler="Migrate" data-confirm="@L["Move {0} file(s) into the revision-keyed layout?", ReadyCount]" onsubmit="return confirm(this.dataset.confirm);">
+				<button type="submit" class="btn btn-primary">@L["Migrate {0} file(s)", ReadyCount]</button>
 			</form>
 			<br />
 		}
@@ -89,12 +82,12 @@
 		<table class="table">
 			<thead>
 				<tr>
-					<th>Site</th>
-					<th>Status</th>
-					<th>Source</th>
-					<th>Target</th>
-					<th>Revisions</th>
-					<th>Note</th>
+					<th>@L["Site"]</th>
+					<th>@L["Status"]</th>
+					<th>@L["Source"]</th>
+					<th>@L["Target"]</th>
+					<th>@L["Revisions"]</th>
+					<th>@L["Note"]</th>
 				</tr>
 			</thead>
 			<tbody>

@@ -221,19 +221,19 @@ public sealed class CreateEditModel(
 			SelectedType = ArticleType.User;
 			if (UploadedFile is { Length: > 0 })
 			{
-				ErrorMessage = "User home pages cannot have an attached file.";
+				ErrorMessage = SharedResource.Text("User home pages cannot have an attached file.");
 				return Page();
 			}
 		}
 
 		if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(UrlSlug) || string.IsNullOrWhiteSpace(ArticleText))
 		{
-			ErrorMessage = "All required fields must be filled out.";
+			ErrorMessage = SharedResource.Text("All required fields must be filled out.");
 			return Page();
 		}
 		if (ArticleUrlHelper.IsRestrictedSlug(UrlSlug))
 		{
-			ErrorMessage = "The chosen URL slug conflicts with a reserved system path and cannot be used.";
+			ErrorMessage = SharedResource.Text("The chosen URL slug conflicts with a reserved system path and cannot be used.");
 			return Page();
 		}
 
@@ -271,7 +271,7 @@ public sealed class CreateEditModel(
         // Creation writes its own revision, so it applies the shared user-page and redirect rules explicitly.
         if (SelectedType == ArticleType.Redirect && UploadedFile is { Length: > 0 })
         {
-            ErrorMessage = "Redirect pages cannot have an attached file.";
+            ErrorMessage = SharedResource.Text("Redirect pages cannot have an attached file.");
             return Page();
         }
 
@@ -296,7 +296,7 @@ public sealed class CreateEditModel(
 
         if (ExistingArticle is not null)
         {
-            ErrorMessage = "An article with this URL slug already exists.";
+            ErrorMessage = SharedResource.Text("An article with this URL slug already exists.");
             return Page();
         }
         Guid CanonicalArticleId = Guid.NewGuid();
@@ -321,7 +321,7 @@ public sealed class CreateEditModel(
             catch (Exception Ex)
             {
                 await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
-                ErrorMessage = $"Error uploading file: {Ex.Message}";
+                ErrorMessage = SharedResource.Format("Error uploading file: {0}", Ex.Message);
                 return Page();
             }
         }
@@ -405,7 +405,7 @@ public sealed class CreateEditModel(
                 }
                 catch (Exception Ex)
                 {
-                    ErrorMessage = $"Article was created, but the uploaded file is still waiting for filesystem recovery: {Ex.Message}";
+                    ErrorMessage = SharedResource.Format("Article was created, but the uploaded file is still waiting for filesystem recovery: {0}", Ex.Message);
                     return Page();
                 }
             }
@@ -421,7 +421,7 @@ public sealed class CreateEditModel(
         catch (Exception Ex)
         {
             await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
-            ErrorMessage = $"Error creating article: {Ex.Message}";
+            ErrorMessage = SharedResource.Format("Error creating article: {0}", Ex.Message);
             return Page();
         }
     }
@@ -470,7 +470,7 @@ public sealed class CreateEditModel(
             }
             catch (Exception Ex)
             {
-                ErrorMessage = $"Error updating article: {Ex.Message}";
+                ErrorMessage = SharedResource.Format("Error updating article: {0}", Ex.Message);
                 await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
                 return Page();
             }
@@ -478,7 +478,7 @@ public sealed class CreateEditModel(
 
         if (SelectedType == ArticleType.Redirect)
         {
-            ErrorMessage = "Redirect pages cannot have an attached file.";
+            ErrorMessage = SharedResource.Text("Redirect pages cannot have an attached file.");
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
         }
@@ -505,7 +505,7 @@ public sealed class CreateEditModel(
         // becomes a file article, whoever submits the form.
         if (ArticleRevisionService.IsUserPageSlug(CurrentArticle.UrlSlug))
         {
-            ErrorMessage = "User home pages cannot have an attached file.";
+            ErrorMessage = SharedResource.Text("User home pages cannot have an attached file.");
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
         }
@@ -522,7 +522,7 @@ public sealed class CreateEditModel(
         catch (Exception Ex)
         {
             await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
-            ErrorMessage = $"Error uploading file: {Ex.Message}";
+            ErrorMessage = SharedResource.Format("Error uploading file: {0}", Ex.Message);
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
         }
@@ -628,7 +628,7 @@ public sealed class CreateEditModel(
                 }
                 catch (Exception Ex)
                 {
-                    ErrorMessage = $"Image revision was created, but the uploaded file is awaiting filesystem recovery: {Ex.Message}";
+                    ErrorMessage = SharedResource.Format("Image revision was created, but the uploaded file is awaiting filesystem recovery: {0}", Ex.Message);
                     await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
                     return Page();
                 }
@@ -646,7 +646,7 @@ public sealed class CreateEditModel(
         catch (Exception Ex)
         {
             await FileUploadStorageService.CleanupUncommittedUploadAsync(StagedUpload, CancellationToken);
-            ErrorMessage = $"Error updating article: {Ex.Message}";
+            ErrorMessage = SharedResource.Format("Error updating article: {0}", Ex.Message);
             await PopulateEditStateAsync(OriginalUrlSlug, CancellationToken);
             return Page();
         }

@@ -4,18 +4,24 @@
 @using WikiWikiWorld.Web.Services
 @model WikiWikiWorld.Web.Pages.Admin.DomainRedirectsModel
 @{
-	ViewData["Title"] = "Domain Redirects";
+	ViewData["Title"] = L["Domain Redirects"];
+	// Messages for the inline article picker below.
+	string ScriptText = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
+	{
+		["loadingCultures"] = L["Loading cultures…"],
+		["culturesFailed"] = L["Could not load cultures for this site. Retry loading cultures or choose another site."],
+		["noArticles"] = L["No matching articles found."],
+		["articlesFailed"] = L["Could not load articles. Type your search again to retry."]
+	});
 }
 
 <figure>
-	<h1>Domain Redirects</h1>
+	<h1>@L["Domain Redirects"]</h1>
 </figure>
 
 <article>
 	<p>
-		Map legacy or alternate domains to specific articles. Requests to these domains receive an
-		<strong>HTTP 308 Permanent Redirect</strong> to the target article on that culture.
-		Because mappings link to the canonical article identifier, <strong>redirects survive article renames and slug changes</strong>.
+		@HL["Map legacy or alternate domains to specific articles. Requests to these domains receive an {0} to the target article on that culture. Because mappings link to the canonical article identifier, {1}.", UiFormat.Strong(L["HTTP 308 Permanent Redirect"]), UiFormat.Strong(L["redirects survive article renames and slug changes"])]
 	</p>
 
 	@if (!string.IsNullOrEmpty(Model.SuccessMessage))
@@ -42,16 +48,16 @@
 	}
 
 	<section class="card" style="margin-block: 2rem; padding: 1.5rem; border: 1px solid var(--md-outline-variant); border-radius: 8px;">
-		<h2>Add Domain Redirect</h2>
-		<form method="post" asp-page-handler="Create" id="create-redirect-form">
+		<h2>@L["Add Domain Redirect"]</h2>
+		<form method="post" asp-page-handler="Create" id="create-redirect-form" data-ui-text="@ScriptText">
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
 				<div>
 					<div class="md3-field md3-filled">
 						<input asp-for="InputDomain" id="InputDomain" placeholder=" " required />
-						<label asp-for="InputDomain">Incoming Domain (e.g. oldmag.com)</label>
+						<label asp-for="InputDomain">@L["Incoming Domain (e.g. oldmag.com)"]</label>
 						<span class="md-line"></span>
 					</div>
-					<span class="form-help">Enter bare domain or host without http://</span>
+					<span class="form-help">@L["Enter bare domain or host without http://"]</span>
 				</div>
 
 				<div>
@@ -59,10 +65,10 @@
 						<select asp-for="InputSiteId" id="InputSiteId">
 							@foreach (SiteInfo Site in Model.Sites)
 							{
-								<option value="@Site.SiteId">@Site.SiteName (ID: @Site.SiteId)</option>
+								<option value="@Site.SiteId">@L["{0} (ID: {1})", Site.SiteName, Site.SiteId]</option>
 							}
 						</select>
-						<label asp-for="InputSiteId">Target Site</label>
+						<label asp-for="InputSiteId">@L["Target Site"]</label>
 						<span class="md-line"></span>
 					</div>
 				</div>
@@ -84,60 +90,60 @@
 								<option value="en">en</option>
 							}
 						</select>
-						<label asp-for="InputCulture">Target Culture</label>
+						<label asp-for="InputCulture">@L["Target Culture"]</label>
 						<span class="md-line"></span>
 					</div>
 				</div>
 			</div>
 
 			<div style="margin-bottom: 1.5rem;">
-				<label style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Target Article</label>
+				<label style="display: block; font-weight: bold; margin-bottom: 0.5rem;">@L["Target Article"]</label>
 				
 				<input type="hidden" asp-for="InputCanonicalArticleId" id="InputCanonicalArticleId" />
 				<input type="hidden" asp-for="SelectedArticleTitle" id="SelectedArticleTitle" />
 
 				<div id="selected-article-display" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "flex" : "none"); align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: var(--md-surface-variant); border-radius: 6px; margin-bottom: 0.75rem;">
 					<div>
-						<strong>Selected:</strong> <span id="selected-article-text">@Model.SelectedArticleTitle</span>
+						<strong>@L["Selected:"]</strong> <span id="selected-article-text">@Model.SelectedArticleTitle</span>
 						<br /><small style="color: var(--md-on-surface-variant);"><code id="selected-article-guid">@Model.InputCanonicalArticleId</code></small>
 					</div>
-					<button type="button" class="button" id="clear-article-btn" style="margin-left: auto; font-size: 0.85rem;" data-button-variant="naked">Change</button>
+					<button type="button" class="button" id="clear-article-btn" style="margin-left: auto; font-size: 0.85rem;" data-button-variant="naked">@L["Change"]</button>
 				</div>
 
 				<div id="article-search-container" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "none" : "block");">
 					<div class="md3-field md3-filled" style="margin-bottom: 0.5rem;">
 						<input type="text" id="article-search-input" placeholder=" " autocomplete="off" />
-						<label for="article-search-input">Search for target article by title or slug...</label>
+						<label for="article-search-input">@L["Search for target article by title or slug..."]</label>
 						<span class="md-line"></span>
 					</div>
 					<p id="article-picker-status" role="status"></p>
-					<button type="button" id="retry-cultures" class="button" style="display: none;">Retry loading cultures</button>
-					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary);">Searching...</div>
+					<button type="button" id="retry-cultures" class="button" style="display: none;">@L["Retry loading cultures"]</button>
+					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary);">@L["Searching..."]</div>
 					<div id="article-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--md-outline-variant); border-radius: 6px; display: none;"></div>
 				</div>
 			</div>
 
-			<button type="submit" class="button" id="submit-btn">Add Domain Redirect</button>
+			<button type="submit" class="button" id="submit-btn">@L["Add Domain Redirect"]</button>
 		</form>
 	</section>
 
-	<h2>Configured Domain Redirects (@Model.Redirects.Count)</h2>
+	<h2>@L["Configured Domain Redirects ({0})", Model.Redirects.Count]</h2>
 
 	@if (Model.Redirects.Count == 0)
 	{
-		<div class="alert alert-info">No domain redirects configured yet.</div>
+		<div class="alert alert-info">@L["No domain redirects configured yet."]</div>
 	}
 	else
 	{
 		<table class="table" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
 			<thead>
 				<tr>
-					<th>Domain</th>
-					<th>Site</th>
-					<th>Culture</th>
-					<th>Target Article</th>
-					<th>Created</th>
-					<th>Actions</th>
+					<th>@L["Domain"]</th>
+					<th>@L["Site"]</th>
+					<th>@L["Culture"]</th>
+					<th>@L["Target Article"]</th>
+					<th>@L["Created"]</th>
+					<th>@L["Actions"]</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -161,8 +167,8 @@
 						</td>
 						<td><small>@Item.DateCreated.ToString("yyyy-MM-dd HH:mm") UTC</small></td>
 						<td>
-							<form method="post" asp-page-handler="Delete" asp-route-id="@Item.Id" onsubmit="return confirm('Are you sure you want to delete the redirect for @Item.Domain?');">
-								<button type="submit" class="button" style="font-size: 0.85rem;" data-button-variant="negative-quiet">Delete</button>
+							<form method="post" asp-page-handler="Delete" asp-route-id="@Item.Id" data-confirm="@L["Are you sure you want to delete the redirect for {0}?", Item.Domain]" onsubmit="return confirm(this.dataset.confirm);">
+								<button type="submit" class="button" style="font-size: 0.85rem;" data-button-variant="negative-quiet">@L["Delete"]</button>
 							</form>
 						</td>
 					</tr>
@@ -190,6 +196,7 @@
 		const Status = document.getElementById("article-picker-status");
 		const RetryCultures = document.getElementById("retry-cultures");
 		if (!SiteSelect || !CultureSelect || !SearchInput) return;
+		const UiText = JSON.parse(document.getElementById("create-redirect-form")?.dataset.uiText || "{}");
 		let CultureRequest = null;
 		let SearchRequest = null;
 		let DebounceTimer = 0;
@@ -232,7 +239,7 @@
 			CultureSelect.disabled = true;
 			SearchInput.disabled = true;
 			RetryCultures.style.display = "none";
-			Status.textContent = "Loading cultures…";
+			Status.textContent = UiText.loadingCultures;
 			try
 			{
 				const Response = await fetch(`?handler=Cultures&siteid=${encodeURIComponent(Request.SiteId)}`, { signal: Request.Controller.signal });
@@ -257,7 +264,7 @@
 			{
 				if (CultureRequest !== Request || SiteSelect.value !== Request.SiteId) return;
 				CultureRequest = null;
-				Status.textContent = "Could not load cultures for this site. Retry loading cultures or choose another site.";
+				Status.textContent = UiText.culturesFailed;
 				RetryCultures.style.display = "inline-flex";
 			}
 		}
@@ -309,7 +316,7 @@
 					ResultsList.replaceChildren();
 					if (Items.length === 0)
 					{
-						ResultsList.textContent = "No matching articles found.";
+						ResultsList.textContent = UiText.noArticles;
 					}
 					for (const Item of Items)
 					{
@@ -331,7 +338,7 @@
 				}
 				catch (Failure)
 				{
-					if (IsCurrentSearch(Request)) Status.textContent = "Could not load articles. Type your search again to retry.";
+					if (IsCurrentSearch(Request)) Status.textContent = UiText.articlesFailed;
 				}
 				finally
 				{

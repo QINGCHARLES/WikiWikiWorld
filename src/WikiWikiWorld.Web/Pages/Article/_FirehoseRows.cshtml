@@ -12,7 +12,7 @@
 			string Path = ArticleUrlHelper.BuildArticlePath(Entry.UrlSlug, Entry.Type);
 			string RevisionPath = ArticleUrlHelper.BuildRelativePath(Entry.UrlSlug, Entry.Type, $"revision/{Entry.DateCreated.UtcDateTime.ToString("yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture)}");
 			<li class="fh-entry">
-				<div class="fh-time"><time datetime="@Entry.DateCreated.ToUniversalTime().ToString("O")" title="@Entry.DateCreated.UtcDateTime.ToString("dd MMM yyyy HH:mm:ss 'UTC'")">@Entry.DateCreated.UtcDateTime.ToString("HH:mm")</time><span>@ArticleHistoryModel.GetRelativeTime(Entry.DateCreated)</span></div>
+				<div class="fh-time"><time datetime="@Entry.DateCreated.ToUniversalTime().ToString("O")" title="@UiFormat.Format(Entry.DateCreated.UtcDateTime, "dd MMM yyyy HH:mm:ss 'UTC'", CultureInfo.CurrentCulture, "yyyy-MM-dd HH:mm:ss 'UTC'")">@Entry.DateCreated.UtcDateTime.ToString("HH:mm")</time><span>@ArticleHistoryModel.GetRelativeTime(Entry.DateCreated)</span></div>
 				<div class="fh-entry-main"><span class="fh-type" data-type="@Entry.Type">@L[Entry.Type.ToString()]</span><h4><a href="@Path">@Entry.Title</a></h4><p>@(string.IsNullOrWhiteSpace(Entry.Reason) ? L["No edit summary supplied."].Value : Entry.Reason)</p>
 					<div class="fh-entry-bottom">
 						@if (Contributor?.UserName is not null)

@@ -17,7 +17,7 @@
 }
 <div class="profile">
 	<partial name="_ProfileHeader" model="new WikiWikiWorld.Web.Pages.Profile.ProfileHeaderView(Model.Header, ProfileTab.Bookmarks)" />
-	<div id="bookmark-browser" class="profile-stack" data-text="@ScriptText"
+	<div id="bookmark-browser" class="profile-stack" data-ui-text="@ScriptText"
 		data-on:bookmark-load="@@get(evt.detail.url, {requestCancellation: evt.detail.controller, headers: {'X-Bookmark-Navigation': evt.detail.id}, filterSignals: {include: /^$/}, retry: 'never', retryMaxCount: 0}).then(evt.detail.complete).catch(evt.detail.fail)">
 		<div id="bookmark-navigation-status" role="status" class="bookmark-navigation-status"></div>
 		<partial name="_BookmarkBrowser" model="Model" />

@@ -69,7 +69,7 @@ public sealed class MigrateFilesModel(
 
 		int Moved = Report.Items.Count(I => I.Status == FileMigrationStatus.Moved);
 		int Failed = Report.Items.Count(I => I.Status == FileMigrationStatus.Failed);
-		ResultMessage = $"Migration complete: {Moved} moved, {Failed} failed. No database changes were required.";
+		ResultMessage = SharedResource.Format("Migration complete: {0} moved, {1} failed. No database changes were required.", Moved, Failed);
 		return Page();
 	}
 

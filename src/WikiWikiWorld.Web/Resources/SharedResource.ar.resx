@@ -5,6 +5,7 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="&amp; others" xml:space="preserve"><value>وآخرون</value></data>
+  <data name="(required)" xml:space="preserve"><value>(مطلوب)</value></data>
   <data name="(you)" xml:space="preserve"><value>(أنت)</value></data>
   <data name="12h" xml:space="preserve"><value>12 س</value></data>
   <data name="24 HOURS" xml:space="preserve"><value>24 ساعة</value></data>
@@ -19,8 +20,10 @@
   <data name="A missing date. A forgotten cover. A story worth saving. Every contribution adds something." xml:space="preserve"><value>تاريخ مفقود. غلاف منسيّ. قصة تستحق الحفظ. كل مساهمة تضيف شيئًا.</value></data>
   <data name="A quiet day in this stream. The archive is here whenever inspiration strikes." xml:space="preserve"><value>يوم هادئ في هذا السجل. الأرشيف هنا متى ما جاءك الإلهام.</value></data>
   <data name="A space for contributors to coordinate edits, verify facts, and resolve citations." xml:space="preserve"><value>مساحة للمساهمين لتنسيق التعديلات والتحقق من الحقائق وحل مسائل المراجع.</value></data>
+  <data name="A target article must be selected." xml:space="preserve"><value>يجب اختيار مقالة هدف.</value></data>
   <data name="About this talk page" xml:space="preserve"><value>عن صفحة النقاش هذه</value></data>
   <data name="Account menu for {0}" xml:space="preserve"><value>قائمة حساب {0}</value></data>
+  <data name="Actions" xml:space="preserve"><value>الإجراءات</value></data>
   <data name="Active days" xml:space="preserve"><value>أيام النشاط</value></data>
   <data name="Active {0}" xml:space="preserve"><value>نشط {0}</value></data>
   <data name="Activity" xml:space="preserve"><value>النشاط</value></data>
@@ -30,6 +33,7 @@
   <data name="Add a note for {0}" xml:space="preserve"><value>إضافة ملاحظة في {0}</value></data>
   <data name="Add a note to {0}" xml:space="preserve"><value>إضافة ملاحظة إلى {0}</value></data>
   <data name="Add an introduction" xml:space="preserve"><value>إضافة مقدمة</value></data>
+  <data name="Add Domain Redirect" xml:space="preserve"><value>إضافة تحويل نطاق</value></data>
   <data name="Add note" xml:space="preserve"><value>إضافة ملاحظة</value></data>
   <data name="adding missing information" xml:space="preserve"><value>إضافة المعلومات الناقصة</value></data>
   <data name="Adult" xml:space="preserve"><value>للبالغين</value></data>
@@ -38,10 +42,12 @@
   <data name="All categories" xml:space="preserve"><value>كل التصنيفات</value></data>
   <data name="All changes" xml:space="preserve"><value>كل التعديلات</value></data>
   <data name="All contributions" xml:space="preserve"><value>كل المساهمات</value></data>
+  <data name="All required fields must be filled out." xml:space="preserve"><value>يجب ملء كل الحقول المطلوبة.</value></data>
   <data name="almost {0} ago" xml:space="preserve"><value>منذ ما يقارب {0}</value></data>
   <data name="Already have an account?" xml:space="preserve"><value>لديك حساب بالفعل؟</value></data>
   <data name="already linked here" xml:space="preserve"><value>مرتبطة هنا بالفعل</value></data>
   <data name="An archive" xml:space="preserve"><value>أرشيف</value></data>
+  <data name="An article with this URL slug already exists." xml:space="preserve"><value>توجد مقالة بهذا المعرّف النصي بالفعل.</value></data>
   <data name="An error occurred while processing your request." xml:space="preserve"><value>حدث خطأ أثناء معالجة طلبك.</value></data>
   <data name="An unknown failure has occurred." xml:space="preserve"><value>حدث خطأ غير معروف.</value></data>
   <data name="Anniversary" xml:space="preserve"><value>الذكرى السنوية</value></data>
@@ -51,22 +57,30 @@
   <data name="Anyone will be able to see “{0}” and its {1}, introduction and {2}." xml:space="preserve"><value>سيتمكن أي شخص من رؤية «{0}» و{1} ومقدمتها و{2}.</value></data>
   <data name="Anyone will be able to see “{0}” and its {1}." xml:space="preserve"><value>سيتمكن أي شخص من رؤية «{0}» و{1}.</value></data>
   <data name="Anyone with the link or your profile" xml:space="preserve"><value>أي شخص لديه الرابط أو يزور ملفك الشخصي</value></data>
+  <data name="Anything else the moderator should know?" xml:space="preserve"><value>هل هناك ما ينبغي أن يعرفه المشرف؟</value></data>
   <data name="Appearance" xml:space="preserve"><value>المظهر</value></data>
   <data name="Apply" xml:space="preserve"><value>تطبيق</value></data>
   <data name="Architecture" xml:space="preserve"><value>العمارة</value></data>
+  <data name="Archive password (if the zip / rar / 7z file itself is password-protected)" xml:space="preserve"><value>كلمة مرور الأرشيف (إن كان ملف zip / rar / 7z نفسه محميًا بكلمة مرور)</value></data>
   <data name="Archivist" xml:space="preserve"><value>أمين أرشيف</value></data>
+  <data name="Are you sure you want to delete the redirect for {0}?" xml:space="preserve"><value>هل أنت متأكد من أنك تريد حذف التحويل الخاص بـ{0}؟</value></data>
   <data name="Are you sure you want to delete this article?" xml:space="preserve"><value>هل أنت متأكد من أنك تريد حذف هذه المقالة؟</value></data>
+  <data name="Are you sure you want to revert to the previous revision? This will discard your current changes." xml:space="preserve"><value>هل أنت متأكد من أنك تريد الرجوع إلى النسخة السابقة؟ سيؤدي هذا إلى تجاهل تغييراتك الحالية.</value></data>
   <data name="Arriving with watchlists" xml:space="preserve"><value>قادمة مع قوائم المتابعة</value></data>
   <data name="Arrow.Back" xml:space="preserve"><value>→</value></data>
   <data name="Arrow.Forward" xml:space="preserve"><value>←</value></data>
   <data name="Art &amp; Design" xml:space="preserve"><value>الفن والتصميم</value></data>
   <data name="Article" xml:space="preserve"><value>مقالة</value></data>
   <data name="Article actions" xml:space="preserve"><value>إجراءات المقالة</value></data>
+  <data name="Article Content" xml:space="preserve"><value>محتوى المقالة</value></data>
   <data name="Article in that language" xml:space="preserve"><value>المقالة بتلك اللغة</value></data>
   <data name="Article Not Found" xml:space="preserve"><value>المقالة غير موجودة</value></data>
   <data name="Article not found." xml:space="preserve"><value>المقالة غير موجودة.</value></data>
   <data name="Article revisions · {0}" xml:space="preserve"><value>نسخ المقالات · {0}</value></data>
+  <data name="Article slug" xml:space="preserve"><value>المعرّف النصي للمقالة</value></data>
+  <data name="Article title" xml:space="preserve"><value>عنوان المقالة</value></data>
   <data name="Article type" xml:space="preserve"><value>نوع المقالة</value></data>
+  <data name="Article was created, but the uploaded file is still waiting for filesystem recovery: {0}" xml:space="preserve"><value>أُنشئت المقالة، لكن الملف المرفوع ما زال ينتظر الاستعادة في نظام الملفات: {0}</value></data>
   <data name="ArticleKind.Article" xml:space="preserve"><value>مقالة</value></data>
   <data name="ArticleKind.Category" xml:space="preserve"><value>تصنيف</value></data>
   <data name="ArticleKind.File" xml:space="preserve"><value>ملف</value></data>
@@ -77,6 +91,8 @@
   <data name="Articles in this category" xml:space="preserve"><value>المقالات في هذا التصنيف</value></data>
   <data name="Auto-update" xml:space="preserve"><value>تحديث تلقائي</value></data>
   <data name="Auto-update paused." xml:space="preserve"><value>التحديث التلقائي متوقف مؤقتًا.</value></data>
+  <data name="AVIF encoding failed. Try a smaller crop." xml:space="preserve"><value>فشل الترميز بصيغة AVIF. جرّب قصًّا أصغر.</value></data>
+  <data name="AVIF quality" xml:space="preserve"><value>جودة AVIF</value></data>
   <data name="Award" xml:space="preserve"><value>جائزة</value></data>
   <data name="Back to latest ↑" xml:space="preserve"><value>العودة إلى الأحدث ↑</value></data>
   <data name="Back to the newest" xml:space="preserve"><value>العودة إلى الأحدث</value></data>
@@ -114,6 +130,7 @@
   <data name="Bookmarks.Notes|two" xml:space="preserve"><value>ملاحظتان</value></data>
   <data name="Bookmarks.Notes|zero" xml:space="preserve"><value>{0} ملاحظة</value></data>
   <data name="Both groups have a {0} article. Keep which?" xml:space="preserve"><value>لكلتا المجموعتين مقالة {0}. أيّهما تُبقي؟</value></data>
+  <data name="Bottom" xml:space="preserve"><value>الأسفل</value></data>
   <data name="Breadcrumb" xml:space="preserve"><value>مسار التنقل</value></data>
   <data name="Browse all sections, categories, files, and pages on {0} ({1})." xml:space="preserve"><value>تصفّح كل الأقسام والتصنيفات والملفات والصفحات في {0} ({1}).</value></data>
   <data name="Browse {0} indexed entries on {1} ({2}), or fetch the machine-readable {3}." xml:space="preserve"><value>تصفّح {0} مدخلًا مفهرسًا في {1} ({2})، أو احصل على {3} المقروءة آليًا.</value></data>
@@ -121,6 +138,7 @@
   <data name="Browsing earlier changes" xml:space="preserve"><value>تتصفح تعديلات سابقة</value></data>
   <data name="built together." xml:space="preserve"><value>نبنيه معًا.</value></data>
   <data name="Business &amp; Finance" xml:space="preserve"><value>الأعمال والمال</value></data>
+  <data name="By submitting this URL, I certify that I hold the legal rights or a valid copyright exemption to share the content. I understand that copyright-infringing content will be removed immediately." xml:space="preserve"><value>بإرسال هذا الرابط، أقرّ بأنني أملك الحقوق القانونية أو استثناءً صالحًا من حقوق النشر لمشاركة المحتوى. وأدرك أن المحتوى المخالف لحقوق النشر سيُزال فورًا.</value></data>
   <data name="by {0}" xml:space="preserve"><value>بواسطة {0}</value></data>
   <data name="Byline" xml:space="preserve"><value>التوقيع</value></data>
   <data name="Calendar.Days|few" xml:space="preserve"><value>{0} أيام</value></data>
@@ -136,12 +154,15 @@
   <data name="Calendar.Edits|two" xml:space="preserve"><value>تعديلان</value></data>
   <data name="Calendar.Edits|zero" xml:space="preserve"><value>{0} تعديل</value></data>
   <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Canonical File Id" xml:space="preserve"><value>معرّف الملف الأساسي</value></data>
   <data name="Categories" xml:space="preserve"><value>التصنيفات</value></data>
   <data name="Categories appear here once the articles you edit are categorised." xml:space="preserve"><value>تظهر التصنيفات هنا بعد تصنيف المقالات التي تحررها.</value></data>
   <data name="Categories appear here once the articles {0} edits are categorised." xml:space="preserve"><value>تظهر التصنيفات هنا بعد تصنيف المقالات التي يحررها {0}.</value></data>
   <data name="Category" xml:space="preserve"><value>تصنيف</value></data>
   <data name="Category articles" xml:space="preserve"><value>مقالات التصنيف</value></data>
+  <data name="Category of the article" xml:space="preserve"><value>فئة المقالة</value></data>
   <data name="Celebrity &amp; Royalty" xml:space="preserve"><value>المشاهير والعائلات المالكة</value></data>
+  <data name="Center" xml:space="preserve"><value>الوسط</value></data>
   <data name="Change" xml:space="preserve"><value>تغيير</value></data>
   <data name="Changes" xml:space="preserve"><value>التعديلات</value></data>
   <data name="Checked {0} · checks every 30 seconds" xml:space="preserve"><value>آخر فحص {0} · يُفحص كل 30 ثانية</value></data>
@@ -149,6 +170,7 @@
   <data name="Children &amp; Youth" xml:space="preserve"><value>الأطفال والشباب</value></data>
   <data name="Choose a language and enter the article's address." xml:space="preserve"><value>اختر لغة وأدخل عنوان المقالة.</value></data>
   <data name="Choose a language and enter the other article's address." xml:space="preserve"><value>اختر لغة وأدخل عنوان المقالة الأخرى.</value></data>
+  <data name="Choose an image smaller than 50 MiB." xml:space="preserve"><value>اختر صورة أصغر من 50 ميبيبايت.</value></data>
   <data name="Choose at least one other recipient." xml:space="preserve"><value>اختر مستلمًا آخر واحدًا على الأقل.</value></data>
   <data name="Choose at most {0} recipients." xml:space="preserve"><value>اختر {0} مستلمين كحد أقصى.</value></data>
   <data name="Choose how the site looks on this device. Your preference is remembered in this browser." xml:space="preserve"><value>اختر مظهر الموقع على هذا الجهاز. يُحفظ اختيارك في هذا المتصفح.</value></data>
@@ -168,6 +190,7 @@
   <data name="Comment:" xml:space="preserve"><value>تعليق:</value></data>
   <data name="Community" xml:space="preserve"><value>المجتمع</value></data>
   <data name="Computing" xml:space="preserve"><value>الحوسبة</value></data>
+  <data name="Configured Domain Redirects ({0})" xml:space="preserve"><value>تحويلات النطاقات المُعدّة ({0})</value></data>
   <data name="Confirm and link" xml:space="preserve"><value>تأكيد وربط</value></data>
   <data name="Confirm merge" xml:space="preserve"><value>تأكيد الدمج</value></data>
   <data name="Confirm password" xml:space="preserve"><value>تأكيد كلمة المرور</value></data>
@@ -180,10 +203,16 @@
   <data name="Contributors" xml:space="preserve"><value>المساهمون</value></data>
   <data name="Conversation pages" xml:space="preserve"><value>صفحات المحادثة</value></data>
   <data name="Copy failed" xml:space="preserve"><value>تعذّر النسخ</value></data>
+  <data name="Copy markup" xml:space="preserve"><value>نسخ الترميز</value></data>
+  <data name="Copy the selected markup with Ctrl+C / ⌘C." xml:space="preserve"><value>انسخ الترميز المحدد بـ Ctrl+C / ⌘C.</value></data>
   <data name="Copyright &amp; DMCA" xml:space="preserve"><value>حقوق النشر وقانون DMCA</value></data>
+  <data name="Copyright exemption" xml:space="preserve"><value>استثناء حقوق النشر</value></data>
   <data name="Could not create the list. Reload to check your lists before trying again." xml:space="preserve"><value>تعذّر إنشاء القائمة. أعد تحميل الصفحة للتحقق من قوائمك قبل المحاولة مجددًا.</value></data>
+  <data name="Could not load articles. Type your search again to retry." xml:space="preserve"><value>تعذّر تحميل المقالات. اكتب بحثك مجددًا لإعادة المحاولة.</value></data>
+  <data name="Could not load cultures for this site. Retry loading cultures or choose another site." xml:space="preserve"><value>تعذّر تحميل لغات هذا الموقع. أعد المحاولة أو اختر موقعًا آخر.</value></data>
   <data name="Could not load the preview. Your text is unchanged." xml:space="preserve"><value>تعذّر تحميل المعاينة. لم يتغير نصك.</value></data>
   <data name="Could not load this list. Your current page is unchanged. Try the link again." xml:space="preserve"><value>تعذّر تحميل هذه القائمة. لم تتغير صفحتك الحالية. جرّب الرابط مجددًا.</value></data>
+  <data name="Could not process this picture. Try a smaller PNG or JPEG." xml:space="preserve"><value>تعذّرت معالجة هذه الصورة. جرّب ملف PNG أو JPEG أصغر.</value></data>
   <data name="Could not save the note. Check your connection and try again." xml:space="preserve"><value>تعذّر حفظ الملاحظة. تحقق من اتصالك وحاول مجددًا.</value></data>
   <data name="Could not save. Reload to check your bookmark before trying again." xml:space="preserve"><value>تعذّر الحفظ. أعد تحميل الصفحة للتحقق من الإشارة المرجعية قبل المحاولة مجددًا.</value></data>
   <data name="Could not save. Reload to check your lists before trying again." xml:space="preserve"><value>تعذّر الحفظ. أعد تحميل الصفحة للتحقق من قوائمك قبل المحاولة مجددًا.</value></data>
@@ -191,39 +220,73 @@
   <data name="Couldn't check for changes. Retrying in 30 seconds; you can also refresh the page." xml:space="preserve"><value>تعذّر البحث عن تعديلات. ستُعاد المحاولة بعد 30 ثانية، ويمكنك أيضًا تحديث الصفحة.</value></data>
   <data name="Cover" xml:space="preserve"><value>الغلاف</value></data>
   <data name="Create" xml:space="preserve"><value>إنشاء</value></data>
+  <data name="Create a New Article" xml:space="preserve"><value>إنشاء مقالة جديدة</value></data>
   <data name="Create Account" xml:space="preserve"><value>إنشاء حساب</value></data>
   <data name="Create an account" xml:space="preserve"><value>أنشئ حسابًا</value></data>
   <data name="Create an account to edit articles, upload covers and join the discussion." xml:space="preserve"><value>أنشئ حسابًا لتحرير المقالات ورفع الأغلفة والمشاركة في النقاش.</value></data>
+  <data name="Create Article" xml:space="preserve"><value>إنشاء المقالة</value></data>
   <data name="Create list" xml:space="preserve"><value>إنشاء القائمة</value></data>
   <data name="Create New Article" xml:space="preserve"><value>إنشاء مقالة جديدة</value></data>
   <data name="Create this Page" xml:space="preserve"><value>إنشاء هذه الصفحة</value></data>
   <data name="Created" xml:space="preserve"><value>أنشأ</value></data>
   <data name="Created by" xml:space="preserve"><value>أنشأها</value></data>
+  <data name="Creating User Home Page for {0}" xml:space="preserve"><value>إنشاء الصفحة الشخصية لـ{0}</value></data>
+  <data name="Creative Commons / Open License" xml:space="preserve"><value>المشاع الإبداعي / رخصة مفتوحة</value></data>
   <data name="Credits" xml:space="preserve"><value>فريق العمل</value></data>
+  <data name="Crop.Height" xml:space="preserve"><value>الارتفاع</value></data>
+  <data name="Crop.Width" xml:space="preserve"><value>العرض</value></data>
+  <data name="Crop.X" xml:space="preserve"><value>س</value></data>
+  <data name="Crop.Y" xml:space="preserve"><value>ص</value></data>
+  <data name="Culture" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Culture is required." xml:space="preserve"><value>اللغة مطلوبة.</value></data>
   <data name="Current" xml:space="preserve"><value>الحالية</value></data>
+  <data name="Current File:" xml:space="preserve"><value>الملف الحالي:</value></data>
   <data name="Current streak" xml:space="preserve"><value>السلسلة الحالية</value></data>
   <data name="Current version" xml:space="preserve"><value>النسخة الحالية</value></data>
+  <data name="Danger Zone" xml:space="preserve"><value>منطقة الخطر</value></data>
   <data name="Dark" xml:space="preserve"><value>داكن</value></data>
+  <data name="Dark preview" xml:space="preserve"><value>معاينة داكنة</value></data>
   <data name="Dates grouped in UTC. Updated {0} UTC." xml:space="preserve"><value>التواريخ مجمّعة بتوقيت UTC. حُدّث {0} UTC.</value></data>
+  <data name="DB Revisions" xml:space="preserve"><value>النسخ في قاعدة البيانات</value></data>
   <data name="Debut" xml:space="preserve"><value>البداية</value></data>
   <data name="Default list cleared." xml:space="preserve"><value>أُفرغت القائمة الافتراضية.</value></data>
+  <data name="Delete" xml:space="preserve"><value>حذف</value></data>
   <data name="Delete article" xml:space="preserve"><value>حذف المقالة</value></data>
   <data name="Delete list" xml:space="preserve"><value>حذف القائمة</value></data>
   <data name="Delete list…" xml:space="preserve"><value>حذف القائمة…</value></data>
   <data name="Delete note" xml:space="preserve"><value>حذف الملاحظة</value></data>
   <data name="Delete this list?" xml:space="preserve"><value>حذف هذه القائمة؟</value></data>
   <data name="Development Mode" xml:space="preserve"><value>وضع التطوير</value></data>
+  <data name="Device previews" xml:space="preserve"><value>معاينات الأجهزة</value></data>
+  <data name="Device.Desktop" xml:space="preserve"><value>حاسوب مكتبي</value></data>
+  <data name="Device.Phone" xml:space="preserve"><value>هاتف</value></data>
+  <data name="Device.Tablet" xml:space="preserve"><value>جهاز لوحي</value></data>
   <data name="Dimensions" xml:space="preserve"><value>الأبعاد</value></data>
   <data name="Discuss" xml:space="preserve"><value>نقاش</value></data>
   <data name="Discussed" xml:space="preserve"><value>ناقش</value></data>
   <data name="Discussion: {0}" xml:space="preserve"><value>نقاش: {0}</value></data>
+  <data name="Display Title" xml:space="preserve"><value>عنوان العرض</value></data>
   <data name="Distributor" xml:space="preserve"><value>موزّع</value></data>
+  <data name="Domain" xml:space="preserve"><value>النطاق</value></data>
+  <data name="Domain '{0}' is already configured as a redirect." xml:space="preserve"><value>النطاق ‎'{0}'‎ مُعدّ بالفعل كتحويل.</value></data>
+  <data name="Domain is required." xml:space="preserve"><value>النطاق مطلوب.</value></data>
+  <data name="Domain must not contain paths, query parameters, or URL fragments." xml:space="preserve"><value>يجب ألا يحتوي النطاق على مسارات أو معاملات استعلام أو أجزاء عناوين.</value></data>
+  <data name="Domain redirect deleted successfully." xml:space="preserve"><value>حُذف تحويل النطاق بنجاح.</value></data>
+  <data name="Domain redirect for '{0}' created successfully." xml:space="preserve"><value>أُنشئ تحويل النطاق ‎'{0}'‎ بنجاح.</value></data>
+  <data name="Domain Redirects" xml:space="preserve"><value>تحويلات النطاقات</value></data>
   <data name="Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Download and use" xml:space="preserve"><value>التنزيل والاستخدام</value></data>
+  <data name="Download didn’t start? Save header" xml:space="preserve"><value>لم يبدأ التنزيل؟ احفظ الترويسة</value></data>
   <data name="Download file not available." xml:space="preserve"><value>ملف التنزيل غير متاح.</value></data>
+  <data name="Download header" xml:space="preserve"><value>تنزيل الترويسة</value></data>
+  <data name="Download the finished header, upload it as a {0}, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically." xml:space="preserve"><value>نزّل الترويسة الجاهزة، وارفعها بوصفها {0}، ثم الصق هذا الترميز في مقالتك. يفترض الترميز أن المعرّف النصي لمقالة الملف يطابق اسم الملف المنزّل دون «‎.avif»؛ وإن أعطيت مقالة الملف معرّفًا آخر فاستخدمه في الترميز. لا يُنشر شيء تلقائيًا.</value></data>
+  <data name="Download URL" xml:space="preserve"><value>رابط التنزيل</value></data>
+  <data name="Drag the frame or its corners. Use arrow keys to move or resize; hold Shift for 10 pixels. Double-click the frame to reset. Zoom in and scroll for detail." xml:space="preserve"><value>اسحب الإطار أو زواياه. استخدم مفاتيح الأسهم للتحريك أو تغيير الحجم؛ واضغط Shift للتحريك 10 بكسلات. انقر نقرًا مزدوجًا على الإطار لإعادة ضبطه. كبّر ومرّر لرؤية التفاصيل.</value></data>
   <data name="e.g. Ones to read next" xml:space="preserve"><value>مثلًا: للقراءة لاحقًا</value></data>
   <data name="Earlier" xml:space="preserve"><value>أقدم</value></data>
   <data name="Earlier changes" xml:space="preserve"><value>تعديلات سابقة</value></data>
   <data name="Edit" xml:space="preserve"><value>تحرير</value></data>
+  <data name="Edit Article" xml:space="preserve"><value>تحرير المقالة</value></data>
   <data name="Edit history" xml:space="preserve"><value>سجل التعديلات</value></data>
   <data name="Edit history pages" xml:space="preserve"><value>صفحات سجل التعديلات</value></data>
   <data name="Edit introduction" xml:space="preserve"><value>تحرير المقدمة</value></data>
@@ -236,8 +299,11 @@
   <data name="Edited" xml:space="preserve"><value>حرّر</value></data>
   <data name="Edited 7 days in a row." xml:space="preserve"><value>حرّر 7 أيام متتالية.</value></data>
   <data name="Edited articles in 10 categories." xml:space="preserve"><value>حرّر مقالات في 10 تصنيفات.</value></data>
+  <data name="Editing User Home Page for {0}" xml:space="preserve"><value>تحرير الصفحة الشخصية لـ{0}</value></data>
+  <data name="Editing: {0}" xml:space="preserve"><value>تحرير: {0}</value></data>
   <data name="Editor at Large" xml:space="preserve"><value>محرر متجول</value></data>
   <data name="Editor mode" xml:space="preserve"><value>وضع المحرر</value></data>
+  <data name="Editor.ArticleType" xml:space="preserve"><value>نوع المقالة</value></data>
   <data name="Edits" xml:space="preserve"><value>التعديلات</value></data>
   <data name="Education &amp; Careers" xml:space="preserve"><value>التعليم والمهن</value></data>
   <data name="Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
@@ -246,18 +312,29 @@
   <data name="Encyclopedia articles and publication entries" xml:space="preserve"><value>مقالات الموسوعة ومداخل الإصدارات</value></data>
   <data name="Enter a name for the list." xml:space="preserve"><value>أدخل اسمًا للقائمة.</value></data>
   <data name="Enter a search term to find articles." xml:space="preserve"><value>أدخل عبارة بحث للعثور على المقالات.</value></data>
+  <data name="Enter an HTTP or HTTPS image URL." xml:space="preserve"><value>أدخل رابط صورة يبدأ بـ HTTP أو HTTPS.</value></data>
+  <data name="Enter bare domain or host without http://" xml:space="preserve"><value>أدخل النطاق أو اسم المضيف دون http://</value></data>
   <data name="Enter its slug, such as {0}, or paste its address." xml:space="preserve"><value>أدخل المعرّف النصي مثل {0}، أو الصق عنوانه.</value></data>
+  <data name="Enter the article slug before downloading the header or copying markup." xml:space="preserve"><value>أدخل المعرّف النصي للمقالة قبل تنزيل الترويسة أو نسخ الترميز.</value></data>
   <data name="Episode" xml:space="preserve"><value>حلقة</value></data>
   <data name="Error" xml:space="preserve"><value>خطأ</value></data>
+  <data name="Error creating article: {0}" xml:space="preserve"><value>خطأ في إنشاء المقالة: {0}</value></data>
+  <data name="Error updating article: {0}" xml:space="preserve"><value>خطأ في تحديث المقالة: {0}</value></data>
+  <data name="Error uploading file: {0}" xml:space="preserve"><value>خطأ في رفع الملف: {0}</value></data>
   <data name="Error." xml:space="preserve"><value>خطأ.</value></data>
   <data name="Every edit leaves a mark." xml:space="preserve"><value>كل تعديل يترك أثرًا.</value></data>
   <data name="Everyone listed can read and reply. Participants are fixed when the conversation starts." xml:space="preserve"><value>يمكن لكل المذكورين القراءة والرد. يُحدَّد المشاركون عند بدء المحادثة.</value></data>
+  <data name="Fade" xml:space="preserve"><value>التلاشي</value></data>
+  <data name="Failed to delete domain redirect." xml:space="preserve"><value>تعذّر حذف تحويل النطاق.</value></data>
+  <data name="Fair Use / Fair Dealing Exemption" xml:space="preserve"><value>الاستخدام العادل / التعامل العادل</value></data>
   <data name="Family &amp; Relationships" xml:space="preserve"><value>الأسرة والعلاقات</value></data>
   <data name="Farming &amp; Rural Life" xml:space="preserve"><value>الزراعة والحياة الريفية</value></data>
   <data name="Fashion &amp; Beauty" xml:space="preserve"><value>الأزياء والجمال</value></data>
+  <data name="Featured Image" xml:space="preserve"><value>الصورة المميزة</value></data>
   <data name="Feed pagination" xml:space="preserve"><value>تصفح السجل</value></data>
   <data name="Festival" xml:space="preserve"><value>مهرجان</value></data>
   <data name="File" xml:space="preserve"><value>ملف</value></data>
+  <data name="file article" xml:space="preserve"><value>مقالة ملف</value></data>
   <data name="File History" xml:space="preserve"><value>سجل الملف</value></data>
   <data name="File Size" xml:space="preserve"><value>حجم الملف</value></data>
   <data name="FileHistory.VersionsRecorded|few" xml:space="preserve"><value>{0} نسخ مسجّلة لهذا الملف.</value></data>
@@ -317,12 +394,18 @@
   <data name="Firehose.OnThisPage|two" xml:space="preserve"><value>اثنان في هذه الصفحة</value></data>
   <data name="Firehose.OnThisPage|zero" xml:space="preserve"><value>{0} في هذه الصفحة</value></data>
   <data name="Firehose.RecentChanges" xml:space="preserve"><value>أحدث التعديلات</value></data>
+  <data name="Fit" xml:space="preserve"><value>ملاءمة</value></data>
   <data name="Focus areas" xml:space="preserve"><value>مجالات التركيز</value></data>
+  <data name="Focus changes the way the wiki positions your header, not the downloaded pixels." xml:space="preserve"><value>يغيّر التركيز طريقة وضع الويكي للترويسة، لا البكسلات المنزّلة.</value></data>
   <data name="Follow the people building the encyclopedia, one page at a time." xml:space="preserve"><value>تابع الذين يبنون الموسوعة صفحةً بعد صفحة.</value></data>
   <data name="Follow your device’s appearance." xml:space="preserve"><value>اتّبع مظهر جهازك.</value></data>
   <data name="Food &amp; Drink" xml:space="preserve"><value>الطعام والشراب</value></data>
   <data name="Footnotes" xml:space="preserve"><value>الحواشي</value></data>
   <data name="For local debugging, enable the {0} environment by setting the {1} environment variable to {0} and restarting the app." xml:space="preserve"><value>لتصحيح الأخطاء محليًا، فعّل بيئة {0} بضبط متغير البيئة {1} على {0} ثم أعد تشغيل التطبيق.</value></data>
+  <data name="Found {0} legacy file(s): {1} ready to move, {2} orphaned (no DB match)." xml:space="preserve"><value>عُثر على {0} ملف قديم: {1} جاهز للنقل، و{2} يتيم (بلا مطابقة في قاعدة البيانات).</value></data>
+  <data name="Frame a picture for {0}. Check how it looks on different screens, then download your header." xml:space="preserve"><value>أطّر صورة لـ{0}. تحقّق من مظهرها على الشاشات المختلفة، ثم نزّل ترويستك.</value></data>
+  <data name="Frame your header" xml:space="preserve"><value>أطّر ترويستك</value></data>
+  <data name="Framing previews use the wiki’s header geometry. Titles and top bars are illustrative; paper texture and scrolling animation are not shown." xml:space="preserve"><value>تستخدم معاينات التأطير أبعاد ترويسة الويكي. العناوين والأشرطة العلوية للتوضيح فقط، ولا يظهر ملمس الورق ولا حركة التمرير.</value></data>
   <data name="Franchise" xml:space="preserve"><value>سلسلة إعلامية</value></data>
   <data name="from the other group" xml:space="preserve"><value>من المجموعة الأخرى</value></data>
   <data name="Games &amp; Puzzles" xml:space="preserve"><value>الألعاب والألغاز</value></data>
@@ -333,8 +416,12 @@
   <data name="Go to Latest Version" xml:space="preserve"><value>انتقل إلى أحدث نسخة</value></data>
   <data name="Go to New URL" xml:space="preserve"><value>انتقل إلى العنوان الجديد</value></data>
   <data name="Have a copy of this publication you can legally share?" xml:space="preserve"><value>هل لديك نسخة من هذا الإصدار يمكنك مشاركتها قانونيًا؟</value></data>
+  <data name="Header helper" xml:space="preserve"><value>مساعد الترويسة</value></data>
+  <data name="Header ready · {0}." xml:space="preserve"><value>الترويسة جاهزة · {0}.</value></data>
   <data name="Heads up" xml:space="preserve"><value>تنبيه</value></data>
   <data name="Health &amp; Medicine" xml:space="preserve"><value>الصحة والطب</value></data>
+  <data name="HEIC decoding failed." xml:space="preserve"><value>فشل فك ترميز HEIC.</value></data>
+  <data name="Help grow the archive by pointing us at a copy of a publication (magazine, fanzine, bookazine, mook, etc.) you have hosted on a file-transfer service. Another contributor will download, verify, and post it." xml:space="preserve"><value>ساعد في توسيع الأرشيف بإرشادنا إلى نسخة من إصدار (مجلة، مجلة مستقلة، كتاب-مجلة، موك، إلخ) رفعتها على خدمة لنقل الملفات. سيقوم مساهم آخر بتنزيلها والتحقق منها ونشرها.</value></data>
   <data name="History" xml:space="preserve"><value>التاريخ</value></data>
   <data name="History.BackToArticle" xml:space="preserve"><value>→ العودة إلى المقالة</value></data>
   <data name="History.Revisions|few" xml:space="preserve"><value>{0} نسخ</value></data>
@@ -349,13 +436,19 @@
   <data name="Home page" xml:space="preserve"><value>الصفحة الرئيسية</value></data>
   <data name="House rules" xml:space="preserve"><value>قواعد المكان</value></data>
   <data name="HTML Sitemap" xml:space="preserve"><value>خريطة الموقع (HTML)</value></data>
+  <data name="HTTP 308 Permanent Redirect" xml:space="preserve"><value>تحويل دائم HTTP 308</value></data>
   <data name="Humour &amp; Satire" xml:space="preserve"><value>الفكاهة والسخرية</value></data>
   <data name="Hunting, Shooting &amp; Angling" xml:space="preserve"><value>الصيد والرماية وصيد الأسماك</value></data>
+  <data name="I am the Rightsholder / Creator" xml:space="preserve"><value>أنا صاحب الحقوق / المُنشئ</value></data>
+  <data name="I am the sole creator, author, or publisher of this publication and hold 100% of the distribution rights." xml:space="preserve"><value>أنا المُنشئ أو المؤلف أو الناشر الوحيد لهذا الإصدار وأملك كامل حقوق التوزيع.</value></data>
+  <data name="I have obtained direct, explicit written permission from the publisher, author, or current copyright owner to upload and distribute this digital copy." xml:space="preserve"><value>حصلت على إذن كتابي مباشر وصريح من الناشر أو المؤلف أو مالك حقوق النشر الحالي لرفع هذه النسخة الرقمية وتوزيعها.</value></data>
   <data name="Ideas &amp; Criticism" xml:space="preserve"><value>الأفكار والنقد</value></data>
+  <data name="Image revision was created, but the uploaded file is awaiting filesystem recovery: {0}" xml:space="preserve"><value>أُنشئت نسخة الصورة، لكن الملف المرفوع ينتظر الاستعادة في نظام الملفات: {0}</value></data>
   <data name="Improved by" xml:space="preserve"><value>حسّنها</value></data>
   <data name="In the spotlight" xml:space="preserve"><value>تحت الضوء</value></data>
   <data name="In This Issue" xml:space="preserve"><value>في هذا العدد</value></data>
   <data name="Inbox" xml:space="preserve"><value>الوارد</value></data>
+  <data name="Incoming Domain (e.g. oldmag.com)" xml:space="preserve"><value>النطاق الوارد (مثل oldmag.com)</value></data>
   <data name="Incorrect password." xml:space="preserve"><value>كلمة المرور غير صحيحة.</value></data>
   <data name="Info" xml:space="preserve"><value>معلومات</value></data>
   <data name="Info Pages" xml:space="preserve"><value>صفحات المعلومات</value></data>
@@ -426,10 +519,16 @@
   <data name="Lists" xml:space="preserve"><value>القوائم</value></data>
   <data name="Literature &amp; Fiction" xml:space="preserve"><value>الأدب والقصص</value></data>
   <data name="Loading bookmarks…" xml:space="preserve"><value>جارٍ تحميل الإشارات المرجعية…</value></data>
+  <data name="Loading cultures…" xml:space="preserve"><value>جارٍ تحميل اللغات…</value></data>
+  <data name="Loading editor…" xml:space="preserve"><value>جارٍ تحميل المحرر…</value></data>
   <data name="Loading preview…" xml:space="preserve"><value>جارٍ تحميل المعاينة…</value></data>
+  <data name="Lock aspect" xml:space="preserve"><value>قفل النسبة</value></data>
   <data name="Log In" xml:space="preserve"><value>تسجيل الدخول</value></data>
   <data name="Log Out" xml:space="preserve"><value>تسجيل الخروج</value></data>
   <data name="Login here" xml:space="preserve"><value>سجّل الدخول هنا</value></data>
+  <data name="Lost" xml:space="preserve"><value>مفقودة</value></data>
+  <data name="Lost revision history detected." xml:space="preserve"><value>اكتُشف سجل نسخ مفقود.</value></data>
+  <data name="Lowercase letters, numbers, and hyphens only" xml:space="preserve"><value>حروف لاتينية صغيرة وأرقام وشرطات فقط</value></data>
   <data name="Made 2,500 edits." xml:space="preserve"><value>أجرى 2,500 تعديل.</value></data>
   <data name="Made 50 edits." xml:space="preserve"><value>أجرى 50 تعديلًا.</value></data>
   <data name="Made 500 edits." xml:space="preserve"><value>أجرى 500 تعديل.</value></data>
@@ -440,6 +539,8 @@
   <data name="Make public" xml:space="preserve"><value>جعلها عامة</value></data>
   <data name="Make public…" xml:space="preserve"><value>جعلها عامة…</value></data>
   <data name="Make this list public?" xml:space="preserve"><value>جعل هذه القائمة عامة؟</value></data>
+  <data name="Making your header on your device… Large pictures can take a while." xml:space="preserve"><value>جارٍ إعداد ترويستك على جهازك… قد تستغرق الصور الكبيرة بعض الوقت.</value></data>
+  <data name="Map legacy or alternate domains to specific articles. Requests to these domains receive an {0} to the target article on that culture. Because mappings link to the canonical article identifier, {1}." xml:space="preserve"><value>اربط النطاقات القديمة أو البديلة بمقالات محددة. تتلقى الطلبات إلى هذه النطاقات {0} إلى المقالة الهدف بتلك اللغة. ولأن الروابط تشير إلى المعرّف الأساسي للمقالة، {1}.</value></data>
   <data name="Markdown supported" xml:space="preserve"><value>يدعم Markdown</value></data>
   <data name="Markdown supported · Blank line for new paragraph" xml:space="preserve"><value>يدعم Markdown · سطر فارغ لفقرة جديدة</value></data>
   <data name="Markdown: {0}, {1}, {2}, a blank line for a new paragraph." xml:space="preserve"><value>Markdown: {0}، {1}، {2}، وسطر فارغ لفقرة جديدة.</value></data>
@@ -452,12 +553,20 @@
   <data name="Message to {0}" xml:space="preserve"><value>رسالة إلى {0}</value></data>
   <data name="Message {0}" xml:space="preserve"><value>مراسلة {0}</value></data>
   <data name="Messages" xml:space="preserve"><value>الرسائل</value></data>
+  <data name="Migrate" xml:space="preserve"><value>ترحيل</value></data>
+  <data name="Migrate Files" xml:space="preserve"><value>ترحيل الملفات</value></data>
+  <data name="Migrate Legacy Image Files" xml:space="preserve"><value>ترحيل ملفات الصور القديمة</value></data>
+  <data name="Migrate {0} file(s)" xml:space="preserve"><value>ترحيل {0} ملف</value></data>
+  <data name="Migration complete: {0} moved, {1} failed. No database changes were required." xml:space="preserve"><value>اكتمل الترحيل: نُقل {0}، وفشل {1}. لم تكن هناك حاجة لتغييرات في قاعدة البيانات.</value></data>
   <data name="Military &amp; Defence" xml:space="preserve"><value>الشؤون العسكرية والدفاع</value></data>
   <data name="Missing Article" xml:space="preserve"><value>مقالة مفقودة</value></data>
   <data name="Missing Image" xml:space="preserve"><value>صورة مفقودة</value></data>
   <data name="More" xml:space="preserve"><value>أكثر</value></data>
   <data name="More article actions" xml:space="preserve"><value>مزيد من إجراءات المقالة</value></data>
   <data name="Most edited pages in this stream" xml:space="preserve"><value>أكثر الصفحات تعديلًا في هذا السجل</value></data>
+  <data name="Move crop with arrow keys; hold Shift for 10 pixels" xml:space="preserve"><value>حرّك القصّ بمفاتيح الأسهم؛ واضغط Shift للتحريك 10 بكسلات</value></data>
+  <data name="Move {0} file(s) into the revision-keyed layout?" xml:space="preserve"><value>نقل {0} ملف إلى التخطيط المعتمد على النسخ؟</value></data>
+  <data name="Moves legacy files ({0}) into the revision-keyed layout ({1}). Scanning is read-only; nothing moves until you press {2}. No database changes are required — URLs are derived from the existing revision id and filename." xml:space="preserve"><value>ينقل الملفات القديمة ({0}) إلى التخطيط المعتمد على النسخ ({1}). الفحص للقراءة فقط؛ لا يُنقل شيء حتى تضغط {2}. لا حاجة لتغييرات في قاعدة البيانات — تُشتق العناوين من معرّف النسخة الحالي واسم الملف.</value></data>
   <data name="Movie" xml:space="preserve"><value>فيلم</value></data>
   <data name="Music" xml:space="preserve"><value>الموسيقى</value></data>
   <data name="My Bookmarks" xml:space="preserve"><value>إشاراتي المرجعية</value></data>
@@ -480,14 +589,19 @@
   <data name="No articles with cover images found." xml:space="preserve"><value>لا توجد مقالات بصور أغلفة.</value></data>
   <data name="No badges yet. The first arrives with the first edit." xml:space="preserve"><value>لا شارات بعد. تأتي الأولى مع أول تعديل.</value></data>
   <data name="No discussion subjects yet. Be the first to start one." xml:space="preserve"><value>لا توجد مواضيع نقاش بعد. كن أول من يبدأ واحدًا.</value></data>
+  <data name="No domain redirects configured yet." xml:space="preserve"><value>لم تُعدّ تحويلات نطاقات بعد.</value></data>
   <data name="No edit summary supplied." xml:space="preserve"><value>لم يُقدَّم ملخص للتعديل.</value></data>
   <data name="No edit warring; resolve disputes here first." xml:space="preserve"><value>لا لحروب التحرير؛ حُلّ الخلافات هنا أولًا.</value></data>
   <data name="No edits" xml:space="preserve"><value>لا تعديلات</value></data>
   <data name="No entries" xml:space="preserve"><value>لا توجد مداخل</value></data>
   <data name="No entries found for this filter." xml:space="preserve"><value>لا توجد مداخل لهذا المرشح.</value></data>
   <data name="No entries published in this section yet." xml:space="preserve"><value>لم تُنشر مداخل في هذا القسم بعد.</value></data>
+  <data name="No legacy-layout files found. Nothing to migrate." xml:space="preserve"><value>لا توجد ملفات بالتخطيط القديم. لا شيء للترحيل.</value></data>
+  <data name="No matching articles found." xml:space="preserve"><value>لا توجد مقالات مطابقة.</value></data>
   <data name="No matching edits this week." xml:space="preserve"><value>لا توجد تعديلات مطابقة هذا الأسبوع.</value></data>
+  <data name="No new header was created." xml:space="preserve"><value>لم تُنشأ ترويسة جديدة.</value></data>
   <data name="No pages currently link to this article." xml:space="preserve"><value>لا توجد صفحات تربط بهذه المقالة حاليًا.</value></data>
+  <data name="No picture selected." xml:space="preserve"><value>لم تُختر صورة.</value></data>
   <data name="No profile article yet" xml:space="preserve"><value>لا توجد مقالة ملف شخصي بعد</value></data>
   <data name="No results found for &quot;{0}&quot;." xml:space="preserve"><value>لا توجد نتائج لـ«{0}».</value></data>
   <data name="No revisions found for this article." xml:space="preserve"><value>لا توجد نسخ لهذه المقالة.</value></data>
@@ -502,6 +616,7 @@
   <data name="Note:" xml:space="preserve"><value>ملاحظة:</value></data>
   <data name="NoteEditor.PrivateSuffix" xml:space="preserve"><value>. قائمة خاصة، لا يراها أحد سواك.</value></data>
   <data name="NoteEditor.PublicSuffix" xml:space="preserve"><value>. قائمة عامة، يمكن لأي شخص قراءتها.</value></data>
+  <data name="Notes (optional)" xml:space="preserve"><value>ملاحظات (اختياري)</value></data>
   <data name="Notes can be up to {0:N0} characters." xml:space="preserve"><value>يمكن أن تصل الملاحظات إلى {0:N0} حرف.</value></data>
   <data name="Notes you wrote while it was private become public too." xml:space="preserve"><value>الملاحظات التي كتبتها وهي خاصة ستصبح عامة أيضًا.</value></data>
   <data name="NoteVisibility.PrivateSuffix" xml:space="preserve"><value>. هذه قائمة خاصة، ولا يرى هذه الملاحظة أحد سواك.</value></data>
@@ -516,13 +631,26 @@
   <data name="On Deadline" xml:space="preserve"><value>على الموعد</value></data>
   <data name="On this device" xml:space="preserve"><value>على هذا الجهاز</value></data>
   <data name="on {0}" xml:space="preserve"><value>في {0}</value></data>
+  <data name="Once you delete an article, there is no going back. Please be certain." xml:space="preserve"><value>بعد حذف المقالة لا يمكن التراجع. تأكد من قرارك.</value></data>
   <data name="One topic per thread — fork if scope drifts." xml:space="preserve"><value>موضوع واحد لكل نقاش — افتح نقاشًا جديدًا إن تشعّب الموضوع.</value></data>
   <data name="Only participants can open a conversation. Public user-page discussions are separate." xml:space="preserve"><value>لا يفتح المحادثة إلا المشاركون فيها. نقاشات صفحات المستخدمين العامة منفصلة.</value></data>
   <data name="Only the participants can read this." xml:space="preserve"><value>لا يقرأ هذا إلا المشاركون.</value></data>
   <data name="Only the people you list can read this." xml:space="preserve"><value>لا يقرأ هذا إلا من تذكرهم.</value></data>
   <data name="Only you" xml:space="preserve"><value>أنت فقط</value></data>
   <data name="Only you see this message." xml:space="preserve"><value>هذه الرسالة تظهر لك وحدك.</value></data>
+  <data name="Open a picture" xml:space="preserve"><value>افتح صورة</value></data>
   <data name="Open as article" xml:space="preserve"><value>فتح كمقالة</value></data>
+  <data name="Open image" xml:space="preserve"><value>فتح صورة</value></data>
+  <data name="Open link" xml:space="preserve"><value>فتح الرابط</value></data>
+  <data name="Open, drop, or paste a picture to begin. Pictures stay on your device." xml:space="preserve"><value>افتح صورة أو أفلتها أو الصقها للبدء. تبقى الصور على جهازك.</value></data>
+  <data name="Opening cancelled or timed out. Try a local file." xml:space="preserve"><value>أُلغي الفتح أو انتهت مهلته. جرّب ملفًا محليًا.</value></data>
+  <data name="Opening picture…" xml:space="preserve"><value>جارٍ فتح الصورة…</value></data>
+  <data name="Optional multi-line title with custom formatting" xml:space="preserve"><value>عنوان اختياري متعدد الأسطر بتنسيق مخصص</value></data>
+  <data name="Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history." xml:space="preserve"><value>اختياري: اختر ملف صورة جديدًا ليحل محل النسخة الحالية. ستُحفظ النسخة السابقة في سجل الملف.</value></data>
+  <data name="Optional: Custom display title with formatting" xml:space="preserve"><value>اختياري: عنوان عرض مخصص بتنسيق</value></data>
+  <data name="Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)" xml:space="preserve"><value>اختياري: ارفع صورة مميزة (JPG وPNG وGIF وWebP وAVIF وHEIC - حتى 10 ميغابايت)</value></data>
+  <data name="Or drop a picture here, or paste a copied picture with Ctrl+V / ⌘V. Up to 50 MiB; large images may exceed your device’s memory." xml:space="preserve"><value>أو أفلت صورة هنا، أو الصق صورة منسوخة بـ Ctrl+V / ⌘V. حتى 50 ميبيبايت؛ وقد تتجاوز الصور الكبيرة ذاكرة جهازك.</value></data>
+  <data name="Or open an image URL" xml:space="preserve"><value>أو افتح رابط صورة</value></data>
   <data name="Organization" xml:space="preserve"><value>منظمة</value></data>
   <data name="Other" xml:space="preserve"><value>أخرى</value></data>
   <data name="Other languages" xml:space="preserve"><value>لغات أخرى</value></data>
@@ -543,13 +671,21 @@
   <data name="Passwords must use at least {0} different characters." xml:space="preserve"><value>يجب أن تستخدم كلمة المرور {0} أحرف مختلفة على الأقل.</value></data>
   <data name="Past 12 months" xml:space="preserve"><value>آخر 12 شهرًا</value></data>
   <data name="Performing Arts" xml:space="preserve"><value>فنون الأداء</value></data>
+  <data name="Permission from the Rightsholder" xml:space="preserve"><value>إذن من صاحب الحقوق</value></data>
   <data name="Person" xml:space="preserve"><value>شخص</value></data>
   <data name="Pets &amp; Animals" xml:space="preserve"><value>الحيوانات الأليفة والحيوانات</value></data>
   <data name="Photography" xml:space="preserve"><value>التصوير الفوتوغرافي</value></data>
+  <data name="Pick the option that best describes why you can legally share this publication." xml:space="preserve"><value>اختر الخيار الذي يصف على أفضل وجه سبب قدرتك قانونيًا على مشاركة هذا الإصدار.</value></data>
+  <data name="Picture ready. Adjust the crop and check the previews." xml:space="preserve"><value>الصورة جاهزة. اضبط القصّ وتحقّق من المعاينات.</value></data>
+  <data name="Picture was not replaced." xml:space="preserve"><value>لم تُستبدل الصورة.</value></data>
   <data name="Play {0} on YouTube" xml:space="preserve"><value>تشغيل {0} على يوتيوب</value></data>
+  <data name="Please choose the copyright exemption that applies." xml:space="preserve"><value>يرجى اختيار استثناء حقوق النشر المنطبق.</value></data>
+  <data name="Please enter a valid http or https download URL." xml:space="preserve"><value>يرجى إدخال رابط تنزيل صالح يبدأ بـ http أو https.</value></data>
   <data name="Polymath" xml:space="preserve"><value>موسوعي</value></data>
+  <data name="Portrait crop: check desktop framing." xml:space="preserve"><value>قصّ عمودي: تحقّق من التأطير على الحاسوب المكتبي.</value></data>
   <data name="Post reply" xml:space="preserve"><value>نشر الرد</value></data>
   <data name="Post subject" xml:space="preserve"><value>نشر الموضوع</value></data>
+  <data name="Prepare a header image" xml:space="preserve"><value>جهّز صورة ترويسة</value></data>
   <data name="Preview" xml:space="preserve"><value>معاينة</value></data>
   <data name="Previous" xml:space="preserve"><value>السابق</value></data>
   <data name="Previous image" xml:space="preserve"><value>الصورة السابقة</value></data>
@@ -559,6 +695,7 @@
   <data name="Private conversation" xml:space="preserve"><value>محادثة خاصة</value></data>
   <data name="Private messages" xml:space="preserve"><value>الرسائل الخاصة</value></data>
   <data name="Private · Only you" xml:space="preserve"><value>خاصة · أنت فقط</value></data>
+  <data name="Processing cancelled." xml:space="preserve"><value>أُلغيت المعالجة.</value></data>
   <data name="Profile" xml:space="preserve"><value>الملف الشخصي</value></data>
   <data name="Profile article" xml:space="preserve"><value>مقالة الملف الشخصي</value></data>
   <data name="Profile sections" xml:space="preserve"><value>أقسام الملف الشخصي</value></data>
@@ -582,6 +719,7 @@
   <data name="Profile.Categories|zero" xml:space="preserve"><value>{0} تصنيف</value></data>
   <data name="Provided by {0}" xml:space="preserve"><value>قدّمها {0}</value></data>
   <data name="Public" xml:space="preserve"><value>عامة</value></data>
+  <data name="Public Domain (Copyright Expired or Waived)" xml:space="preserve"><value>الملك العام (انتهت حقوق النشر أو تُنوزل عنها)</value></data>
   <data name="Published a first edit." xml:space="preserve"><value>نشر أول تعديل.</value></data>
   <data name="Published on: {0}" xml:space="preserve"><value>نُشرت في: {0}</value></data>
   <data name="Publisher" xml:space="preserve"><value>ناشر</value></data>
@@ -596,9 +734,11 @@
   <data name="Recipients" xml:space="preserve"><value>المستلمون</value></data>
   <data name="Redirect" xml:space="preserve"><value>تحويل</value></data>
   <data name="Redirect page:" xml:space="preserve"><value>صفحة تحويل:</value></data>
+  <data name="Redirect pages cannot have an attached file." xml:space="preserve"><value>لا يمكن أن تحتوي صفحات التحويل على ملف مرفق.</value></data>
   <data name="Redirect pages pointing to canonical articles" xml:space="preserve"><value>صفحات تحويل تشير إلى المقالات الأساسية</value></data>
   <data name="Redirected from {0}." xml:space="preserve"><value>تم التحويل من {0}.</value></data>
   <data name="Redirects" xml:space="preserve"><value>التحويلات</value></data>
+  <data name="redirects survive article renames and slug changes" xml:space="preserve"><value>تبقى التحويلات صالحة بعد إعادة تسمية المقالات وتغيير معرّفاتها</value></data>
   <data name="Reference, guide, and policy pages" xml:space="preserve"><value>صفحات المراجع والإرشادات والسياسات</value></data>
   <data name="Referenced by:" xml:space="preserve"><value>مُشار إليه في:</value></data>
   <data name="Regular" xml:space="preserve"><value>منتظم</value></data>
@@ -610,6 +750,7 @@
   <data name="Remove {0} from this list" xml:space="preserve"><value>إزالة {0} من هذه القائمة</value></data>
   <data name="Removed from this list. You can undo this for five minutes." xml:space="preserve"><value>أُزيلت من هذه القائمة. يمكنك التراجع خلال خمس دقائق.</value></data>
   <data name="Replace a linked article?" xml:space="preserve"><value>استبدال مقالة مرتبطة؟</value></data>
+  <data name="Replace Image" xml:space="preserve"><value>استبدال الصورة</value></data>
   <data name="Replacement {0} article" xml:space="preserve"><value>مقالة {0} البديلة</value></data>
   <data name="Replies" xml:space="preserve"><value>الردود</value></data>
   <data name="Reply" xml:space="preserve"><value>رد</value></data>
@@ -620,10 +761,19 @@
   <data name="Reputation will grow as readers cite, thank and review your work, and unlock moderation tools along the way." xml:space="preserve"><value>ستنمو السمعة كلما استشهد القراء بعملك وشكروك عليه وراجعوه، وستفتح لك أدوات الإشراف مع الوقت.</value></data>
   <data name="Request ID:" xml:space="preserve"><value>معرّف الطلب:</value></data>
   <data name="Requested:" xml:space="preserve"><value>المطلوب:</value></data>
+  <data name="required" xml:space="preserve"><value>مطلوب</value></data>
+  <data name="Reset crop" xml:space="preserve"><value>إعادة ضبط القصّ</value></data>
+  <data name="Resize {0} corner with arrow keys" xml:space="preserve"><value>غيّر حجم الزاوية {0} بمفاتيح الأسهم</value></data>
+  <data name="Resting scale" xml:space="preserve"><value>المقياس الثابت</value></data>
+  <data name="Retry loading cultures" xml:space="preserve"><value>إعادة تحميل اللغات</value></data>
   <data name="Return to Article" xml:space="preserve"><value>العودة إلى المقالة</value></data>
+  <data name="Revert to Previous Revision" xml:space="preserve"><value>الرجوع إلى النسخة السابقة</value></data>
+  <data name="Reverts the article to the revision before the current one. The current revision will be soft-deleted." xml:space="preserve"><value>يُرجع المقالة إلى النسخة التي تسبق الحالية. ستُحذف النسخة الحالية حذفًا مؤقتًا.</value></data>
   <data name="Revision feed" xml:space="preserve"><value>سجل النسخ</value></data>
   <data name="Revision History" xml:space="preserve"><value>سجل النسخ</value></data>
   <data name="Revision History: {0}" xml:space="preserve"><value>سجل النسخ: {0}</value></data>
+  <data name="Revisions" xml:space="preserve"><value>النسخ</value></data>
+  <data name="Save Changes" xml:space="preserve"><value>حفظ التغييرات</value></data>
   <data name="Save introduction" xml:space="preserve"><value>حفظ المقدمة</value></data>
   <data name="Save note" xml:space="preserve"><value>حفظ الملاحظة</value></data>
   <data name="Save theme" xml:space="preserve"><value>حفظ المظهر</value></data>
@@ -632,10 +782,12 @@
   <data name="Saved to {0}. Your earlier note is back." xml:space="preserve"><value>حُفظت في {0}. استُعيدت ملاحظتك السابقة.</value></data>
   <data name="Saved {0}" xml:space="preserve"><value>حُفظت {0}</value></data>
   <data name="Saved, but the infobox needs attention." xml:space="preserve"><value>حُفظت، لكن صندوق المعلومات يحتاج إلى مراجعة.</value></data>
+  <data name="Scanned root:" xml:space="preserve"><value>المجلد الذي فُحص:</value></data>
   <data name="Science &amp; Nature" xml:space="preserve"><value>العلوم والطبيعة</value></data>
   <data name="Search" xml:space="preserve"><value>بحث</value></data>
   <data name="Search all articles for “{0}”" xml:space="preserve"><value>البحث في كل المقالات عن «{0}»</value></data>
   <data name="Search articles" xml:space="preserve"><value>ابحث في المقالات</value></data>
+  <data name="Search for target article by title or slug..." xml:space="preserve"><value>ابحث عن المقالة الهدف بالعنوان أو المعرّف النصي...</value></data>
   <data name="Search suggestions" xml:space="preserve"><value>اقتراحات البحث</value></data>
   <data name="Search.ResultsFound|few" xml:space="preserve"><value>وُجدت {0} نتائج لـ«{1}»:</value></data>
   <data name="Search.ResultsFound|many" xml:space="preserve"><value>وُجدت {0} نتيجة لـ«{1}»:</value></data>
@@ -650,6 +802,9 @@
   <data name="Search.SuggestionsAvailable|two" xml:space="preserve"><value>اقتراحان متاحان. استخدم مفاتيح الأسهم للاختيار.</value></data>
   <data name="Search.SuggestionsAvailable|zero" xml:space="preserve"><value>لا اقتراحات.</value></data>
   <data name="Search: {0}" xml:space="preserve"><value>بحث: {0}</value></data>
+  <data name="Searching..." xml:space="preserve"><value>جارٍ البحث...</value></data>
+  <data name="Selected article could not be found for the specified site and culture." xml:space="preserve"><value>تعذّر العثور على المقالة المختارة في الموقع واللغة المحددين.</value></data>
+  <data name="Selected:" xml:space="preserve"><value>المختارة:</value></data>
   <data name="Send message" xml:space="preserve"><value>إرسال الرسالة</value></data>
   <data name="Send reply" xml:space="preserve"><value>إرسال الرد</value></data>
   <data name="Sender account is unavailable." xml:space="preserve"><value>حساب المرسل غير متاح.</value></data>
@@ -665,7 +820,10 @@
   <data name="Sign in to bookmark articles." xml:space="preserve"><value>سجّل الدخول لحفظ المقالات.</value></data>
   <data name="Sign in to edit articles, upload covers and join the discussion." xml:space="preserve"><value>سجّل الدخول لتحرير المقالات ورفع الأغلفة والمشاركة في النقاش.</value></data>
   <data name="Sign Up" xml:space="preserve"><value>إنشاء حساب</value></data>
+  <data name="Site" xml:space="preserve"><value>الموقع</value></data>
+  <data name="Site focus" xml:space="preserve"><value>تركيز الموقع</value></data>
   <data name="Site Pages" xml:space="preserve"><value>صفحات الموقع</value></data>
+  <data name="Site password (if the transfer service requires one)" xml:space="preserve"><value>كلمة مرور الموقع (إن كانت خدمة النقل تتطلبها)</value></data>
   <data name="Sitemap" xml:space="preserve"><value>خريطة الموقع</value></data>
   <data name="Sitemap pagination" xml:space="preserve"><value>تصفح خريطة الموقع</value></data>
   <data name="Sitemap.Entries|few" xml:space="preserve"><value>{0} مداخل</value></data>
@@ -678,10 +836,14 @@
   <data name="Sitemap.XmlSitemapLink" xml:space="preserve"><value>خريطة الموقع (XML)</value></data>
   <data name="Size" xml:space="preserve"><value>الحجم</value></data>
   <data name="Small corrections. New discoveries. A better archive with every contribution." xml:space="preserve"><value>تصحيحات صغيرة. اكتشافات جديدة. أرشيف أفضل مع كل مساهمة.</value></data>
+  <data name="Some websites block direct image imports. Download the picture, then choose Open image or drag it here. The picture stays in your browser until you choose to upload the finished header." xml:space="preserve"><value>تمنع بعض المواقع استيراد الصور مباشرة. نزّل الصورة، ثم اختر «فتح صورة» أو اسحبها إلى هنا. تبقى الصورة في متصفحك حتى تختار رفع الترويسة الجاهزة.</value></data>
+  <data name="Some websites block direct image imports. If your link doesn’t work, download the picture, then choose Open image or drag it here. Your picture is processed in your browser; it won’t be uploaded to the wiki until you choose to upload the finished header." xml:space="preserve"><value>تمنع بعض المواقع استيراد الصور مباشرة. إن لم يعمل رابطك، نزّل الصورة ثم اختر «فتح صورة» أو اسحبها إلى هنا. تُعالَج صورتك في متصفحك، ولن تُرفع إلى الويكي حتى تختار رفع الترويسة الجاهزة.</value></data>
   <data name="Soon" xml:space="preserve"><value>قريبًا</value></data>
   <data name="Sort" xml:space="preserve"><value>الترتيب</value></data>
   <data name="Sort entries" xml:space="preserve"><value>ترتيب المداخل</value></data>
   <data name="Source" xml:space="preserve"><value>المصدر</value></data>
+  <data name="Source picture" xml:space="preserve"><value>الصورة الأصلية</value></data>
+  <data name="Source, scan quality, issue number, language, etc." xml:space="preserve"><value>المصدر، جودة المسح، رقم العدد، اللغة، إلخ.</value></data>
   <data name="Sport &amp; Fitness" xml:space="preserve"><value>الرياضة واللياقة</value></data>
   <data name="Start a new subject" xml:space="preserve"><value>بدء موضوع جديد</value></data>
   <data name="Start a page ↗" xml:space="preserve"><value>ابدأ صفحة ↗</value></data>
@@ -690,10 +852,14 @@
   <data name="Started a first article." xml:space="preserve"><value>بدأ أول مقالة.</value></data>
   <data name="Started by you" xml:space="preserve"><value>بدأتها أنت</value></data>
   <data name="Started by {0}" xml:space="preserve"><value>بدأه {0}</value></data>
+  <data name="Status" xml:space="preserve"><value>الحالة</value></data>
   <data name="stub" xml:space="preserve"><value>بذرة</value></data>
   <data name="Studio" xml:space="preserve"><value>استوديو</value></data>
   <data name="Subject" xml:space="preserve"><value>الموضوع</value></data>
+  <data name="Submit" xml:space="preserve"><value>إرسال</value></data>
+  <data name="Submit a Publication" xml:space="preserve"><value>إرسال إصدار</value></data>
   <data name="Submit it now" xml:space="preserve"><value>أرسلها الآن</value></data>
+  <data name="Surviving Files" xml:space="preserve"><value>الملفات المتبقية</value></data>
   <data name="Swapping to the {0} environment displays detailed information about the error that occurred." xml:space="preserve"><value>التبديل إلى بيئة {0} يعرض معلومات تفصيلية عن الخطأ الذي حدث.</value></data>
   <data name="System" xml:space="preserve"><value>النظام</value></data>
   <data name="Tag with the appropriate flair on creation." xml:space="preserve"><value>أضف الوسم المناسب عند الإنشاء.</value></data>
@@ -724,9 +890,14 @@
   <data name="Talk.Threads|two" xml:space="preserve"><value>نقاشان</value></data>
   <data name="Talk.Threads|zero" xml:space="preserve"><value>{0} نقاش</value></data>
   <data name="TalkPost.Edited" xml:space="preserve"><value>معدَّلة</value></data>
+  <data name="Target" xml:space="preserve"><value>الهدف</value></data>
+  <data name="Target Article" xml:space="preserve"><value>المقالة الهدف</value></data>
+  <data name="Target Culture" xml:space="preserve"><value>اللغة الهدف</value></data>
+  <data name="Target Site" xml:space="preserve"><value>الموقع الهدف</value></data>
   <data name="Technology" xml:space="preserve"><value>التقنية</value></data>
   <data name="Terms of Use" xml:space="preserve"><value>شروط الاستخدام</value></data>
   <data name="Text" xml:space="preserve"><value>النص</value></data>
+  <data name="Thanks!" xml:space="preserve"><value>شكرًا!</value></data>
   <data name="That address is a {0} page, but {1} is selected." xml:space="preserve"><value>هذا العنوان لصفحة {0}، لكن اللغة المحددة هي {1}.</value></data>
   <data name="That address isn't on this site." xml:space="preserve"><value>هذا العنوان ليس على هذا الموقع.</value></data>
   <data name="That article is no longer linked here. The page has been refreshed." xml:space="preserve"><value>لم تعد تلك المقالة مرتبطة هنا. حُدّثت الصفحة.</value></data>
@@ -734,18 +905,26 @@
   <data name="That entry is no longer in this list, so the note was not saved." xml:space="preserve"><value>لم يعد هذا المدخل في القائمة، لذا لم تُحفظ الملاحظة.</value></data>
   <data name="That list no longer exists. Reload to see your lists." xml:space="preserve"><value>لم تعد تلك القائمة موجودة. أعد تحميل الصفحة لرؤية قوائمك.</value></data>
   <data name="That recipient was not found. Choose another account below." xml:space="preserve"><value>لم يُعثر على هذا المستلم. اختر حسابًا آخر أدناه.</value></data>
+  <data name="The chosen URL slug conflicts with a reserved system path and cannot be used." xml:space="preserve"><value>يتعارض المعرّف النصي المختار مع مسار محجوز للنظام ولا يمكن استخدامه.</value></data>
   <data name="The current version was published on {0}." xml:space="preserve"><value>نُشرت النسخة الحالية في {0}.</value></data>
   <data name="The Development environment shouldn't be enabled for deployed applications." xml:space="preserve"><value>لا ينبغي تفعيل بيئة التطوير في التطبيقات المنشورة.</value></data>
   <data name="THE ENCYCLOPEDIA, IN THE MAKING" xml:space="preserve"><value>الموسوعة قيد الصنع</value></data>
   <data name="The field {0} must be a string with a maximum length of {1}." xml:space="preserve"><value>يجب ألا يتجاوز طول الحقل {0} {1} حرفًا.</value></data>
   <data name="The field {0} must be a string with a minimum length of {2} and a maximum length of {1}." xml:space="preserve"><value>يجب أن يكون طول الحقل {0} بين {2} و{1} حرفًا.</value></data>
+  <data name="The following canonical files have more revisions in the database than surviving files on disk. Older revisions were overwritten under the legacy layout and their bytes cannot be recovered." xml:space="preserve"><value>للملفات الأساسية التالية نسخ في قاعدة البيانات أكثر من الملفات المتبقية على القرص. كُتب فوق النسخ الأقدم في التخطيط القديم ولا يمكن استعادة بياناتها.</value></data>
   <data name="The following pages link here:" xml:space="preserve"><value>الصفحات التالية تربط هنا:</value></data>
+  <data name="The image processor could not start. Reload the page and try again." xml:space="preserve"><value>تعذّر تشغيل معالج الصور. أعد تحميل الصفحة وحاول مجددًا.</value></data>
+  <data name="The ingestion queue is not configured correctly. Please contact a site administrator." xml:space="preserve"><value>قائمة الاستقبال غير مُعدّة بشكل صحيح. يرجى التواصل مع مدير الموقع.</value></data>
   <data name="The latest changes" xml:space="preserve"><value>أحدث التعديلات</value></data>
+  <data name="The main title of your article" xml:space="preserve"><value>العنوان الرئيسي لمقالتك</value></data>
   <data name="The other one is unlinked from every language. You can link it again later." xml:space="preserve"><value>يُلغى ربط الأخرى بكل اللغات. يمكنك ربطها مجددًا لاحقًا.</value></data>
   <data name="The page you are looking for might have been removed, had its name changed, or is temporarily unavailable." xml:space="preserve"><value>ربما حُذفت الصفحة التي تبحث عنها أو تغيّر اسمها أو أنها غير متاحة مؤقتًا.</value></data>
   <data name="The password and confirmation password do not match." xml:space="preserve"><value>كلمة المرور وتأكيدها غير متطابقين.</value></data>
+  <data name="The publication was issued so long ago that its copyright protection has legally expired, or the creator explicitly dedicated it to the public domain." xml:space="preserve"><value>صدر الإصدار منذ زمن بعيد بحيث انتهت حماية حقوق نشره قانونيًا، أو خصّصه مُنشئه صراحةً للملك العام.</value></data>
+  <data name="The publisher or creator released this specific issue under a license that allows for free redistribution and sharing (e.g., CC BY, CC BY-NC)." xml:space="preserve"><value>أصدر الناشر أو المُنشئ هذا العدد تحديدًا بموجب رخصة تتيح إعادة التوزيع والمشاركة بحرية (مثل CC BY وCC BY-NC).</value></data>
   <data name="The pulse" xml:space="preserve"><value>النبض</value></data>
   <data name="The title of this article has changed from &quot;{0}&quot; to &quot;{1}&quot;." xml:space="preserve"><value>تغيّر عنوان هذه المقالة من «{0}» إلى «{1}».</value></data>
+  <data name="The URL of the article this is the header for, e.g. spider-man or gq-style-usa-summer-2023." xml:space="preserve"><value>عنوان المقالة التي هذه ترويستها، مثل spider-man أو gq-style-usa-summer-2023.</value></data>
   <data name="The URL of this article has changed from &quot;{0}&quot; to &quot;{1}&quot;." xml:space="preserve"><value>تغيّر عنوان URL لهذه المقالة من «{0}» إلى «{1}».</value></data>
   <data name="the {0} article “{1}”" xml:space="preserve"><value>المقالة {0} «{1}»</value></data>
   <data name="The {0} field is not a valid e-mail address." xml:space="preserve"><value>الحقل {0} ليس عنوان بريد إلكتروني صالحًا.</value></data>
@@ -766,17 +945,23 @@
   <data name="This contributor has no public bookmark lists." xml:space="preserve"><value>ليس لدى هذا المساهم قوائم إشارات مرجعية عامة.</value></data>
   <data name="This discussion and its replies are public." xml:space="preserve"><value>هذا النقاش وردوده علنية.</value></data>
   <data name="This discussion is public. Use {0} for a private conversation." xml:space="preserve"><value>هذا النقاش علني. استخدم {0} لمحادثة خاصة.</value></data>
+  <data name="This editor needs JavaScript to process pictures on your device. Enable JavaScript to use it." xml:space="preserve"><value>يحتاج هذا المحرر إلى JavaScript لمعالجة الصور على جهازك. فعّل JavaScript لاستخدامه.</value></data>
+  <data name="This editor requires a current browser with WebAssembly and OffscreenCanvas. Try an up-to-date Chrome, Edge, Firefox, or Safari." xml:space="preserve"><value>يتطلب هذا المحرر متصفحًا حديثًا يدعم WebAssembly وOffscreenCanvas. جرّب إصدارًا حديثًا من Chrome أو Edge أو Firefox أو Safari.</value></data>
   <data name="This entry was already removed." xml:space="preserve"><value>أُزيل هذا المدخل بالفعل.</value></data>
+  <data name="This header exceeds the wiki’s 10 MiB upload limit. Lower the quality or choose a smaller crop, then download it again." xml:space="preserve"><value>تتجاوز هذه الترويسة حد الرفع في الويكي البالغ 10 ميبيبايت. اخفض الجودة أو اختر قصًّا أصغر، ثم نزّلها مجددًا.</value></data>
+  <data name="This HEIC/HEIF picture could not be decoded. Try saving it as PNG or JPEG." xml:space="preserve"><value>تعذّر فك ترميز صورة HEIC/HEIF هذه. جرّب حفظها بصيغة PNG أو JPEG.</value></data>
   <data name="This is {0}, the first thing readers see here. Its {1} becomes your masthead epigraph and its {2} your one-line bio." xml:space="preserve"><value>هذه {0}، أول ما يراه القراء هنا. يصبح {1} فيها عبارة ترويستك، و{2} نبذتك ذات السطر الواحد.</value></data>
   <data name="This list has no articles in this language." xml:space="preserve"><value>لا توجد في هذه القائمة مقالات بهذه اللغة.</value></data>
   <data name="This page redirects to {0} (target is also a redirect and cannot be chained)." xml:space="preserve"><value>تُحوِّل هذه الصفحة إلى {0} (الهدف صفحة تحويل أيضًا ولا يمكن تسلسل التحويلات).</value></data>
   <data name="This page redirects to {0} (target page does not exist yet)." xml:space="preserve"><value>تُحوِّل هذه الصفحة إلى {0} (الصفحة الهدف غير موجودة بعد).</value></data>
   <data name="This page redirects to {0}." xml:space="preserve"><value>تُحوِّل هذه الصفحة إلى {0}.</value></data>
+  <data name="This picture is too large for the browser editor. Reduce it to at most 40 megapixels and 16,384 pixels per side, then try again." xml:space="preserve"><value>هذه الصورة كبيرة جدًا على محرر المتصفح. صغّرها إلى 40 ميغابكسل كحد أقصى و16,384 بكسل لكل ضلع، ثم حاول مجددًا.</value></data>
   <data name="This policy is published in English only." xml:space="preserve"><value>هذه السياسة منشورة باللغة الإنجليزية فقط.</value></data>
   <data name="This removes {0} from “{1}” and deletes the list. Your other lists stay untouched. There is no undo." xml:space="preserve"><value>سيزيل هذا {0} من «{1}» ويحذف القائمة. لن تتأثر قوائمك الأخرى. لا يمكن التراجع.</value></data>
   <data name="This removes {0} from “{1}”. Your other lists stay untouched. There is no undo." xml:space="preserve"><value>سيزيل هذا {0} من «{1}». لن تتأثر قوائمك الأخرى. لا يمكن التراجع.</value></data>
   <data name="This revision was published on {0}." xml:space="preserve"><value>نُشرت هذه النسخة في {0}.</value></data>
   <data name="This subject has no posts." xml:space="preserve"><value>لا توجد مشاركات في هذا الموضوع.</value></data>
+  <data name="This upload qualifies under copyright exemptions for non-profit purposes such as criticism, comment, news reporting, teaching, scholarship, or historical preservation/archiving." xml:space="preserve"><value>يندرج هذا الرفع ضمن استثناءات حقوق النشر للأغراض غير الربحية مثل النقد والتعليق ونقل الأخبار والتدريس والبحث العلمي أو الحفظ والأرشفة التاريخية.</value></data>
   <data name="This username or email is unavailable." xml:space="preserve"><value>اسم المستخدم أو البريد الإلكتروني هذا غير متاح.</value></data>
   <data name="this wiki" xml:space="preserve"><value>هذه الويكي</value></data>
   <data name="This will remove it from public view but can be restored later." xml:space="preserve"><value>سيؤدي هذا إلى إخفائها عن العامة، ويمكن استعادتها لاحقًا.</value></data>
@@ -823,12 +1008,15 @@
   <data name="TimeAgo.Year|other" xml:space="preserve"><value>{0} سنة</value></data>
   <data name="TimeAgo.Year|two" xml:space="preserve"><value>سنتين</value></data>
   <data name="TimeAgo.Year|zero" xml:space="preserve"><value>{0} سنة</value></data>
+  <data name="Title" xml:space="preserve"><value>العنوان</value></data>
   <data name="Title at this revision:" xml:space="preserve"><value>العنوان في هذه النسخة:</value></data>
   <data name="Title.CreateAnAccount" xml:space="preserve"><value>إنشاء حساب</value></data>
   <data name="Title.DeleteArticle" xml:space="preserve"><value>حذف المقالة</value></data>
   <data name="To" xml:space="preserve"><value>إلى</value></data>
   <data name="To see the canonical URL, visit:" xml:space="preserve"><value>لرؤية العنوان الأساسي، انتقل إلى:</value></data>
   <data name="Today" xml:space="preserve"><value>اليوم</value></data>
+  <data name="Top" xml:space="preserve"><value>الأعلى</value></data>
+  <data name="Top bar" xml:space="preserve"><value>الشريط العلوي</value></data>
   <data name="Topic and index category pages" xml:space="preserve"><value>صفحات تصنيفات المواضيع والفهارس</value></data>
   <data name="Topics" xml:space="preserve"><value>المواضيع</value></data>
   <data name="Trade &amp; Professional" xml:space="preserve"><value>التجارة والمهن المتخصصة</value></data>
@@ -836,6 +1024,7 @@
   <data name="Travel &amp; Outdoors" xml:space="preserve"><value>السفر والهواء الطلق</value></data>
   <data name="True Crime" xml:space="preserve"><value>الجريمة الحقيقية</value></data>
   <data name="Type" xml:space="preserve"><value>النوع</value></data>
+  <data name="Unable to load the migration report." xml:space="preserve"><value>تعذّر تحميل تقرير الترحيل.</value></data>
   <data name="Undo" xml:space="preserve"><value>تراجع</value></data>
   <data name="Undo expired or the list has changed." xml:space="preserve"><value>انتهت مهلة التراجع أو تغيّرت القائمة.</value></data>
   <data name="Unknown" xml:space="preserve"><value>غير معروف</value></data>
@@ -847,8 +1036,11 @@
   <data name="Upload new file version" xml:space="preserve"><value>رفع نسخة جديدة من الملف</value></data>
   <data name="Upload New Version" xml:space="preserve"><value>رفع نسخة جديدة</value></data>
   <data name="Uploaded images, covers, and media pages" xml:space="preserve"><value>الصور المرفوعة والأغلفة وصفحات الوسائط</value></data>
+  <data name="URL Slug" xml:space="preserve"><value>المعرّف النصي في العنوان</value></data>
   <data name="Use 8–100 characters, including uppercase and lowercase letters, a number and a symbol." xml:space="preserve"><value>استخدم من 8 إلى 100 حرف، تتضمن حروفًا لاتينية كبيرة وصغيرة ورقمًا ورمزًا.</value></data>
+  <data name="Use Markdown formatting for rich text. Embed a video with {0}." xml:space="preserve"><value>استخدم تنسيق Markdown للنص المنسق. ضمّن فيديو باستخدام {0}.</value></data>
   <data name="User" xml:space="preserve"><value>مستخدم</value></data>
+  <data name="User home pages cannot have an attached file." xml:space="preserve"><value>لا يمكن أن تحتوي الصفحات الشخصية للمستخدمين على ملف مرفق.</value></data>
   <data name="User pages" xml:space="preserve"><value>صفحات المستخدمين</value></data>
   <data name="Username" xml:space="preserve"><value>اسم المستخدم</value></data>
   <data name="Username '{0}' is already taken." xml:space="preserve"><value>اسم المستخدم ‎'{0}'‎ مستخدم بالفعل.</value></data>
@@ -869,13 +1061,19 @@
   <data name="Watchlist" xml:space="preserve"><value>قائمة المتابعة</value></data>
   <data name="Watchlist alerts" xml:space="preserve"><value>تنبيهات قائمة المتابعة</value></data>
   <data name="Watchlists are coming soon" xml:space="preserve"><value>قوائم المتابعة قادمة قريبًا</value></data>
+  <data name="We recommend {0} as a free, no-account-required transfer service. Other services (WeTransfer, MEGA, Google Drive share links, etc.) also work as long as the link is downloadable." xml:space="preserve"><value>نوصي بخدمة {0} المجانية التي لا تتطلب حسابًا. تعمل الخدمات الأخرى أيضًا (WeTransfer وMEGA وروابط مشاركة Google Drive وغيرها) ما دام الرابط قابلًا للتنزيل.</value></data>
   <data name="Welcome back" xml:space="preserve"><value>مرحبًا بعودتك</value></data>
   <data name="What is this list for? Readers see this above the entries." xml:space="preserve"><value>ما الغرض من هذه القائمة؟ يرى القراء هذا فوق المداخل.</value></data>
   <data name="What links here" xml:space="preserve"><value>ما يربط هنا</value></data>
+  <data name="Where to download from" xml:space="preserve"><value>مصدر التنزيل</value></data>
   <data name="Who can see it?" xml:space="preserve"><value>من يمكنه رؤيتها؟</value></data>
   <data name="Why is this in “{0}”?" xml:space="preserve"><value>لماذا هذه في «{0}»؟</value></data>
+  <data name="Width below 1,500 px may look soft on wide screens." xml:space="preserve"><value>قد يبدو العرض الأقل من 1,500 بكسل غير حادّ على الشاشات العريضة.</value></data>
+  <data name="Wiki markup" xml:space="preserve"><value>ترميز الويكي</value></data>
+  <data name="Wiki markup copied." xml:space="preserve"><value>نُسخ ترميز الويكي.</value></data>
   <data name="Women's Interest" xml:space="preserve"><value>اهتمامات المرأة</value></data>
   <data name="Write" xml:space="preserve"><value>كتابة</value></data>
+  <data name="Write your article content here using Markdown..." xml:space="preserve"><value>اكتب محتوى مقالتك هنا باستخدام Markdown...</value></data>
   <data name="Write your profile" xml:space="preserve"><value>اكتب ملفك الشخصي</value></data>
   <data name="Write your profile article" xml:space="preserve"><value>اكتب مقالة ملفك الشخصي</value></data>
   <data name="Wrote 10 talk posts." xml:space="preserve"><value>كتب 10 مشاركات نقاش.</value></data>
@@ -883,19 +1081,28 @@
   <data name="Yes, Delete" xml:space="preserve"><value>نعم، احذف</value></data>
   <data name="Yesterday" xml:space="preserve"><value>أمس</value></data>
   <data name="You" xml:space="preserve"><value>أنت</value></data>
+  <data name="You are submitting a copy for {0}." xml:space="preserve"><value>أنت ترسل نسخة لـ{0}.</value></data>
   <data name="You are viewing the current revision of this article." xml:space="preserve"><value>أنت تعرض النسخة الحالية من هذه المقالة.</value></data>
   <data name="You can have up to {0} lists." xml:space="preserve"><value>يمكنك إنشاء {0} قائمة كحد أقصى.</value></data>
+  <data name="You can only submit one URL at a time. To send us multiple publications in one go, bundle them into a single archive (zip, rar, 7z, etc.) and submit the URL to that archive." xml:space="preserve"><value>يمكنك إرسال رابط واحد في كل مرة. لإرسال عدة إصدارات دفعة واحدة، اجمعها في أرشيف واحد (zip أو rar أو 7z أو غيرها) وأرسل رابط ذلك الأرشيف.</value></data>
   <data name="You haven't edited any articles yet." xml:space="preserve"><value>لم تحرر أي مقالة بعد.</value></data>
   <data name="You haven't started any conversations yet." xml:space="preserve"><value>لم تبدأ أي محادثة بعد.</value></data>
+  <data name="You must be logged in to create articles. {0}." xml:space="preserve"><value>يجب تسجيل الدخول لإنشاء المقالات. {0}.</value></data>
   <data name="You must be logged in to delete articles. {0}." xml:space="preserve"><value>يجب تسجيل الدخول لحذف المقالات. {0}.</value></data>
+  <data name="You must be logged in to edit articles. {0}." xml:space="preserve"><value>يجب تسجيل الدخول لتحرير المقالات. {0}.</value></data>
   <data name="You're viewing a prior revision." xml:space="preserve"><value>أنت تعرض نسخة سابقة.</value></data>
   <data name="Your account is locked out." xml:space="preserve"><value>حسابك مقفل.</value></data>
   <data name="Your first post (Markdown supported)" xml:space="preserve"><value>مشاركتك الأولى (يدعم Markdown)</value></data>
   <data name="your profile article" xml:space="preserve"><value>مقالة ملفك الشخصي</value></data>
+  <data name="Your submission has been added to the ingestion queue." xml:space="preserve"><value>أُضيف إرسالك إلى قائمة الاستقبال.</value></data>
+  <data name="your-article" xml:space="preserve"><value>your-article</value></data>
   <data name="YouTube video: {0}" xml:space="preserve"><value>فيديو يوتيوب: {0}</value></data>
   <data name="You’re all caught up." xml:space="preserve"><value>لقد اطّلعت على كل شيء.</value></data>
   <data name="Zine" xml:space="preserve"><value>مجلة مستقلة</value></data>
   <data name="Zine Issue" xml:space="preserve"><value>عدد مجلة مستقلة</value></data>
+  <data name="Zoom" xml:space="preserve"><value>التكبير</value></data>
+  <data name="{0} (ID: {1})" xml:space="preserve"><value>{0} (المعرّف: {1})</value></data>
+  <data name="{0} (opens in a new tab)." xml:space="preserve"><value>{0} (يُفتح في علامة تبويب جديدة).</value></data>
   <data name="{0} (Revision {1})" xml:space="preserve"><value>{0} (النسخة {1})</value></data>
   <data name="{0} - Sitemap" xml:space="preserve"><value>{0} - خريطة الموقع</value></data>
   <data name="{0} ago" xml:space="preserve"><value>منذ {0}</value></data>
@@ -904,6 +1111,7 @@
   <data name="{0} edition" xml:space="preserve"><value>النسخة {0}</value></data>
   <data name="{0} hasn't edited any articles yet." xml:space="preserve"><value>لم يحرر {0} أي مقالة بعد.</value></data>
   <data name="{0} hasn't written a profile article. Their contributions tell the story so far." xml:space="preserve"><value>لم يكتب {0} مقالة ملف شخصي. مساهماته تروي القصة حتى الآن.</value></data>
+  <data name="{0} header preview" xml:space="preserve"><value>معاينة الترويسة على {0}</value></data>
   <data name="{0} is not one of this site's languages." xml:space="preserve"><value>{0} ليست من لغات هذا الموقع.</value></data>
   <data name="{0} KB" xml:space="preserve"><value>{0} ك.ب</value></data>
   <data name="{0} MB" xml:space="preserve"><value>{0} م.ب</value></data>
@@ -920,6 +1128,7 @@
   <data name="{0} · Profile" xml:space="preserve"><value>{0} · الملف الشخصي</value></data>
   <data name="{0} · Settings" xml:space="preserve"><value>{0} · الإعدادات</value></data>
   <data name="{0} × {1} px" xml:space="preserve"><value>{0} × {1} بكسل</value></data>
+  <data name="{0} × {1} px · Native resolution, no upscaling." xml:space="preserve"><value>{0} × {1} بكسل · الدقة الأصلية، دون تكبير.</value></data>
   <data name="{0} — Other languages" xml:space="preserve"><value>{0} — لغات أخرى</value></data>
   <data name="{0} — Talk" xml:space="preserve"><value>{0} — نقاش</value></data>
   <data name="{0}, {1}" xml:space="preserve"><value>{0} و{1}</value></data>

@@ -1,11 +1,11 @@
 @page
 @model WikiWikiWorld.Web.Pages.Wiki.UploadModel
 @{
-	ViewData["Title"] = "Submit a Publication";
+	ViewData["Title"] = L["Submit a Publication"];
 	Model.AllowSearchEngineIndexingOfPage = false;
 
-	// Display strings for the copyright-exemption radios. Keyed by the DB Code.
-	// When site-wide localization is wired up, move these to resource files.
+	// Display strings for the copyright-exemption radios, keyed by the DB Code. The English texts are translation keys
+	// (shown through L[...] below). l10n: "Public Domain (Copyright Expired or Waived)", "The publication was issued so long ago that its copyright protection has legally expired, or the creator explicitly dedicated it to the public domain.", "Creative Commons / Open License", "The publisher or creator released this specific issue under a license that allows for free redistribution and sharing (e.g., CC BY, CC BY-NC).", "Permission from the Rightsholder", "I have obtained direct, explicit written permission from the publisher, author, or current copyright owner to upload and distribute this digital copy.", "Fair Use / Fair Dealing Exemption", "This upload qualifies under copyright exemptions for non-profit purposes such as criticism, comment, news reporting, teaching, scholarship, or historical preservation/archiving.", "I am the Rightsholder / Creator", "I am the sole creator, author, or publisher of this publication and hold 100% of the distribution rights."
 	var ExemptionDisplay = new Dictionary<string, (string Label, string Description)>
 	{
 		["PUBLICDOMAIN"] = (
@@ -28,10 +28,9 @@
 
 <figure></figure>
 <hgroup>
-	<h1>Submit a Publication</h1>
+	<h1>@L["Submit a Publication"]</h1>
 	<p class="subtitle">
-		Help grow the archive by pointing us at a copy of a publication (magazine, fanzine, bookazine, mook, etc.)
-		you have hosted on a file-transfer service. Another contributor will download, verify, and post it.
+		@L["Help grow the archive by pointing us at a copy of a publication (magazine, fanzine, bookazine, mook, etc.) you have hosted on a file-transfer service. Another contributor will download, verify, and post it."]
 	</p>
 </hgroup>
 
@@ -39,7 +38,7 @@
 	@if (Model.SubmissionSucceeded)
 	{
 		<div class="alert alert-success" role="status">
-			<strong>Thanks!</strong> Your submission has been added to the ingestion queue.
+			<strong>@L["Thanks!"]</strong> @L["Your submission has been added to the ingestion queue."]
 		</div>
 	}
 
@@ -53,8 +52,7 @@
 	@if (Model.AssociatedArticle is not null)
 	{
 		<p class="associated-article">
-			You are submitting a copy for
-			<strong>@DisplayTitleHelper.ToPlainText(Model.AssociatedArticle.DisplayTitle, Model.AssociatedArticle.Title)</strong>.
+			@HL["You are submitting a copy for {0}.", UiFormat.Strong(DisplayTitleHelper.ToPlainText(Model.AssociatedArticle.DisplayTitle, Model.AssociatedArticle.Title))]
 		</p>
 	}
 
@@ -62,47 +60,43 @@
 		<input type="hidden" asp-for="ArticleSlug" />
 
 		<fieldset class="form-section">
-			<legend>Where to download from</legend>
+			<legend>@L["Where to download from"]</legend>
 			<p class="form-help">
-				We recommend
-				<a href="https://transfer.it/" target="_blank" rel="noopener">transfer.it</a>
-				as a free, no-account-required transfer service. Other services (WeTransfer, MEGA, Google Drive
-				share links, etc.) also work as long as the link is downloadable.
+				@HL["We recommend {0} as a free, no-account-required transfer service. Other services (WeTransfer, MEGA, Google Drive share links, etc.) also work as long as the link is downloadable.", new Microsoft.AspNetCore.Html.HtmlString("<a href=\"https://transfer.it/\" target=\"_blank\" rel=\"noopener\">transfer.it</a>")]
 			</p>
 
 			<div class="form-group">
 				<label asp-for="DownloadUrl" class="form-label">
-					<span class="label-text">Download URL</span>
-					<span class="label-required" aria-label="required">*</span>
+					<span class="label-text">@L["Download URL"]</span>
+					<span class="label-required" aria-label="@L["required"]">*</span>
 				</label>
 				<input asp-for="DownloadUrl" type="url" class="form-input"
 					placeholder="https://transfer.it/t/your-upload-id"
 					required />
 				<span class="form-help">
-					You can only submit one URL at a time. To send us multiple publications in one go, bundle them
-					into a single archive (zip, rar, 7z, etc.) and submit the URL to that archive.
+					@L["You can only submit one URL at a time. To send us multiple publications in one go, bundle them into a single archive (zip, rar, 7z, etc.) and submit the URL to that archive."]
 				</span>
 			</div>
 
 			<div class="form-group">
 				<label asp-for="SitePassword" class="form-label">
-					<span class="label-text">Site password (if the transfer service requires one)</span>
+					<span class="label-text">@L["Site password (if the transfer service requires one)"]</span>
 				</label>
 				<input asp-for="SitePassword" type="text" class="form-input" autocomplete="off" />
 			</div>
 
 			<div class="form-group">
 				<label asp-for="ArchivePassword" class="form-label">
-					<span class="label-text">Archive password (if the zip / rar / 7z file itself is password-protected)</span>
+					<span class="label-text">@L["Archive password (if the zip / rar / 7z file itself is password-protected)"]</span>
 				</label>
 				<input asp-for="ArchivePassword" type="text" class="form-input" autocomplete="off" />
 			</div>
 		</fieldset>
 
 		<fieldset class="form-section">
-			<legend>Copyright exemption <span class="label-required" aria-label="required">*</span></legend>
+			<legend>@L["Copyright exemption"] <span class="label-required" aria-label="@L["required"]">*</span></legend>
 			<p class="form-help">
-				Pick the option that best describes why you can legally share this publication.
+				@L["Pick the option that best describes why you can legally share this publication."]
 			</p>
 
 			@foreach (var Exemption in Model.Exemptions)
@@ -115,10 +109,10 @@
 					<input type="radio" id="@RadioId" name="CopyrightExemptionId" value="@Exemption.Id"
 						checked="@(Model.CopyrightExemptionId == Exemption.Id)" required />
 					<label for="@RadioId">
-						<span class="form-radio-label">@Display.Label</span>
+						<span class="form-radio-label">@L[Display.Label]</span>
 						@if (!string.IsNullOrEmpty(Display.Description))
 						{
-							<span class="form-radio-description">@Display.Description</span>
+							<span class="form-radio-description">@L[Display.Description]</span>
 						}
 					</label>
 				</div>
@@ -126,23 +120,22 @@
 		</fieldset>
 
 		<fieldset class="form-section">
-			<legend>Notes (optional)</legend>
+			<legend>@L["Notes (optional)"]</legend>
 			<div class="form-group">
 				<label asp-for="SubmitterNotes" class="form-label">
-					<span class="label-text">Anything else the moderator should know?</span>
+					<span class="label-text">@L["Anything else the moderator should know?"]</span>
 				</label>
 				<textarea asp-for="SubmitterNotes" class="form-textarea" rows="4"
-					placeholder="Source, scan quality, issue number, language, etc."></textarea>
+					placeholder="@L["Source, scan quality, issue number, language, etc."]"></textarea>
 			</div>
 		</fieldset>
 
 		<div class="form-actions">
-			<button type="submit" class="button button-primary" data-button-variant="primary">Submit</button>
+			<button type="submit" class="button button-primary" data-button-variant="primary">@L["Submit"]</button>
 		</div>
 
 		<p class="disclaimer">
-			By submitting this URL, I certify that I hold the legal rights or a valid copyright exemption to share
-			the content. I understand that copyright-infringing content will be removed immediately.
+			@L["By submitting this URL, I certify that I hold the legal rights or a valid copyright exemption to share the content. I understand that copyright-infringing content will be removed immediately."]
 		</p>
 	</form>
 </article>
