@@ -42,6 +42,112 @@ public static partial class DisplayTitleHelper
 	}
 
 	/// <summary>
+	/// Builds the inline custom properties that let the header shrink to fit its widest word. CSS keeps
+	/// the normal heading size unless that word would be wider than the text column on a narrow screen.
+	/// </summary>
+	/// <remarks>
+	/// The width is estimated from the characters, because the heading font is <c>system-ui</c> and differs
+	/// by platform. Each character takes the wider of its Segoe UI and Arial/Helvetica advance at weight 800,
+	/// uppercase, so the estimate errs towards a slightly smaller heading. A word is any run that the browser
+	/// cannot break: spaces, slashes (which get <c>&lt;wbr&gt;</c>), dashes before non-digits and CJK characters
+	/// all end one. Logo tokens are left out, because they normally render as a graphic sized separately.
+	/// </remarks>
+	/// <param name="DisplayTitle">The optional display title containing logo tokens or line breaks.</param>
+	/// <param name="FallbackTitle">The canonical article title used when <paramref name="DisplayTitle"/> is empty.</param>
+	/// <returns>
+	/// A <c>style</c> attribute value such as <c>--title-word-em: 11.57; --title-word-chars: 15</c>,
+	/// or <see langword="null"/> when the title has no text words.
+	/// </returns>
+	public static string? BuildFitStyle(string? DisplayTitle, string? FallbackTitle)
+	{
+		string Source = string.IsNullOrWhiteSpace(DisplayTitle)
+			? (FallbackTitle ?? string.Empty)
+			: DisplayTitle;
+
+		string Text = LogoTokenRegex().Replace(Source, " ");
+		double WidestWordEm = 0;
+		int WidestWordCharacters = 0;
+		double WordEm = 0;
+		int WordCharacters = 0;
+
+		for (int i = 0; i < Text.Length; i++)
+		{
+			char Character = Text[i];
+			bool EndsBeforeCharacter = char.IsWhiteSpace(Character) || IsCjkCharacter(Character);
+
+			if (!EndsBeforeCharacter)
+			{
+				WordEm += EstimateGlyphWidthEm(Character);
+				WordCharacters++;
+			}
+
+			bool NextIsDigit = i + 1 < Text.Length && char.IsAsciiDigit(Text[i + 1]);
+			bool EndsAfterCharacter = Character switch
+			{
+				'/' or '–' or '—' => true,
+				'-' or '‐' => !NextIsDigit,
+				_ => false
+			};
+
+			if (EndsBeforeCharacter || EndsAfterCharacter || i == Text.Length - 1)
+			{
+				if (WordEm > WidestWordEm)
+				{
+					WidestWordEm = WordEm;
+					WidestWordCharacters = WordCharacters;
+				}
+
+				WordEm = 0;
+				WordCharacters = 0;
+			}
+		}
+
+		return WidestWordCharacters == 0
+			? null
+			: string.Create(CultureInfo.InvariantCulture, $"--title-word-em: {WidestWordEm:0.##}; --title-word-chars: {WidestWordCharacters}");
+	}
+
+	/// <summary>
+	/// Estimates one character's uppercase advance in the heading font, taking the wider of Segoe UI
+	/// (Windows) and Arial/Helvetica (close to Apple's and Android's heavy sans) at weight 800.
+	/// Arabic letters are joined and narrow (about 0.34em in Segoe UI, 0.56em in Tahoma); other
+	/// scripts such as Cyrillic and accented Latin share the general capital width.
+	/// </summary>
+	/// <param name="Character">The authored character; the heading shows it uppercase.</param>
+	/// <returns>The estimated advance in em, before letter-spacing.</returns>
+	private static double EstimateGlyphWidthEm(char Character) => char.ToUpperInvariant(Character) switch
+	{
+		'I' => 0.40,
+		'.' or ',' or ':' or ';' or '!' or '\'' or '’' or '|' => 0.37,
+		'-' or '‐' => 0.41,
+		'?' => 0.61,
+		>= '0' and <= '9' => 0.67,
+		'E' or 'F' or 'J' or 'L' or 'P' or 'S' or 'T' or 'Z' => 0.72,
+		'&' => 0.89,
+		'M' => 0.99,
+		'W' => 1.05,
+		(>= '؀' and <= 'ۿ') or (>= 'ݐ' and <= 'ݿ') or (>= 'ﭐ' and <= '﷿') or (>= 'ﹰ' and <= '﻿') => 0.60,
+		_ => 0.83
+	};
+
+	/// <summary>
+	/// Identifies characters the browser may break between without a space: kana, CJK ideographs,
+	/// hangul, CJK punctuation and full-width forms.
+	/// </summary>
+	/// <param name="Character">The character to classify.</param>
+	/// <returns><see langword="true"/> when the character never extends an unbreakable word.</returns>
+	private static bool IsCjkCharacter(char Character) => Character switch
+	{
+		>= '　' and <= 'ヿ' => true,
+		>= '㐀' and <= '䶿' => true,
+		>= '一' and <= '鿿' => true,
+		>= '가' and <= '힯' => true,
+		>= '豈' and <= '﫿' => true,
+		>= '＀' and <= '￯' => true,
+		_ => false
+	};
+
+	/// <summary>
 	/// Renders a display title as safe HTML for an <c>&lt;h1&gt;</c> heading, resolving any
 	/// <c>[[FallbackText|#|file-slug]]</c> tokens against current file articles in the database.
 	/// Unresolved file slugs gracefully fall back to the HTML-encoded <c>FallbackText</c>.

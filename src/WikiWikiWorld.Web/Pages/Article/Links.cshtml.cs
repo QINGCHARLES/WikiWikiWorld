@@ -39,6 +39,12 @@ public sealed class LinksModel(
     public string DisplayTitleHtml { get; private set; } = string.Empty;
 
     /// <summary>
+    /// Gets the header's fit-to-width custom properties from <see cref="DisplayTitleHelper.BuildFitStyle"/>,
+    /// or <see langword="null"/> when the title has no text words.
+    /// </summary>
+    public string? DisplayTitleFitStyle { get; private set; }
+
+    /// <summary>
     /// Gets the canonical article path for the current article.
     /// </summary>
     public string CanonicalArticlePath => CurrentArticle is null ? string.Empty : ArticleUrlHelper.BuildArticlePath(CurrentArticle);
@@ -96,6 +102,7 @@ public sealed class LinksModel(
             SiteId,
             Culture,
             CancellationToken);
+        DisplayTitleFitStyle = DisplayTitleHelper.BuildFitStyle(CurrentArticle.DisplayTitle, CurrentArticle.Title);
 
         Backlinks = await Context.ArticleRevisions
             .Where(r => r.SiteId == SiteId 

@@ -6,8 +6,10 @@
 }
 
 /* The title block is wider than the text column and centred on it with equal negative inline
-   margins, which mirror correctly in right-to-left pages (a left offset plus translate does not). */
+   margins, which mirror correctly in right-to-left pages (a left offset plus translate does not).
+   It is an inline-size container so the display title can size itself against its real width (cqi). */
 hgroup {
+    container-type: inline-size;
     --hgroup-width: clamp( 100%, 100vw - 4 * var(--grid-gutter),
     calc(2 * var(--grid-max-width) - 4 * var(--grid-gutter))
     );

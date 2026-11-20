@@ -74,6 +74,12 @@ public sealed class ViewModel(
     public string DisplayTitleHtml { get; private set; } = string.Empty;
 
     /// <summary>
+    /// Gets the header's fit-to-width custom properties from <see cref="DisplayTitleHelper.BuildFitStyle"/>,
+    /// or <see langword="null"/> when the title has no text words.
+    /// </summary>
+    public string? DisplayTitleFitStyle { get; private set; }
+
+    /// <summary>
     /// Gets the displayed revision's canonical title for the browser title and image alternative text,
     /// preserving punctuation independently of the optional formatted display heading.
     /// </summary>
@@ -415,6 +421,7 @@ public sealed class ViewModel(
             SiteId,
             Culture,
             CancellationToken);
+        DisplayTitleFitStyle = DisplayTitleHelper.BuildFitStyle(RevisionToRender.DisplayTitle, RevisionToRender.Title);
 
         string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(RevisionToRender)}/edit";
         RenderedArticle RenderedArticle = await ArticleRenderer.RenderAsync(RevisionToRender, SiteId, Culture, EditUrl, CancellationToken, CategoryPage);
