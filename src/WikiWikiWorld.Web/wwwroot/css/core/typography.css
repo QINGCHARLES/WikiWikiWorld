@@ -62,8 +62,12 @@ h1.display-title {
     font-size: min(var(--step-6), calc((var(--title-column) + var(--title-word-chars, 0) * 0.2rem) / var(--title-word-em, 0.01)));
 }
 
-hgroup > h1.display-title {
-    --title-column: 100cqi;
+/* Without container query units the property would make font-size invalid (inheriting body size),
+   so only browsers that support cqi swap the viewport estimate for the hgroup's real width. */
+@supports (width: 1cqi) {
+    hgroup > h1.display-title {
+        --title-column: 100cqi;
+    }
 }
 
 h1 .title-logo {
