@@ -121,8 +121,8 @@
 							id="UploadedFile" 
 							asp-for="UploadedFile" 
 							class="form-file"
-							accept="image/*" />
-						<span class="form-help">@L["Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)"]</span>
+							accept="@WikiWikiWorld.Web.Helpers.ImageValidationHelper.AcceptedFileTypes" />
+						<span class="form-help">@L["Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, SVG - max 10MB)"]</span>
 					</div>
 				}
 				else if (Model.SelectedType == WikiWikiWorld.Data.Models.ArticleType.File || Model.HasExistingFile)
@@ -160,8 +160,8 @@
 							id="UploadedFile" 
 							asp-for="UploadedFile" 
 							class="form-file"
-							accept="image/*" />
-						<span class="form-help">@L["Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history."]</span>
+							accept="@WikiWikiWorld.Web.Helpers.ImageValidationHelper.AcceptedFileTypes" />
+						<span class="form-help">@L["Optional: Choose a new image file (JPG, PNG, GIF, WebP, AVIF, SVG - max 10MB) to replace the current version. The previous version will be preserved in the file history."]</span>
 					</div>
 				}
 

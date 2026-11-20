@@ -10,7 +10,7 @@ public static class ImageValidationHelper
 	/// </summary>
 	public static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
 	{
-		".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".svg"
+		".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".svg"
 	};
 
 	/// <summary>
@@ -19,8 +19,13 @@ public static class ImageValidationHelper
 	public static readonly HashSet<string> AllowedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
 	{
 		"image/jpeg", "image/jpg", "image/png", "image/gif",
-		"image/webp", "image/avif", "image/heic", "image/svg+xml"
+		"image/webp", "image/avif", "image/svg+xml"
 	};
+
+	/// <summary>
+	/// The HTML <c>accept</c> attribute value matching the supported web-baseline image formats.
+	/// </summary>
+	public const string AcceptedFileTypes = "image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml,.jpg,.jpeg,.png,.gif,.webp,.avif,.svg";
 
 	/// <summary>
 	/// The maximum allowed file size in bytes (10 MB).
@@ -129,9 +134,8 @@ public static class ImageValidationHelper
 				   Signature[3] == 0x46;
 		}
 
-		// For AVIF, HEIC, and SVG, trust extension and MIME type
+		// For AVIF and SVG, trust extension and MIME type
 		if (FileExtension.Equals(".avif", StringComparison.OrdinalIgnoreCase) ||
-			FileExtension.Equals(".heic", StringComparison.OrdinalIgnoreCase) ||
 			FileExtension.Equals(".svg", StringComparison.OrdinalIgnoreCase))
 		{
 			return true;

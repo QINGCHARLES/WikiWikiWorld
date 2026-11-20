@@ -646,9 +646,9 @@
   <data name="Opening cancelled or timed out. Try a local file." xml:space="preserve"><value>أُلغي الفتح أو انتهت مهلته. جرّب ملفًا محليًا.</value></data>
   <data name="Opening picture…" xml:space="preserve"><value>جارٍ فتح الصورة…</value></data>
   <data name="Optional multi-line title with custom formatting" xml:space="preserve"><value>عنوان اختياري متعدد الأسطر بتنسيق مخصص</value></data>
-  <data name="Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history." xml:space="preserve"><value>اختياري: اختر ملف صورة جديدًا ليحل محل النسخة الحالية. ستُحفظ النسخة السابقة في سجل الملف.</value></data>
+  <data name="Optional: Choose a new image file (JPG, PNG, GIF, WebP, AVIF, SVG - max 10MB) to replace the current version. The previous version will be preserved in the file history." xml:space="preserve"><value>اختياري: اختر ملف صورة جديدًا (JPG وPNG وGIF وWebP وAVIF وSVG - حتى 10 ميغابايت) ليحل محل النسخة الحالية. ستُحفظ النسخة السابقة في سجل الملف.</value></data>
   <data name="Optional: Custom display title with formatting" xml:space="preserve"><value>اختياري: عنوان عرض مخصص بتنسيق</value></data>
-  <data name="Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)" xml:space="preserve"><value>اختياري: ارفع صورة مميزة (JPG وPNG وGIF وWebP وAVIF وHEIC - حتى 10 ميغابايت)</value></data>
+  <data name="Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, SVG - max 10MB)" xml:space="preserve"><value>اختياري: ارفع صورة مميزة (JPG وPNG وGIF وWebP وAVIF وSVG - حتى 10 ميغابايت)</value></data>
   <data name="Or drop a picture here, or paste a copied picture with Ctrl+V / ⌘V. Up to 50 MiB; large images may exceed your device’s memory." xml:space="preserve"><value>أو أفلت صورة هنا، أو الصق صورة منسوخة بـ Ctrl+V / ⌘V. حتى 50 ميبيبايت؛ وقد تتجاوز الصور الكبيرة ذاكرة جهازك.</value></data>
   <data name="Or open an image URL" xml:space="preserve"><value>أو افتح رابط صورة</value></data>
   <data name="Organization" xml:space="preserve"><value>منظمة</value></data>

@@ -556,9 +556,9 @@
   <data name="Opening cancelled or timed out. Try a local file." xml:space="preserve"><value>読み込みが取り消されたか、時間切れになりました。端末内のファイルを試してください。</value></data>
   <data name="Opening picture…" xml:space="preserve"><value>画像を開いています…</value></data>
   <data name="Optional multi-line title with custom formatting" xml:space="preserve"><value>任意：書式付きの複数行タイトル</value></data>
-  <data name="Optional: Choose a new image file to replace the current version. The previous version will be preserved in the file history." xml:space="preserve"><value>任意：現在の版と置き換える新しい画像ファイルを選びます。以前の版はファイルの履歴に残ります。</value></data>
+  <data name="Optional: Choose a new image file (JPG, PNG, GIF, WebP, AVIF, SVG - max 10MB) to replace the current version. The previous version will be preserved in the file history." xml:space="preserve"><value>任意：現在の版と置き換える新しい画像ファイル（JPG、PNG、GIF、WebP、AVIF、SVG、最大10MB）を選びます。以前の版はファイルの履歴に残ります。</value></data>
   <data name="Optional: Custom display title with formatting" xml:space="preserve"><value>任意：書式付きの表示タイトル</value></data>
-  <data name="Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, HEIC - max 10MB)" xml:space="preserve"><value>任意：アイキャッチ画像をアップロード（JPG、PNG、GIF、WebP、AVIF、HEIC、最大10MB）</value></data>
+  <data name="Optional: Upload a featured image (JPG, PNG, GIF, WebP, AVIF, SVG - max 10MB)" xml:space="preserve"><value>任意：アイキャッチ画像をアップロード（JPG、PNG、GIF、WebP、AVIF、SVG、最大10MB）</value></data>
   <data name="Or drop a picture here, or paste a copied picture with Ctrl+V / ⌘V. Up to 50 MiB; large images may exceed your device’s memory." xml:space="preserve"><value>またはここに画像をドロップするか、コピーした画像を Ctrl+V / ⌘V で貼り付けます。最大50 MiB。大きな画像は端末のメモリを超えることがあります。</value></data>
   <data name="Or open an image URL" xml:space="preserve"><value>または画像のURLを開く</value></data>
   <data name="Organization" xml:space="preserve"><value>組織</value></data>
