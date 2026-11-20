@@ -386,6 +386,13 @@ CoverPrice=£3.50
 }}
 ```
 
+#### Placement
+
+Like the other side boxes (`CoverCarousel`, `DownloadsBox`), an infobox floats to the end side (the right; the left in Arabic) beside the content written after it, and clears earlier side boxes so they stack. When the article column is narrower than 44rem, as on phones, side boxes stop floating and appear exactly where they are written. So:
+
+- Never write an infobox before the first paragraph, or narrow screens open the article with the box. Put it after the first paragraph.
+- Split an infobox longer than about a dozen rows into two boxes of the same type: the first after the first paragraph, the second after a later paragraph. Divide the fields in schema order and never write a field in both. Phones then show text, box, text, box.
+
 #### Schemas
 
 Each site's types are defined in one JSON file in `src/WikiWikiWorld.Web/InfoboxSchemas/`, read once at startup. The file names its site by `SiteId`; the file name is only for people. Magazedia (`magazedia.json`, site 1) defines two types:

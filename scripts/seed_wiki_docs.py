@@ -551,6 +551,12 @@ Magazedia has two infobox types:
 * `{{Infobox Publication}}` for an article about a whole publication: magazine, zine, journal, newsletter or mook. The eyebrow says which kind it is.
 * `{{Infobox PublicationIssue}}` for an article about one issue.
 
+## Where to put it
+
+Write the infobox after the first paragraph, never before it. On a wide screen the box sits at the side of the text that follows it. On a phone it appears exactly where you wrote it, so an infobox written first would open the article with a box instead of text.
+
+If an infobox runs to more than about a dozen rows, split it into two boxes of the same type: the first after the first paragraph, the second after a later paragraph. Keep the fields in the order of the tables below, the earlier ones in the first box, and don't write a field in both. On a phone the article then reads text, box, text, box.
+
 ## Publication
 
 ```markdown

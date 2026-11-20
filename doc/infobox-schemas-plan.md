@@ -61,6 +61,7 @@ Recount live articles that use the old name. Then, with the same save/compare/up
 - Magazine pages with copied issue facts (playgirl-1973, playgirl-1955-1957-magazine, gq-style, sneaker-freaker-russia, sugar-ape): remove the placeholders. Real `{{Infobox Publication}}` boxes come with each V21 rewrite.
 - Help pages (wiki:infobox, wiki:formatting): update the text.
 - **Done when:** no current article uses the old name except on purpose, and every edited page renders with no `{{`.
+- **Done 2026-11-19.** The recount found 30 articles, not 10; see [release-infobox-2026-11-18.md](release-infobox-2026-11-18.md#production-articles-2026-11-19). The help pages had already been updated at deployment.
 
 ### 10. Later, not part of this change
 - Decide whether the old name should show a "deprecated" warning once nothing uses it.

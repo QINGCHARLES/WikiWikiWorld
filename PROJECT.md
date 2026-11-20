@@ -232,6 +232,17 @@ Title=Acquisition by Reader's Digest |#| Date=October 1998 |#| Description=Rodal
 {{Stub}}
 ```
 
+## Editorial authoring standards (Magazedia articles)
+
+- **No short/stub articles:** Never write compressed ~4,000–6,000-character summaries when authoring Magazedia publication articles. Match the depth, structure, and primary-source rigor of `ACE`, `Star Wars Insider`, `Bantha Tracks`, and `1994` (typically **14,000–25,000+ characters** with rich inline `{{Citation ...}}` references).
+- **Primary-source research first:** Sample actual early, middle, and late issues from `M:\Magazedia\Magazines (Sorted)\` using `pdftotext` / `pdftoppm` + image inspection to verify mastheads, editors, publishers, street addresses, cover prices, subscription rates, ISSNs/postal indicia, column names, and format shifts, paired with verified secondary journalism and critical retrospectives.
+- **Required structure & directives:** Include `{{ShortDescription ...}}`, `{{Eyebrow MAGAZINE}}`, schema-valid `{{Infobox Publication ...}}` (matching [`src/WikiWikiWorld.Web/InfoboxSchemas/magazedia.json`](src/WikiWikiWorld.Web/InfoboxSchemas/magazedia.json) with zero API warnings) placed after the lead's first paragraph, lead summary, multi-era `## History` with chronological `###` subsections, `### Publishing history timeline` (`{{Timeline ...}}`), `## Editorial profile and coverage`, `## Ownership and management`, `## Reception and impact`, `{{Citations}}`, and `{{Category ...}}` + `{{Categories}}`.
+- **Keep ISSNs in the infobox:** Put ISSN numbers in `{{Infobox Publication}}` (`ISSN=...`), not in parentheses in the lead sentence or routinely in body prose. Only mention an ISSN in article text when there is a specific fact about it that needs explanation (such as an ISSN change, separate regional ISSNs, or a publisher misprint).
+- **Infobox placement:** Never put the infobox (or any other side box) before the first paragraph. Write it after the first paragraph of the lead. On wide screens the box floats to the side (the right; the left in Arabic) beside the text that follows it, but on narrow screens such as phones it stops floating and appears exactly where it is written, so an infobox written first would open the article with a box instead of text.
+- **Split long infoboxes:** When an infobox has more than about a dozen rows, split it into two `{{Infobox Publication}}` boxes of the same type: the first after the lead's first paragraph, the second after the first paragraph of the first body section (usually History). Divide the fields in schema order (the first box takes the earlier fields), and never write the same field in both. Phones then read text, box, text, box, rather than one long box. On wide screens the second box floats beside the text that follows it, below the first box.
+- **Multi-article workflow:** When writing multiple articles in one request, launch **one dedicated subagent per magazine** rather than batching multiple magazines into a single generation.
+- **Safe publishing & URL hygiene:** Send live updates via UTF-8 JSON through Python and [`scripts/wiki_api.py`](scripts/wiki_api.py) (never PowerShell `Get-Content`). Every `url=` inside `{{Citation ...}}` must be a direct, verified live URL (never grounding proxy URLs or guessed links); omit `url=` when citing a local scanned print issue without a verified online archive URL.
+
 ## 📋 Multi-Site Follow-Up Work List
 
 The following items were deferred during the Cinepedia (`SiteId = 4`) bootstrap and are tracked here for future work:

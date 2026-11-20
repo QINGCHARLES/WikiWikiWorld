@@ -46,6 +46,35 @@ No database change. Nothing under `deploy/` changed.
 - Not verified in production: an API save returning warnings, and the editor notice, because no production
   article had been edited yet.
 
+## Production articles (2026-11-19)
+
+Step 9 of the plan. The search API found 30 current Magazedia articles using `{{PublicationIssueInfobox`
+(none on the Japanese, Arabic or Cinepedia sites). Each was saved before editing, re-read just before its `PUT`
+and skipped if it had changed (none had), and edited in its own line endings. Every save returned `"Warnings": []`,
+the saved text matched what was sent, and the rendered page has no `{{` or raw `##`.
+
+- **Renamed to `{{Infobox PublicationIssue`, values untouched (20):** `vogue-usa-october-2026` and the 19 GQ Style
+  (USA) issue pages from Spring/Summer 2014 to Fall/Winter 2021. Their citations stay inside the values.
+- **Renamed, placeholder rows dropped (3):** `edge-issue-no-1`, `cinefex-no-1` and `playboy-usa-february-2025` lost
+  their `Unknown` rows. Other values were kept as written.
+- **Placeholder block removed (6):** `playgirl-1973`, `playgirl-1955-1957-magazine`, `playgirl-1955-1957`,
+  `gq-style`, `sneaker-freaker-russia` and `sugar-ape` carried issue facts copied onto a publication article
+  (`Unknown`, `Fictional`, the cover date as a print date).
+- **Changed to `{{Infobox Publication` (1):** `gq-style-usa`, a publication article whose only row is its cited ISSN.
+
+Afterwards a search for the old name finds only `wiki:infobox`, which documents the alias. The 20
+`{{Infobox Publication}}` boxes agents had written since the release use only schema keys, with no repeated
+non-repeating key and no citations inside.
+
+Left for an editor:
+
+- `edge-issue-no-1` and `cinefex-no-1` give `PrintPublicationDate` equal to `CoverDate`, which is probably copied.
+  Edge's £3.00 price and ISSN 1350-1593 are not supported by its text.
+- `playgirl-1955-1957-magazine`, `sneaker-freaker-russia` and `gq-style` show `cover-of-gq-style-usa-summer-2017`
+  in their CoverCarousel, which is the wrong cover.
+- `playgirl-1955-1957` and `playgirl-1955-1957-magazine` look like duplicate articles.
+- `gq-style-usa` puts its infobox before the first paragraph.
+
 ## Rollback
 
 Previous image retained on the host as
