@@ -89,7 +89,7 @@ Base Path: `/api/article`
 - **Authorization**: Requires Bearer Token.
 - **Request Format**: `multipart/form-data`
   - `Title` (required string)
-  - `DisplayTitle` (optional string)
+  - `DisplayTitle` (optional string): the page heading. Plain text, not Markdown; see [Display titles](#display-titles).
   - `Type` (required string): `"Article"`, `"Category"`, `"File"`, `"User"`, `"Info"`
   - `Text` (required string)
   - `RevisionReason` (required string)
@@ -118,6 +118,7 @@ Base Path: `/api/article`
       "NewUrlSlug": "new-slug" // optional: renames the article
   }
   ```
+- **Display title**: `DisplayTitle` follows the same rules as on create; see [Display titles](#display-titles).
 - **Renaming**: Set `NewUrlSlug` to move the article to a new address. The new revision keeps the same `CanonicalArticleId`, so history, discussions and bookmarks follow it; earlier revisions keep the old slug. Omit it or leave it empty to keep the current slug. A `file:` prefix is ignored, as for lookups. Afterwards the old address answers with a temporary `302` redirect to the new one, unless another current article takes the old slug, which then wins. (It is not a `301`, because browsers cache those and slugs can be reused.) Links to the old slug in other articles' text, including `file:` references and `{{CoverGrid}}` lists, are not rewritten; `file:` and CoverGrid lookups do not follow the redirect.
 - **Responses**:
   - `200 OK`: `{"Message": "Article revision updated successfully.", "Warnings": []}`, with `Warnings` as for create.
@@ -125,6 +126,18 @@ Base Path: `/api/article`
   - `401 Unauthorized`: Missing or invalid token.
   - `404 Not Found`: Article does not exist.
   - `409 Conflict`: `NewUrlSlug` is already used by another current article.
+
+### Display titles
+`DisplayTitle` is the `<h1>` on the article and its Links page. The HTML sitemap and the upload page show it flattened: each logo token becomes its fallback text, and line breaks become spaces. The browser tab and search results use `Title`.
+
+**It is plain text, not Markdown.** Nothing formats it, so `*`, `_`, quote marks and HTML tags (including `<br>`) appear literally in the heading. Do not italicise it, even for a publication name. Publication names are italic in the article body, and Wikipedia italicises them in page titles, but neither convention applies to this field. Example: the lead sentence can say `***Stash*** is…`, but the display title is `Stash`, never `*Stash*`.
+
+Leave it empty, or the same as `Title`, unless you need one of the two things it supports:
+
+- **Line breaks**, written as a real newline (`\n` in JSON). Use one in place of the ` - ` separators in a title, so the heading breaks cleanly instead of wrapping at a stray hyphen. For example, the title `Outlander - Issue 01` gets the display title `"Outlander\nIssue 01"`.
+- **Logo tokens**: `[[Fallback Text|#|file-slug]]` shows the current image from the `File` article `file-slug` in place of the text, and falls back to `Fallback Text` if the file is missing. A token alone on its line is shown as a block logo. Example: `"[[Outlander|#|outlander-logo]]\nIssue 01"`.
+
+Slashes get optional break points automatically. After saving, `GET` the article and check that `DisplayTitle` contains no `*`, `_` or `<`.
 
 ### Get Article History
 - **Endpoint**: `GET /api/article/{UrlSlug}/history`
