@@ -56,7 +56,7 @@ public sealed class SitemapTests
 		Assert.Equal(1L, ExecuteScalar(Connection, await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "SqliteScripts", "VerifySitemapIndexes.sql"))));
 
 		string HtmlPlan = ExplainQueryPlan(Connection,
-			"SELECT Id, Title, DisplayTitle, UrlSlug FROM ArticleRevisions " +
+			"SELECT Id, Title, UrlSlug, Type FROM ArticleRevisions " +
 			"WHERE SiteId = 1 AND Culture = 'en' AND IsCurrent AND DateDeleted IS NULL AND Type = 0 " +
 			"AND Title COLLATE NOCASE >= 'a' AND Title COLLATE NOCASE < 'b' " +
 			"ORDER BY Title COLLATE NOCASE, Id LIMIT 200 OFFSET 0;");
@@ -78,7 +78,7 @@ public sealed class SitemapTests
 			.ThenBy(r => r.Id)
 			.Skip(0)
 			.Take(200)
-			.Select(r => new { r.UrlSlug, r.Title, r.DisplayTitle, r.Type });
+			.Select(r => new { r.UrlSlug, r.Title, r.Type });
 
 		string EfBucketPlan = await ExplainEfQueryPlanAsync(Connection, EfBucketQuery);
 		Assert.True(EfBucketPlan.Contains("IX_ArticleRevisions_Sitemap_Html", StringComparison.Ordinal),
@@ -92,7 +92,7 @@ public sealed class SitemapTests
 			.ThenBy(r => r.Id)
 			.Skip(0)
 			.Take(200)
-			.Select(r => new { r.UrlSlug, r.Title, r.DisplayTitle, r.Type });
+			.Select(r => new { r.UrlSlug, r.Title, r.Type });
 
 		string EfUnfilteredPlan = await ExplainEfQueryPlanAsync(Connection, EfUnfilteredQuery);
 		Assert.True(EfUnfilteredPlan.Contains("IX_ArticleRevisions_Sitemap_Html", StringComparison.Ordinal),
@@ -101,7 +101,7 @@ public sealed class SitemapTests
 	}
 
 	/// <summary>
-	/// Verifies HTML hub summaries, bucket filtering, scoping, display-title rendering, and pagination.
+	/// Verifies HTML hub summaries, bucket filtering, scoping, canonical titles (never display titles), and pagination.
 	/// </summary>
 	[Fact]
 	public async Task HtmlSitemapHubAndSectionPaginationFilterAndSortProperly()
@@ -179,11 +179,11 @@ public sealed class SitemapTests
 		Assert.NotNull(OtherBucket);
 		Assert.Equal(2, OtherBucket.TotalItems);
 
-		// File entry uses DisplayTitleHelper.ToPlainText and /file: canonical path
+		// File entry lists the canonical title, not its display title, and the /file: canonical path
 		HtmlSitemapSectionPage? FilesPage = await Service.GetHtmlSectionPageAsync(1, "en", "files", null, 1);
 		Assert.NotNull(FilesPage);
 		HtmlSitemapEntry FileEntry = Assert.Single(FilesPage.Entries);
-		Assert.Equal("Cover Logo Scan", FileEntry.Title);
+		Assert.Equal("Cover Scan", FileEntry.Title);
 		Assert.Equal("/file:cover-scan", FileEntry.Path);
 
 		// Redirects section appears in HTML sitemap

@@ -487,13 +487,13 @@ public sealed class SitemapService : ISitemapService
 				.ThenBy(r => r.Id)
 				.Skip((PageNumber - 1) * HtmlPageSize)
 				.Take(HtmlPageSize)
-				.Select(r => new HtmlRawProjection(r.UrlSlug, r.Title, r.DisplayTitle, r.Type))
+				.Select(r => new HtmlRawProjection(r.UrlSlug, r.Title, r.Type))
 				.ToListAsync(CancellationToken);
 
 		List<HtmlSitemapEntry> Entries =
 		[
 			.. RawEntries.Select(Entry => new HtmlSitemapEntry(
-				DisplayTitleHelper.ToPlainText(Entry.DisplayTitle, Entry.Title),
+				Entry.Title,
 				ArticleUrlHelper.BuildArticlePath(Entry.UrlSlug, Entry.Type)))
 		];
 
@@ -999,10 +999,9 @@ public sealed class SitemapService : ISitemapService
 	/// Lightweight SQL projection for HTML sitemap entries.
 	/// </summary>
 	/// <param name="UrlSlug">The article URL slug.</param>
-	/// <param name="Title">The canonical title.</param>
-	/// <param name="DisplayTitle">The optional display title.</param>
+	/// <param name="Title">The canonical title, listed as-is; display titles are only for the article header.</param>
 	/// <param name="Type">The article type.</param>
-	private sealed record HtmlRawProjection(string UrlSlug, string Title, string? DisplayTitle, ArticleType Type);
+	private sealed record HtmlRawProjection(string UrlSlug, string Title, ArticleType Type);
 
 	/// <summary>
 	/// Inclusive <c>Id</c> bounds for one XML chunk file.

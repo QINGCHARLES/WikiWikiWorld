@@ -128,7 +128,7 @@ Base Path: `/api/article`
   - `409 Conflict`: `NewUrlSlug` is already used by another current article.
 
 ### Display titles
-`DisplayTitle` exists for the article's header, where a title can spread over several lines or show a logo. Write it for that place only. Everywhere else, such as the browser tab and search results, the article is named by `Title`. (The Links page reuses the header. The HTML sitemap and the upload page currently show a flattened copy, with logo tokens replaced by their fallback text and line breaks by spaces.)
+`DisplayTitle` exists for the article's header, where a title can spread over several lines or show a logo. Write it for that place only. Everywhere else, including the browser tab, search results, the HTML sitemap and the upload page, the article is named by `Title`. The only other page that shows it is the article's Links page, which reuses the header.
 
 **It is plain text, not Markdown.** Nothing formats it, so `*`, `_`, quote marks and HTML tags (including `<br>`) appear literally in the heading. Do not italicise it, even for a publication name. Publication names are italic in the article body, and Wikipedia italicises them in page titles, but neither convention applies to this field. Example: the lead sentence can say `***Stash*** is…`, but the display title is `Stash`, never `*Stash*`.
 

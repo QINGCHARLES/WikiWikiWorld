@@ -52,7 +52,7 @@
 	@if (Model.AssociatedArticle is not null)
 	{
 		<p class="associated-article">
-			@HL["You are submitting a copy for {0}.", UiFormat.Strong(DisplayTitleHelper.ToPlainText(Model.AssociatedArticle.DisplayTitle, Model.AssociatedArticle.Title))]
+			@HL["You are submitting a copy for {0}.", UiFormat.Strong(Model.AssociatedArticle.Title)]
 		</p>
 	}
 
