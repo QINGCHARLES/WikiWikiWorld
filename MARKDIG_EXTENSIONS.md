@@ -424,9 +424,9 @@ Each site's types are defined in one JSON file in `src/WikiWikiWorld.Web/Infobox
 - `Publication`: a whole publication, whether magazine, zine, journal, newsletter or mook. The eyebrow says which.
 - `PublicationIssue`: one issue of a publication.
 
-Each field has a `Key`, optional `Repeatable` and `Description`, and `Labels` keyed by culture. An `en` label is required, and other cultures fall back to it. The file itself is the reference for each type's fields and what goes in them.
+Each field has a `Key`, optional `Repeatable`, `Format` and `Description`, and `Labels` keyed by culture. An `en` label is required, and other cultures fall back to it. `Format` is `Text` (the default, nothing checked) or `Website`: one Markdown link to a full `http`/`https` URL whose text is the URL's host without a leading `www.` (`[bfi.org.uk](https://www.bfi.org.uk/sight-and-sound)`, `[dnd.wizards.com](https://dnd.wizards.com/)`), or a `{{YouTubeLink}}`. Magazedia's `Publication` `Website` field uses it. The file itself is the reference for each type's fields and what goes in them.
 
-The app refuses to start when a schema file is malformed, has an unknown or missing property, defines a type or field twice (ignoring case), lacks an `en` label, or claims a site another file already claims. A file naming a site that is not configured stops production and is skipped with a warning elsewhere. A site with no file renders every infobox with raw keys.
+The app refuses to start when a schema file is malformed, has an unknown or missing property, defines a type or field twice (ignoring case), lacks an `en` label, names an unknown `Format`, or claims a site another file already claims. A file naming a site that is not configured stops production and is skipped with a warning elsewhere. A site with no file renders every infobox with raw keys.
 
 #### Rendering
 
@@ -441,7 +441,7 @@ The app refuses to start when a schema file is malformed, has an unknown or miss
 
 #### Warnings
 
-Saving never fails because of an infobox, but problems are reported: an unclosed infobox, a missing or undefined type, a key the type does not define, and a non-repeatable field written more than once. Sites without a schema file report only unclosed infoboxes. They are reported with the other [save warnings](#save-warnings).
+Saving never fails because of an infobox, but problems are reported: an unclosed infobox, a missing or undefined type, a key the type does not define, a non-repeatable field written more than once, and a value that breaks its field's `Format`, with the exact value to write instead when the URL can be read. Sites without a schema file report only unclosed infoboxes. They are reported with the other [save warnings](#save-warnings).
 
 ```markdown
 {{Infobox PublicationIssue

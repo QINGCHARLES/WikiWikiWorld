@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Markdig;
 using Markdig.Helpers;
 using Markdig.Parsers;
@@ -265,7 +266,7 @@ public sealed class InfoboxRenderer : HtmlObjectRenderer<InfoboxBlock>
 }
 
 /// <summary>Adds infoboxes to the article's block and inline Markdown processing.</summary>
-public sealed class InfoboxExtension : IMarkdownExtension
+public sealed partial class InfoboxExtension : IMarkdownExtension
 {
 	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
@@ -310,8 +311,8 @@ public sealed class InfoboxExtension : IMarkdownExtension
 
 	/// <summary>
 	/// Lists problems an author should fix in the document's infoboxes, checked against the site's schemas: an
-	/// unclosed infobox, a missing or undefined type, a key the type does not define, and a non-repeatable field
-	/// written more than once. Problems never block a save; sites without a schema file report only unclosed infoboxes.
+	/// unclosed infobox, a missing or undefined type, a key the type does not define, a non-repeatable field
+	/// written more than once, and a value that breaks its field's <see cref="InfoboxFieldSchema.Format"/>. Problems never block a save; sites without a schema file report only unclosed infoboxes.
 	/// </summary>
 	/// <param name="Document">The parsed article.</param>
 	/// <param name="Catalog">The schemas loaded at startup.</param>
@@ -354,12 +355,57 @@ public sealed class InfoboxExtension : IMarkdownExtension
 				{
 					Problems.Add($"{Where} ({Block.TypeName}): \"{Key}\" is not a field of this type and shows with its raw key.");
 				}
-				else if (!Field.Repeatable && Values.Count > 1)
+				else
 				{
-					Problems.Add($"{Where} ({Block.TypeName}): \"{Field.Key}\" appears {Values.Count} times but is not repeatable.");
+					if (!Field.Repeatable && Values.Count > 1)
+					{
+						Problems.Add($"{Where} ({Block.TypeName}): \"{Field.Key}\" appears {Values.Count} times but is not repeatable.");
+					}
+					if (Field.Format == InfoboxFieldFormat.Website)
+					{
+						foreach (string Value in Values)
+						{
+							if (FindWebsiteProblem(Value) is { } Problem)
+							{
+								Problems.Add($"{Where} ({Block.TypeName}): {Field.Key} \"{Value}\" {Problem}");
+							}
+						}
+					}
 				}
 			}
 		}
 		return Problems;
 	}
+
+	/// <summary>
+	/// Checks a <see cref="InfoboxFieldFormat.Website"/> value: one Markdown link to a full <c>http</c> or <c>https</c>
+	/// URL whose visible text is the URL's host without a leading <c>www.</c>, or a <c>{{YouTubeLink}}</c>.
+	/// </summary>
+	/// <param name="Value">The raw value as written, before inline parsing.</param>
+	/// <returns>
+	/// The end of a sentence saying what is wrong and, when the URL can be read, the exact value to write instead;
+	/// <see langword="null"/> when the value is acceptable.
+	/// </returns>
+	private static string? FindWebsiteProblem(string Value)
+	{
+		if (Value.StartsWith("{{YouTubeLink", StringComparison.Ordinal)) return null;
+
+		Match Link = MarkdownLinkRegex().Match(Value);
+		string Url = Link.Success ? Link.Groups["Url"].Value : Value;
+		if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri? Address) || (Address.Scheme != Uri.UriSchemeHttps && Address.Scheme != Uri.UriSchemeHttp))
+		{
+			return Link.Success
+				? "must link to a full URL starting with https:// or http://."
+				: "must be a Markdown link whose text is the bare host name, such as [bfi.org.uk](https://www.bfi.org.uk/sight-and-sound).";
+		}
+
+		string Host = Address.Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? Address.Host[4..] : Address.Host;
+		if (Link.Success && string.Equals(Link.Groups["Text"].Value.Trim(), Host, StringComparison.OrdinalIgnoreCase)) return null;
+
+		return $"should show only the host name, with no https://, www. or path, and link to the full URL: write [{Host}]({Url}).";
+	}
+
+	/// <summary>Matches a value that is exactly one inline Markdown link, capturing its text and destination.</summary>
+	[GeneratedRegex(@"^\[(?<Text>[^\[\]\r\n]+)\]\((?<Url>[^\s()]+)\)$")]
+	private static partial Regex MarkdownLinkRegex();
 }

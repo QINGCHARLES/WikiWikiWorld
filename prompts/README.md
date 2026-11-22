@@ -38,7 +38,7 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 
 ## Change log
 
-- **22 November 2026 — magazine 24.** Infobox `Website`: the link goes to the full URL with its protocol; the visible text is only the host name, without `www.` but with any other subdomain.
+- **22 November 2026 — magazine 24.** Infobox `Website`: the link goes to the full URL with its protocol; the visible text is only the host name, without `www.` but with any other subdomain. Saving warns when a `Website` breaks the rule.
 - **22 November 2026 — common 1, magazine 23, issue 4.** Moved the rules the magazine prompt (v22) and issue prompt (v3) shared into `magazedia-common.md`, and moved the prompts into this repository as the single copy. New or changed rules since v22 and v3:
   - Code formatting only for real code; escape Markdown punctuation (including `{…}`) in plain text.
   - Websites written as printed, `www.` included (bare `www.` no longer becomes a link); dead sites linked only to a working Wayback capture, at the first mention.

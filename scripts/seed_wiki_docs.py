@@ -642,7 +642,7 @@ UPC=0 74470 01234 5
 
 Leave out any field you can't support with a source; every field is optional. Fields appear in the order of the tables above, whatever order you write them in. Any other `Key=Value` pair still appears, after the listed fields and with the key as its label, but it is reported as a problem.
 
-When you save, the wiki points out an infobox with no type, a type that doesn't exist, a key the type doesn't define, a field that doesn't repeat but is written twice, and an infobox that isn't closed. Saving still succeeds. The message appears once on the saved article, and only you see it.
+When you save, the wiki points out an infobox with no type, a type that doesn't exist, a key the type doesn't define, a field that doesn't repeat but is written twice, a Website that isn't a link showing just the host name, and an infobox that isn't closed. Saving still succeeds. The message appears once on the saved article, and only you see it.
 
 ## Formatting and Notes
 

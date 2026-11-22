@@ -71,6 +71,7 @@
 				},
 				{
 					"Key": "Website",
+					"Format": "Website",
 					"Description": "Official website as a Markdown link to the full URL, showing only the host name without www.",
 					"Labels": { "en": "Website", "ja": "ウェブサイト", "ar": "الموقع الإلكتروني" }
 				}

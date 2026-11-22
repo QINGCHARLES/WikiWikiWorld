@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace WikiWikiWorld.Web.Configuration;
 
 /// <summary>
@@ -40,4 +42,25 @@ public sealed record class InfoboxFieldSchema
 
 	/// <summary>Gets display labels keyed by culture code; an <c>en</c> label is required as the fallback.</summary>
 	public required IReadOnlyDictionary<string, string> Labels { get; init; }
+
+	/// <summary>
+	/// Gets the form the field's values must take, checked when an article is saved. Written by name in the schema
+	/// file, such as <c>"Format": "Website"</c>; omitted means <see cref="InfoboxFieldFormat.Text"/>.
+	/// </summary>
+	[JsonConverter(typeof(JsonStringEnumConverter<InfoboxFieldFormat>))]
+	public InfoboxFieldFormat Format { get; init; }
+}
+
+/// <summary>The value forms an infobox field can require.</summary>
+public enum InfoboxFieldFormat
+{
+	/// <summary>Any inline Markdown; nothing is checked.</summary>
+	Text,
+
+	/// <summary>
+	/// One Markdown link to a full <c>http</c> or <c>https</c> URL whose visible text is the URL's host name without a
+	/// leading <c>www.</c>, such as <c>[bfi.org.uk](https://www.bfi.org.uk/sight-and-sound)</c>; or a
+	/// <c>{{YouTubeLink}}</c> for a publication whose issues now live on YouTube.
+	/// </summary>
+	Website,
 }

@@ -184,6 +184,10 @@ public sealed partial class InfoboxSchemaCatalog
 				{
 					throw new InvalidOperationException($"{Where}: field \"{Field.Key}\" needs an \"{FallbackCulture}\" label.");
 				}
+				if (!Enum.IsDefined(Field.Format))
+				{
+					throw new InvalidOperationException($"{Where}: field \"{Field.Key}\" has an unknown format; use one of: {string.Join(", ", Enum.GetNames<InfoboxFieldFormat>())}.");
+				}
 
 				Fields.Add(Field with { Labels = Labels });
 			}
