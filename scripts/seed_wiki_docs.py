@@ -605,7 +605,7 @@ ISSN=0198-1056 (print)
 | `Language` | Language | Yes | Language of the editorial content. |
 | `Circulation` | Circulation | | A cited figure with its year and what it measures. |
 | `ISSN` | ISSN | Yes | With the medium when there are several: *0198-1056 (print)*. |
-| `Website` | Website | | Official website as a link. |
+| `Website` | Website | | Official website as a link to the full URL, showing only the host name without `www.`: `[bfi.org.uk](https://www.bfi.org.uk/sight-and-sound)`. Keep any other subdomain: `[dnd.wizards.com](https://dnd.wizards.com/)`. |
 
 ## PublicationIssue
 

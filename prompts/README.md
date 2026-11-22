@@ -5,7 +5,7 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 | File | Version | Use it for |
 | --- | --- | --- |
 | [magazedia-common.md](magazedia-common.md) | 1 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
-| [magazedia-magazine.md](magazedia-magazine.md) | 23 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
+| [magazedia-magazine.md](magazedia-magazine.md) | 24 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
 | [magazedia-issue.md](magazedia-issue.md) | 4 | An article about one issue of a publication, usually from page scans |
 
 ## How an agent writes an article
@@ -38,6 +38,7 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 
 ## Change log
 
+- **22 November 2026 — magazine 24.** Infobox `Website`: the link goes to the full URL with its protocol; the visible text is only the host name, without `www.` but with any other subdomain.
 - **22 November 2026 — common 1, magazine 23, issue 4.** Moved the rules the magazine prompt (v22) and issue prompt (v3) shared into `magazedia-common.md`, and moved the prompts into this repository as the single copy. New or changed rules since v22 and v3:
   - Code formatting only for real code; escape Markdown punctuation (including `{…}`) in plain text.
   - Websites written as printed, `www.` included (bare `www.` no longer becomes a link); dead sites linked only to a working Wayback capture, at the first mention.

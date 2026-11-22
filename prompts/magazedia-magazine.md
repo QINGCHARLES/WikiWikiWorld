@@ -1,6 +1,6 @@
 # Magazedia magazine article prompt
 
-Version 23, 22 November 2026 (version 22 plus the shared rules moved into `magazedia-common.md`). Read `magazedia-common.md` first; this prompt adds the rules for an article about a whole publication. This is prompt metadata, not article text.
+Version 24, 22 November 2026 (version 23 plus the infobox `Website` display rule). Read `magazedia-common.md` first; this prompt adds the rules for an article about a whole publication. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article about **[MAGAZINE_NAME]** for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters.
 
@@ -195,9 +195,10 @@ ISSN=[ISSN (medium)]
 | `Language` | Yes | Language of the editorial content. |
 | `Circulation` | | One figure with its year and what it measures: `55,000 print run (2016)`. Never a web-traffic figure. |
 | `ISSN` | Yes | Each verified ISSN, with its medium when there are several: `0198-1056 (print)`. |
-| `Website` | | The official site as a Markdown link: `[032c.com](https://032c.com)`. |
+| `Website` | | The official site as a Markdown link whose text is the bare host name: `[032c.com](https://032c.com)`. |
 
-- Values are plain text, except `Website`, which is a link: the publication's live official site, or, if that is gone, wherever its issues now live, such as the creator's YouTube channel written as `{{YouTubeLink Channel=… |#| Label=…}}`. Italicize publication names. Do not add internal links inside the infobox.
+- Values are plain text, except `Website`, which is a link: the publication's live official site, or, if that is gone, wherever its issues now live, such as the creator's YouTube channel written as `{{YouTubeLink Channel=… |#| Label=…}}`.
+- The `Website` link's destination is the full URL, with `https://` or `http://` and any path: `https://www.bfi.org.uk/sight-and-sound`. Its visible text is only the host name, with no protocol, no path, no trailing slash, and no leading `www.`: `[bfi.org.uk](https://www.bfi.org.uk/sight-and-sound)`. Keep any other subdomain, because it is part of the address: `[dnd.wizards.com](https://dnd.wizards.com/)`. An archive copy shows its archive's host: `[archive.org](https://archive.org/details/theweeklystandard)`. Never write the URL itself as the value. Italicize publication names. Do not add internal links inside the infobox.
 - Do not put Citation or Footnote tags inside the infobox.
 
 ### Timeline — optional publishing chronology
