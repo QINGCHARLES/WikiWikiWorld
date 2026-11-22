@@ -194,7 +194,7 @@ public sealed class YouTubeBlockParser : BlockParser
 	/// <param name="VideoId">The validated video identifier.</param>
 	/// <param name="StartSeconds">The playback start position extracted from the URL.</param>
 	/// <returns><see langword="true"/> when the reference is valid; otherwise, <see langword="false"/>.</returns>
-	private static bool TryParseVideoReference(
+	internal static bool TryParseVideoReference(
 		string VideoReference,
 		[NotNullWhen(true)] out string? VideoId,
 		out int StartSeconds)
@@ -457,7 +457,7 @@ public sealed class YouTubeBlockParser : BlockParser
 	/// </summary>
 	/// <param name="VideoId">The candidate identifier.</param>
 	/// <returns><see langword="true"/> when the identifier is valid; otherwise, <see langword="false"/>.</returns>
-	private static bool IsValidVideoId([NotNullWhen(true)] string? VideoId)
+	internal static bool IsValidVideoId([NotNullWhen(true)] string? VideoId)
 	{
 		if (VideoId is not { Length: 11 })
 		{

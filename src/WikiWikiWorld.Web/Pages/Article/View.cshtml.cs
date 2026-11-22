@@ -136,19 +136,19 @@ public sealed class ViewModel(
     public string? RedirectedFromTitle { get; private set; }
 
     /// <summary>
-    /// TempData key storing infobox problems found when the editor last saved, shown once on the saved article.
+    /// TempData key storing the save warnings (infobox problems, email addresses, raw YouTube addresses) found when the editor last saved, shown once on the saved article.
     /// </summary>
-    public const string InfoboxWarningsTempDataKey = "InfoboxWarnings";
+    public const string SaveWarningsTempDataKey = "SaveWarnings";
 
     /// <summary>
-    /// TempData key storing the slug the infobox problems belong to, so they show only on that article.
+    /// TempData key storing the slug the save warnings belong to, so they show only on that article.
     /// </summary>
-    public const string InfoboxWarningsSlugTempDataKey = "InfoboxWarningsSlug";
+    public const string SaveWarningsSlugTempDataKey = "SaveWarningsSlug";
 
     /// <summary>
-    /// Gets infobox problems from the save that led here; empty unless this viewer just saved this article.
+    /// Gets the save warnings from the save that led here; empty unless this viewer just saved this article.
     /// </summary>
-    public IReadOnlyList<string> InfoboxWarnings { get; private set; } = [];
+    public IReadOnlyList<string> SaveWarnings { get; private set; } = [];
 
     /// <summary>
     /// Gets or sets the list of recent authors.
@@ -390,7 +390,7 @@ public sealed class ViewModel(
         }
 
         ConsumeRedirectNotice(DisplayedRevision);
-        ConsumeInfoboxWarnings(DisplayedRevision);
+        ConsumeSaveWarnings(DisplayedRevision);
 
         // Fetch recent authors (username and profile pic GUID) for this article.
         DateTimeOffset? MaxRevisionDate = IsViewingCurrentRevision ? null : DisplayedRevision.DateCreated;
@@ -804,19 +804,19 @@ public sealed class ViewModel(
     }
 
     /// <summary>
-    /// Reads and consumes infobox problems left by the editor's save, exposing them only when the displayed
+    /// Reads and consumes the save warnings left by the editor's save, exposing them only when the displayed
     /// revision is the current revision of the article that was saved.
     /// </summary>
     /// <param name="Displayed">The revision currently being rendered.</param>
-    private void ConsumeInfoboxWarnings(ArticleRevision Displayed)
+    private void ConsumeSaveWarnings(ArticleRevision Displayed)
     {
-        if (TempData is null || !TempData.ContainsKey(InfoboxWarningsTempDataKey))
+        if (TempData is null || !TempData.ContainsKey(SaveWarningsTempDataKey))
         {
             return;
         }
 
-        string? SavedSlug = TempData[InfoboxWarningsSlugTempDataKey] as string;
-        if (TempData[InfoboxWarningsTempDataKey] is not string[] Warnings
+        string? SavedSlug = TempData[SaveWarningsSlugTempDataKey] as string;
+        if (TempData[SaveWarningsTempDataKey] is not string[] Warnings
             || !string.IsNullOrWhiteSpace(Revision)
             || string.IsNullOrWhiteSpace(SavedSlug)
             || !SavedSlug.Equals(Displayed.UrlSlug, StringComparison.OrdinalIgnoreCase))
@@ -824,7 +824,7 @@ public sealed class ViewModel(
             return;
         }
 
-        InfoboxWarnings = Warnings;
+        SaveWarnings = Warnings;
     }
 }
 

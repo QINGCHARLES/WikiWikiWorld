@@ -42,6 +42,7 @@ Directive names are case-sensitive. Named properties are generally case-insensit
 | `Stub` | `StubExtension` | Block | Incomplete-article notice |
 | `Image` | `ImageExtension` | Inline | Wiki-hosted image |
 | `YouTube` | `YouTubeExtension` | Block | Controlled click-to-load YouTube video |
+| `YouTubeLink` | `YouTubeLinkExtension` | Inline | Text link to a YouTube video, channel or handle |
 | `DownloadsBox` | `DownloadsBoxExtension` | Block | Download information and link |
 | `PullQuote` | `PullQuoteExtension` | Inline | Display pull quote |
 | `Footnote` / `Footnotes` | `FootnoteExtension` | Inline + block | Inline notes and collected note list |
@@ -244,6 +245,29 @@ URL query rules:
 - The no-JavaScript fallback opens the canonical YouTube watch page, including the selected timestamp.
 - The iframe uses autoplay, fullscreen support, a constrained permissions policy, and `strict-origin-when-cross-origin` referrer policy.
 
+### `YouTubeLink`
+
+Names a YouTube video, channel or handle in running text, so authors never paste a YouTube address or a raw channel ID into prose. It renders an ordinary link with a small YouTube play mark before the label.
+
+```markdown
+In June 2008 Boss opened a {{YouTubeLink Channel=UCxNu4IGHko2yxmagLfqHtxw |#| Label=Wallace Boss}} channel.
+The {{YouTubeLink Video=nGgnmxTaMsQ |#| Label=Warren MacKenzie interview}} runs 31 minutes.
+Later uploads are on {{YouTubeLink Handle=@example |#| Label=the publisher's channel}}.
+```
+
+| Property | Required | Value |
+| --- | --- | --- |
+| `Video` | One of the three | An 11-character video ID, or any video URL `{{YouTube}}` accepts; a timestamp is kept |
+| `Channel` | One of the three | A channel ID: `UC` followed by 22 letters, digits, `-` or `_` |
+| `Handle` | One of the three | A handle, with or without `@`: 3 to 30 letters, digits, `.`, `-` or `_` |
+| `Label` | Yes | Plain-text link text, usually the video's title or the channel's name |
+
+- The link goes to `https://www.youtube.com/watch?v=…` (with `&t=…s` for a timestamp), `https://www.youtube.com/channel/…` or `https://www.youtube.com/@…`, always with `rel="nofollow noopener"`.
+- The play mark is CSS (`a.youtube-link`); screen readers hear a visually hidden "(YouTube)" after the label.
+- Property names are case-insensitive. Unknown or repeated properties, a missing label, or zero or several targets leave the directive as visible text, and the save reports why (see [Save warnings](#save-warnings)).
+- It works in paragraphs, table cells, infobox values (such as `Website=`) and `{{Timeline}}` descriptions.
+- Cite a YouTube source with `{{Citation … |#| url=…}}`, and embed a playable video with `{{YouTube}}`; `YouTubeLink` is for naming one in the text.
+
 ### `DownloadsBox`
 
 Looks up a download record by SHA-256 hash and renders its filename, human-readable file size, and download button.
@@ -417,7 +441,7 @@ The app refuses to start when a schema file is malformed, has an unknown or miss
 
 #### Warnings
 
-Saving never fails because of an infobox, but problems are reported: an unclosed infobox, a missing or undefined type, a key the type does not define, and a non-repeatable field written more than once. The API returns them in `Warnings` on a successful POST or PUT (`{"Message": "...", "Warnings": [...]}`). The web editor shows them once, on the saved article, to the person who saved it. Sites without a schema file report only unclosed infoboxes.
+Saving never fails because of an infobox, but problems are reported: an unclosed infobox, a missing or undefined type, a key the type does not define, and a non-repeatable field written more than once. Sites without a schema file report only unclosed infoboxes. They are reported with the other [save warnings](#save-warnings).
 
 ```markdown
 {{Infobox PublicationIssue
@@ -502,9 +526,23 @@ Title=Acquisition |#| Date=October 1998 |#| Description=The title was acquired b
 - A milestone without a non-empty title is skipped.
 - If an equivalent property repeats, the last non-empty value wins.
 - Titles and dates are HTML-encoded.
-- Descriptions support automatic links, extra emphasis, and pipe tables. Raw HTML is disabled.
+- Descriptions support automatic links (except bare `www.` text, which stays plain), `{{YouTubeLink}}`, extra emphasis, and pipe tables. Raw HTML is disabled.
+- A nested directive's own `|#|` and `}}` do not split the milestone or end the timeline.
+
+## Save warnings
+
+Saving an article never fails because of these checks, but `ArticleSaveWarnings` reports, with line numbers:
+
+- infobox problems (see [Infobox warnings](#warnings));
+- email addresses, which articles include only when the address itself is notable;
+- YouTube addresses and raw channel IDs written into the text, which belong in `{{YouTubeLink}}` (or a citation's `url=`);
+- `{{YouTubeLink}}` directives that do not validate, with the reason.
+
+Fenced code, code spans and the payloads of `{{Citation}}`, `{{Source}}` and `{{YouTube}}` are not checked for addresses. The API returns the messages in `Warnings` on a successful POST or PUT (`{"Message": "...", "Warnings": [...]}`). The web editor shows them once, on the saved article, to the person who saved it.
 
 ## Link processing
+
+Bare `www.` text stays plain text in articles and timeline descriptions (`BareWwwTextExtension`). Articles name old websites exactly as printed, and many of those domains are dead or now belong to someone else. To link one, write an explicit link, usually to an archive copy: `[www.example.com](https://web.archive.org/web/2001/http://www.example.com/)`. Bare `http://` and `https://` URLs and `<…>` autolinks still link. The user-content pipeline (discussions, messages, notes) still links bare `www.` text.
 
 `ApprovedNoFollowLinksExtension` post-processes ordinary Markdown links and automatic links:
 
@@ -722,7 +760,7 @@ The application currently does not load Mermaid or nomnoml client libraries, so 
 
 ### Automatic links
 
-Plain text beginning with `http://`, `https://`, `ftp://`, `mailto:`, `tel:`, or `www.` is linked automatically when it appears at a valid word boundary.
+Plain text beginning with `http://`, `https://`, `ftp://`, `mailto:` or `tel:` is linked automatically when it appears at a valid word boundary. In articles, bare `www.` text is not linked; see [Link processing](#link-processing).
 
 ```markdown
 Visit https://example.com or email mailto:archive@example.com.

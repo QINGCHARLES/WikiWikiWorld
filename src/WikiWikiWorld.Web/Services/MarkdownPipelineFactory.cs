@@ -127,12 +127,14 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(new IssueCreditsExtension(ApprovedLinkDomains))
 			.Use(new IssueContentsExtension())
 			.Use(YouTubeExt)
+			.Use(new YouTubeLinkExtension())
 			.Use(DownloadsBoxExt)
 			.Use(PullQuoteExt)
 			.Use(StubExt)
 			.Use(SourceExt)
 			.Use(new MarkdownSafetyExtension())
 			.Use(LinksExt)
+			.Use(new BareWwwTextExtension())
 			.UseAdvancedExtensions()
 			.DisableHtml();
 

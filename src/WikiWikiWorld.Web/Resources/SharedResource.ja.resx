@@ -676,7 +676,7 @@
   <data name="Saved to {0}." xml:space="preserve"><value>{0} に保存しました。</value></data>
   <data name="Saved to {0}. Your earlier note is back." xml:space="preserve"><value>{0} に保存しました。以前のメモも戻りました。</value></data>
   <data name="Saved {0}" xml:space="preserve"><value>{0}に保存</value></data>
-  <data name="Saved, but the infobox needs attention." xml:space="preserve"><value>保存しましたが、インフォボックスに確認が必要です。</value></data>
+  <data name="Saved, but the article needs attention." xml:space="preserve"><value>保存しましたが、記事に確認が必要です。</value></data>
   <data name="Scanned root:" xml:space="preserve"><value>スキャンしたフォルダー：</value></data>
   <data name="Science &amp; Nature" xml:space="preserve"><value>科学・自然</value></data>
   <data name="Search" xml:space="preserve"><value>検索</value></data>

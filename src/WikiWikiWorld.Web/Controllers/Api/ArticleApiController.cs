@@ -9,9 +9,6 @@ using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using WikiWikiWorld.Web.Services;
-using WikiWikiWorld.Web.MarkdigExtensions;
-using Markdig;
-using Markdig.Syntax;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
@@ -158,7 +155,7 @@ public class ArticleApiController(
             return BadRequest(Ex.Message);
         }
 
-        return Ok(new ArticleSaveResult("Article revision updated successfully.", FindInfoboxProblems(Model.Text, SiteId)));
+        return Ok(new ArticleSaveResult("Article revision updated successfully.", FindSaveWarnings(Model.Text, SiteId)));
     }
 
     /// <summary>
@@ -331,7 +328,7 @@ public class ArticleApiController(
                     // The article is committed and the staged file is recoverable, so this
                     // is a success: startup recovery finalizes the file. Reporting an error
                     // here would invite a duplicate-create retry.
-                    return Ok(new ArticleSaveResult("Article created successfully. The uploaded file is awaiting filesystem recovery.", FindInfoboxProblems(Text, SiteId)));
+                    return Ok(new ArticleSaveResult("Article created successfully. The uploaded file is awaiting filesystem recovery.", FindSaveWarnings(Text, SiteId)));
                 }
             }
         }
@@ -346,7 +343,7 @@ public class ArticleApiController(
             throw;
         }
 
-        return Ok(new ArticleSaveResult("Article created successfully.", FindInfoboxProblems(Text, SiteId)));
+        return Ok(new ArticleSaveResult("Article created successfully.", FindSaveWarnings(Text, SiteId)));
     }
 
     /// <summary>
@@ -439,18 +436,15 @@ public class ArticleApiController(
     }
 
     /// <summary>
-    /// Parses saved text and lists problems in its infoboxes against this site's schemas, so API authors such as
-    /// agents learn about a misspelt key or an undefined type. Runs after the save succeeds and never blocks it.
+    /// Lists what the author should fix in the saved text (see <see cref="ArticleSaveWarnings.Find"/>), so API authors
+    /// such as agents learn about a misspelt infobox key, an email address or a raw YouTube address. Runs after the
+    /// save succeeds and never blocks it.
     /// </summary>
     /// <param name="Text">The text that was saved.</param>
     /// <param name="SiteId">The site the article belongs to.</param>
-    /// <returns>The problems found; empty when there are none or the text is blank.</returns>
-    private IReadOnlyList<string> FindInfoboxProblems(string? Text, int SiteId)
-    {
-        if (string.IsNullOrWhiteSpace(Text)) return [];
-        MarkdownDocument Document = Markdown.Parse(Text, MarkdownPipelineFactory.GetPipeline());
-        return InfoboxExtension.FindProblems(Document, InfoboxSchemas, SiteId);
-    }
+    /// <returns>The warnings found; empty when there are none or the text is blank.</returns>
+    private IReadOnlyList<string> FindSaveWarnings(string? Text, int SiteId) =>
+        ArticleSaveWarnings.Find(Text, MarkdownPipelineFactory.GetPipeline(), InfoboxSchemas, SiteId);
 }
 
 /// <summary>
@@ -458,7 +452,8 @@ public class ArticleApiController(
 /// </summary>
 /// <param name="Message">What was done.</param>
 /// <param name="Warnings">Problems the author should fix that did not stop the save, such as infobox keys the
-/// site's schema does not define. Empty when there are none.</param>
+/// site's schema does not define, email addresses or raw YouTube addresses (see <see cref="ArticleSaveWarnings"/>).
+/// Empty when there are none.</param>
 public sealed record ArticleSaveResult(string Message, IReadOnlyList<string> Warnings);
 
 /// <summary>

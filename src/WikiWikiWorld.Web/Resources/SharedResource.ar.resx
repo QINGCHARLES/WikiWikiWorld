@@ -781,7 +781,7 @@
   <data name="Saved to {0}." xml:space="preserve"><value>حُفظت في {0}.</value></data>
   <data name="Saved to {0}. Your earlier note is back." xml:space="preserve"><value>حُفظت في {0}. استُعيدت ملاحظتك السابقة.</value></data>
   <data name="Saved {0}" xml:space="preserve"><value>حُفظت {0}</value></data>
-  <data name="Saved, but the infobox needs attention." xml:space="preserve"><value>حُفظت، لكن صندوق المعلومات يحتاج إلى مراجعة.</value></data>
+  <data name="Saved, but the article needs attention." xml:space="preserve"><value>حُفظت، لكن المقالة تحتاج إلى مراجعة.</value></data>
   <data name="Scanned root:" xml:space="preserve"><value>المجلد الذي فُحص:</value></data>
   <data name="Science &amp; Nature" xml:space="preserve"><value>العلوم والطبيعة</value></data>
   <data name="Search" xml:space="preserve"><value>بحث</value></data>

@@ -10,9 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using WikiWikiWorld.Web.Helpers;
 using WikiWikiWorld.Web.Services;
-using WikiWikiWorld.Web.MarkdigExtensions;
-using Markdig;
-using Markdig.Syntax;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
@@ -243,19 +240,19 @@ public sealed class CreateEditModel(
 	}
 
     /// <summary>
-    /// Redirects to the article just saved. When its infoboxes have problems against the site's schemas, they are
-    /// left in <see cref="Microsoft.AspNetCore.Mvc.RazorPages.PageModel.TempData"/> so the article page shows them,
-    /// once, to the editor who saved. Problems never block the save.
+    /// Redirects to the article just saved. When <see cref="ArticleSaveWarnings.Find"/> reports problems (infobox
+    /// errors, email addresses, raw YouTube addresses), they are left in
+    /// <see cref="Microsoft.AspNetCore.Mvc.RazorPages.PageModel.TempData"/> so the article page shows them, once, to
+    /// the editor who saved. Problems never block the save.
     /// </summary>
     /// <returns>A redirect to the saved article.</returns>
     private RedirectResult RedirectToSavedArticle()
     {
-        MarkdownDocument Document = Markdown.Parse(ArticleText, MarkdownPipelineFactory.GetPipeline());
-        IReadOnlyList<string> Problems = InfoboxExtension.FindProblems(Document, InfoboxSchemas, SiteId);
+        IReadOnlyList<string> Problems = ArticleSaveWarnings.Find(ArticleText, MarkdownPipelineFactory.GetPipeline(), InfoboxSchemas, SiteId);
         if (Problems.Count > 0)
         {
-            TempData[ViewModel.InfoboxWarningsTempDataKey] = Problems.ToArray();
-            TempData[ViewModel.InfoboxWarningsSlugTempDataKey] = UrlSlug;
+            TempData[ViewModel.SaveWarningsTempDataKey] = Problems.ToArray();
+            TempData[ViewModel.SaveWarningsSlugTempDataKey] = UrlSlug;
         }
         return Redirect(ArticleUrlHelper.BuildArticlePath(UrlSlug!, SelectedType));
     }

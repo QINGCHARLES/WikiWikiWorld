@@ -42,12 +42,12 @@
 	</div>
 }
 
-@if (Model.InfoboxWarnings.Count > 0)
+@if (Model.SaveWarnings.Count > 0)
 {
-	<div class="revision-notice infobox-warnings" role="status">
-		<strong>@L["Saved, but the infobox needs attention."]</strong> @L["Only you see this message."]
+	<div class="revision-notice save-warnings" role="status">
+		<strong>@L["Saved, but the article needs attention."]</strong> @L["Only you see this message."]
 		<ul>
-			@foreach (string Warning in Model.InfoboxWarnings)
+			@foreach (string Warning in Model.SaveWarnings)
 			{
 				<li>@Warning</li>
 			}

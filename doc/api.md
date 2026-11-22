@@ -96,7 +96,7 @@ Base Path: `/api/article`
   - `Source` (optional string): Used only if `Type` is `"File"`.
   - `File` (required file): The image file (required if `Type` is `"File"`, ignored otherwise).
 - **Responses**:
-  - `200 OK`: `{"Message": "Article created successfully.", "Warnings": []}`. `Warnings` lists problems in the article's infoboxes, such as a key the site's infobox schema does not define; they never stop the save. See [MARKDIG_EXTENSIONS.md](../MARKDIG_EXTENSIONS.md#warnings).
+  - `200 OK`: `{"Message": "Article created successfully.", "Warnings": []}`. `Warnings` lists problems to fix, with line numbers: infobox problems (such as a key the site's infobox schema does not define), email addresses, YouTube addresses or raw channel IDs in the text (use `{{YouTubeLink}}`), and `{{YouTubeLink}}` directives that do not validate. They never stop the save. Read them after every save and fix the article. See [Save warnings](../MARKDIG_EXTENSIONS.md#save-warnings).
   - `400 Bad Request`: Missing slug, invalid parameters, missing file for File type.
   - `401 Unauthorized`: Missing or invalid token.
   - `409 Conflict`: An article with the slug already exists.

@@ -35,6 +35,12 @@ public class TimelineBlock(BlockParser Parser) : LeafBlock(Parser)
 	/// Gets the ordered list of timeline entries parsed from the block.
 	/// </summary>
 	public List<TimelineEntry> Entries { get; } = [];
+
+	/// <summary>
+	/// Gets or sets how many inner directives (such as <c>{{YouTubeLink …}}</c>) are open at the end of the last line
+	/// read, so their closing braces are not mistaken for the timeline's own.
+	/// </summary>
+	internal int NestingDepth { get; set; }
 }
 
 /// <summary>
@@ -44,7 +50,6 @@ public class TimelineBlock(BlockParser Parser) : LeafBlock(Parser)
 public class TimelineBlockParser : BlockParser
 {
 	private const string MarkerStart = "{{Timeline";
-	private const string MarkerEnd = "}}";
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TimelineBlockParser"/> class.
@@ -72,7 +77,9 @@ public class TimelineBlockParser : BlockParser
 		string Remaining = Slice.ToString();
 		if (!string.IsNullOrWhiteSpace(Remaining))
 		{
-			int EndPos = Remaining.IndexOf(MarkerEnd, StringComparison.Ordinal);
+			int Depth = 0;
+			int EndPos = DirectiveSyntax.FindClosingDelimiter(Remaining, 0, ref Depth);
+			Block.NestingDepth = Depth;
 			if (EndPos != -1)
 			{
 				Block.RawContent.AppendLine(Remaining[..EndPos]);
@@ -95,8 +102,10 @@ public class TimelineBlockParser : BlockParser
 
 		StringSlice Slice = Processor.Line;
 		string Line = Slice.ToString();
-		int EndPos = Line.IndexOf(MarkerEnd, StringComparison.Ordinal);
 		TimelineBlock Block = CurrentBlock as TimelineBlock ?? throw new InvalidOperationException("Block is not a TimelineBlock.");
+		int Depth = Block.NestingDepth;
+		int EndPos = DirectiveSyntax.FindClosingDelimiter(Line, 0, ref Depth);
+		Block.NestingDepth = Depth;
 
 		if (EndPos != -1)
 		{
@@ -118,6 +127,8 @@ public class TimelineBlockRenderer : HtmlObjectRenderer<TimelineBlock>
 	private static readonly Lazy<MarkdownPipeline> DescriptionPipeline = new(() =>
 		new MarkdownPipelineBuilder()
 			.UseAutoLinks()
+			.Use(new BareWwwTextExtension())
+			.Use(new YouTubeLinkExtension())
 			.UseEmphasisExtras()
 			.UsePipeTables()
 			.DisableHtml()
@@ -180,7 +191,6 @@ public class TimelineBlockRenderer : HtmlObjectRenderer<TimelineBlock>
 		}
 
 		const string ItemSeparator = "|~|";
-		const string PropertySeparator = "|#|";
 
 		List<TimelineEntry> Entries = [];
 		string[] Items = Raw.Split(ItemSeparator, StringSplitOptions.RemoveEmptyEntries);
@@ -191,9 +201,8 @@ public class TimelineBlockRenderer : HtmlObjectRenderer<TimelineBlock>
 			string? Date = null;
 			string? Description = null;
 
-			string[] Properties = Item.Split(PropertySeparator, StringSplitOptions.RemoveEmptyEntries);
-
-			foreach (string Property in Properties)
+			// Split only at outer separators, so a nested directive such as {{YouTubeLink … |#| Label=…}} stays whole.
+			foreach (string Property in DirectiveSyntax.SplitProperties(Item))
 			{
 				string Trimmed = Property.Trim();
 				if (string.IsNullOrEmpty(Trimmed))

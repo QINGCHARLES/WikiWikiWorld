@@ -141,6 +141,7 @@ Directives that embed interactive or rich media into article content:
 
 * [**Embedded Images** `{{Image}}`](/wiki:images) — Embeds file articles with width options (`full`, `breakout`, `max`), alt text, and captions.
 * [**YouTube Video Player** `{{YouTube}}`](/wiki:youtube) — Privacy-preserving click-to-load responsive video player.
+* [**YouTube Link** `{{YouTubeLink}}`](/wiki:youtube#linking-to-youtube-in-text) — Names a YouTube video, channel or handle in running text.
 * [**Downloads Box** `{{DownloadsBox}}`](/wiki:downloads) — Digital issue download card with file size and SHA-256 hash lookup.
 
 ### Publication Displays
@@ -503,6 +504,24 @@ or simply by slug:
 ```markdown
 {{YouTube https://youtu.be/M7lc1UVf-VE |#| Title=Byte Magazine Retrospective |#| StartSeconds=30 |#| Caption=A documentary retrospective on early computing periodicals.}}
 ```
+
+## Linking to YouTube in text
+
+To name a video, channel or handle in a sentence, use `{{YouTubeLink}}` instead of pasting a YouTube address or a raw channel ID. It renders an ordinary link with a small YouTube play mark.
+
+```markdown
+The publisher posted the {{YouTubeLink Video=M7lc1UVf-VE |#| Label=launch trailer}} on its
+{{YouTubeLink Channel=UCxNu4IGHko2yxmagLfqHtxw |#| Label=official channel}}, later {{YouTubeLink Handle=@example |#| Label=@example}}.
+```
+
+| Parameter | Required | Description |
+| :--- | :--- | :--- |
+| **`Video=`** | One of these three | 11-character video ID or any accepted YouTube video URL (a timestamp is kept). |
+| **`Channel=`** | One of these three | Channel ID: `UC` followed by 22 characters. |
+| **`Handle=`** | One of these three | Handle, with or without `@`. |
+| **`Label=`** | Yes | The text readers see, usually the video's title or the channel's name. |
+
+It works in paragraphs, tables, infobox values (such as `Website=`) and timeline descriptions. If a value is invalid the directive shows as text, and saving reports why. Cite a YouTube source with `{{Citation ... |#| url=...}}`.
 
 ---
 *Return to the [Formatting Guide](/wiki:formatting).*"""

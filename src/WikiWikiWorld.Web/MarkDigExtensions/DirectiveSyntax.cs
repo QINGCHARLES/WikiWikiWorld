@@ -10,6 +10,19 @@ internal static class DirectiveSyntax
 	internal static int FindClosingDelimiter(string Text, int Start)
 	{
 		int Depth = 0;
+		return FindClosingDelimiter(Text, Start, ref Depth);
+	}
+
+	/// <summary>
+	/// Finds the matching end of a directive that is read one line at a time, carrying the nesting depth of inner
+	/// directives (such as <c>{{YouTubeLink …}}</c> inside a <c>{{Timeline}}</c>) from one line to the next.
+	/// </summary>
+	/// <param name="Text">One line of the directive's source.</param>
+	/// <param name="Start">The first character on the line to inspect.</param>
+	/// <param name="Depth">How many inner directives are open; updated for the next line.</param>
+	/// <returns>The outer closing-brace position on this line, or -1 when the directive continues.</returns>
+	internal static int FindClosingDelimiter(string Text, int Start, ref int Depth)
+	{
 		foreach ((int Position, string Token) in ReadTokens(Text, Start))
 		{
 			if (Token == "{{") Depth++;
