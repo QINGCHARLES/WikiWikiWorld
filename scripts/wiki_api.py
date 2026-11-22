@@ -8,6 +8,7 @@ Tokens are saved under .local/tokens/ (Git-ignored) and are never printed.
   python scripts/wiki_api.py request prod GET api/article/gq-hype
   python scripts/wiki_api.py request prod --host en.cinepedia.wiki GET api/article/the-matrix
   python scripts/wiki_api.py request dev --host en.cinepedia.wiki.localhost GET api/article/the-matrix
+  python scripts/wiki_api.py request prod POST api/article/new-slug --form Title="New Title" --form Type=Article --form-file Text=article.md --form RevisionReason="Create article"
   python scripts/wiki_api.py request prod PUT api/article/gq-hype --json body.json
   python scripts/wiki_api.py request prod PUT api/article/old-slug --json body.json   # body with "NewUrlSlug": "new-slug" renames
   python scripts/wiki_api.py request prod POST api/file/some-file-slug --file File=pic.webp --form Culture=en
@@ -232,6 +233,9 @@ def Main() -> int:
     Body.add_argument("--json", type=Path, help="file holding the JSON request body")
     Body.add_argument("--form", action="append", default=[], metavar="KEY=VALUE", help="multipart form field (repeatable)")
     RequestCommand.add_argument("--file", action="append", default=[], metavar="FIELD=PATH", help="multipart file part (repeatable)")
+    RequestCommand.add_argument(
+        "--form-file", action="append", default=[], metavar="KEY=PATH",
+        help="multipart form field whose value is the UTF-8 text of PATH, such as a whole article (repeatable)")
 
     Arguments = Parser.parse_args()
     HostOverride = getattr(Arguments, "subcommand_host", None) or Arguments.host
@@ -240,14 +244,19 @@ def Main() -> int:
         return GetToken(Arguments.environment, Arguments.user, Days, HostOverride)
     if Arguments.command == "status":
         return ShowStatus(Arguments.environment)
-    if Arguments.json and Arguments.file:
-        Parser.error("--json cannot be combined with --file")
+    if Arguments.json and (Arguments.file or Arguments.form_file):
+        Parser.error("--json cannot be combined with --file or --form-file")
+    # Article text is far longer than a Windows command line allows, so it is read from a file.
+    Fields = Arguments.form + [
+        f"{Name}={Path(FilePath).read_text(encoding='utf-8')}"
+        for Name, FilePath in (FormFile.split("=", 1) for FormFile in Arguments.form_file)
+    ]
     return CallApi(
         Arguments.environment,
         Arguments.method,
         Arguments.path,
         Arguments.json,
-        Arguments.form,
+        Fields,
         Arguments.file,
         HostOverride,
     )
