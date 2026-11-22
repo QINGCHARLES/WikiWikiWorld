@@ -313,7 +313,6 @@ CoverPrice=[Verified cover price and currency]
 
 - Use only these keys, spelled exactly as shown. The wiki reports any other key, and a non-repeating key written twice, as an error. Publisher and circulation are not issue fields: mention a historically relevant publisher in the prose, and do not give the issue a circulation figure from an annual average.
 - Values are plain text, except `Publication`, which may be a link. The infobox displays facts only: put covers in CoverCarousel, never in an infobox field.
-- `{{PublicationIssueInfobox` is an older name for the same block. Write `{{Infobox PublicationIssue` in new and revised articles; when revising an article that uses the old name, change it to the new one.
 
 Place and split it under the common rules (section 8), after any CoverCarousel that follows the lead's first paragraph.
 
