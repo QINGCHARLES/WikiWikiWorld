@@ -638,8 +638,6 @@ UPC=0 74470 01234 5
 | `PrintEAN-2` | Print EAN-2 | | 2-digit add-on to the EAN-13 barcode. |
 | `UPC` | UPC | | UPC barcode number (North American issues). |
 
-The older name `{{PublicationIssueInfobox}}` still works and means the same as `{{Infobox PublicationIssue}}`.
-
 ## Other keys and mistakes
 
 Leave out any field you can't support with a source; every field is optional. Fields appear in the order of the tables above, whatever order you write them in. Any other `Key=Value` pair still appears, after the listed fields and with the key as its label, but it is reported as a problem.
