@@ -8,6 +8,8 @@ Open, drop, or paste a picture; adjust the crop using pointer handles, arrows (S
 
 The image URL field and failed remote imports explain that some websites block direct imports and the user should download the image and open/drop the local file. There is no server fetch proxy, upload endpoint, temporary image storage, or automatic publication. File selection is local processing, not a wiki upload. The final AVIF can be uploaded through the existing file-article workflow; generated markup is `{{HeaderImage file:header-for-<slug>}}`, the file article's URL slug without the `.avif` extension (HeaderImage slugifies its value, so an extension would never resolve), and must be edited if the file article gets a different slug.
 
+Describe an informative picture in **Image description (optional)**. Select **Decorative image** when nearby text already provides everything the artwork conveys. The copied `HeaderImage` directive includes the description or an explicit empty `AltText=` for a decorative image.
+
 ## Implementation and bounds
 
 - Page: `Pages/Wiki/HeaderHelper.cshtml(.cs)`. Script: `wwwroot/js/header-helper.js`; cancellable codecs: `header-helper-worker.js`. Styling is registered in `SiteStylesheetCatalog` and scoped to the helper.

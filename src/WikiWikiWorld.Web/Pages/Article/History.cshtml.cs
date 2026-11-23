@@ -119,6 +119,8 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
     /// <returns>A string representing the formatted revision timestamp.</returns>
     public static string FormatRevisionTimestamp(DateTimeOffset date)
     {
-        return date.ToString("yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture).TrimEnd('0');
+		string Timestamp = date.ToString("yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture);
+		// Seconds are part of every revision permalink even when the fractional part is empty.
+		return Timestamp[..14] + Timestamp[14..].TrimEnd('0');
     }
 }

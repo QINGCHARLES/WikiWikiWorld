@@ -5,6 +5,20 @@
 	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
 	ViewData["Title"] = !string.IsNullOrWhiteSpace(Model.PlainTextTitle) ? Model.PlainTextTitle : L["Article Not Found"];
 }
+@section PageHead {
+	@if (Model.Head is { } Metadata)
+	{
+		<partial name="_PublicationHead" model="Metadata" />
+	}
+	@foreach (PublicationAlternate Alternate in Model.LanguageAlternates)
+	{
+		<link rel="alternate" hreflang="@Alternate.Culture" href="@Alternate.Url" />
+	}
+	@if (Model.Head is null && Model.LanguageAlternates.FirstOrDefault(Alternate => Alternate.Culture == Model.Culture) is { } Self)
+	{
+		<link rel="canonical" href="@Self.Url" />
+	}
+}
 @functions {
 	static string FormatFileSize(long SizeBytes)
 	{
@@ -20,7 +34,7 @@
 <figure>
 	@if(!string.IsNullOrWhiteSpace(Model.HeaderImage))
 	{
-		<img src="@Model.HeaderImage" alt="..." class="hero-image" data-focus="@Model.HeaderImageFocus" />
+		<img src="@Model.HeaderImage" alt="@Model.HeaderImageAltText" class="hero-image" data-focus="@Model.HeaderImageFocus" />
 	}
 </figure>
 <hgroup>
@@ -438,6 +452,23 @@ else if(Model.DisplayedRevision is not null)
 		}
 
 		@Html.Raw(Model.ArticleRevisionHtml)
+
+		@if (Model.IssueCitation is { } IssueCitation)
+		{
+			<details>
+				<summary>@L["Cite this issue"]</summary>
+				<p>@IssueCitation.Text</p>
+				<a href="@(Model.CurrentArticlePath + "?handler=citation&kind=issue")" download>@L["Download RIS citation"]</a>
+			</details>
+		}
+		@if (Model.PageCitation is { } PageCitation)
+		{
+			<details>
+				<summary>@L["Cite this Magazedia page"]</summary>
+				<p>@PageCitation.Text</p>
+				<a href="@(Model.CurrentArticlePath + "?handler=citation&kind=page")" download>@L["Download RIS citation"]</a>
+			</details>
+		}
 
 		@if(Model.IsPriorRevision)
 		{

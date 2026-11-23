@@ -59,6 +59,15 @@ public sealed record class RenderedArticle
 	/// </summary>
 	public string? HeaderImageFocus { get; init; }
 
+	/// <summary>Gets the description to expose in the hero image's alternative text.</summary>
+	public string? HeaderImageAltText { get; init; }
+
+	/// <summary>Gets reusable descriptive text for the header artwork, if the file has it.</summary>
+	public string? HeaderImageFileDescription { get; init; }
+
+	/// <summary>Gets the facts describing a single publication or issue for public metadata.</summary>
+	public PublicationFacts? Publication { get; init; }
+
 	/// <summary>
 	/// Gets the resolved meta description, if present.
 	/// </summary>
@@ -144,6 +153,10 @@ public sealed class ArticleRenderer(
 			Categories = Categories,
 			HeaderImage = Document.GetData(HeaderImageExtension.DocumentKey) as string,
 			HeaderImageFocus = Document.GetData(HeaderImageExtension.FocusDocumentKey) as string,
+			HeaderImageAltText = Document.GetData(HeaderImageExtension.AltTextDocumentKey) as string,
+			HeaderImageFileDescription = Document.GetData(HeaderImageExtension.FileDescriptionDocumentKey) as string,
+			Publication = SiteId == 1 && Revision.Type == ArticleType.Article && Revision.IsCurrent
+				? PublicationFacts.Extract(Document) : null,
 			MetaDescription = Document.GetData(ShortDescriptionExtension.DocumentKey) as string,
 			EyebrowLabel = Document.GetData(EyebrowExtension.DocumentKey) as string,
 			Eyebrow = Document.GetData(EyebrowExtension.TypeDocumentKey) as EyebrowType?,

@@ -1,0 +1,20 @@
+@model PublicationHead
+<link rel="canonical" href="@Model.CanonicalUrl" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="@Model.CanonicalUrl" />
+<meta property="og:title" content="@Model.Title" />
+<meta property="og:site_name" content="@Model.SiteName" />
+@if (Model.Description is { } Description)
+{
+	<meta property="og:description" content="@Description" />
+}
+<meta property="og:image" content="@Model.Image.Url" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:alt" content="@Model.Image.AltText" />
+@if (Model.Image.WidthPixels is int WidthPixels && Model.Image.HeightPixels is int HeightPixels)
+{
+	<meta property="og:image:width" content="@WidthPixels" />
+	<meta property="og:image:height" content="@HeightPixels" />
+}
+<meta name="twitter:card" content="@(Model.Image.WidthPixels > Model.Image.HeightPixels ? "summary_large_image" : "summary")" />
+<script type="application/ld+json">@Html.Raw(Model.JsonLd)</script>

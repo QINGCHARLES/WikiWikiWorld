@@ -156,15 +156,20 @@ Sets the article hero image by referring to a current file article in the same s
 {{HeaderImage wired-issue-1-cover}}
 
 {{HeaderImage file:wired-issue-1-cover}}
+
+{{HeaderImage file:header-for-george |#| Focus=center |#| AltText=Portrait of a woman in a white powdered wig and a black coat with yellow lapels.}}
 ```
 
 | Parameter | Required | Features |
 | --- | --- | --- |
 | File article slug | Yes | Bare slug or `file:`-prefixed slug |
+| `Focus` | No | `top`, `center` or `bottom` controls framing. Defaults to top. |
+| `AltText` | No | Plain description of an informative picture. Use an empty `AltText=` for a decorative image. |
 
 - The reference is slug-normalized before lookup.
 - The referenced article must have a current canonical file revision.
 - The first successfully resolved header image becomes the hero image.
+- A legacy header without `AltText` uses a descriptive file title when available. Add a description when the file title is a generic upload label. The header helper encodes directive punctuation in the copied description.
 - Metadata key: `HeaderImage`.
 - An unresolved reference produces no hero image.
 

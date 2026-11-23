@@ -95,6 +95,7 @@
   <data name="AVIF quality" xml:space="preserve"><value>جودة AVIF</value></data>
   <data name="Award" xml:space="preserve"><value>جائزة</value></data>
   <data name="Back to latest ↑" xml:space="preserve"><value>العودة إلى الأحدث ↑</value></data>
+  <data name="Back to revision" xml:space="preserve"><value>العودة إلى المراجعة</value></data>
   <data name="Back to the newest" xml:space="preserve"><value>العودة إلى الأحدث</value></data>
   <data name="Badges" xml:space="preserve"><value>الشارات</value></data>
   <data name="Be respectful of archivists and original contributors." xml:space="preserve"><value>احترم القائمين على الأرشفة والمساهمين الأصليين.</value></data>
@@ -178,6 +179,8 @@
   <data name="Choose…" xml:space="preserve"><value>اختر…</value></data>
   <data name="Citations" xml:space="preserve"><value>المراجع</value></data>
   <data name="Cite primary sources where possible." xml:space="preserve"><value>استشهد بالمصادر الأولية متى أمكن.</value></data>
+  <data name="Cite this issue" xml:space="preserve"><value>استشهد بهذا العدد</value></data>
+  <data name="Cite this Magazedia page" xml:space="preserve"><value>استشهد بهذه الصفحة من Magazedia</value></data>
   <data name="Clear list" xml:space="preserve"><value>إفراغ القائمة</value></data>
   <data name="Clear list…" xml:space="preserve"><value>إفراغ القائمة…</value></data>
   <data name="Clear this list?" xml:space="preserve"><value>إفراغ هذه القائمة؟</value></data>
@@ -249,6 +252,7 @@
   <data name="Dates grouped in UTC. Updated {0} UTC." xml:space="preserve"><value>التواريخ مجمّعة بتوقيت UTC. حُدّث {0} UTC.</value></data>
   <data name="DB Revisions" xml:space="preserve"><value>النسخ في قاعدة البيانات</value></data>
   <data name="Debut" xml:space="preserve"><value>البداية</value></data>
+  <data name="Decorative image" xml:space="preserve"><value>صورة للزينة</value></data>
   <data name="Default list cleared." xml:space="preserve"><value>أُفرغت القائمة الافتراضية.</value></data>
   <data name="Delete" xml:space="preserve"><value>حذف</value></data>
   <data name="Delete article" xml:space="preserve"><value>حذف المقالة</value></data>
@@ -256,6 +260,7 @@
   <data name="Delete list…" xml:space="preserve"><value>حذف القائمة…</value></data>
   <data name="Delete note" xml:space="preserve"><value>حذف الملاحظة</value></data>
   <data name="Delete this list?" xml:space="preserve"><value>حذف هذه القائمة؟</value></data>
+  <data name="Describe the important details in the picture for readers who cannot see it." xml:space="preserve"><value>صِف التفاصيل المهمة في الصورة للقراء الذين لا يستطيعون رؤيتها.</value></data>
   <data name="Development Mode" xml:space="preserve"><value>وضع التطوير</value></data>
   <data name="Device previews" xml:space="preserve"><value>معاينات الأجهزة</value></data>
   <data name="Device.Desktop" xml:space="preserve"><value>حاسوب مكتبي</value></data>
@@ -279,6 +284,7 @@
   <data name="Download didn’t start? Save header" xml:space="preserve"><value>لم يبدأ التنزيل؟ احفظ الترويسة</value></data>
   <data name="Download file not available." xml:space="preserve"><value>ملف التنزيل غير متاح.</value></data>
   <data name="Download header" xml:space="preserve"><value>تنزيل الترويسة</value></data>
+  <data name="Download RIS citation" xml:space="preserve"><value>نزّل الاستشهاد بصيغة RIS</value></data>
   <data name="Download the finished header, upload it as a {0}, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically." xml:space="preserve"><value>نزّل الترويسة الجاهزة، وارفعها بوصفها {0}، ثم الصق هذا الترميز في مقالتك. يفترض الترميز أن المعرّف النصي لمقالة الملف يطابق اسم الملف المنزّل دون «‎.avif»؛ وإن أعطيت مقالة الملف معرّفًا آخر فاستخدمه في الترميز. لا يُنشر شيء تلقائيًا.</value></data>
   <data name="Download URL" xml:space="preserve"><value>رابط التنزيل</value></data>
   <data name="Drag the frame or its corners. Use arrow keys to move or resize; hold Shift for 10 pixels. Double-click the frame to reset. Zoom in and scroll for detail." xml:space="preserve"><value>اسحب الإطار أو زواياه. استخدم مفاتيح الأسهم للتحريك أو تغيير الحجم؛ واضغط Shift للتحريك 10 بكسلات. انقر نقرًا مزدوجًا على الإطار لإعادة ضبطه. كبّر ومرّر لرؤية التفاصيل.</value></data>
@@ -443,6 +449,7 @@
   <data name="I am the sole creator, author, or publisher of this publication and hold 100% of the distribution rights." xml:space="preserve"><value>أنا المُنشئ أو المؤلف أو الناشر الوحيد لهذا الإصدار وأملك كامل حقوق التوزيع.</value></data>
   <data name="I have obtained direct, explicit written permission from the publisher, author, or current copyright owner to upload and distribute this digital copy." xml:space="preserve"><value>حصلت على إذن كتابي مباشر وصريح من الناشر أو المؤلف أو مالك حقوق النشر الحالي لرفع هذه النسخة الرقمية وتوزيعها.</value></data>
   <data name="Ideas &amp; Criticism" xml:space="preserve"><value>الأفكار والنقد</value></data>
+  <data name="Image description (optional)" xml:space="preserve"><value>وصف الصورة (اختياري)</value></data>
   <data name="Image revision was created, but the uploaded file is awaiting filesystem recovery: {0}" xml:space="preserve"><value>أُنشئت نسخة الصورة، لكن الملف المرفوع ينتظر الاستعادة في نظام الملفات: {0}</value></data>
   <data name="Improved by" xml:space="preserve"><value>حسّنها</value></data>
   <data name="In the spotlight" xml:space="preserve"><value>تحت الضوء</value></data>
@@ -842,6 +849,7 @@
   <data name="Sort" xml:space="preserve"><value>الترتيب</value></data>
   <data name="Sort entries" xml:space="preserve"><value>ترتيب المداخل</value></data>
   <data name="Source" xml:space="preserve"><value>المصدر</value></data>
+  <data name="Source for {0}" xml:space="preserve"><value>مصدر «{0}»</value></data>
   <data name="Source picture" xml:space="preserve"><value>الصورة الأصلية</value></data>
   <data name="Source, scan quality, issue number, language, etc." xml:space="preserve"><value>المصدر، جودة المسح، رقم العدد، اللغة، إلخ.</value></data>
   <data name="Sport &amp; Fitness" xml:space="preserve"><value>الرياضة واللياقة</value></data>
@@ -1053,11 +1061,9 @@
   <data name="View Full Resolution" xml:space="preserve"><value>عرض بالدقة الكاملة</value></data>
   <data name="View full resolution for revision {0}" xml:space="preserve"><value>عرض النسخة {0} بالدقة الكاملة</value></data>
   <data name="View history" xml:space="preserve"><value>عرض السجل</value></data>
-  <data name="View source" xml:space="preserve"><value>عرض المصدر</value></data>
-  <data name="Source for {0}" xml:space="preserve"><value>مصدر «{0}»</value></data>
-  <data name="Back to revision" xml:space="preserve"><value>العودة إلى المراجعة</value></data>
   <data name="View My Profile" xml:space="preserve"><value>عرض ملفي الشخصي</value></data>
   <data name="View revision ↗" xml:space="preserve"><value>عرض النسخة ↗</value></data>
+  <data name="View source" xml:space="preserve"><value>عرض المصدر</value></data>
   <data name="View the Firehose" xml:space="preserve"><value>عرض السجل الحي</value></data>
   <data name="Watch article" xml:space="preserve"><value>متابعة المقالة</value></data>
   <data name="Watch the articles you care about and you'll hear here when they're edited, discussed or nominated for a feature." xml:space="preserve"><value>تابع المقالات التي تهمك وستصلك هنا أخبار تحريرها أو مناقشتها أو ترشيحها للإبراز.</value></data>

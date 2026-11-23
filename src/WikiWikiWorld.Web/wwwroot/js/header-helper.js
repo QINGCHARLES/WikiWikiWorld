@@ -129,7 +129,11 @@ function UpdateMarkup() {
     }
     const FileSlug = `header-for-${ArticleSlug}`;
     const Focus = Get('SiteFocus').value;
-    Get('WikiText').value = `{{HeaderImage file:${FileSlug}${Focus === 'top' ? '' : ` |#| Focus=${Focus}`}}}`;
+    const AltText = Get('HeaderAltText').value.trim();
+    // Encode syntax characters so a description always stays inside its directive property.
+    const EncodedAltText = AltText.replace(/[&{}|`]/g, Character => `&#${Character.charCodeAt(0)};`);
+    const AltProperty = Get('DecorativeHeader').checked ? ' |#| AltText=' : AltText ? ` |#| AltText=${EncodedAltText}` : '';
+    Get('WikiText').value = `{{HeaderImage file:${FileSlug}${Focus === 'top' ? '' : ` |#| Focus=${Focus}`}${AltProperty}}}`;
     Get('DownloadImage').download = `${FileSlug}.avif`;
 }
 
@@ -325,6 +329,11 @@ Get('ArticleSlug').addEventListener('input', () => {
     UpdateMarkup();
 });
 Get('DownloadImage').addEventListener('click', Event => { if (!ValidateArticleSlug()) Event.preventDefault(); });
+Get('HeaderAltText').addEventListener('input', UpdateMarkup);
+Get('DecorativeHeader').addEventListener('change', Event => {
+    Get('HeaderAltText').disabled = Event.currentTarget.checked;
+    UpdateMarkup();
+});
 Get('Quality').addEventListener('input', () => { Get('QualityValue').value = Get('Quality').value; Invalidate(); });
 Get('ExportImage').addEventListener('click', DownloadHeader);
 Get('CopyMarkup').addEventListener('click', async () => {

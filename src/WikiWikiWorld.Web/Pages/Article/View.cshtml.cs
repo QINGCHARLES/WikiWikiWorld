@@ -19,14 +19,30 @@ namespace WikiWikiWorld.Web.Pages.Article;
 /// <param name="ArticleRenderer">The article renderer.</param>
 /// <param name="ArticleRevisionService">The article revision service.</param>
 /// <param name="BookmarkService">The bookmark service.</param>
+/// <param name="PublicationHeadBuilder">Builds catalogue metadata for current publication articles.</param>
 public sealed class ViewModel(
     WikiWikiWorldDbContext Context,
     SiteResolverService SiteResolverService,
     UserManager<User> UserManager,
     IArticleRenderer ArticleRenderer,
     ArticleRevisionService ArticleRevisionService,
-    BookmarkService BookmarkService) : BasePageModel(SiteResolverService)
+    BookmarkService BookmarkService,
+    PublicationHeadBuilder PublicationHeadBuilder) : BasePageModel(SiteResolverService)
 {
+	/// <summary>Gets the hero's image description, or an empty value for decorative artwork.</summary>
+	public string HeaderImageAltText { get; private set; } = string.Empty;
+
+	/// <summary>Gets the metadata for a current publication or issue article.</summary>
+	public PublicationHead? Head { get; private set; }
+
+	/// <summary>Gets the reciprocal language links for a current Magazedia article.</summary>
+	public IReadOnlyList<PublicationAlternate> LanguageAlternates { get; private set; } = [];
+
+	/// <summary>Gets a citation for the original magazine issue when the article describes one.</summary>
+	public PublicationCitation? IssueCitation { get; private set; }
+
+	/// <summary>Gets a citation for the individual revision of this Magazedia page.</summary>
+	public PublicationCitation? PageCitation { get; private set; }
     /// <summary>
     /// Gets or sets the URL slug of the article.
     /// </summary>
@@ -270,6 +286,7 @@ public sealed class ViewModel(
     /// <summary>
     /// Loads the requested revision and resolves its current article by identity even after a rename.
     /// Uses the saved title for metadata and the optional display title for the formatted heading.
+    /// Builds the head and citations for a current Magazedia publication or issue.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
     /// <returns>The page or result.</returns>
@@ -430,7 +447,26 @@ public sealed class ViewModel(
         Categories = RenderedArticle.Categories;
         HeaderImage = RenderedArticle.HeaderImage;
         HeaderImageFocus = RenderedArticle.HeaderImageFocus;
+        HeaderImageAltText = RenderedArticle.HeaderImageAltText ?? string.Empty;
         MetaDescription = RenderedArticle.MetaDescription ?? string.Empty;
+		if (AllowSearchEngineIndexingOfPage && SiteId == 1 && RevisionToRender.Type == ArticleType.Article
+			&& SiteResolverService.GetSite(SiteId) is { } Site)
+		{
+			if (RenderedArticle.Publication is { } Publication)
+			{
+				Head = await PublicationHeadBuilder.BuildAsync(RevisionToRender, RenderedArticle, Publication, Site, Request, CancellationToken);
+				MetaDescription = Head.Description ?? string.Empty;
+				string RevisionPath = ArticleUrlHelper.BuildRevisionPath(RevisionToRender,
+					ArticleHistoryModel.FormatRevisionTimestamp(RevisionToRender.DateCreated));
+				string Permalink = new Uri(new Uri(Head.CanonicalUrl), RevisionPath).AbsoluteUri;
+				PageCitation = PublicationCitation.ForPage(Head, RevisionToRender, Permalink);
+				if (Publication.IsIssue)
+				{
+					IssueCitation = PublicationCitation.ForIssue(Head, Publication);
+				}
+			}
+			LanguageAlternates = await PublicationHeadBuilder.GetAlternatesAsync(RevisionToRender, Site, Request, CancellationToken);
+		}
         EyebrowLabel = RenderedArticle.EyebrowLabel;
         Eyebrow = RenderedArticle.Eyebrow;
         SubtitleText = RenderedArticle.SubtitleText;
@@ -501,6 +537,24 @@ public sealed class ViewModel(
 
         return Page();
     }
+
+	/// <summary>Downloads a RIS citation for the current issue or its Magazedia entry.</summary>
+	/// <param name="Kind">The item to cite, either issue or page.</param>
+	/// <param name="CancellationToken">Cancels resolution and rendering of the article.</param>
+	/// <returns>A RIS attachment, a canonical redirect, or a missing-item response.</returns>
+	public async Task<IActionResult> OnGetCitationAsync(string Kind, CancellationToken CancellationToken)
+	{
+		if (SiteId != 1 || Kind is not ("issue" or "page") || UrlSlug.StartsWith('@'))
+			return NotFound();
+
+		IActionResult Result = await OnGetAsync(CancellationToken);
+		if (Result is not Microsoft.AspNetCore.Mvc.RazorPages.PageResult) return Result;
+		PublicationCitation? Citation = Kind == "issue" ? IssueCitation : PageCitation;
+		if (Citation is null) return NotFound();
+
+		Response.Headers["X-Robots-Tag"] = "noindex";
+		return File(Encoding.UTF8.GetBytes(Citation.Ris), "application/x-research-info-systems", $"magazedia-{Kind}.ris");
+	}
 
     /// <summary>
     /// Saves the article to, or removes it from, the default list and returns the refreshed control.

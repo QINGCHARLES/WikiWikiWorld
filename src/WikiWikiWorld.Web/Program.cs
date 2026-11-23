@@ -163,6 +163,7 @@ Builder.Services.AddScoped<PrivateMessagingService>();
 Builder.Services.AddScoped<FirehoseService>();
 Builder.Services.AddScoped<ArticleSearchService>();
 Builder.Services.AddScoped<IArticleRenderer, ArticleRenderer>();
+Builder.Services.AddScoped<PublicationHeadBuilder>();
 Builder.Services.AddScoped<FileUploadStorageService>();
 Builder.Services.AddScoped<FileMigrationService>();
 Builder.Services.AddScoped<ArticleDomainRedirectService>();

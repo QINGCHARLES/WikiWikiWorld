@@ -1,3 +1,4 @@
+using System.Net;
 using Markdig;
 using Markdig.Helpers;
 using Markdig.Parsers;
@@ -26,6 +27,9 @@ public sealed class HeaderImageBlock(BlockParser Parser) : LeafBlock(Parser)
 	/// <c>Focus=</c> property, or <see langword="null"/> when absent or unrecognised (the hero then stays top-aligned).
 	/// </summary>
 	public string? Focus { get; init; }
+
+	/// <summary>Gets the authored description, with an empty value marking a decorative image.</summary>
+	public string? AltText { get; init; }
 
 	// Stored here during Enrichment; retrieved by the Renderer (debug) 
 	// or the PageModel (via Document.SetData)
@@ -74,6 +78,7 @@ public sealed class HeaderImageBlockParser : BlockParser
 		// The first segment is the file slug; any further "|#|" segments are Key=Value properties.
 		string[] Segments = Slice.Text[Slice.Start..EndPos].Split("|#|", StringSplitOptions.TrimEntries);
 		string? Focus = null;
+		string? AltText = null;
 		foreach (string Segment in Segments.Skip(1))
 		{
 			int EqualsIndex = Segment.IndexOf('=');
@@ -81,12 +86,17 @@ public sealed class HeaderImageBlockParser : BlockParser
 			{
 				Focus = NormalizeFocus(Segment[(EqualsIndex + 1)..]);
 			}
+			else if (EqualsIndex > 0 && Segment[..EqualsIndex].Trim().Equals("AltText", StringComparison.OrdinalIgnoreCase))
+			{
+				AltText = WebUtility.HtmlDecode(Segment[(EqualsIndex + 1)..]).Trim();
+			}
 		}
 
 		HeaderImageBlock Block = new(this)
 		{
 			UrlSlug = Segments[0],
 			Focus = Focus,
+			AltText = AltText,
 			Column = Processor.Column,
 			Span = new SourceSpan(Processor.LineIndex, Processor.LineIndex)
 		};
@@ -145,6 +155,12 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 	/// </summary>
 	public const string FocusDocumentKey = "HeaderImageFocus";
 
+	/// <summary>The key for the resolved header's accessible description, including an explicit empty value.</summary>
+	public const string AltTextDocumentKey = "HeaderImageAltText";
+
+	/// <summary>The key for the resolved header's reusable file description.</summary>
+	internal const string FileDescriptionDocumentKey = "HeaderImageFileDescription";
+
 	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
 	{
@@ -167,6 +183,12 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 	/// <summary>
 	/// Scans the document for HeaderImage blocks and resolves their URLs using optimized database projections.
 	/// </summary>
+	/// <param name="Document">The parsed article.</param>
+	/// <param name="Context">The article and file revision context.</param>
+	/// <param name="SiteId">The current site.</param>
+	/// <param name="Culture">The current article culture.</param>
+	/// <param name="CancellationToken">Cancels file and article lookups.</param>
+	/// <returns>A task that completes after resolving the header and its description.</returns>
 	public static async Task EnrichAsync(
 		MarkdownDocument Document,
 		WikiWikiWorldDbContext Context,
@@ -199,12 +221,11 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 		// We use 'var' because the projection creates an anonymous type.
 		var Articles = await Context.ArticleRevisions
 			.AsNoTracking()
-			.Where(x => x.SiteId == SiteId && x.Culture == Culture && Slugs.Contains(x.UrlSlug) && x.IsCurrent)
-			.Select(x => new { x.UrlSlug, x.CanonicalFileId }) 
+			.Where(x => x.SiteId == SiteId && x.Culture == Culture && Slugs.Contains(x.UrlSlug) && x.IsCurrent && x.DateDeleted == null)
+			.Select(x => new { x.UrlSlug, x.CanonicalFileId, x.Title })
 			.ToListAsync(CancellationToken);
 
-		Dictionary<string, Guid?> ArticleLookup = Articles
-			.ToDictionary(a => a.UrlSlug, a => a.CanonicalFileId, StringComparer.OrdinalIgnoreCase);
+		var ArticleLookup = Articles.ToDictionary(a => a.UrlSlug, StringComparer.OrdinalIgnoreCase);
 
 		// 4. Gather File IDs
 		List<Guid> FileIds = [.. Articles
@@ -215,14 +236,16 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 		// 5. Batch Query Files (Projection)
 		var Files = await Context.FileRevisions
 			.AsNoTracking()
-			.Where(f => FileIds.Contains(f.CanonicalFileId) && f.IsCurrent == true)
-			.Select(f => new { f.Id, f.CanonicalFileId, f.Filename, f.ImageWidthPixels, f.ImageHeightPixels })
+			.Where(f => FileIds.Contains(f.CanonicalFileId) && f.IsCurrent == true && f.DateDeleted == null)
+			.Select(f => new { f.Id, f.CanonicalFileId, f.Filename })
 			.ToListAsync(CancellationToken);
 
 		Dictionary<Guid, (int Id, string Filename)> FileLookup = Files.ToDictionary(f => f.CanonicalFileId, f => (f.Id, f.Filename));
 
 		string? FirstFoundHeaderImage = null;
 		string? FirstFoundHeaderFocus = null;
+		string? FirstFoundHeaderAltText = null;
+		string? FirstFoundFileDescription = null;
 
 		// 6. Update Blocks & Document
 		foreach (HeaderImageBlock Block in HeaderBlocks)
@@ -234,11 +257,11 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 			}
 			Slug = SlugHelper.GenerateSlug(Slug);
 
-			if (ArticleLookup.TryGetValue(Slug, out Guid? CanonicalFileId) &&
-				CanonicalFileId.HasValue &&
-				FileLookup.TryGetValue(CanonicalFileId.Value, out (int Id, string Filename) FileInfo))
+			if (ArticleLookup.TryGetValue(Slug, out var Article) &&
+				Article.CanonicalFileId is { } CanonicalFileId &&
+				FileLookup.TryGetValue(CanonicalFileId, out (int Id, string Filename) FileInfo))
 			{
-				string Url = ImageUrlHelper.BuildImageUrl(SiteId, CanonicalFileId.Value, FileInfo.Id, FileInfo.Filename);
+				string Url = ImageUrlHelper.BuildImageUrl(SiteId, CanonicalFileId, FileInfo.Id, FileInfo.Filename);
 
 				// Update block for debug renderer
 				Block.ResolvedUrl = Url;
@@ -248,6 +271,8 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 				{
 					FirstFoundHeaderImage = Url;
 					FirstFoundHeaderFocus = Block.Focus;
+					FirstFoundFileDescription = GetFileDescription(Article.Title, FileInfo.Filename);
+					FirstFoundHeaderAltText = Block.AltText ?? FirstFoundFileDescription;
 				}
 			}
 		}
@@ -256,10 +281,37 @@ public sealed class HeaderImageExtension : IMarkdownExtension
 		if (FirstFoundHeaderImage is not null)
 		{
 			Document.SetData(DocumentKey, FirstFoundHeaderImage);
+			if (FirstFoundHeaderAltText is not null)
+			{
+				Document.SetData(AltTextDocumentKey, FirstFoundHeaderAltText);
+			}
+			if (FirstFoundFileDescription is not null)
+			{
+				Document.SetData(FileDescriptionDocumentKey, FirstFoundFileDescription);
+			}
 			if (FirstFoundHeaderFocus is not null)
 			{
 				Document.SetData(FocusDocumentKey, FirstFoundHeaderFocus);
 			}
 		}
+	}
+
+	/// <summary>Uses a readable file article title when it describes the artwork.</summary>
+	/// <param name="Title">The localized file article title.</param>
+	/// <param name="Filename">The stored source filename.</param>
+	/// <returns>A usable description when the title is more than a generated file label.</returns>
+	private static string? GetFileDescription(string Title, string Filename)
+	{
+		string Text = Title.Trim();
+		if (Text.StartsWith("File:", StringComparison.OrdinalIgnoreCase))
+		{
+			Text = Text["File:".Length..].Trim();
+		}
+		return Text.Length == 0 || Text is "..." or "…"
+			|| Text.StartsWith("Header for ", StringComparison.OrdinalIgnoreCase)
+			|| Text.StartsWith("header-for-", StringComparison.OrdinalIgnoreCase)
+			|| Text.Equals(Filename, StringComparison.OrdinalIgnoreCase)
+			|| Text.Equals(Path.GetFileNameWithoutExtension(Filename), StringComparison.OrdinalIgnoreCase)
+			? null : Text;
 	}
 }

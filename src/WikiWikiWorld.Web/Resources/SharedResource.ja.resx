@@ -95,6 +95,7 @@
   <data name="AVIF quality" xml:space="preserve"><value>AVIF の画質</value></data>
   <data name="Award" xml:space="preserve"><value>賞</value></data>
   <data name="Back to latest ↑" xml:space="preserve"><value>最新に戻る ↑</value></data>
+  <data name="Back to revision" xml:space="preserve"><value>版に戻る</value></data>
   <data name="Back to the newest" xml:space="preserve"><value>最新に戻る</value></data>
   <data name="Badges" xml:space="preserve"><value>バッジ</value></data>
   <data name="Be respectful of archivists and original contributors." xml:space="preserve"><value>アーキビストと最初の投稿者に敬意を払いましょう。</value></data>
@@ -148,6 +149,8 @@
   <data name="Choose…" xml:space="preserve"><value>選択…</value></data>
   <data name="Citations" xml:space="preserve"><value>出典</value></data>
   <data name="Cite primary sources where possible." xml:space="preserve"><value>可能な限り一次資料を引用しましょう。</value></data>
+  <data name="Cite this issue" xml:space="preserve"><value>この号を引用</value></data>
+  <data name="Cite this Magazedia page" xml:space="preserve"><value>このMagazediaページを引用</value></data>
   <data name="Clear list" xml:space="preserve"><value>リストを空にする</value></data>
   <data name="Clear list…" xml:space="preserve"><value>リストを空にする…</value></data>
   <data name="Clear this list?" xml:space="preserve"><value>このリストを空にしますか？</value></data>
@@ -219,6 +222,7 @@
   <data name="Dates grouped in UTC. Updated {0} UTC." xml:space="preserve"><value>日付はUTCでまとめています。{0} UTCに更新。</value></data>
   <data name="DB Revisions" xml:space="preserve"><value>DB の版数</value></data>
   <data name="Debut" xml:space="preserve"><value>デビュー</value></data>
+  <data name="Decorative image" xml:space="preserve"><value>装飾用の画像</value></data>
   <data name="Default list cleared." xml:space="preserve"><value>既定のリストを空にしました。</value></data>
   <data name="Delete" xml:space="preserve"><value>削除</value></data>
   <data name="Delete article" xml:space="preserve"><value>記事を削除</value></data>
@@ -226,6 +230,7 @@
   <data name="Delete list…" xml:space="preserve"><value>リストを削除…</value></data>
   <data name="Delete note" xml:space="preserve"><value>メモを削除</value></data>
   <data name="Delete this list?" xml:space="preserve"><value>このリストを削除しますか？</value></data>
+  <data name="Describe the important details in the picture for readers who cannot see it." xml:space="preserve"><value>画像を見ることができない読者に向けて、画像の重要な内容を説明してください。</value></data>
   <data name="Development Mode" xml:space="preserve"><value>開発モード</value></data>
   <data name="Device previews" xml:space="preserve"><value>端末別プレビュー</value></data>
   <data name="Device.Desktop" xml:space="preserve"><value>デスクトップ</value></data>
@@ -249,6 +254,7 @@
   <data name="Download didn’t start? Save header" xml:space="preserve"><value>ダウンロードが始まらない場合はヘッダーを保存</value></data>
   <data name="Download file not available." xml:space="preserve"><value>ダウンロードファイルはありません。</value></data>
   <data name="Download header" xml:space="preserve"><value>ヘッダーをダウンロード</value></data>
+  <data name="Download RIS citation" xml:space="preserve"><value>RIS形式の引用情報をダウンロード</value></data>
   <data name="Download the finished header, upload it as a {0}, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically." xml:space="preserve"><value>完成したヘッダーをダウンロードし、{0}としてアップロードしてから、このマークアップを記事に貼り付けてください。マークアップは、ファイル記事のURLスラッグがダウンロードしたファイル名（「.avif」を除く）と同じだと想定しています。別のスラッグにした場合は、マークアップのほうを合わせてください。自動では何も公開されません。</value></data>
   <data name="Download URL" xml:space="preserve"><value>ダウンロードURL</value></data>
   <data name="Drag the frame or its corners. Use arrow keys to move or resize; hold Shift for 10 pixels. Double-click the frame to reset. Zoom in and scroll for detail." xml:space="preserve"><value>枠や角をドラッグします。矢印キーで移動・サイズ変更でき、Shift を押すと10ピクセルずつ動きます。枠をダブルクリックするとリセットします。拡大してスクロールすると細部を確認できます。</value></data>
@@ -368,6 +374,7 @@
   <data name="I am the sole creator, author, or publisher of this publication and hold 100% of the distribution rights." xml:space="preserve"><value>私はこの刊行物の唯一の制作者・著者・発行者で、配布権のすべてを持っています。</value></data>
   <data name="I have obtained direct, explicit written permission from the publisher, author, or current copyright owner to upload and distribute this digital copy." xml:space="preserve"><value>このデジタルコピーをアップロードして配布することについて、発行者・著者・現在の著作権者から直接、明示的な書面での許可を得ています。</value></data>
   <data name="Ideas &amp; Criticism" xml:space="preserve"><value>思想・批評</value></data>
+  <data name="Image description (optional)" xml:space="preserve"><value>画像の説明（任意）</value></data>
   <data name="Image revision was created, but the uploaded file is awaiting filesystem recovery: {0}" xml:space="preserve"><value>画像の版は作成されましたが、アップロードしたファイルはファイルシステムの復旧待ちです：{0}</value></data>
   <data name="Improved by" xml:space="preserve"><value>編集者</value></data>
   <data name="In the spotlight" xml:space="preserve"><value>注目</value></data>
@@ -722,6 +729,7 @@
   <data name="Sort" xml:space="preserve"><value>並べ替え</value></data>
   <data name="Sort entries" xml:space="preserve"><value>項目を並べ替え</value></data>
   <data name="Source" xml:space="preserve"><value>出典</value></data>
+  <data name="Source for {0}" xml:space="preserve"><value>「{0}」のソース</value></data>
   <data name="Source picture" xml:space="preserve"><value>元の画像</value></data>
   <data name="Source, scan quality, issue number, language, etc." xml:space="preserve"><value>入手元、スキャンの画質、号数、言語など</value></data>
   <data name="Sport &amp; Fitness" xml:space="preserve"><value>スポーツ・フィットネス</value></data>
@@ -878,11 +886,9 @@
   <data name="View Full Resolution" xml:space="preserve"><value>フル解像度で表示</value></data>
   <data name="View full resolution for revision {0}" xml:space="preserve"><value>版 {0} をフル解像度で表示</value></data>
   <data name="View history" xml:space="preserve"><value>履歴を表示</value></data>
-  <data name="View source" xml:space="preserve"><value>ソースを表示</value></data>
-  <data name="Source for {0}" xml:space="preserve"><value>「{0}」のソース</value></data>
-  <data name="Back to revision" xml:space="preserve"><value>版に戻る</value></data>
   <data name="View My Profile" xml:space="preserve"><value>プロフィールを見る</value></data>
   <data name="View revision ↗" xml:space="preserve"><value>版を表示 ↗</value></data>
+  <data name="View source" xml:space="preserve"><value>ソースを表示</value></data>
   <data name="View the Firehose" xml:space="preserve"><value>ファイアホースを見る</value></data>
   <data name="Watch article" xml:space="preserve"><value>記事をウォッチ</value></data>
   <data name="Watch the articles you care about and you'll hear here when they're edited, discussed or nominated for a feature." xml:space="preserve"><value>気になる記事をウォッチすると、編集・議論・特集候補になったときにここでお知らせします。</value></data>

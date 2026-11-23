@@ -44,24 +44,7 @@
 		<meta name="robots" content="noindex">
 	}
 
-@* 	<meta name="dcterms.created" content="2025-03-05T08:54:00Z">
-	<meta property="article:published_time" content="2025-03-05T08:54:00Z">
- *@
-@* 	<script type="application/ld+json">
-		{
-		  "@context": "https://schema.org",
-		  "@type": "Article",
-		  "headline": "Your Article Title",
-		  "datePublished": "2025-03-05T08:54:00Z",
-		  "author": {
-			"@type": "Person",
-			"name": "Author Name"
-		  }
-		  // Additional properties
-		}
-	</script> *@
-@* 	Ensure your website's XML sitemap includes the
-	<lastmod> tag for each URL, indicating the last modification date. *@
+	@await RenderSectionAsync("PageHead", required: false)
 
 	@* <script defer src="https://cloud.umami.is/script.js" data-website-id="2681fe66-d481-4722-9df1-b50b7aa0010c"></script> *@
 

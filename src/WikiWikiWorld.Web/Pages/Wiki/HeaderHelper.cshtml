@@ -132,6 +132,12 @@
 		</div>
 		<div class="helper-row helper-actions"><button id="ExportImage" type="button" data-button-variant="primary">@L["Download header"]</button><a id="DownloadImage" hidden>@L["Download didn’t start? Save header"]</a></div>
 		<div class="helper-field">
+			<label for="HeaderAltText">@L["Image description (optional)"]</label>
+			<input id="HeaderAltText" type="text" aria-describedby="HeaderAltHelp" />
+			<p id="HeaderAltHelp">@L["Describe the important details in the picture for readers who cannot see it."]</p>
+			<label><input id="DecorativeHeader" type="checkbox" /> @L["Decorative image"]</label>
+		</div>
+		<div class="helper-field">
 			<label for="WikiText">@L["Wiki markup"]</label>
 			<div class="helper-markup"><textarea id="WikiText" readonly rows="2"></textarea><button id="CopyMarkup" type="button" data-button-variant="ghost">@L["Copy markup"]</button></div>
 			<p>@HL["Download the finished header, upload it as a {0}, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically.", UiFormat.Link("/create:", L["file article"])]</p>

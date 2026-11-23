@@ -212,8 +212,12 @@ public sealed class UserArticleEditorTests : IDisposable
 		DefaultHttpContext Http = CreateHttpContext();
 		SiteResolverService Resolver = new(Configuration, new HttpContextAccessor { HttpContext = Http });
 		ArticleRevisionService Revisions = new(Context, NullLogger<ArticleRevisionService>.Instance);
+		MarkdownPipelineFactory Pipeline = new(Configuration);
 		ViewModel Viewer = new(Context, Resolver, Users,
-			new ArticleRenderer(Context, new MarkdownPipelineFactory(Configuration), Configuration, TestInfoboxSchemas.Catalog), Revisions, new(Context)) { UrlSlug = "@Owner" };
+			new ArticleRenderer(Context, Pipeline, Configuration, TestInfoboxSchemas.Catalog), Revisions, new(Context),
+			new(Context, Pipeline, TestInfoboxSchemas.Catalog, new(Context),
+				Options.Create(new FileStorageOptions { SiteFilesPath = StorageRoot })))
+		{ UrlSlug = "@Owner" };
 		InitializePage(Viewer, Http);
 		EventHandler<SavingChangesEventArgs> FailProvisioning = (_, _) => throw new InvalidOperationException("Simulated provisioning save failure.");
 		Context.SavingChanges += FailProvisioning;
