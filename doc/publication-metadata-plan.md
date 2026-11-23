@@ -123,3 +123,10 @@ The local `artifacts/publication-metadata/sitefiles/` directory contains the pre
 - Imported both production RIS downloads into an isolated Zotero 10.0.8 library. Zotero recorded the issue as a magazine item with its Fall 2016 cover date note and the Magazedia entry as a webpage with its revision permalink.
 
 The previous application image is retained as `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261123T061252Z-2d2c5467ed3d`. Pass that reference to `/home/deploy/update.sh` for application rollback. The wiki history retains the three previous revisions. Their source snapshots and exact edit payloads are in the local release record under `.local/releases/release-20261123T061252Z-2d2c5467ed3d/`.
+
+### Citation display fix · 23 November 2026
+
+- Removed the citation sections from the article body and generate RIS on direct download requests. The hotfix was built from the production branch at `480b02e9a469`.
+- Deployed `release-20261123T210758Z-480b02e9a469` at 21:09 UTC. The running image is `ghcr.io/qingcharles/wikiwikiworld@sha256:ead2a6a3d0026692723f1233c59854eb87f17be6d8a8ab3c7edb28872fdca072`.
+- All 436 tests passed on the release branch. Before-and-after checks on Fast Company and GQ Style Fall 2016 confirmed the controls were removed. Canonical URLs, Open Graph, JSON-LD and both direct RIS downloads matched exactly. The container reported zero restarts or application errors.
+- The rollback image is retained as `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261123T210758Z-480b02e9a469`.
