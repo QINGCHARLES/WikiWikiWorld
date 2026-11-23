@@ -878,6 +878,9 @@
   <data name="View Full Resolution" xml:space="preserve"><value>フル解像度で表示</value></data>
   <data name="View full resolution for revision {0}" xml:space="preserve"><value>版 {0} をフル解像度で表示</value></data>
   <data name="View history" xml:space="preserve"><value>履歴を表示</value></data>
+  <data name="View source" xml:space="preserve"><value>ソースを表示</value></data>
+  <data name="Source for {0}" xml:space="preserve"><value>「{0}」のソース</value></data>
+  <data name="Back to revision" xml:space="preserve"><value>版に戻る</value></data>
   <data name="View My Profile" xml:space="preserve"><value>プロフィールを見る</value></data>
   <data name="View revision ↗" xml:space="preserve"><value>版を表示 ↗</value></data>
   <data name="View the Firehose" xml:space="preserve"><value>ファイアホースを見る</value></data>

@@ -44,57 +44,62 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
     public IReadOnlyDictionary<Guid, Guid?> UserProfilePics { get; private set; } = new Dictionary<Guid, Guid?>();
 
     /// <summary>
-    /// Gets the article title from the current (first) revision.
+    /// Gets the title of the current revision, or the latest available revision if the article has no current revision.
     /// </summary>
     public string ArticleTitle { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Handles the GET request to load the revision history.
+    /// Loads an article's history across slug changes and redirects former addresses to the current history.
     /// </summary>
-    /// <returns>The page or result.</returns>
-    public async Task<IActionResult> OnGetAsync()
+    /// <param name="CancellationToken">A token that cancels the database reads when the request ends.</param>
+    /// <returns>The history page, a redirect to its current address, or an error result for an invalid or missing article.</returns>
+    public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
     {
-        // Validate the query string parameter.
-        if (SiteId <= 0 || string.IsNullOrWhiteSpace(Culture) || string.IsNullOrWhiteSpace(UrlSlug))
-        {
-            return BadRequest("Invalid parameters.");
-        }
+		if (SiteId <= 0 || string.IsNullOrWhiteSpace(Culture) || string.IsNullOrWhiteSpace(UrlSlug))
+			return BadRequest("Invalid parameters.");
 
-        string RequestedUrlSlug = UrlSlug;
-        string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
-        UrlSlug = LookupUrlSlug;
+		string RequestedUrlSlug = UrlSlug;
+		string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
+		UrlSlug = LookupUrlSlug;
 
-        // Retrieve all revisions for the article.
-        ArticleRevisionsBySlugSpec Spec = new(LookupUrlSlug, IsCurrent: null);
-        ArticleRevisions = await Context.ArticleRevisions.WithSpecification(Spec).ToListAsync();
+		// A current article at this slug takes precedence over any former occupants.
+		Guid? CanonicalArticleId = await Context.ArticleRevisions
+			.Where(r => r.UrlSlug == LookupUrlSlug)
+			.OrderByDescending(r => r.IsCurrent)
+			.ThenByDescending(r => r.DateCreated)
+			.Select(r => (Guid?)r.CanonicalArticleId)
+			.FirstOrDefaultAsync(CancellationToken);
 
-        if (ArticleRevisions.Count == 0)
-        {
-            return NotFound("No revisions found for this article.");
-        }
+		if (CanonicalArticleId is null)
+			return NotFound("No revisions found for this article.");
 
-        ArticleRevision CurrentRevision = ArticleRevisions.FirstOrDefault(r => r.IsCurrent) ?? ArticleRevisions[0];
+		ArticleRevisionsByCanonicalIdSpec HistorySpec = new(CanonicalArticleId.Value, MaxDate: null);
+		ArticleRevisions = await Context.ArticleRevisions.WithSpecification(HistorySpec).ToListAsync(CancellationToken);
 
-        if (ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, CurrentRevision.Type))
-        {
-            return RedirectPermanent(ArticleUrlHelper.BuildRelativePath(CurrentRevision, "history"));
-        }
+		ArticleRevision? CurrentRevision = ArticleRevisions.FirstOrDefault(r => r.IsCurrent) ?? ArticleRevisions.FirstOrDefault();
+		if (CurrentRevision is null)
+			return NotFound("No revisions found for this article.");
 
-        CanonicalArticlePath = ArticleUrlHelper.BuildArticlePath(CurrentRevision);
-        ArticleTitle = CurrentRevision.Title;
+		if (CurrentRevision.IsCurrent && !CurrentRevision.UrlSlug.Equals(LookupUrlSlug, StringComparison.Ordinal))
+			return Redirect(ArticleUrlHelper.BuildRelativePath(CurrentRevision, "history"));
 
-        // Fetch user information for all revision authors
-        List<Guid> UserIds = ArticleRevisions.Select(r => r.CreatedByUserId).Distinct().ToList();
-        UserByIdsSpec UserSpec = new(UserIds);
-        List<User> Users = await Context.Users.WithSpecification(UserSpec).ToListAsync();
+		if (ArticleUrlHelper.RequiresCanonicalRedirect(RequestedUrlSlug, CurrentRevision.Type))
+			return RedirectPermanent(ArticleUrlHelper.BuildRelativePath(CurrentRevision, "history"));
 
-        UserNames = Users
-            .Where(u => u.UserName is not null)
-            .ToDictionary(u => u.Id, u => u.UserName!);
+		CanonicalArticlePath = ArticleUrlHelper.BuildArticlePath(CurrentRevision);
+		ArticleTitle = CurrentRevision.Title;
 
-        UserProfilePics = Users.ToDictionary(u => u.Id, u => u.ProfilePicGuid);
+		List<Guid> UserIds = ArticleRevisions.Select(r => r.CreatedByUserId).Distinct().ToList();
+		UserByIdsSpec UserSpec = new(UserIds);
+		List<User> Users = await Context.Users.WithSpecification(UserSpec).ToListAsync(CancellationToken);
 
-        return Page();
+		UserNames = Users
+			.Where(u => u.UserName is not null)
+			.ToDictionary(u => u.Id, u => u.UserName!);
+
+		UserProfilePics = Users.ToDictionary(u => u.Id, u => u.ProfilePicGuid);
+
+		return Page();
     }
 
     /// <summary>

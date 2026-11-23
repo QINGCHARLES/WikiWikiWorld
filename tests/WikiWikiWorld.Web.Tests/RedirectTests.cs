@@ -23,7 +23,7 @@ namespace WikiWikiWorld.Web.Tests;
 
 /// <summary>
 /// Verifies <c>{{Redirect ...}}</c> parsing, HTTP redirect + TempData flash notice behavior,
-/// save validation, and search integration for <see cref="ArticleType.Redirect"/>.
+/// save validation, search integration for <see cref="ArticleType.Redirect"/>, and history across article moves.
 /// </summary>
 public sealed class RedirectTests : IDisposable
 {
@@ -170,6 +170,65 @@ public sealed class RedirectTests : IDisposable
 		ViewModel FileViewer = CreateViewer("cover-alias", TempDataStore);
 		RedirectResult FileRedirect = Assert.IsType<RedirectResult>(await FileViewer.OnGetAsync(default));
 		Assert.Equal("/file:cover-art", FileRedirect.Url);
+	}
+
+	/// <summary>
+	/// Verifies that reusing a renamed article's former slug keeps both histories and the older source attached to the right article.
+	/// </summary>
+	/// <returns>A task that completes when both histories, the original revision link, and its source have been checked.</returns>
+	[Fact]
+	public async Task RenamedArticleHistoryRetainsOriginalRevisionWhenFormerSlugIsReused()
+	{
+		await SeedArticleAsync("old-title", "Old Title", ArticleType.Article, "Original text.");
+		ArticleRevisionService Revisions = new(Context, NullLogger<ArticleRevisionService>.Instance);
+		await Revisions.UpdateArticleAsync(new(
+			OriginalUrlSlug: "old-title",
+			NewUrlSlug: "new-title",
+			SiteId: 1,
+			Culture: "en",
+			Title: "New Title",
+			DisplayTitle: null,
+			Type: ArticleType.Article,
+			CanonicalFileId: null,
+			Text: "Rewritten text.",
+			RevisionReason: "Rename and rewrite",
+			CreatedByUserId: EditorUser.Id), default);
+
+		ArticleHistoryModel History = CreateHistory("new-title");
+		Assert.IsType<PageResult>(await History.OnGetAsync(default));
+		Assert.Equal("/new-title", History.CanonicalArticlePath);
+		Assert.Equal("New Title", History.ArticleTitle);
+		Assert.Equal(new[] { "new-title", "old-title" }, History.ArticleRevisions.Select(r => r.UrlSlug));
+		Assert.True(History.ArticleRevisions[0].IsCurrent);
+		ArticleRevision Original = History.ArticleRevisions[1];
+		Assert.False(Original.IsCurrent);
+
+		RedirectResult Redirect = Assert.IsType<RedirectResult>(await CreateHistory("old-title").OnGetAsync(default));
+		Assert.False(Redirect.Permanent);
+		Assert.Equal("/new-title/history", Redirect.Url);
+
+		await SeedArticleAsync("old-title", "Unrelated Article", ArticleType.Article, "Reused address.");
+		ArticleHistoryModel UnrelatedHistory = CreateHistory("old-title");
+		Assert.IsType<PageResult>(await UnrelatedHistory.OnGetAsync(default));
+		Assert.Equal("Unrelated Article", Assert.Single(UnrelatedHistory.ArticleRevisions).Title);
+
+		History = CreateHistory("new-title");
+		Assert.IsType<PageResult>(await History.OnGetAsync(default));
+		Assert.Equal(Original.Id, History.ArticleRevisions[1].Id);
+		ViewModel OriginalViewer = CreateViewer(Original.UrlSlug, new StubTempDataProvider());
+		OriginalViewer.Revision = ArticleHistoryModel.FormatRevisionTimestamp(Original.DateCreated);
+		Assert.IsType<PageResult>(await OriginalViewer.OnGetAsync(default));
+		Assert.Equal(Original.Id, OriginalViewer.DisplayedRevision?.Id);
+		Assert.True(OriginalViewer.IsPriorRevision);
+		Assert.Equal("/new-title", OriginalViewer.CurrentArticlePath);
+		Assert.Equal($"/old-title/revision/{OriginalViewer.Revision}/source", OriginalViewer.RevisionSourcePath);
+
+		DefaultHttpContext Http = new();
+		Http.Request.Host = new("en.example.test");
+		SourceModel Source = new(Context, new(Configuration, new HttpContextAccessor { HttpContext = Http }));
+		Assert.IsType<PageResult>(await Source.OnGetAsync(Original.UrlSlug, OriginalViewer.Revision, default));
+		Assert.Equal("Original text.", Source.Markdown);
+		Assert.IsType<NotFoundResult>(await Source.OnGetAsync("new-title", OriginalViewer.Revision, default));
 	}
 
 	/// <summary>
@@ -345,6 +404,21 @@ public sealed class RedirectTests : IDisposable
 		Viewer.TempData = new TempDataDictionary(Http, TempDataStore);
 		Viewer.OnPageHandlerExecuting(new(Viewer.PageContext, [], new HandlerMethodDescriptor(), new Dictionary<string, object?>(), Viewer));
 		return Viewer;
+	}
+
+	/// <summary>
+	/// Creates an initialized history page that uses the same site and culture as the article viewer.
+	/// </summary>
+	/// <param name="Slug">The article slug from the requested history route.</param>
+	/// <returns>The history page backed by the test SQLite database.</returns>
+	private ArticleHistoryModel CreateHistory(string Slug)
+	{
+		DefaultHttpContext Http = CreateHttpContext();
+		SiteResolverService Resolver = new(Configuration, new HttpContextAccessor { HttpContext = Http });
+		ArticleHistoryModel Page = new(Context, Resolver) { UrlSlug = Slug };
+		Page.PageContext = new() { HttpContext = Http, RouteData = new(), ActionDescriptor = new() };
+		Page.OnPageHandlerExecuting(new(Page.PageContext, [], new HandlerMethodDescriptor(), new Dictionary<string, object?>(), Page));
+		return Page;
 	}
 
 	/// <summary>

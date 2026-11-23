@@ -1053,6 +1053,9 @@
   <data name="View Full Resolution" xml:space="preserve"><value>عرض بالدقة الكاملة</value></data>
   <data name="View full resolution for revision {0}" xml:space="preserve"><value>عرض النسخة {0} بالدقة الكاملة</value></data>
   <data name="View history" xml:space="preserve"><value>عرض السجل</value></data>
+  <data name="View source" xml:space="preserve"><value>عرض المصدر</value></data>
+  <data name="Source for {0}" xml:space="preserve"><value>مصدر «{0}»</value></data>
+  <data name="Back to revision" xml:space="preserve"><value>العودة إلى المراجعة</value></data>
   <data name="View My Profile" xml:space="preserve"><value>عرض ملفي الشخصي</value></data>
   <data name="View revision ↗" xml:space="preserve"><value>عرض النسخة ↗</value></data>
   <data name="View the Firehose" xml:space="preserve"><value>عرض السجل الحي</value></data>

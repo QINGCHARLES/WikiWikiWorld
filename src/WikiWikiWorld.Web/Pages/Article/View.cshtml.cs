@@ -86,9 +86,14 @@ public sealed class ViewModel(
     public string PlainTextTitle { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether this is a prior revision.
+    /// Gets whether a specific revision was loaded and is no longer the current one.
     /// </summary>
-    public bool IsPriorRevision { get; set; }
+    public bool IsPriorRevision { get; private set; }
+
+	/// <summary>Gets the read-only source URL when viewing a previous revision.</summary>
+	public string? RevisionSourcePath => IsPriorRevision && DisplayedRevision is { } Previous && Revision is { } Timestamp
+		? $"{ArticleUrlHelper.BuildRevisionPath(Previous, Timestamp)}/source"
+		: null;
 
     /// <summary>
     /// Gets or sets a value indicating whether the title has changed compared to the current revision.
@@ -263,8 +268,8 @@ public sealed class ViewModel(
         && !R.Text.Contains("{{DownloadsBox ", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Loads the requested article revision, using its canonical title for plain-text metadata
-    /// and its optional display title for the formatted heading.
+    /// Loads the requested revision and resolves its current article by identity even after a rename.
+    /// Uses the saved title for metadata and the optional display title for the formatted heading.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
     /// <returns>The page or result.</returns>
@@ -281,24 +286,24 @@ public sealed class ViewModel(
 
         ArticleRevision? SpecificRevision = null;
 
-        // Check if a revision is specified
-        if (!string.IsNullOrWhiteSpace(Revision) && TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
-        {
-            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
-            SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
-
-            ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-            CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
-
-            // Determine if this revision is the latest one
-            IsViewingCurrentRevision = SpecificRevision is not null && CurrentRevision is not null && SpecificRevision.DateCreated == CurrentRevision.DateCreated;
-        }
-        else
-        {
-            ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-            CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
-            IsViewingCurrentRevision = true;
-        }
+		if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
+		{
+			ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
+			SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
+		}
+		if (SpecificRevision is null)
+		{
+			ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
+			CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
+		}
+		else
+		{
+			CurrentRevision = SpecificRevision.IsCurrent ? SpecificRevision : await Context.ArticleRevisions
+				.AsNoTracking()
+				.FirstOrDefaultAsync(r => r.CanonicalArticleId == SpecificRevision.CanonicalArticleId && r.IsCurrent, CancellationToken);
+		}
+		IsPriorRevision = SpecificRevision is { IsCurrent: false };
+		IsViewingCurrentRevision = !IsPriorRevision;
 
         DisplayedRevision = SpecificRevision ?? CurrentRevision;
 
@@ -397,10 +402,6 @@ public sealed class ViewModel(
         RecentAuthors = await ArticleRevisionService.GetRecentAuthorsAsync(DisplayedRevision.CanonicalArticleId, MaxRevisionDate, CancellationToken);
 		ThreadCount = await ArticleRevisionService.GetThreadCountAsync(DisplayedRevision.CanonicalArticleId, CancellationToken);
 
-        // Calculate View Properties
-        // Note: Logic moved from View.cshtml
-        IsPriorRevision = Revision is not null && DisplayedRevision?.DateCreated != CurrentRevision?.DateCreated;
-        
         if (IsPriorRevision)
         {
             HasTitleChanged = DisplayedRevision?.Title != CurrentRevision?.Title;
@@ -423,7 +424,7 @@ public sealed class ViewModel(
             CancellationToken);
         DisplayTitleFitStyle = DisplayTitleHelper.BuildFitStyle(RevisionToRender.DisplayTitle, RevisionToRender.Title);
 
-        string EditUrl = $"{ArticleUrlHelper.BuildArticlePath(RevisionToRender)}/edit";
+        string EditUrl = IsPriorRevision ? string.Empty : ArticleUrlHelper.BuildRelativePath(RevisionToRender, "edit");
         RenderedArticle RenderedArticle = await ArticleRenderer.RenderAsync(RevisionToRender, SiteId, Culture, EditUrl, CancellationToken, CategoryPage);
         ArticleRevisionHtml = RenderedArticle.Html;
         Categories = RenderedArticle.Categories;
@@ -437,16 +438,15 @@ public sealed class ViewModel(
         FileSourceUrl = RenderedArticle.FileSourceUrl;
         IsFileSourceApprovedDomain = RenderedArticle.IsFileSourceApprovedDomain;
 
-        // Resolve bookmark state for the displayed (canonical) article when the visitor is signed in.
-        BookmarkControl = new(DisplayedArticlePath, IsSignedIn: false, []);
-        if (User.Identity?.IsAuthenticated == true)
+        BookmarkControl = new(CurrentArticlePath, IsSignedIn: false, []);
+        if (CurrentRevision is { } CurrentArticle && User.Identity?.IsAuthenticated == true)
         {
             User? CurrentUserForBookmark = await UserManager.GetUserAsync(User);
             if (CurrentUserForBookmark is not null)
             {
-                IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(RevisionToRender.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
-                BookmarkControl = new(DisplayedArticlePath, IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUserForBookmark.UserName),
-                    ArticleTitle: RevisionToRender.Title);
+                IReadOnlyList<BookmarkListMembership> Lists = await BookmarkService.GetListMembershipsAsync(CurrentArticle.CanonicalArticleId, CurrentUserForBookmark.Id, CancellationToken);
+                BookmarkControl = new(CurrentArticlePath, IsSignedIn: true, Lists, BookmarkControlModel.BuildBookmarksPath(CurrentUserForBookmark.UserName),
+                    ArticleTitle: CurrentArticle.Title);
             }
         }
 
@@ -703,42 +703,6 @@ public sealed class ViewModel(
             .FirstOrDefaultAsync(CancellationToken);
 
         return Current is not null && !Current.UrlSlug.Equals(UrlSlug, StringComparison.OrdinalIgnoreCase) ? Current : null;
-    }
-
-    /// <summary>
-    /// Tries to parse a revision date string into a DateTimeOffset.
-    /// </summary>
-    /// <param name="Revision">The revision string (timestamp).</param>
-    /// <param name="DateTime">The parsed DateTimeOffset.</param>
-    /// <returns>True if parsing was successful; otherwise, false.</returns>
-    private static bool TryParseRevisionDate(string Revision, out DateTimeOffset DateTime)
-    {
-        DateTime = default;
-
-        if (Revision.Length == 14)
-        {
-            if (DateTimeOffset.TryParseExact(
-                Revision, "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedDate14))
-            {
-                DateTime = ParsedDate14;
-                return true;
-            }
-        }
-        else if (Revision.Length >= 15 && Revision.Length <= 21)
-        {
-            string NormalizedRevision = Revision.PadRight(21, '0'); // Ensure proper format
-
-            if (DateTimeOffset.TryParseExact(
-                NormalizedRevision, "yyyyMMddHHmmssfffffff", CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedDateFull))
-            {
-                DateTime = ParsedDateFull;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /// <summary>

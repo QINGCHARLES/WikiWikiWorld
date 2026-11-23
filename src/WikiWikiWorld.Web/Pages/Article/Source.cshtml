@@ -1,0 +1,39 @@
+@page
+@model WikiWikiWorld.Web.Pages.Article.SourceModel
+@{
+	ViewData["Title"] = L["Source for {0}", Model.ArticleTitle];
+}
+
+<article class="revision-source">
+	<a href="@Model.RevisionPath">@L["Back to revision"]</a>
+	<h1>@ViewData["Title"]</h1>
+	<label for="RevisionMarkdown">@L["Article Content"]</label>
+	<textarea id="RevisionMarkdown" rows="20" readonly spellcheck="false" dir="auto">
+@Model.Markdown</textarea>
+</article>
+
+<style>
+	.revision-source {
+		max-inline-size: 900px;
+		margin-inline: auto;
+		padding: var(--grid-gutter);
+	}
+
+	.revision-source h1 {
+		font-size: var(--step-3);
+		margin-block: var(--space-s);
+	}
+
+	.revision-source textarea {
+		display: block;
+		box-sizing: border-box;
+		margin-block-start: var(--space-2xs);
+		padding: var(--space-s);
+		border: 1px solid var(--color-border);
+		border-radius: 0.5rem;
+		background: var(--color-background);
+		color: var(--color-foreground);
+		font: var(--step--1) / 1.5 monospace;
+		resize: vertical;
+	}
+</style>

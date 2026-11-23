@@ -42,7 +42,7 @@
 	</div>
 }
 
-@if (Model.SaveWarnings.Count > 0)
+@if (!Model.IsPriorRevision && Model.SaveWarnings.Count > 0)
 {
 	<div class="revision-notice save-warnings" role="status">
 		<strong>@L["Saved, but the article needs attention."]</strong> @L["Only you see this message."]
@@ -142,81 +142,102 @@ else if(Model.DisplayedRevision is not null)
 			<dd><time datetime="@Model.DisplayedRevision.DateCreated.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@RelativeTimeText</time></dd>
 		</dl>
 	</div>
+}
+
+@if (Model.DisplayedRevision is not null)
+{
+	string? SourcePath = Model.RevisionSourcePath;
 	<div class="article-actions" role="toolbar" aria-label="@L["Article actions"]">
-		<partial name="_Bookmark" model="Model.BookmarkControl" />
-		<a href="@Model.TalkPath" class="article-action-talk" rel="nofollow">
-			<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
-				<use href="@IconSpriteUrl#Discuss"></use>
-			</svg>
-			<span>@Model.TalkLabel</span>
-		</a>
-		<div class="m3-split-button">
-			<a href="@($"{Model.DisplayedArticlePath}/edit")" rel="nofollow">
-				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-					<use href="@IconSpriteUrl#Edit"></use>
+		@if (Model.CurrentRevision is not null)
+		{
+			<partial name="_Bookmark" model="Model.BookmarkControl" />
+			<a href="@Model.TalkPath" class="article-action-talk" rel="nofollow">
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+					<use href="@IconSpriteUrl#Discuss"></use>
 				</svg>
-				<span>@L["Edit"]<span class="action-label-extra">@L["EditArticle.Suffix"]</span></span>
+				<span>@Model.TalkLabel</span>
 			</a>
-			<details name="site-menu" class="dropdown-menu">
-				<summary aria-label="@L["More article actions"]">
-					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-						<use href="@IconSpriteUrl#More"></use>
-					</svg>
-				</summary>
-				<div class="menu-content">
-					@if (Model.DisplayedRevision?.Type == WikiWikiWorld.Data.Models.ArticleType.File)
-					{
-						<a href="@($"{Model.DisplayedArticlePath}/edit#file-upload-section")" rel="nofollow">
+		}
+		<div class="m3-split-button">
+			<a href="@(SourcePath ?? $"{Model.CurrentArticlePath}/edit")" rel="nofollow">
+				<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+					<use href="@($"{IconSpriteUrl}#{(SourcePath is null ? "Edit" : "Source")}")"></use>
+				</svg>
+				@if (SourcePath is not null)
+				{
+					<span>@L["View source"]</span>
+				}
+				else
+				{
+					<span>@L["Edit"]<span class="action-label-extra">@L["EditArticle.Suffix"]</span></span>
+				}
+			</a>
+			@if (Model.CurrentRevision is not null)
+			{
+				<details name="site-menu" class="dropdown-menu">
+					<summary aria-label="@L["More article actions"]">
+						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+							<use href="@IconSpriteUrl#More"></use>
+						</svg>
+					</summary>
+					<div class="menu-content">
+						@if (!Model.IsPriorRevision && Model.DisplayedRevision.Type == WikiWikiWorld.Data.Models.ArticleType.File)
+						{
+							<a href="@($"{Model.DisplayedArticlePath}/edit#file-upload-section")" rel="nofollow">
+								<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+									<use href="@IconSpriteUrl#Upload"></use>
+								</svg>
+								<span>@L["Upload new file version"]</span>
+							</a>
+						}
+						<a href="@($"{Model.CurrentArticlePath}/history")" rel="nofollow">
 							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-								<use href="@IconSpriteUrl#Upload"></use>
+								<use href="@IconSpriteUrl#History"></use>
 							</svg>
-							<span>@L["Upload new file version"]</span>
+							<span>@L["View history"]</span>
 						</a>
-					}
-					<a href="@($"{Model.DisplayedArticlePath}/history")" rel="nofollow">
-						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-							<use href="@IconSpriteUrl#History"></use>
-						</svg>
-						<span>@L["View history"]</span>
-					</a>
-					<a href="#">
-						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-							<use href="@IconSpriteUrl#Watch"></use>
-						</svg>
-						<span>@L["Watch article"]</span>
-					</a>
-					<a href="@($"{Model.DisplayedArticlePath}/links")" rel="nofollow">
-						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-							<use href="@IconSpriteUrl#Links"></use>
-						</svg>
-						<span>@L["What links here"]</span>
-					</a>
-					<a href="@($"{Model.DisplayedArticlePath}/languages")" rel="nofollow">
-						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-							<use href="@IconSpriteUrl#Languages"></use>
-						</svg>
-						<span>@L["Other languages"]</span>
-					</a>
-					<a href="#">
-						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-							<use href="@IconSpriteUrl#Report"></use>
-						</svg>
-						<span>@L["Report article"]</span>
-					</a>
-					<hr />
-					<a href="#" class="menu-item-danger">
-						<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-							<use href="@IconSpriteUrl#Delete"></use>
-						</svg>
-						<span>@L["Delete article"]</span>
-					</a>
-				</div>
-			</details>
+						<a href="#">
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+								<use href="@IconSpriteUrl#Watch"></use>
+							</svg>
+							<span>@L["Watch article"]</span>
+						</a>
+						<a href="@($"{Model.CurrentArticlePath}/links")" rel="nofollow">
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+								<use href="@IconSpriteUrl#Links"></use>
+							</svg>
+							<span>@L["What links here"]</span>
+						</a>
+						<a href="@($"{Model.CurrentArticlePath}/languages")" rel="nofollow">
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+								<use href="@IconSpriteUrl#Languages"></use>
+							</svg>
+							<span>@L["Other languages"]</span>
+						</a>
+						<a href="#">
+							<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+								<use href="@IconSpriteUrl#Report"></use>
+							</svg>
+							<span>@L["Report article"]</span>
+						</a>
+						@if (!Model.IsPriorRevision)
+						{
+							<hr />
+							<a href="#" class="menu-item-danger">
+								<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+									<use href="@IconSpriteUrl#Delete"></use>
+								</svg>
+								<span>@L["Delete article"]</span>
+							</a>
+						}
+					</div>
+				</details>
+			}
 		</div>
 	</div>
 }
 
-@if (Model.ShowPublicationUploadAside && Model.DisplayedRevision is not null)
+@if (!Model.IsPriorRevision && Model.ShowPublicationUploadAside && Model.DisplayedRevision is not null)
 {
 	<aside class="publication-upload-cta">
 		<p>
@@ -317,7 +338,7 @@ else if(Model.DisplayedRevision is not null)
 					</svg>
 					<span>@L["View Full Resolution"]</span>
 				</a>
-				@if (User.Identity?.IsAuthenticated == true)
+				@if (!Model.IsPriorRevision && User.Identity?.IsAuthenticated == true)
 				{
 					<a href="@($"{Model.DisplayedArticlePath}/edit#file-upload-section")" class="button" rel="nofollow">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -341,7 +362,7 @@ else if(Model.DisplayedRevision is not null)
 								@SharedResource.Plural("FileHistory.VersionsRecorded", Model.FileRevisionHistory.Count)
 							</p>
 						</div>
-						@if (User.Identity?.IsAuthenticated == true)
+						@if (!Model.IsPriorRevision && User.Identity?.IsAuthenticated == true)
 						{
 							<a href="@($"{Model.DisplayedArticlePath}/edit#file-upload-section")" class="button" rel="nofollow">
 								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
