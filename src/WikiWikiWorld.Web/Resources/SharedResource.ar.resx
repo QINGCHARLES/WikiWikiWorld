@@ -189,8 +189,6 @@
   <data name="Choose…" xml:space="preserve"><value>اختر…</value></data>
   <data name="Citations" xml:space="preserve"><value>المراجع</value></data>
   <data name="Cite primary sources where possible." xml:space="preserve"><value>استشهد بالمصادر الأولية متى أمكن.</value></data>
-  <data name="Cite this issue" xml:space="preserve"><value>استشهد بهذا العدد</value></data>
-  <data name="Cite this Magazedia page" xml:space="preserve"><value>استشهد بهذه الصفحة من Magazedia</value></data>
   <data name="Clear list" xml:space="preserve"><value>إفراغ القائمة</value></data>
   <data name="Clear list…" xml:space="preserve"><value>إفراغ القائمة…</value></data>
   <data name="Clear this list?" xml:space="preserve"><value>إفراغ هذه القائمة؟</value></data>
@@ -300,7 +298,6 @@
   <data name="Download didn’t start? Save header" xml:space="preserve"><value>لم يبدأ التنزيل؟ احفظ الترويسة</value></data>
   <data name="Download file not available." xml:space="preserve"><value>ملف التنزيل غير متاح.</value></data>
   <data name="Download header" xml:space="preserve"><value>تنزيل الترويسة</value></data>
-  <data name="Download RIS citation" xml:space="preserve"><value>نزّل الاستشهاد بصيغة RIS</value></data>
   <data name="Download the finished header, upload it as a {0}, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically." xml:space="preserve"><value>نزّل الترويسة الجاهزة، وارفعها بوصفها {0}، ثم الصق هذا الترميز في مقالتك. يفترض الترميز أن المعرّف النصي لمقالة الملف يطابق اسم الملف المنزّل دون «‎.avif»؛ وإن أعطيت مقالة الملف معرّفًا آخر فاستخدمه في الترميز. لا يُنشر شيء تلقائيًا.</value></data>
   <data name="Download URL" xml:space="preserve"><value>رابط التنزيل</value></data>
   <data name="Drag the frame or its corners. Use arrow keys to move or resize; hold Shift for 10 pixels. Double-click the frame to reset. Zoom in and scroll for detail." xml:space="preserve"><value>اسحب الإطار أو زواياه. استخدم مفاتيح الأسهم للتحريك أو تغيير الحجم؛ واضغط Shift للتحريك 10 بكسلات. انقر نقرًا مزدوجًا على الإطار لإعادة ضبطه. كبّر ومرّر لرؤية التفاصيل.</value></data>

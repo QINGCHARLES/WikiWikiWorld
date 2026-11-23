@@ -38,11 +38,9 @@ public sealed class ViewModel(
 	/// <summary>Gets the reciprocal language links for a current Magazedia article.</summary>
 	public IReadOnlyList<PublicationAlternate> LanguageAlternates { get; private set; } = [];
 
-	/// <summary>Gets a citation for the original magazine issue when the article describes one.</summary>
-	public PublicationCitation? IssueCitation { get; private set; }
+	/// <summary>Holds the parsed publication facts for an explicit citation download request.</summary>
+	private PublicationFacts? CitationFacts;
 
-	/// <summary>Gets a citation for the individual revision of this Magazedia page.</summary>
-	public PublicationCitation? PageCitation { get; private set; }
     /// <summary>
     /// Gets or sets the URL slug of the article.
     /// </summary>
@@ -286,7 +284,7 @@ public sealed class ViewModel(
     /// <summary>
     /// Loads the requested revision and resolves its current article by identity even after a rename.
     /// Uses the saved title for metadata and the optional display title for the formatted heading.
-    /// Builds the head and citations for a current Magazedia publication or issue.
+    /// Builds the head for a current Magazedia publication or issue.
     /// </summary>
     /// <param name="CancellationToken">A cancellation token.</param>
     /// <returns>The page or result.</returns>
@@ -456,14 +454,7 @@ public sealed class ViewModel(
 			{
 				Head = await PublicationHeadBuilder.BuildAsync(RevisionToRender, RenderedArticle, Publication, Site, Request, CancellationToken);
 				MetaDescription = Head.Description ?? string.Empty;
-				string RevisionPath = ArticleUrlHelper.BuildRevisionPath(RevisionToRender,
-					ArticleHistoryModel.FormatRevisionTimestamp(RevisionToRender.DateCreated));
-				string Permalink = new Uri(new Uri(Head.CanonicalUrl), RevisionPath).AbsoluteUri;
-				PageCitation = PublicationCitation.ForPage(Head, RevisionToRender, Permalink);
-				if (Publication.IsIssue)
-				{
-					IssueCitation = PublicationCitation.ForIssue(Head, Publication);
-				}
+				CitationFacts = Publication;
 			}
 			LanguageAlternates = await PublicationHeadBuilder.GetAlternatesAsync(RevisionToRender, Site, Request, CancellationToken);
 		}
@@ -549,8 +540,24 @@ public sealed class ViewModel(
 
 		IActionResult Result = await OnGetAsync(CancellationToken);
 		if (Result is not Microsoft.AspNetCore.Mvc.RazorPages.PageResult) return Result;
-		PublicationCitation? Citation = Kind == "issue" ? IssueCitation : PageCitation;
-		if (Citation is null) return NotFound();
+		if (Head is not { } Metadata || CitationFacts is not { } Facts || DisplayedRevision is not { } Article
+			|| (Kind == "issue" && !Facts.IsIssue))
+		{
+			return NotFound();
+		}
+
+		PublicationCitation Citation;
+		if (Kind == "issue")
+		{
+			Citation = PublicationCitation.ForIssue(Metadata, Facts);
+		}
+		else
+		{
+			string RevisionPath = ArticleUrlHelper.BuildRevisionPath(Article,
+				ArticleHistoryModel.FormatRevisionTimestamp(Article.DateCreated));
+			string Permalink = new Uri(new Uri(Metadata.CanonicalUrl), RevisionPath).AbsoluteUri;
+			Citation = PublicationCitation.ForPage(Metadata, Article, Permalink);
+		}
 
 		Response.Headers["X-Robots-Tag"] = "noindex";
 		return File(Encoding.UTF8.GetBytes(Citation.Ris), "application/x-research-info-systems", $"magazedia-{Kind}.ris");

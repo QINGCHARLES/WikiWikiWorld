@@ -76,14 +76,14 @@ Emit one `application/ld+json` graph. Give the `WebPage` the canonical URL as it
 
 ## Stage 7 — Let readers cite the issue or the wiki entry
 
-- [ ] Reuse the verified fields to offer two explicitly labelled actions: **Cite this issue** and **Cite this Magazedia page**. Draft a human-readable citation for each. For the wiki entry, include its revision-specific permalink. For the issue, preserve printed designations, supported dates and the parent publication. Include partial citations when a fact is unknown.
+- [ ] Offer direct RIS downloads for the issue and its Magazedia entry. Keep article rendering focused on reading. For the wiki entry, include its revision-specific permalink. For the issue, preserve printed designations, supported dates and the parent publication. Include partial citations when a fact is unknown.
 - [ ] Add a small downloadable RIS export and verify a real Zotero import for both choices. Check title, publication, issue, date, edition and URL. Consider mapping individual contents entries or contributor roles after these two citations work with representative issues. [Zotero bibliographic formats](https://www.zotero.org/support/dev/data_formats)
 
 ## Rollout notes
 
 The implementation combines same-type infobox blocks when their fields are disjoint. The four publication examples use two such blocks each. Overlapping fields across boxes can indicate competing subjects, so those pages keep their ordinary metadata until the overlap is resolved.
 
-The article now offers **Cite this issue** for an issue and **Cite this Magazedia page** for its encyclopedia entry. The issue's RIS uses the magazine item type and preserves a seasonal or combined cover designation in its notes. The encyclopedia citation uses the exact wiki revision URL.
+Direct RIS downloads use `?handler=citation&kind=issue` on issue pages or `?handler=citation&kind=page` for the wiki entry. The issue's RIS uses the magazine item type and preserves a seasonal or combined cover designation in its notes. The encyclopedia citation uses the exact wiki revision URL. The article head carries the JSON-LD and share metadata.
 
 For publication headers, prepare a wide JPEG using the same vertical focus as the hero. For issue covers, prepare a wide JPEG with the full cover visible. Run the following from the checkout with PowerShell and ImageMagick, using a local copy of the revision image.
 
@@ -123,3 +123,10 @@ The local `artifacts/publication-metadata/sitefiles/` directory contains the pre
 - Imported both production RIS downloads into an isolated Zotero 10.0.8 library. Zotero recorded the issue as a magazine item with its Fall 2016 cover date note and the Magazedia entry as a webpage with its revision permalink.
 
 The previous application image is retained as `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261123T061252Z-2d2c5467ed3d`. Pass that reference to `/home/deploy/update.sh` for application rollback. The wiki history retains the three previous revisions. Their source snapshots and exact edit payloads are in the local release record under `.local/releases/release-20261123T061252Z-2d2c5467ed3d/`.
+
+### Citation display fix · 23 November 2026
+
+- Removed the citation sections from the article body and generate RIS on direct download requests. The hotfix was built from the production branch at `480b02e9a469`.
+- Deployed `release-20261123T210758Z-480b02e9a469` at 21:09 UTC. The running image is `ghcr.io/qingcharles/wikiwikiworld@sha256:ead2a6a3d0026692723f1233c59854eb87f17be6d8a8ab3c7edb28872fdca072`.
+- All 436 tests passed on the release branch. Before-and-after checks on Fast Company and GQ Style Fall 2016 confirmed the controls were removed. Canonical URLs, Open Graph, JSON-LD and both direct RIS downloads matched exactly. The container reported zero restarts or application errors.
+- The rollback image is retained as `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261123T210758Z-480b02e9a469`.

@@ -454,23 +454,6 @@ else if(Model.DisplayedRevision is not null)
 
 		@Html.Raw(Model.ArticleRevisionHtml)
 
-		@if (Model.IssueCitation is { } IssueCitation)
-		{
-			<details>
-				<summary>@L["Cite this issue"]</summary>
-				<p>@IssueCitation.Text</p>
-				<a href="@(Model.CurrentArticlePath + "?handler=citation&kind=issue")" download>@L["Download RIS citation"]</a>
-			</details>
-		}
-		@if (Model.PageCitation is { } PageCitation)
-		{
-			<details>
-				<summary>@L["Cite this Magazedia page"]</summary>
-				<p>@PageCitation.Text</p>
-				<a href="@(Model.CurrentArticlePath + "?handler=citation&kind=page")" download>@L["Download RIS citation"]</a>
-			</details>
-		}
-
 		@if(Model.IsPriorRevision)
 		{
 			<p>
