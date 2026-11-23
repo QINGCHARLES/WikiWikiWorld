@@ -76,14 +76,14 @@ Emit one `application/ld+json` graph. Give the `WebPage` the canonical URL as it
 
 ## Stage 7 — Let readers cite the issue or the wiki entry
 
-- [ ] Reuse the verified fields to offer two explicitly labelled actions: **Cite this issue** and **Cite this Magazedia page**. Draft a human-readable citation for each. For the wiki entry, include its revision-specific permalink. For the issue, preserve printed designations, supported dates and the parent publication. Include partial citations when a fact is unknown.
+- [ ] Offer direct RIS downloads for the issue and its Magazedia entry. Keep article rendering focused on reading. For the wiki entry, include its revision-specific permalink. For the issue, preserve printed designations, supported dates and the parent publication. Include partial citations when a fact is unknown.
 - [ ] Add a small downloadable RIS export and verify a real Zotero import for both choices. Check title, publication, issue, date, edition and URL. Consider mapping individual contents entries or contributor roles after these two citations work with representative issues. [Zotero bibliographic formats](https://www.zotero.org/support/dev/data_formats)
 
 ## Rollout notes
 
 The implementation combines same-type infobox blocks when their fields are disjoint. The four publication examples use two such blocks each. Overlapping fields across boxes can indicate competing subjects, so those pages keep their ordinary metadata until the overlap is resolved.
 
-The article now offers **Cite this issue** for an issue and **Cite this Magazedia page** for its encyclopedia entry. The issue's RIS uses the magazine item type and preserves a seasonal or combined cover designation in its notes. The encyclopedia citation uses the exact wiki revision URL.
+Direct RIS downloads use `?handler=citation&kind=issue` on issue pages or `?handler=citation&kind=page` for the wiki entry. The issue's RIS uses the magazine item type and preserves a seasonal or combined cover designation in its notes. The encyclopedia citation uses the exact wiki revision URL. The article head carries the JSON-LD and share metadata.
 
 For publication headers, prepare a wide JPEG using the same vertical focus as the hero. For issue covers, prepare a wide JPEG with the full cover visible. Run the following from the checkout with PowerShell and ImageMagick, using a local copy of the revision image.
 

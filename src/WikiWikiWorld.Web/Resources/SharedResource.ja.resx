@@ -149,8 +149,6 @@
   <data name="Choose…" xml:space="preserve"><value>選択…</value></data>
   <data name="Citations" xml:space="preserve"><value>出典</value></data>
   <data name="Cite primary sources where possible." xml:space="preserve"><value>可能な限り一次資料を引用しましょう。</value></data>
-  <data name="Cite this issue" xml:space="preserve"><value>この号を引用</value></data>
-  <data name="Cite this Magazedia page" xml:space="preserve"><value>このMagazediaページを引用</value></data>
   <data name="Clear list" xml:space="preserve"><value>リストを空にする</value></data>
   <data name="Clear list…" xml:space="preserve"><value>リストを空にする…</value></data>
   <data name="Clear this list?" xml:space="preserve"><value>このリストを空にしますか？</value></data>
@@ -254,7 +252,6 @@
   <data name="Download didn’t start? Save header" xml:space="preserve"><value>ダウンロードが始まらない場合はヘッダーを保存</value></data>
   <data name="Download file not available." xml:space="preserve"><value>ダウンロードファイルはありません。</value></data>
   <data name="Download header" xml:space="preserve"><value>ヘッダーをダウンロード</value></data>
-  <data name="Download RIS citation" xml:space="preserve"><value>RIS形式の引用情報をダウンロード</value></data>
   <data name="Download the finished header, upload it as a {0}, then paste this markup into your article. The markup expects the file article’s URL slug to match the downloaded filename without “.avif”; if you give the file article a different slug, use that in the markup instead. Nothing is published automatically." xml:space="preserve"><value>完成したヘッダーをダウンロードし、{0}としてアップロードしてから、このマークアップを記事に貼り付けてください。マークアップは、ファイル記事のURLスラッグがダウンロードしたファイル名（「.avif」を除く）と同じだと想定しています。別のスラッグにした場合は、マークアップのほうを合わせてください。自動では何も公開されません。</value></data>
   <data name="Download URL" xml:space="preserve"><value>ダウンロードURL</value></data>
   <data name="Drag the frame or its corners. Use arrow keys to move or resize; hold Shift for 10 pixels. Double-click the frame to reset. Zoom in and scroll for detail." xml:space="preserve"><value>枠や角をドラッグします。矢印キーで移動・サイズ変更でき、Shift を押すと10ピクセルずつ動きます。枠をダブルクリックするとリセットします。拡大してスクロールすると細部を確認できます。</value></data>
