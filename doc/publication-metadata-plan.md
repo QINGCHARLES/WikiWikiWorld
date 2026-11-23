@@ -114,4 +114,12 @@ The local `artifacts/publication-metadata/sitefiles/` directory contains the pre
 - Published the chiseled Linux image to a local archive and ran its extracted filesystem in a WSL jail as UID 1654. Verified HTTPS requests, JPEG assets, citation downloads, reciprocal alternates after a rename, alternate removal and site isolation.
 - Ran both downloaded RIS files through Zotero’s official RIS translator in a test harness. The issue retained its publication, volume, issue and cover season. The webpage retained its site name, revision date and permalink. [Zotero RIS translator](https://github.com/zotero/translators/blob/master/RIS.js)
 
-The production rollout includes uploading the prepared cards, applying the editorial revisions, checking a live sharing client and importing both RIS records in Zotero.
+### Production release · 23 November 2026
+
+- Deployed source `2d2c5467ed3d` as `release-20261123T061252Z-2d2c5467ed3d` at 06:15 UTC. The host is running `ghcr.io/qingcharles/wikiwikiworld@sha256:16c70a7ddce065fbde22a66c38a1f0aee9899f95d13162ff276c3e393fdcc709`.
+- Installed the three JPEGs beside their source revisions and checked their bytes, mode and ownership. Anonymous checks verified the seven publication and issue pages, their canonical links, the sitemap, a historical revision and its source view, and both RIS downloads. The container reported zero restarts or application errors.
+- MaggieTheBot added the Fast Company alt text in revision `1082` (from `970`), the George alt text in `1083` (from `1036`), and the GQ Style Fall 2016 parent link in `1084` (from `882`). Each save returned zero warnings. Verified the accessible image names in Chromium and the issue’s `isPartOf` link in the live JSON-LD.
+- Bluesky’s preview service returned the expected George portrait, GQ Style issue cover and Juxtapoz fallback card. [Bluesky link preview endpoint](https://github.com/bluesky-social/social-app/blob/main/src/lib/constants.ts)
+- Imported both production RIS downloads into an isolated Zotero 10.0.8 library. Zotero recorded the issue as a magazine item with its Fall 2016 cover date note and the Magazedia entry as a webpage with its revision permalink.
+
+The previous application image is retained as `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261123T061252Z-2d2c5467ed3d`. Pass that reference to `/home/deploy/update.sh` for application rollback. The wiki history retains the three previous revisions. Their source snapshots and exact edit payloads are in the local release record under `.local/releases/release-20261123T061252Z-2d2c5467ed3d/`.
