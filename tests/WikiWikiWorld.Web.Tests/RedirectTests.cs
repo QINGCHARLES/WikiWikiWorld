@@ -173,9 +173,9 @@ public sealed class RedirectTests : IDisposable
 	}
 
 	/// <summary>
-	/// Verifies that article history follows a rename and that reusing the former slug keeps the two histories distinct.
+	/// Verifies that reusing a renamed article's former slug keeps both histories and the older source attached to the right article.
 	/// </summary>
-	/// <returns>A task that completes when both histories and the original revision link have been checked.</returns>
+	/// <returns>A task that completes when both histories, the original revision link, and its source have been checked.</returns>
 	[Fact]
 	public async Task RenamedArticleHistoryRetainsOriginalRevisionWhenFormerSlugIsReused()
 	{
@@ -219,6 +219,16 @@ public sealed class RedirectTests : IDisposable
 		OriginalViewer.Revision = ArticleHistoryModel.FormatRevisionTimestamp(Original.DateCreated);
 		Assert.IsType<PageResult>(await OriginalViewer.OnGetAsync(default));
 		Assert.Equal(Original.Id, OriginalViewer.DisplayedRevision?.Id);
+		Assert.True(OriginalViewer.IsPriorRevision);
+		Assert.Equal("/new-title", OriginalViewer.CurrentArticlePath);
+		Assert.Equal($"/old-title/revision/{OriginalViewer.Revision}/source", OriginalViewer.RevisionSourcePath);
+
+		DefaultHttpContext Http = new();
+		Http.Request.Host = new("en.example.test");
+		SourceModel Source = new(Context, new(Configuration, new HttpContextAccessor { HttpContext = Http }));
+		Assert.IsType<PageResult>(await Source.OnGetAsync(Original.UrlSlug, OriginalViewer.Revision, default));
+		Assert.Equal("Original text.", Source.Markdown);
+		Assert.IsType<NotFoundResult>(await Source.OnGetAsync("new-title", OriginalViewer.Revision, default));
 	}
 
 	/// <summary>

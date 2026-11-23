@@ -269,6 +269,11 @@ ul.categories a {
     }
 }
 
+.article-actions .m3-split-button > a:only-child {
+    border-radius: 9999px;
+    padding-inline: 1.1rem;
+}
+
 .dropdown-menu {
     position: relative;
     display: inline-flex;
