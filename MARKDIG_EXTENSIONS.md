@@ -366,7 +366,7 @@ The publication began in 1993.{{Citation author=Smith, Jane |#| author=Doe, John
 - Citations are numbered by the first occurrence of each unique payload.
 - The first `Citations` block receives the bibliography. Use exactly one.
 - Without a `Citations` block, inline references still appear but no bibliography is rendered.
-- External citation and DOI links open in a new tab and receive the configured approved-domain `rel` policy.
+- External citation and DOI links open in a new tab and receive the trusted-domain `rel` policy.
 - Markdig's `""cited text""` syntax is unrelated; it produces a semantic `<cite>` element rather than a bibliography entry.
 
 ### `Category` and `Categories`
@@ -554,7 +554,7 @@ Bare `www.` text stays plain text in articles and timeline descriptions (`BareWw
 - Relative links are unchanged.
 - Images are ignored.
 - Every `http://`, `https://`, or protocol-relative external link receives `rel="noopener"`.
-- External links whose host is not in `SiteConfiguration.ApprovedLinkDomains` receive `rel="nofollow noopener"`.
+- External links whose host is not a trusted link domain (or a subdomain of one) receive `rel="nofollow noopener"`. Trusted domains are proposed by members and confirmed by administrators at `/wiki:trusted-domains`; see [roles and trusted link domains](doc/roles-and-trusted-domains.md).
 - Citation URLs apply the same approved-domain decision in their dedicated renderer.
 
 ## Built-in Markdig features in full articles

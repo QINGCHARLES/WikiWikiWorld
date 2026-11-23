@@ -81,5 +81,5 @@ public sealed class CategoryMembershipBackfillTests
 	/// <param name="Context">The test database context.</param>
 	/// <returns>A maintenance service using production parsing rules.</returns>
 	private static CategoryMembershipBackfill CreateBackfill(WikiWikiWorldDbContext Context) =>
-		new(Context, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())));
+		new(Context, new MarkdownPipelineFactory(new TrustedLinkDomainList()));
 }

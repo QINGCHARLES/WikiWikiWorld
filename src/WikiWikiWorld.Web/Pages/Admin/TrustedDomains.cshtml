@@ -1,0 +1,162 @@
+@page
+@model WikiWikiWorld.Web.Pages.Admin.TrustedDomainsModel
+@{
+	ViewData["Title"] = L["Review trusted domains"];
+}
+@functions {
+	/// <summary>Renders a UTC instant as a machine-readable time element with a short local date.</summary>
+	/// <param name="Instant">The instant to show.</param>
+	/// <returns>The time element.</returns>
+	private static Microsoft.AspNetCore.Html.IHtmlContent When(DateTimeOffset Instant) =>
+		new Microsoft.AspNetCore.Html.HtmlString(
+			$"<time datetime=\"{Instant.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)}\">{System.Net.WebUtility.HtmlEncode(Instant.UtcDateTime.ToString("d", CultureInfo.CurrentCulture))}</time>");
+
+	/// <summary>Renders a username as a link to its profile, or a dash when there is none (seeded rows, deleted accounts).</summary>
+	/// <param name="UserName">The username, if known.</param>
+	/// <returns>The link or dash.</returns>
+	private static Microsoft.AspNetCore.Html.IHtmlContent Person(string? UserName) => UserName is null
+		? new Microsoft.AspNetCore.Html.HtmlString("—")
+		: new Microsoft.AspNetCore.Html.HtmlString(
+			$"<a href=\"/@{Uri.EscapeDataString(UserName)}/profile\">{System.Net.WebUtility.HtmlEncode(UserName)}</a>");
+}
+
+<figure></figure>
+<hgroup>
+	<h1>@L["Review trusted domains"]</h1>
+	<p class="subtitle">@L["Confirming a domain makes every link to it, and to its subdomains, followed by search engines on every page, straight away."]</p>
+</hgroup>
+
+<article class="trusted-domains">
+	@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+	{
+		<div role="status">@Model.SuccessMessage</div>
+	}
+
+	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+	{
+		<div role="alert">@Model.ErrorMessage</div>
+	}
+
+	<p>@L["Trust official sites: magazines and publishers, libraries, archives, museums and government. Deny hosts where anyone can publish (blogs, Medium, Substack, social networks), because trust covers every subdomain."] <a href="/wiki:trusted-domains">@L["Members' page"]</a></p>
+
+	<section>
+		<h2>@L["Waiting for review ({0})", Model.Pending.Count]</h2>
+		@if (Model.Pending.Count == 0)
+		{
+			<p>@L["No proposals are waiting."]</p>
+		}
+		@foreach (TrustedLinkDomainView Proposal in Model.Pending)
+		{
+			string NoteId = $"note-{Proposal.Id}";
+			<article class="proposal" aria-labelledby="proposal-@Proposal.Id">
+				<h3 id="proposal-@Proposal.Id"><a href="https://@Proposal.Domain/" target="_blank" rel="nofollow noopener noreferrer">@Proposal.Domain</a></h3>
+				<dl>
+					<dt>@L["Proposed by"]</dt>
+					<dd>@Person(Proposal.ProposedBy)</dd>
+					<dt>@L["Proposed"]</dt>
+					<dd>@When(Proposal.DateProposed)</dd>
+				</dl>
+				<blockquote>@Proposal.ProposalNote</blockquote>
+				<form method="post">
+					<input type="hidden" name="Id" value="@Proposal.Id" />
+					<label for="@NoteId">@L["Note to the proposer (optional)"]</label>
+					<textarea id="@NoteId" name="Note" rows="2" maxlength="@TrustedLinkDomainService.MaxNoteLength"></textarea>
+					<div class="form-actions">
+						<button type="submit" class="button" data-button-variant="primary" asp-page-handler="Confirm">@L["Confirm"]</button>
+						<button type="submit" class="button" data-button-variant="negative-quiet" asp-page-handler="Deny">@L["Deny"]</button>
+					</div>
+				</form>
+			</article>
+		}
+	</section>
+
+	<section>
+		<h2>@L["Trusted ({0})", Model.Trusted.Count]</h2>
+		@if (Model.Trusted.Count == 0)
+		{
+			<p>@L["No domains are trusted yet."]</p>
+		}
+		else
+		{
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">@L["Domain"]</th>
+						<th scope="col">@L["Reason"]</th>
+						<th scope="col">@L["Proposed by"]</th>
+						<th scope="col">@L["Confirmed by"]</th>
+						<th scope="col">@L["Withdraw"]</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (TrustedLinkDomainView Domain in Model.Trusted)
+					{
+						string RevokeNoteId = $"revoke-note-{Domain.Id}";
+						<tr>
+							<td><code>@Domain.Domain</code></td>
+							<td class="note">@Domain.ProposalNote</td>
+							<td>@Person(Domain.ProposedBy)</td>
+							<td>
+								@Person(Domain.ReviewedBy)
+								@if (Domain.DateReviewed is DateTimeOffset Reviewed)
+								{
+									<br />@When(Reviewed)
+								}
+							</td>
+							<td>
+								<form method="post" asp-page-handler="Revoke"
+									data-confirm="@L["Stop trusting {0}? Its links will be nofollow again on every page.", Domain.Domain]"
+									onsubmit="return confirm(this.dataset.confirm);">
+									<input type="hidden" name="Id" value="@Domain.Id" />
+									<label class="visually-hidden" for="@RevokeNoteId">@L["Reason for withdrawing {0} (optional)", Domain.Domain]</label>
+									<input type="text" id="@RevokeNoteId" name="Note" maxlength="@TrustedLinkDomainService.MaxNoteLength" placeholder="@L["Reason (optional)"]" />
+									<button type="submit" class="button" data-button-variant="negative-quiet">@L["Withdraw trust"]</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	</section>
+
+	@if (Model.History.Count > 0)
+	{
+		<section>
+			<h2>@L["Recent decisions"]</h2>
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">@L["Domain"]</th>
+						<th scope="col">@L["Status"]</th>
+						<th scope="col">@L["Proposed by"]</th>
+						<th scope="col">@L["Decided by"]</th>
+						<th scope="col">@L["Note"]</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (TrustedLinkDomainView Entry in Model.History)
+					{
+						bool Revoked = Entry.Status == TrustedLinkDomainStatus.Revoked;
+						DateTimeOffset? Decided = Revoked ? Entry.DateRevoked : Entry.DateReviewed;
+						<tr>
+							<td><code>@Entry.Domain</code></td>
+							<td>@TrustedLinkDomainService.StatusLabel(Entry.Status)</td>
+							<td>@Person(Entry.ProposedBy)</td>
+							<td>
+								@Person(Revoked ? Entry.RevokedBy : Entry.ReviewedBy)
+								@if (Decided is DateTimeOffset At)
+								{
+									<br />@When(At)
+								}
+							</td>
+							<td class="note">@(Revoked ? Entry.RevocationNote : Entry.ReviewNote)</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+	}
+</article>
+
+<partial name="_TrustedDomainsStyles" />

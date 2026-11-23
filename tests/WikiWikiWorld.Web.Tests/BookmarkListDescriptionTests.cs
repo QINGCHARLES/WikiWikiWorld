@@ -182,7 +182,7 @@ public sealed class BookmarkListDescriptionTests : IDisposable
 		BookmarkService Service = new(Context);
 		int ListId = (await Service.CreateEmptyListAsync("Markdown", true, Owner, 1, Source, default)).ListId!.Value;
 		BookmarkListDetails Details = (await Service.GetListDetailsAsync(ListId, Owner, false, default))!;
-		MarkdownPipelineFactory Factory = new(Options.Create(new SiteConfiguration()));
+		MarkdownPipelineFactory Factory = new(new TrustedLinkDomainList());
 		using IDocument Document = new HtmlParser().ParseDocument(Factory.RenderUserContentMarkdown(Details.Description));
 		Assert.Equal("Reading", Document.QuerySelector("h1")!.TextContent);
 		Assert.Equal("Italic", Document.QuerySelector("em")!.TextContent);

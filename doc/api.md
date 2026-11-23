@@ -171,10 +171,11 @@ Slashes get optional break points automatically. After saving, `GET` the article
 ### Delete Article
 - **Endpoint**: `DELETE /api/article/{UrlSlug}`
 - **Description**: Soft-deletes the current revision of an article.
-- **Authorization**: Requires Bearer Token.
+- **Authorization**: Requires Bearer Token, and the `DeleteArticles` permission (Senior Editor or Administrator) for anything other than the caller's own `@user` page. See [roles](roles-and-trusted-domains.md).
 - **Responses**:
   - `200 OK`: Article deleted successfully.
   - `401 Unauthorized`: Missing or invalid token.
+  - `403 Forbidden`: Another account's user page, or the caller lacks the `DeleteArticles` permission.
   - `404 Not Found`: Article not found.
 
 ---

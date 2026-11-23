@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using WikiWikiWorld.Web.Infrastructure;
 using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Admin;
@@ -9,7 +10,7 @@ namespace WikiWikiWorld.Web.Pages.Admin;
 /// </summary>
 /// <param name="SiteResolverService">The site resolver service.</param>
 /// <param name="FileMigrationService">The file migration service.</param>
-[Authorize]
+[Authorize(Policy = nameof(Permission.UseAdminTools))]
 public sealed class MigrateFilesModel(
 	SiteResolverService SiteResolverService,
 	FileMigrationService FileMigrationService) : BasePageModel(SiteResolverService)

@@ -209,7 +209,7 @@ public sealed class InfoboxTests
 	/// <returns>HTML produced by the production pipeline before page-level layout processing.</returns>
 	private static string Render(string Source)
 	{
-		MarkdownPipeline Pipeline = new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())).GetPipeline();
+		MarkdownPipeline Pipeline = new MarkdownPipelineFactory(new TrustedLinkDomainList()).GetPipeline();
 		MarkdownDocument Document = Markdown.Parse(Source, Pipeline);
 		InfoboxExtension.Enrich(Document, TestInfoboxSchemas.Catalog, TestInfoboxSchemas.SiteId, "en");
 		FootnoteExtension.ReprocessFootnotes(Document, Pipeline);

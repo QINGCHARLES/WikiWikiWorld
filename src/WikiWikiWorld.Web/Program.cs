@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Scalar.AspNetCore;
@@ -20,6 +21,12 @@ using SixLabors.ImageSharp.Web.DependencyInjection;
 if (args.Length > 0 && args[0] == "backfill-categories")
 {
 	Environment.ExitCode = await CategoryMembershipBackfillCommand.RunAsync(args[1..]);
+	return;
+}
+
+if (args.Length > 0 && args[0] is "grant-role" or "revoke-role")
+{
+	Environment.ExitCode = await RoleAssignmentCommand.RunAsync(args);
 	return;
 }
 
@@ -168,6 +175,10 @@ Builder.Services.AddScoped<FileUploadStorageService>();
 Builder.Services.AddScoped<FileMigrationService>();
 Builder.Services.AddScoped<ArticleDomainRedirectService>();
 Builder.Services.AddScoped<ArticleLanguageService>();
+Builder.Services.AddSingleton<TrustedLinkDomainList>();
+Builder.Services.AddScoped<TrustedLinkDomainService>();
+Builder.Services.AddScoped<PermissionService>();
+Builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddScoped<ISitemapService, SitemapService>();
 Builder.Services.AddHttpContextAccessor();
@@ -209,6 +220,13 @@ Builder.Services.ConfigureApplicationCookie(Options =>
             Context.RejectPrincipal();
             await Context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
         }
+    };
+    // There is no access-denied page. Answer 403 instead of redirecting to one; the status-code page then shows the
+    // not-found page (with 404), so a refused account cannot tell an admin page exists.
+    Options.Events.OnRedirectToAccessDenied = Context =>
+    {
+        Context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
     };
 });
 
@@ -291,7 +309,16 @@ Builder.Services.AddHttpsRedirection(options =>
     options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
 });
 
-Builder.Services.AddAuthorization();
+// One policy per Permission, named after it; AppRoles.Grants decides which roles hold each one.
+Builder.Services.AddAuthorization(Options =>
+{
+    foreach (Permission Permission in Enum.GetValues<Permission>())
+    {
+        Options.AddPolicy(Permission.ToString(), Policy => Policy
+            .RequireAuthenticatedUser()
+            .AddRequirements(new PermissionRequirement(Permission)));
+    }
+});
 
 // Add services to the container.
 Builder.Services.AddRazorPages(options =>
@@ -317,6 +344,7 @@ Builder.Services.AddRazorPages(options =>
     // A page targeted by the dynamic transformer must keep a single conventional route,
     // otherwise dynamic matches become ambiguous (CreateEdit is also the /edit target).
     options.Conventions.AddPageRoute("/Wiki/Upload", "wiki:upload");
+    options.Conventions.AddPageRoute("/Wiki/TrustedDomains", "wiki:trusted-domains");
     options.Conventions.AddPageRoute("/Profile/View", "@{Username}/profile");
     options.Conventions.AddPageRoute("/Profile/Contributions", "@{Username}/contributions");
     options.Conventions.AddPageRoute("/Profile/Messages", "@{Username}/messages/{Tab?}");
@@ -365,6 +393,10 @@ App.Services.GetRequiredService<InfoboxSchemaCatalog>();
 
 using (IServiceScope StartupScope = App.Services.CreateScope())
 {
+	// Links rendered before this would all get nofollow. Requires AddRolesAndTrustedLinkDomains.sql to have been applied.
+	await App.Services.GetRequiredService<TrustedLinkDomainList>()
+		.ReloadAsync(StartupScope.ServiceProvider.GetRequiredService<WikiWikiWorldDbContext>(), CancellationToken.None);
+
 	FileUploadStorageService FileUploadStorageService = StartupScope.ServiceProvider.GetRequiredService<FileUploadStorageService>();
 	FileUploadStartupMaintenanceResult UploadRecovery = await FileUploadStorageService.FinalizeCommittedUploadsAndDeleteStaleTempFilesAsync(CancellationToken.None);
 	foreach (FileUploadRecoveryIssue Issue in UploadRecovery.Issues)

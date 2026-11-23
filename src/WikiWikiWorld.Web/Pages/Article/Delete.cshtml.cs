@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using WikiWikiWorld.Web.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Web.Services;
@@ -30,9 +31,10 @@ public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverServi
 	/// <summary>
 	/// Handles the POST request to delete an article.
 	/// </summary>
+	/// <param name="Permissions">Decides whether the account may delete pages other than its own user page.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <returns>A redirect to the home page, the page with errors, or a forbidden result for another account's user page.</returns>
-	public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
+	/// <returns>A redirect to the home page, the page with errors, or a forbidden result for another account's user page or for an account without the DeleteArticles permission.</returns>
+	public async Task<IActionResult> OnPostAsync([FromServices] PermissionService Permissions, CancellationToken CancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(UrlSlug))
 		{
@@ -53,7 +55,8 @@ public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverServi
 
 		try
 		{
-			await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CurrentUserId.Value, CancellationToken);
+			bool MayDeleteArticles = await Permissions.HasPermissionAsync(User, Permission.DeleteArticles, CancellationToken);
+			await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CurrentUserId.Value, MayDeleteArticles, CancellationToken);
 		}
 		catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
 		{

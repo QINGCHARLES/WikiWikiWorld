@@ -12,8 +12,7 @@ namespace WikiWikiWorld.Web.Tests;
 /// </summary>
 public sealed class YouTubeExtensionTests
 {
-	private static readonly IMarkdownPipelineFactory PipelineFactory = new MarkdownPipelineFactory(
-		Options.Create(new SiteConfiguration()));
+	private static readonly IMarkdownPipelineFactory PipelineFactory = new MarkdownPipelineFactory(new TrustedLinkDomainList());
 
 	/// <summary>
 	/// Verifies that supported references render the same local click-to-load placeholder.

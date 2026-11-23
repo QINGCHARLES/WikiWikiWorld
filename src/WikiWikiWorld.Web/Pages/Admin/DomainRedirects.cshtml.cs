@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using WikiWikiWorld.Web.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -15,7 +16,7 @@ namespace WikiWikiWorld.Web.Pages.Admin;
 /// <param name="DomainRedirectService">The domain redirect service.</param>
 /// <param name="SiteConfigurationOptions">The site configuration options.</param>
 /// <param name="UserManager">The identity user manager.</param>
-[Authorize]
+[Authorize(Policy = nameof(Permission.UseAdminTools))]
 public sealed class DomainRedirectsModel(
 	SiteResolverService SiteResolverService,
 	ArticleDomainRedirectService DomainRedirectService,

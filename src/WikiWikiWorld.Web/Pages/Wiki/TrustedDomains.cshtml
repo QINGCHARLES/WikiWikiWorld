@@ -1,0 +1,101 @@
+@page
+@model WikiWikiWorld.Web.Pages.Wiki.TrustedDomainsModel
+@{
+	ViewData["Title"] = L["Trusted link domains"];
+}
+
+<figure></figure>
+<hgroup>
+	<h1>@L["Trusted link domains"]</h1>
+	<p class="subtitle">@L["Search engines follow links to these sites. Every other outside link is marked nofollow."]</p>
+</hgroup>
+
+<article class="trusted-domains">
+	@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+	{
+		<div role="status">@Model.SuccessMessage</div>
+	}
+
+	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+	{
+		<div role="alert">@Model.ErrorMessage</div>
+	}
+
+	@if (Model.CanReview)
+	{
+		<p><a href="/Admin/TrustedDomains">@L["Review proposals ({0} waiting)", Model.PendingCount]</a></p>
+	}
+
+	<section>
+		<h2>@L["Propose a domain"]</h2>
+		<p>@L["Propose official sites you cite: magazine and publisher sites, libraries, archives, museums and government sites. Do not propose sites where anyone can publish, such as blogs, Medium, Substack or social networks. Trusting a domain also trusts all of its subdomains."]</p>
+		<p>@L["An administrator reviews every proposal. Links stay nofollow until it is confirmed."]</p>
+
+		<form method="post" asp-page-handler="Propose">
+			<p>
+				<label for="InputDomain">@L["Domain"]</label>
+				<input type="text" id="InputDomain" name="InputDomain" value="@Model.InputDomain" required
+					autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="url" maxlength="2048"
+					placeholder="example.com" aria-describedby="InputDomainHelp" />
+				<span id="InputDomainHelp" class="form-help">@L["A domain such as vogue.com, or paste any address on the site."]</span>
+			</p>
+			<p>
+				<label for="InputReason">@L["Why should it be trusted?"]</label>
+				<textarea id="InputReason" name="InputReason" rows="3" required maxlength="@TrustedLinkDomainService.MaxNoteLength"
+					aria-describedby="InputReasonHelp">@Model.InputReason</textarea>
+				<span id="InputReasonHelp" class="form-help">@L["Say whose site it is, such as \"Official site of Rolling Stone magazine\"."]</span>
+			</p>
+			<div class="form-actions">
+				<button type="submit" class="button" data-button-variant="primary">@L["Propose domain"]</button>
+			</div>
+		</form>
+	</section>
+
+	@if (Model.MyProposals.Count > 0)
+	{
+		<section>
+			<h2>@L["Your proposals"]</h2>
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">@L["Domain"]</th>
+						<th scope="col">@L["Status"]</th>
+						<th scope="col">@L["Proposed"]</th>
+						<th scope="col">@L["Administrator's note"]</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (TrustedLinkDomainView Proposal in Model.MyProposals)
+					{
+						string? Note = Proposal.Status == TrustedLinkDomainStatus.Revoked ? Proposal.RevocationNote : Proposal.ReviewNote;
+						<tr>
+							<td><code>@Proposal.Domain</code></td>
+							<td>@TrustedLinkDomainService.StatusLabel(Proposal.Status)</td>
+							<td><time datetime="@Proposal.DateProposed.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)">@Proposal.DateProposed.UtcDateTime.ToString("d", CultureInfo.CurrentCulture)</time></td>
+							<td class="note">@Note</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+	}
+
+	<section>
+		<h2>@L["Trusted domains ({0})", Model.Trusted.Count]</h2>
+		@if (Model.Trusted.Count == 0)
+		{
+			<p>@L["No domains are trusted yet."]</p>
+		}
+		else
+		{
+			<ul class="domain-list">
+				@foreach (TrustedLinkDomainView Domain in Model.Trusted)
+				{
+					<li><code>@Domain.Domain</code></li>
+				}
+			</ul>
+		}
+	</section>
+</article>
+
+<partial name="_TrustedDomainsStyles" />

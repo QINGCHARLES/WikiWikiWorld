@@ -5,6 +5,8 @@
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
 @inject WikiWikiWorld.Web.Services.SiteStylesheetCatalog Stylesheets
+@inject WikiWikiWorld.Web.Infrastructure.PermissionService Permissions
+@inject WikiWikiWorld.Web.Services.TrustedLinkDomainService TrustedDomains
 @{
 	string IconSpriteUrl = FileVersions.AddFileVersionToPath(Context.Request.PathBase, Url.Content("~/icons.svg"));
 	string? PreferredThemeValue = (ViewData["PreferredTheme"] as string)?.ToLowerInvariant();
@@ -83,8 +85,14 @@
 					string AvatarInitial = !string.IsNullOrEmpty(UserName)
 						? char.ToUpperInvariant(UserName[0]).ToString()
 						: "?";
+					// Administrators see how many trusted-domain proposals wait for review, on the avatar and in the menu.
+					bool CanReviewDomains = await Permissions.HasPermissionAsync(User!, WikiWikiWorld.Web.Infrastructure.Permission.ReviewTrustedLinkDomains, Context.RequestAborted);
+					int PendingDomainCount = CanReviewDomains ? await TrustedDomains.CountPendingAsync(Context.RequestAborted) : 0;
+					string AccountMenuLabel = PendingDomainCount > 0
+						? L["Account menu for {0}, {1}", UserName, SharedResource.Plural("AccountMenu.PendingTrustedDomains", PendingDomainCount)]
+						: L["Account menu for {0}", UserName];
 					<details name="site-menu" class="dropdown-menu account-menu">
-						<summary class="account-menu-trigger" aria-label="@L["Account menu for {0}", UserName]">
+						<summary class="account-menu-trigger" aria-label="@AccountMenuLabel">
 							<span class="avatar header-avatar" aria-hidden="true">
 								@if (!string.IsNullOrWhiteSpace(AvatarPath))
 								{
@@ -95,6 +103,10 @@
 									<span class="avatar-initials">@AvatarInitial</span>
 								}
 							</span>
+							@if (PendingDomainCount > 0)
+							{
+								<span class="account-menu-count" aria-hidden="true">@PendingDomainCount</span>
+							}
 						</summary>
 						<div class="menu-content">
 							<a href="@ProfileUrl">
@@ -114,6 +126,20 @@
 							<a href="@($"/@{UserName}/bookmarks")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Bookmarks"></use></svg><span>@L["My Bookmarks"]</span></a>
 							<a href="@($"/@{UserName}/messages")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Messages"></use></svg><span>@L["Messages"]</span></a>
 							<a href="@($"/@{UserName}/notifications")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Notifications"></use></svg><span>@L["Notifications"]</span></a>
+							@if (CanReviewDomains)
+							{
+								<a href="/Admin/TrustedDomains">
+									<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Links"></use></svg><span>@L["Trusted domains"]</span>
+									@if (PendingDomainCount > 0)
+									{
+										<span class="account-menu-count">@PendingDomainCount<span class="visually-hidden"> @L["waiting"]</span></span>
+									}
+								</a>
+							}
+							else
+							{
+								<a href="/wiki:trusted-domains"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Links"></use></svg><span>@L["Trusted domains"]</span></a>
+							}
 							<hr />
 							<a href="@($"/@{Uri.EscapeDataString(UserName)}/settings")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Settings"></use></svg><span>@L["Settings"]</span></a>
 							<hr />

@@ -1,6 +1,7 @@
 @page
 @model ViewModel
 @inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
+@inject WikiWikiWorld.Web.Infrastructure.PermissionService Permissions
 @{
 	string IconSpriteUrl = FileVersions.AddFileVersionToPath(HttpContext.Request.PathBase, Url.Content("~/icons.svg"));
 	ViewData["Title"] = !string.IsNullOrWhiteSpace(Model.PlainTextTitle) ? Model.PlainTextTitle : L["Article Not Found"];
@@ -234,7 +235,7 @@ else if(Model.DisplayedRevision is not null)
 							</svg>
 							<span>@L["Report article"]</span>
 						</a>
-						@if (!Model.IsPriorRevision)
+						@if (!Model.IsPriorRevision && await Permissions.HasPermissionAsync(User, WikiWikiWorld.Web.Infrastructure.Permission.DeleteArticles, HttpContext.RequestAborted))
 						{
 							<hr />
 							<a href="#" class="menu-item-danger">

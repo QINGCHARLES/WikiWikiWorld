@@ -463,10 +463,11 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 	/// </summary>
 	/// <param name="UrlSlug">The URL slug of the article to delete.</param>
 	/// <param name="ActingUserId">The account performing the deletion; only the owner may delete a user page.</param>
+	/// <param name="MayDeleteArticles">Whether the account holds the <c>DeleteArticles</c> permission (Senior Editor or Administrator), which every page other than the account's own user page requires.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be deleted, including <see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/> for another account's user page.</exception>
+	/// <exception cref="ArticleRevisionWorkflowException">Thrown when the requested article cannot be deleted, including <see cref="ArticleRevisionWorkflowFailureKind.Forbidden"/> for another account's user page or for any other page without <paramref name="MayDeleteArticles"/>.</exception>
 	/// <returns>A task completing when all revision tombstones have been committed.</returns>
-	public async Task DeleteArticleAsync(string UrlSlug, Guid ActingUserId, CancellationToken CancellationToken)
+	public async Task DeleteArticleAsync(string UrlSlug, Guid ActingUserId, bool MayDeleteArticles, CancellationToken CancellationToken)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(UrlSlug);
 
@@ -487,6 +488,10 @@ public sealed class ArticleRevisionService(WikiWikiWorldDbContext Context, ILogg
 			}
 
 			await EnsureOwnsUserPageAsync(CurrentArticle.UrlSlug, ActingUserId, CT);
+			if (!IsUserPageSlug(CurrentArticle.UrlSlug) && !MayDeleteArticles)
+			{
+				throw ArticleRevisionWorkflowException.Forbidden("Only Senior Editors and Administrators can delete articles.");
+			}
 
 			ArticleRevisionsByCanonicalIdSpec AllRevisionsSpec = new(CurrentArticle.CanonicalArticleId, null);
 			IReadOnlyList<ArticleRevision> Revisions = await Context.ArticleRevisions

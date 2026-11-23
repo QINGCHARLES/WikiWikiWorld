@@ -398,7 +398,7 @@ public sealed class RedirectTests : IDisposable
 		DefaultHttpContext Http = CreateHttpContext();
 		SiteResolverService Resolver = new(Configuration, new HttpContextAccessor { HttpContext = Http });
 		ArticleRevisionService Revisions = new(Context, NullLogger<ArticleRevisionService>.Instance);
-		MarkdownPipelineFactory Pipeline = new(Configuration);
+		MarkdownPipelineFactory Pipeline = new(new TrustedLinkDomainList());
 		ArticleRenderer Renderer = new(Context, Pipeline, Configuration, TestInfoboxSchemas.Catalog);
 		ViewModel Viewer = new(Context, Resolver, Users, Renderer, Revisions, new(Context),
 			new(Context, Pipeline, TestInfoboxSchemas.Catalog, new(Context), Options.Create(new FileStorageOptions())))
@@ -437,7 +437,7 @@ public sealed class RedirectTests : IDisposable
 			Resolver,
 			new(Context, NullLogger<ArticleRevisionService>.Instance),
 			new(Context, Options.Create(new FileStorageOptions { SiteFilesPath = StorageRoot })),
-			new MarkdownPipelineFactory(Configuration),
+			new MarkdownPipelineFactory(new TrustedLinkDomainList()),
 			TestInfoboxSchemas.Catalog)
 		{
 			UrlSlug = Slug

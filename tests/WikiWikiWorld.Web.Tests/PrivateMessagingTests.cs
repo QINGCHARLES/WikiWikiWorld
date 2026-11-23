@@ -77,7 +77,7 @@ public sealed class PrivateMessagingTests : IDisposable
 		Assert.Single((await Messaging.GetFolderAsync(1, "en", Sender.Id, true, 1, default)).Items);
 		Assert.Empty((await Messaging.GetFolderAsync(1, "en", Sender.Id, false, 1, default)).Items);
 		Assert.Single((await Messaging.GetFolderAsync(1, "en", First.Id, false, 1, default)).Items);
-		ProfileService Profiles = new(Context, Users, new MarkdownPipelineFactory(Configuration));
+		ProfileService Profiles = new(Context, Users, new MarkdownPipelineFactory(new TrustedLinkDomainList()));
 		ProfileHeader Header = (await Profiles.GetHeaderAsync(Sender.UserName!, new(new ClaimsIdentity()), 1, default))!;
 		Assert.Equal(0, Header.Stats.TalkPostCount);
 		Assert.Null(Header.LastActive);
@@ -250,7 +250,7 @@ public sealed class PrivateMessagingTests : IDisposable
 	{
 		await StartAsync("First");
 		DefaultHttpContext Http = CreateHttp(Sender);
-		MessagesModel Page = new(Messaging, new ProfileService(Context, Users, new MarkdownPipelineFactory(Configuration)),
+		MessagesModel Page = new(Messaging, new ProfileService(Context, Users, new MarkdownPipelineFactory(new TrustedLinkDomainList())),
 			new(Configuration, new HttpContextAccessor { HttpContext = Http })) { Username = Sender.UserName!, Tab = "sent" };
 		InitializePage(Page, Http);
 		Assert.IsType<PageResult>(await Page.OnGetAsync(default));

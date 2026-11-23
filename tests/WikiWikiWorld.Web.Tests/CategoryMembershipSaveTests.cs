@@ -18,7 +18,7 @@ public sealed class CategoryMembershipSaveTests : IDisposable
 {
 	private readonly SqliteConnection Connection = new("Data Source=:memory:;Foreign Keys=True");
 	private readonly CategoryMembershipSaveInterceptor Interceptor = new(
-		new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())));
+		new MarkdownPipelineFactory(new TrustedLinkDomainList()));
 
 	/// <summary>
 	/// Creates a disposable database with the application's EF schema.
@@ -91,7 +91,7 @@ public sealed class CategoryMembershipSaveTests : IDisposable
 			SiteId: 1, Culture: "en", Type: ArticleType.Article, CreatedByUserId: Original.CreatedByUserId), CancellationToken.None);
 		Assert.Empty(Context.ArticleCategoryMemberships.Where(m => m.ArticleRevisionId == Updated.Id));
 		Assert.Single(Context.ArticleCategoryMemberships.Where(m => m.ArticleRevisionId == Original.Id));
-		await Service.DeleteArticleAsync(Original.UrlSlug, Original.CreatedByUserId, CancellationToken.None);
+		await Service.DeleteArticleAsync(Original.UrlSlug, Original.CreatedByUserId, MayDeleteArticles: true, CancellationToken.None);
 		Assert.Empty(Context.ArticleRevisions.Where(r => r.IsCurrent));
 		Assert.Single(Context.ArticleCategoryMemberships);
 	}

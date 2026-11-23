@@ -13,7 +13,7 @@ namespace WikiWikiWorld.Web.Tests;
 /// </summary>
 public sealed class IssueCreditsTests
 {
-	private static readonly MarkdownPipelineFactory Factory = new(Options.Create(new SiteConfiguration()));
+	private static readonly MarkdownPipelineFactory Factory = new(new TrustedLinkDomainList());
 
 	/// <summary>
 	/// Checks featured visibility, independent disclosure defaults, names, and source ordering together.

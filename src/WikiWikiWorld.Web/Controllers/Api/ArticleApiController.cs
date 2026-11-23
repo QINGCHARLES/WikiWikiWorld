@@ -9,6 +9,7 @@ using WikiWikiWorld.Data.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using WikiWikiWorld.Web.Services;
+using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.Controllers.Api;
  
@@ -394,11 +395,13 @@ public class ArticleApiController(
     }
 
     /// <summary>
-    /// Soft-deletes the current revision of an article.
+    /// Soft-deletes the current revision of an article. Requires the DeleteArticles permission (Senior Editor or
+    /// Administrator), except for the caller's own user page.
     /// </summary>
     /// <param name="UrlSlug">The URL slug of the article.</param>
+    /// <param name="Permissions">Decides whether the caller may delete pages other than its own user page.</param>
     /// <param name="CancellationToken">The cancellation token.</param>
-    /// <returns>A success message or error.</returns>
+    /// <returns>A success message or error; 403 when the caller lacks the permission.</returns>
     [HttpDelete("{UrlSlug}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
@@ -406,7 +409,7 @@ public class ArticleApiController(
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteArticle(string UrlSlug, CancellationToken CancellationToken)
+    public async Task<IActionResult> DeleteArticle(string UrlSlug, [FromServices] PermissionService Permissions, CancellationToken CancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UrlSlug))
         {
@@ -421,7 +424,8 @@ public class ArticleApiController(
 
         try
         {
-            await ArticleRevisionService.DeleteArticleAsync(UrlSlug, ParsedUserId, CancellationToken);
+            bool MayDeleteArticles = await Permissions.HasPermissionAsync(User, Permission.DeleteArticles, CancellationToken);
+            await ArticleRevisionService.DeleteArticleAsync(UrlSlug, ParsedUserId, MayDeleteArticles, CancellationToken);
         }
         catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
         {

@@ -11,7 +11,7 @@ namespace WikiWikiWorld.Web.Tests;
 /// <summary>Verifies issue contents preserve authored data, reject malformed input, and never create links.</summary>
 public sealed class IssueContentsTests
 {
-	private static readonly MarkdownPipelineFactory Factory = new(Options.Create(new SiteConfiguration()));
+	private static readonly MarkdownPipelineFactory Factory = new(new TrustedLinkDomainList());
 
 	/// <summary>Checks grouping, optional fields, heading hierarchy, source order, and the closing boundary.</summary>
 	[Fact]

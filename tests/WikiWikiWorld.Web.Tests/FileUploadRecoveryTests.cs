@@ -319,7 +319,7 @@ public sealed class FileUploadRecoveryTests : IDisposable
 			using UserStore<User, Role, WikiWikiWorldDbContext, Guid> Store = new(Context);
 			using UserManager<User> Users = new(Store, Options.Create(new IdentityOptions()), new PasswordHasher<User>(),
 				[], [], new UpperInvariantLookupNormalizer(), new IdentityErrorDescriber(), null!, NullLogger<UserManager<User>>.Instance);
-			CreateEditModel Page = new(Context, Users, Resolver, Revisions, Storage, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())), TestInfoboxSchemas.Catalog)
+			CreateEditModel Page = new(Context, Users, Resolver, Revisions, Storage, new MarkdownPipelineFactory(new TrustedLinkDomainList()), TestInfoboxSchemas.Catalog)
 			{
 				PageContext = new() { HttpContext = Http, RouteData = new(), ActionDescriptor = new() }, UrlSlug = Slug, Title = "Picture", ArticleText = "New picture",
 				OriginalUrlSlug = EntryPoint == "razor-replace" ? Slug : string.Empty, SelectedType = ArticleType.File, UploadedFile = Upload
@@ -338,7 +338,7 @@ public sealed class FileUploadRecoveryTests : IDisposable
 		}
 		else if (EntryPoint == "api-create")
 		{
-			ArticleApiController Controller = new(Context, Resolver, Revisions, Storage, new MarkdownPipelineFactory(Options.Create(new SiteConfiguration())), TestInfoboxSchemas.Catalog) { ControllerContext = new() { HttpContext = Http } };
+			ArticleApiController Controller = new(Context, Resolver, Revisions, Storage, new MarkdownPipelineFactory(new TrustedLinkDomainList()), TestInfoboxSchemas.Catalog) { ControllerContext = new() { HttpContext = Http } };
 			Result = await Controller.CreateArticleRevision(Slug, "Picture", null, ArticleType.File, "Picture", "Created", null, Upload, default);
 			Assert.IsType<OkObjectResult>(Result);
 			if (FailFinalization)

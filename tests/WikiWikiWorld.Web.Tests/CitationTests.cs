@@ -181,7 +181,7 @@ public sealed class CitationTests
 		const string Payload = "<svg onload=\"document.documentElement.dataset.citationProbe='integration'\"></svg>";
 		IOptions<SiteConfiguration> Configuration = Options.Create(new SiteConfiguration());
 		await using WikiWikiWorldDbContext Context = new(new DbContextOptionsBuilder<WikiWikiWorldDbContext>().UseSqlite("Data Source=:memory:").Options);
-		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(Configuration), Configuration, TestInfoboxSchemas.Catalog);
+		ArticleRenderer Renderer = new(Context, new MarkdownPipelineFactory(new TrustedLinkDomainList()), Configuration, TestInfoboxSchemas.Catalog);
 		ArticleRevision Revision = new()
 		{
 			CanonicalArticleId = Guid.NewGuid(), SiteId = 1, Culture = "en", Title = "Citation test", UrlSlug = "citation-test",
@@ -208,7 +208,7 @@ public sealed class CitationTests
 	/// <returns>Rendered HTML before full-page formatting.</returns>
 	private static string Render(string Source, IReadOnlyList<string>? ApprovedDomains = null)
 	{
-		MarkdownPipeline Pipeline = new MarkdownPipelineFactory(Options.Create(new SiteConfiguration { ApprovedLinkDomains = [.. ApprovedDomains ?? []] })).GetPipeline();
+		MarkdownPipeline Pipeline = new MarkdownPipelineFactory(TrustedLinkDomainList.From(ApprovedDomains ?? [])).GetPipeline();
 		MarkdownDocument Document = Markdown.Parse(Source, Pipeline);
 		FootnoteExtension.ReprocessFootnotes(Document, Pipeline);
 		CitationExtension.ReprocessCitations(Document);

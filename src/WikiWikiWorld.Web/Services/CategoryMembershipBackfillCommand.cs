@@ -1,7 +1,5 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using WikiWikiWorld.Web.Configuration;
 
 namespace WikiWikiWorld.Web.Services;
 
@@ -39,8 +37,8 @@ public static class CategoryMembershipBackfillCommand
 			await Connection.OpenAsync(Cancellation.Token);
 			await using WikiWikiWorldDbContext Context = new(new DbContextOptionsBuilder<WikiWikiWorldDbContext>()
 				.UseSqlite(Connection).Options);
-			// Site configuration affects external-link rendering only, not category extraction.
-			MarkdownPipelineFactory Pipeline = new(Options.Create(new SiteConfiguration()));
+			// Trusted domains affect external-link rendering only, not category extraction.
+			MarkdownPipelineFactory Pipeline = new(new TrustedLinkDomainList());
 			CategoryMembershipBackfill Backfill = new(Context, Pipeline);
 			await Backfill.RunAsync(Apply, Console.Out, Cancellation.Token);
 			return 0;

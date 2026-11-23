@@ -122,7 +122,7 @@ public sealed partial class BookmarkManagementTests
 		Assert.True(await Service.SetListVisibilityAsync(ListId, true, Owner, 1, default));
 		BookmarkEntry Entry = Assert.Single((await Service.GetListPageAsync(ListId, Owner, false, "recent", 1, default)).Items);
 		Assert.Equal(Source, Entry.Notes);
-		MarkdownPipelineFactory Factory = new(Options.Create(new SiteConfiguration()));
+		MarkdownPipelineFactory Factory = new(new TrustedLinkDomainList());
 		using IDocument Document = new HtmlParser().ParseDocument(Factory.RenderUserContentMarkdown(Entry.Notes));
 		Assert.Equal("Research", Document.QuerySelector("em")!.TextContent);
 		Assert.Equal("Important", Document.QuerySelector("strong")!.TextContent);

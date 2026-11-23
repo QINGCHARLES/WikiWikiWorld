@@ -30,6 +30,12 @@
 
 - **Download URL notes:** Repaired the stale `DownloadUrls_old` foreign key in development and production on 2026-11-07 at 18:03 UTC. `Create.sql` and the historical copyright/status migration now reference `DownloadUrls` correctly. All 26 tables retained every row and their identity history; integrity, foreign-key and fresh-schema parity checks passed. See [repair scripts, backups, verification and recovery](doc/download-url-notes.md). No application release or restart was required.
 
+## Roles and trusted link domains
+
+- Roles (global across sites): Administrator, Senior Editor, Moderator (no permissions yet), Bot; everyone else is a member. Code checks named permissions (`UseAdminTools`, `DeleteArticles`, `ReviewTrustedLinkDomains`) through policies; `AppRoles.Grants` maps roles to them. Checks read roles from the database per request, so changes apply immediately for cookies and API tokens. Give out roles with the `grant-role` / `revoke-role` command; there is no role page yet.
+- Trusted link domains (followed links) live in `TrustedLinkDomains`, not configuration. Members propose a domain with a reason at `/wiki:trusted-domains`; administrators confirm, deny or withdraw at `/Admin/TrustedDomains` and see a pending count on the account menu. Decisions apply to the next render without a restart.
+- Existing databases need `AddRolesAndTrustedLinkDomains.sql` (with its check and verify files) **before** this release starts, then an Administrator grant. Applied to development on 2026-11-23; not applied to production. See [roles, workflow, deploy order and verification](doc/roles-and-trusted-domains.md).
+
 ## Private messaging
 
 - Private conversations use separate `PrivateConversations`, `PrivateConversationParticipants` and `PrivateMessages` tables with fixed multi-recipient membership. Public user/article discussions remain public. See [behavior, cleanup, schema cutover and verification](doc/private-messaging.md).
@@ -152,7 +158,7 @@ The short-content renderer was renamed to `RenderUserContentMarkdown`, with matc
 - **`Enrich` / `EnrichAsync`.** Extensions that need data outside the markdown source expose a static enrichment method on the extension class. Synchronous `Enrich(MarkdownDocument)` is used to extract metadata (Subtitle, ShortDescription, Eyebrow, Source, Stub). Asynchronous `EnrichAsync(MarkdownDocument, WikiWikiWorldDbContext, int SiteId, string Culture, CancellationToken)` is used to batch-fetch DB rows (HeaderImage, Image, DownloadsBox, CoverGrid, CoverCarousel). Enrichment is run from the page model **between** `Markdown.Parse(...)` and `renderer.Render(...)`.
 - **Document metadata channel.** Metadata-only extensions write into `Document.SetData(Key, value)` so Razor views can read it via `Document.GetData(Key)` (header image URL, subtitle text, short description, eyebrow label, source citation, stub site name/edit URL). The block renderers themselves emit only `<!-- ... -->` comments.
 - **Citation/Footnote two-pass.** Inline parsers create unnumbered AST nodes; `CitationExtension.ReprocessCitations(...)` and `FootnoteExtension.ReprocessFootnotes(..., Pipeline)` walk the document later to assign sequential numbers and populate the corresponding `{{Citations}}` / `{{Footnotes}}` block.
-- **External links.** `ApprovedNoFollowLinksExtension` post-processes all `LinkInline` nodes (via `Pipeline.DocumentProcessed`) and applies `rel="noopener"` to every external link, adding `nofollow` unless the domain is in the approved list.
+- **External links.** `ApprovedNoFollowLinksExtension` post-processes all `LinkInline` nodes (via `Pipeline.DocumentProcessed`) and applies `rel="noopener"` to every external link, adding `nofollow` unless the domain is trusted. The list it receives is the live `TrustedLinkDomainList` singleton (also exposed as `IMarkdownPipelineFactory.TrustedDomains`), so review decisions apply without rebuilding the cached pipeline.
 
 ### Extension Reference
 

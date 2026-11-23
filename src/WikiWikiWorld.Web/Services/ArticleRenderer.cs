@@ -164,7 +164,7 @@ public sealed class ArticleRenderer(
 			FileSourceText = Document.GetData(SourceExtension.TextKey) as string,
 			FileSourceUrl = FileSourceUrl,
 			IsFileSourceApprovedDomain = FileSourceUrl is not null
-				&& LinkDomainHelper.IsApprovedDomain(FileSourceUrl, SiteConfiguration.Value.ApprovedLinkDomains)
+				&& LinkDomainHelper.IsApprovedDomain(FileSourceUrl, MarkdownPipelineFactory.TrustedDomains)
 		};
 	}
 

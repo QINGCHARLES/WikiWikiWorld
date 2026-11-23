@@ -152,6 +152,11 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 	/// </summary>
 	public DbSet<ArticleDomainRedirect> ArticleDomainRedirects { get; set; } = null!;
 
+	/// <summary>
+	/// Gets or sets the trusted-link-domain proposals and decisions. Global: not filtered by site or culture.
+	/// </summary>
+	public DbSet<TrustedLinkDomain> TrustedLinkDomains { get; set; } = null!;
+
 	/// <inheritdoc/>
 	protected override void OnModelCreating(ModelBuilder Builder)
 	{
@@ -369,6 +374,15 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 			b.HasQueryFilter(CultureFilter, e => _allowCrossSiteAndCultureQueries || e.Culture == _currentCulture);
 			b.HasIndex(e => e.Domain).IsUnique().HasFilter("DateDeleted IS NULL");
 			b.HasIndex(e => new { e.SiteId, e.Culture, e.CanonicalArticleId });
+		});
+
+		Builder.Entity<TrustedLinkDomain>(b =>
+		{
+			b.ToTable("TrustedLinkDomains");
+			b.HasKey(e => e.Id);
+			b.HasIndex(e => e.Domain).IsUnique().HasFilter("Status IN (0, 1)").HasDatabaseName("UX_TrustedLinkDomains_Domain_Open");
+			b.HasIndex(e => new { e.Status, e.DateProposed });
+			b.HasIndex(e => e.ProposedByUserId);
 		});
 
 		// SQLite does not support DateTimeOffset natively in ORDER BY, so we convert to string

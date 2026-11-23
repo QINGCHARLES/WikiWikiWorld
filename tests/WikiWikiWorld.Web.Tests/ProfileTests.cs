@@ -20,7 +20,7 @@ namespace WikiWikiWorld.Web.Tests;
 /// </summary>
 public sealed class ProfileTests : IDisposable
 {
-	private static readonly MarkdownPipelineFactory PipelineFactory = new(Options.Create(new SiteConfiguration()));
+	private static readonly MarkdownPipelineFactory PipelineFactory = new(new TrustedLinkDomainList());
 
 	private readonly SqliteConnection Connection = new("Data Source=:memory:;Foreign Keys=True");
 

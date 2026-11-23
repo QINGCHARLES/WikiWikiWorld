@@ -212,7 +212,7 @@ public sealed class UserArticleEditorTests : IDisposable
 		DefaultHttpContext Http = CreateHttpContext();
 		SiteResolverService Resolver = new(Configuration, new HttpContextAccessor { HttpContext = Http });
 		ArticleRevisionService Revisions = new(Context, NullLogger<ArticleRevisionService>.Instance);
-		MarkdownPipelineFactory Pipeline = new(Configuration);
+		MarkdownPipelineFactory Pipeline = new(new TrustedLinkDomainList());
 		ViewModel Viewer = new(Context, Resolver, Users,
 			new ArticleRenderer(Context, Pipeline, Configuration, TestInfoboxSchemas.Catalog), Revisions, new(Context),
 			new(Context, Pipeline, TestInfoboxSchemas.Catalog, new(Context),
@@ -263,7 +263,7 @@ public sealed class UserArticleEditorTests : IDisposable
 		SiteResolverService Resolver = new(Configuration, new HttpContextAccessor { HttpContext = Http });
 		CreateEditModel Page = new(Context, Users, Resolver, new(Context, NullLogger<ArticleRevisionService>.Instance),
 			new(Context, Options.Create(new FileStorageOptions { SiteFilesPath = StorageRoot })),
-			new MarkdownPipelineFactory(Configuration), TestInfoboxSchemas.Catalog) { UrlSlug = Slug };
+			new MarkdownPipelineFactory(new TrustedLinkDomainList()), TestInfoboxSchemas.Catalog) { UrlSlug = Slug };
 		InitializePage(Page, Http);
 		return Page;
 	}

@@ -1,8 +1,6 @@
 using Markdig;
 using Markdig.Extensions.MediaLinks;
 using Markdig.Renderers;
-using Microsoft.Extensions.Options;
-using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.MarkdigExtensions;
 
 namespace WikiWikiWorld.Web.Services;
@@ -30,6 +28,12 @@ public interface IMarkdownPipelineFactory
 	/// <param name="Source">The Markdown source. <see langword="null"/> or whitespace renders to <see cref="string.Empty"/>.</param>
 	/// <returns>The rendered HTML string. Callers are expected to wrap it with <c>Html.Raw</c>.</returns>
 	string RenderUserContentMarkdown(string? Source);
+
+	/// <summary>
+	/// Gets the domains whose external links the article pipeline follows (no <c>nofollow</c>). Live: it reflects the
+	/// latest administrator review without rebuilding the pipeline.
+	/// </summary>
+	IReadOnlyList<string> TrustedDomains { get; }
 }
 
 /// <summary>
@@ -40,13 +44,17 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	private readonly Lazy<MarkdownPipeline> Pipeline;
 	private readonly Lazy<MarkdownPipeline> UserContentPipeline;
 
+	/// <inheritdoc/>
+	public IReadOnlyList<string> TrustedDomains { get; }
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="MarkdownPipelineFactory"/> class.
 	/// </summary>
-	/// <param name="SiteConfiguration">The site configuration options.</param>
-	public MarkdownPipelineFactory(IOptions<SiteConfiguration> SiteConfiguration)
+	/// <param name="TrustedDomains">The live trusted-domain list; the cached pipeline reads it on every render, so review changes apply without a rebuild.</param>
+	public MarkdownPipelineFactory(TrustedLinkDomainList TrustedDomains)
 	{
-		this.Pipeline = new Lazy<MarkdownPipeline>(() => BuildPipeline(SiteConfiguration.Value.ApprovedLinkDomains));
+		this.TrustedDomains = TrustedDomains;
+		this.Pipeline = new Lazy<MarkdownPipeline>(() => BuildPipeline(TrustedDomains));
 		this.UserContentPipeline = new Lazy<MarkdownPipeline>(BuildUserContentPipeline);
 	}
 
@@ -82,7 +90,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	/// <summary>
 	/// Builds the article pipeline with authored-attribute/URL restrictions before the trusted external-link policy.
 	/// </summary>
-	/// <param name="ApprovedLinkDomains">The list of domains that do not require nofollow on external links.</param>
+	/// <param name="ApprovedLinkDomains">The live list of domains whose external links are followed (no nofollow).</param>
 	/// <returns>A fully configured <see cref="MarkdownPipeline"/>.</returns>
 	private static MarkdownPipeline BuildPipeline(IReadOnlyList<string> ApprovedLinkDomains)
 	{

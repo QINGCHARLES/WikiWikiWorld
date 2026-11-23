@@ -481,10 +481,45 @@ nav.header .header-b a.button[href="/Account/Register"] {
 
 /* Account menu uses the same panel, rows, dividers and dismissal layer as article menus. */
 .account-menu-trigger {
+    position: relative;
     display: flex;
     align-items: center;
     padding: 0.25rem;
     border-radius: 9999px;
+}
+
+/* Count of items waiting for this account (trusted-domain proposals, for administrators): on the avatar, and at the
+   end of the matching menu row. */
+.account-menu-count {
+    min-inline-size: 1.15rem;
+    block-size: 1.15rem;
+    padding-inline: 0.3rem;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    background: var(--color-danger-bright);
+    color: var(--color-white);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.15rem;
+    text-align: center;
+}
+
+.account-menu-trigger > .account-menu-count {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+}
+
+.account-menu > .menu-content a > .account-menu-count {
+    /* Contains the visually hidden "waiting" text, which would otherwise widen the scrolling menu. */
+    position: relative;
+    flex-shrink: 0;
+    margin-inline-start: auto;
+}
+
+/* Let a row's label wrap rather than push its count past the menu edge (long translations). */
+.account-menu > .menu-content a:has(> .account-menu-count) > span:not(.account-menu-count) {
+    min-inline-size: 0;
 }
 
 .account-menu-trigger:hover,
