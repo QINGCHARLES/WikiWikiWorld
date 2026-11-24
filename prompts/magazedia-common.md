@@ -1,6 +1,6 @@
 # Magazedia common article rules
 
-Version 1, 22 November 2026. Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
+Version 2, 23 November 2026 (version 1 plus pull quotes, and paragraph and section length). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters. These rules apply to every Magazedia article. The magazine and issue prompts add the rules for their kind of article; where one of them says it overrides a rule here, follow it.
 
@@ -104,6 +104,15 @@ Give each sentence a real actor as its subject and state the sourced fact. Apply
 - **Concise is not compressed:** do not stack three or more nouns, drop “that” from a long clause, or hold a subject apart from its verb with a list or aside. If a shorter sentence takes longer to parse, use the longer one.
 - **Named actors in the timeline:** a Description names who did what (“Publisher X acquired *Title*”), not “Acquired by new owner.”
 
+### Paragraphs and sections
+
+Long, unbroken text is hard to read, especially on a phone. Shape the body so a reader can scan it.
+
+- **Paragraphs of 40 to 120 words,** each about one thing. Split a longer paragraph where its topic turns. A one-sentence paragraph is fine for a single fact that stands apart; a run of them is not.
+- **Subsections for long sections:** when a `##` section runs past about 500 words, or covers several eras, products or themes, divide it into `###` subsections named for those eras or themes: `### 1980s: the Petersen years`, not `### Part 2`. Use no deeper headings.
+- **No thin subsections:** a `###` subsection holds at least two paragraphs, or one substantial one. Do not give each short paragraph its own heading.
+- Break text with the article's own elements where they fit: a pull quote, a small table where your prompt describes one, an image, or a timeline. Never add one just to fill space.
+
 ## 5. Romanizing names and titles in non-Latin scripts
 
 Readers must be able to read every name in the article. Rare or unusual characters, especially kanji with several possible readings, make an unromanized name unreadable even to readers who know some of the language.
@@ -160,6 +169,22 @@ When plain text contains Markdown punctuation, escape it with a backslash so it 
 ### Email addresses and contact details
 
 Leave email addresses out unless the address itself is notable: printed as part of the publication's identity, or the subject of a fact the article discusses (for example, an address whose name reveals a predecessor title). An address that was only how to order, subscribe, submit work, or get in touch is not notable; describe the arrangement without it ("submissions went to the editors"). Never publish a private person's email address, phone number, or home address. Company addresses and telephone numbers from mastheads belong in the article only when they explain a move or other documented change. Saving reports every email address it finds.
+
+### Pull quotes
+
+Pull quotes break up a long page and give the reader a voice from the subject itself. Look for them while researching, and aim for **two** in an article with three or more body sections, **one** in a shorter article, and none in a stub or when nothing suitable turns up.
+
+```markdown
+{{PullQuote At a moment when the country’s psyche is **stratified and stressed-out**, it felt like the right time to find some **common ground**. |#| Will Welch, editor-in-chief, *GQ Style*, Summer 2017}}
+```
+
+- **Choose words with a voice:** a founder's or editor's statement of purpose, an editor's letter, a cover subject's interview line, a contributor's recollection, or a notable critic's verdict. The best ones say something about the publication's identity, ambition or moment. Avoid slogans, advertising copy, subscription blurbs, praise with no content, and anything defamatory or private about a living person.
+- **Quote exactly.** Use one continuous passage of 10 to 40 words, verbatim, with no ellipses, merged sentences or changed words. Never put your own words, or a paraphrase, in a pull quote. A quote in another language is given in the article's translation, and the attribution ends with `(translated)`.
+- **The quote must also be in the prose.** A pull quote takes no citation, so the same words, or the longer passage containing them, appear in the body with their citation, in the same section as the pull quote.
+- **Attribute it** after `|#|`: the speaker, their role, and where and when it was said: `Will Welch, editor-in-chief, *GQ Style*, Summer 2017`. Italicize publication names. Unattributed house text, such as a masthead motto, is attributed to the publication and the issue.
+- **Bold one to three key words** or a short phrase for emphasis; they render in heavy capitals. Do not bold the whole quote.
+- **Placement:** on its own line between two body paragraphs, with a blank line on each side. Never in the lead, directly under a heading, or beside an infobox, CoverCarousel, table, timeline or another pull quote. Spread two pull quotes out: one in the first half of the body, one in the second.
+- If no quote meets these rules, write none and say so in the Notes for the editor.
 
 ## 7. Top lines, header image, and display title
 
@@ -303,6 +328,8 @@ Before publishing, silently check and correct:
 3. Publication names are italicized, not bolded; every internal link is a root-relative `/slug` link to an article confirmed to exist, used once per subject; every non-Latin name in prose is romanized under section 5.
 4. No inline code or code block holds anything but real code or markup being discussed; escaped punctuation renders as intended.
 5. Websites are written as printed; dead ones are unlinked or linked only to a working archive capture at their first mention. YouTube videos and channels use `{{YouTubeLink}}`. No email address or private contact detail remains unless section 6 allows it.
-6. Any infobox follows section 8. All citations use the custom syntax with actual titles and real verified URLs (or the scan exception), use identical blocks for repeated sources, and point to no prohibited site, including hosts equal to or subdomains of `wikipedia.org`, `grokipedia.com`, `fandom.com`, `wikia.com`, or `reddit.com`.
-7. External links, if present, come before the single Citations marker; a Footnotes marker follows only when footnotes exist; Categories come last when used; no manual heading duplicates an automatic one.
-8. No math delimiters or TeX numeric formatting; ordinary numbers, units, and currency symbols are preserved.
+6. Body paragraphs run 40 to 120 words, and any section over about 500 words, or spanning several eras or themes, is divided into named `###` subsections of at least two paragraphs (section 4).
+7. The article has two pull quotes, or one if it has fewer than three body sections, unless none qualifies. Each is verbatim, also appears with its citation in the prose of its section, is attributed, and sits between body paragraphs away from other boxes (section 6).
+8. Any infobox follows section 8. All citations use the custom syntax with actual titles and real verified URLs (or the scan exception), use identical blocks for repeated sources, and point to no prohibited site, including hosts equal to or subdomains of `wikipedia.org`, `grokipedia.com`, `fandom.com`, `wikia.com`, or `reddit.com`.
+9. External links, if present, come before the single Citations marker; a Footnotes marker follows only when footnotes exist; Categories come last when used; no manual heading duplicates an automatic one.
+10. No math delimiters or TeX numeric formatting; ordinary numbers, units, and currency symbols are preserved.

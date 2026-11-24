@@ -1,6 +1,6 @@
 # Magazedia issue article prompt
 
-Version 4, 22 November 2026 (version 3 plus the shared rules moved into `magazedia-common.md`). Read `magazedia-common.md` first; this prompt adds the rules for an article about one issue. Formatting contract reviewed against [Magazedia's formatting guide](https://en.magazedia.com/wiki:formatting) and the site's renderer. This is prompt metadata, not article text.
+Version 5, 23 November 2026 (version 4 with pull quotes used under the common rules instead of omitted). Read `magazedia-common.md` first; this prompt adds the rules for an article about one issue. Formatting contract reviewed against [Magazedia's formatting guide](https://en.magazedia.com/wiki:formatting) and the site's renderer. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article about **one specific issue of [MAGAZINE_NAME]** for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters.
 
@@ -478,7 +478,7 @@ The remaining documented features are optional platform capabilities, not a chec
 | `Source` | For provenance on File articles, not a replacement for citations in the issue article. Omit here |
 | `CoverGrid` | Intended for collections of linked issue articles, normally on publication or franchise pages. Omit from an individual-issue summary |
 | `Timeline` | Omit by default; do not inflate one issue into a publishing-history timeline |
-| `PullQuote` | Omit by default to avoid decorative repetition or promotional emphasis; summarize and cite a useful quotation in normal prose |
+| `PullQuote` | Use under the common rules (section 6, Pull quotes). In an issue article the editor's letter, the cover story and the issue's interviews are the usual sources; quote the issue as printed |
 | `YouTube` | Omit unless the user requests a relevant verified video. Then use `{{YouTube [Verified video ID or accepted URL] |#| Title=[Factual title]}}`, with optional `StartSeconds` and `Caption`. Accepted references include an 11-character ID, standard watch URL, youtu.be URL, Shorts URL, or youtube-nocookie.com embed URL. Do not invent the required title or link; a video embed is not evidence by itself |
 | `Stub` | Use `{{Stub}}` in cover-and-listing mode (section 1) or when the user requests a stub, placed after the Citations and Footnotes markers. Do not label a finished scan-based issue summary a stub merely because it lacks external coverage |
 | Alerts and abbreviations | The site supports GitHub-style alert blocks and `*[ABBR]: Expanded Name`, but omit them from routine issue articles unless specifically needed. Do not use alerts to introduce research-status commentary |

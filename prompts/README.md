@@ -4,9 +4,9 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 1 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
-| [magazedia-magazine.md](magazedia-magazine.md) | 24 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
-| [magazedia-issue.md](magazedia-issue.md) | 4 | An article about one issue of a publication, usually from page scans |
+| [magazedia-common.md](magazedia-common.md) | 2 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-magazine.md](magazedia-magazine.md) | 25 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
+| [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
 ## How an agent writes an article
 
@@ -38,6 +38,11 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 
 ## Change log
 
+- **23 November 2026 — common 2, issue 5, magazine 25.**
+  - Pull quotes: two in an article with three or more body sections, one in a shorter one, none when nothing qualifies. Each is a verbatim passage of 10 to 40 words that also appears, cited, in the prose of its section; attributed; with one to three bold words; placed between body paragraphs away from other boxes. The issue prompt no longer says to omit them.
+  - Paragraphs of 40 to 120 words; a section over about 500 words, or spanning several eras or themes, is divided into named `###` subsections of at least two paragraphs.
+  - Common final checks 6 and 7 cover the two rules above.
+  - Magazine prompt: the lead's second sentence states the most striking verified fact, plainly and cited. Small tables (editors, owners, cover price, circulation, format changes) when there are at least four cited rows, at most two per article, never repeating the timeline or infobox.
 - **22 November 2026 — magazine 24.** Infobox `Website`: the link goes to the full URL with its protocol; the visible text is only the host name, without `www.` but with any other subdomain. Saving warns when a `Website` breaks the rule.
 - **22 November 2026 — common 1, magazine 23, issue 4.** Moved the rules the magazine prompt (v22) and issue prompt (v3) shared into `magazedia-common.md`, and moved the prompts into this repository as the single copy. New or changed rules since v22 and v3:
   - Code formatting only for real code; escape Markdown punctuation (including `{…}`) in plain text.
