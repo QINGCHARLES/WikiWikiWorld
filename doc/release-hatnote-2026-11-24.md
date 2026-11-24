@@ -35,8 +35,8 @@ Shipped later the same morning, after the SQL was applied: see
 "Production's commit is an ancestor of `main`" does not make `main` deployable. Before each deploy, list
 `git log <deployed>..main` and check each commit's notes for schema scripts or other ordering requirements.
 
-## To ship the hatnote
+## Help page
 
-Either apply `AddRolesAndTrustedLinkDomains.sql` to production (backup, check script, apply, verify script, as
-[roles-and-trusted-domains.md](roles-and-trusted-domains.md) describes) and then deploy `main`; or deploy the hatnote
-alone on top of the running hotfix. Both wait for the owner's decision.
+Once the release was live, `wiki:hatnote` was created in production from `scripts/seed_wiki_docs.py` and linked from
+`wiki:formatting` (under "Taxonomy, References & Maintenance"), both as MaggieTheBot through the API. Both pages
+render.
