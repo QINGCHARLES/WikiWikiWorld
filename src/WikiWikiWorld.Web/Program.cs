@@ -386,7 +386,12 @@ if (!App.Environment.IsDevelopment())
     App.UseHsts();
 }
 
-App.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}");
+// Browser pages get the not-found page for empty error responses. API requests are left alone: re-executing them
+// turned a 401 into that page's 404, and a POST into 400 (the page has no POST handler), so clients could not tell
+// "sign in again" from "missing".
+App.UseWhen(
+    Context => !Context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase),
+    Branch => Branch.UseStatusCodePagesWithReExecute("/NotFound", "?statusCode={0}"));
 
 // Load the infobox schemas now so a malformed or conflicting file stops startup instead of the first article render.
 App.Services.GetRequiredService<InfoboxSchemaCatalog>();
