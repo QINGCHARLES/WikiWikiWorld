@@ -34,7 +34,7 @@
 
 - Roles (global across sites): Administrator, Senior Editor, Moderator (no permissions yet), Bot; everyone else is a member. Code checks named permissions (`UseAdminTools`, `DeleteArticles`, `ReviewTrustedLinkDomains`) through policies; `AppRoles.Grants` maps roles to them. Checks read roles from the database per request, so changes apply immediately for cookies and API tokens. Give out roles with the `grant-role` / `revoke-role` command; there is no role page yet.
 - Trusted link domains (followed links) live in `TrustedLinkDomains`, not configuration. Members propose a domain with a reason at `/wiki:trusted-domains`; administrators confirm, deny or withdraw at `/Admin/TrustedDomains` and see a pending count on the account menu. Decisions apply to the next render without a restart.
-- Existing databases need `AddRolesAndTrustedLinkDomains.sql` (with its check and verify files) **before** this release starts, then an Administrator grant. Applied to development on 2026-11-23; not applied to production. See [roles, workflow, deploy order and verification](doc/roles-and-trusted-domains.md).
+- Existing databases need `AddRolesAndTrustedLinkDomains.sql` (with its check and verify files) **before** this release starts, then an Administrator grant. Applied to development on 2026-11-23 and to production on 2026-11-24, before `release-20261124T050232Z-5458ba252aae` ([record](doc/release-roles-trusted-domains-2026-11-24.md)); QINGCHARLES is the production Administrator. See [roles, workflow, deploy order and verification](doc/roles-and-trusted-domains.md).
 
 ## Private messaging
 

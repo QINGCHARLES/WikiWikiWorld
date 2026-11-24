@@ -49,8 +49,9 @@ docker run --rm --user 1654:1654 --network none \
   grant-role /app/data/app.db QINGCHARLES Administrator
 ```
 
-This relies on the SDK container's default entrypoint, which passes the extra arguments to the app. **It has not been
-run yet.** Each production role change is your decision and needs the same approval as any other production change.
+This relies on the SDK container's default entrypoint, which passes the extra arguments to the app. It was run on
+2026-11-24 to make QINGCHARLES an Administrator. Each later production role change is the owner's decision and needs
+the same approval as any other production change.
 
 ## Trusted link domains
 
@@ -103,7 +104,8 @@ checks passed. Before that, the script was tested on a disposable copy of the de
 the open-domain index refuses a duplicate and the status check refuses unknown values, and on a fresh `Create.sql`
 schema (table definitions match). DevvyTheBot and QINGCHARLES are Administrators in development.
 
-Production has not been changed.
+Production: applied and deployed on 2026-11-24; see
+[the release record](release-roles-trusted-domains-2026-11-24.md).
 
 ## Verification
 

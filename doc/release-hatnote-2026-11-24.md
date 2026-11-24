@@ -25,6 +25,11 @@ rolled back within a minute. **Production is unchanged: it still runs the citati
 - The failed image stays on GHCR and on the host as `release-20261124T050232Z-5458ba252aae`; do not run it until the
   SQL has been applied.
 
+## Resolution
+
+Shipped later the same morning, after the SQL was applied: see
+[release-roles-trusted-domains-2026-11-24.md](release-roles-trusted-domains-2026-11-24.md).
+
 ## Lesson
 
 "Production's commit is an ancestor of `main`" does not make `main` deployable. Before each deploy, list
