@@ -4,33 +4,29 @@
 	ViewData["Title"] = L["Title.DeleteArticle"];
 }
 
-<figure>
+<figure></figure>
+<hgroup>
 	<h1>@L["Title.DeleteArticle"]</h1>
-</figure>
+</hgroup>
 
-<article>
-	@if (!User.Identity?.IsAuthenticated ?? true)
-	{
-		<div class="alert alert-danger">
-			@HL["You must be logged in to delete articles. {0}.", UiFormat.Link("/login", L["Login here"])]
+<article class="delete-article">
+	<h2>@L["Delete “{0}”?", Model.ArticleTitle]</h2>
+	<p>@L["Deleting hides the article and its history from readers, and its address stops working. Only a site administrator can restore it."]</p>
+
+	<form method="post">
+		<input type="hidden" asp-for="UrlSlug" />
+		<div class="form-actions">
+			<button type="submit" class="button" data-button-variant="negative">@L["Delete article"]</button>
+			<a href="@Model.ArticlePath" class="button" data-button-variant="ghost">@L["Cancel"]</a>
 		</div>
-	}
-	else
-	{
-		@if (!string.IsNullOrEmpty(Model.ErrorMessage))
-		{
-			<div class="alert alert-danger">@Model.ErrorMessage</div>
-		}
-
-		<div class="alert alert-warning">
-			<strong>@L["Are you sure you want to delete this article?"]</strong><br>
-			@L["This will remove it from public view but can be restored later."]
-		</div>
-
-		<form method="post">
-			<input type="hidden" asp-for="UrlSlug" />
-			<button type="submit" class="btn btn-danger">@L["Yes, Delete"]</button>
-			<a href="/@Model.UrlSlug/edit" class="btn btn-secondary">@L["Cancel"]</a>
-		</form>
-	}
+	</form>
 </article>
+
+<style>
+	.delete-article .form-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-block-start: 1.5rem;
+	}
+</style>

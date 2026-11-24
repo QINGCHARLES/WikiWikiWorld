@@ -69,7 +69,6 @@
   <data name="Archive password (if the zip / rar / 7z file itself is password-protected)" xml:space="preserve"><value>アーカイブのパスワード（zip / rar / 7z ファイル自体にパスワードがある場合）</value></data>
   <data name="Archivist" xml:space="preserve"><value>アーキビスト</value></data>
   <data name="Are you sure you want to delete the redirect for {0}?" xml:space="preserve"><value>{0} の転送を削除してもよろしいですか？</value></data>
-  <data name="Are you sure you want to delete this article?" xml:space="preserve"><value>この記事を削除してもよろしいですか？</value></data>
   <data name="Are you sure you want to revert to the previous revision? This will discard your current changes." xml:space="preserve"><value>前の版に戻してもよろしいですか？ 現在の変更は破棄されます。</value></data>
   <data name="Arriving with watchlists" xml:space="preserve"><value>ウォッチリストとともに登場予定</value></data>
   <data name="Arrow.Back" xml:space="preserve"><value>←</value></data>
@@ -237,6 +236,9 @@
   <data name="Delete list…" xml:space="preserve"><value>リストを削除…</value></data>
   <data name="Delete note" xml:space="preserve"><value>メモを削除</value></data>
   <data name="Delete this list?" xml:space="preserve"><value>このリストを削除しますか？</value></data>
+  <data name="Delete “{0}”?" xml:space="preserve"><value>「{0}」を削除しますか？</value></data>
+  <data name="Deleting hides the article and its history from readers, and its address stops working. Only a site administrator can restore it." xml:space="preserve"><value>削除すると、記事とその履歴は読者から見えなくなり、そのアドレスも使えなくなります。復元できるのはサイト管理者だけです。</value></data>
+  <data name="Deleting hides the article and its history from readers. Only a site administrator can restore it." xml:space="preserve"><value>削除すると、記事とその履歴は読者から見えなくなります。復元できるのはサイト管理者だけです。</value></data>
   <data name="Denied" xml:space="preserve"><value>却下</value></data>
   <data name="Deny" xml:space="preserve"><value>却下</value></data>
   <data name="Describe the important details in the picture for readers who cannot see it." xml:space="preserve"><value>画像を見ることができない読者に向けて、画像の重要な内容を説明してください。</value></data>
@@ -401,7 +403,6 @@
   <data name="Introduction saved." xml:space="preserve"><value>紹介文を保存しました。</value></data>
   <data name="Introduction · {0}" xml:space="preserve"><value>紹介文 · {0}</value></data>
   <data name="IntroEditor.PrivateSuffix" xml:space="preserve"><value>のリスト。リストを公開するまで、あなただけが見られます。</value></data>
-  <data name="Invalid article identifier." xml:space="preserve"><value>記事の識別子が無効です。</value></data>
   <data name="Invalid redirect target directive." xml:space="preserve"><value>リダイレクト先の指定が無効です。</value></data>
   <data name="Invalid username or password." xml:space="preserve"><value>ユーザー名またはパスワードが正しくありません。</value></data>
   <data name="IP addresses cannot be trusted. Enter the site's domain name." xml:space="preserve"><value>IP アドレスは信頼済みにできません。サイトのドメイン名を入力してください。</value></data>
@@ -564,7 +565,6 @@
   <data name="On Deadline" xml:space="preserve"><value>締め切り厳守</value></data>
   <data name="On this device" xml:space="preserve"><value>この端末</value></data>
   <data name="on {0}" xml:space="preserve"><value>{0} で</value></data>
-  <data name="Once you delete an article, there is no going back. Please be certain." xml:space="preserve"><value>記事を削除すると元に戻せません。よく確認してください。</value></data>
   <data name="One topic per thread — fork if scope drifts." xml:space="preserve"><value>1スレッド1話題。話がそれたら新しいスレッドに分けましょう。</value></data>
   <data name="Only participants can open a conversation. Public user-page discussions are separate." xml:space="preserve"><value>会話を開けるのは参加者だけです。利用者ページの公開ディスカッションとは別です。</value></data>
   <data name="Only the participants can read this." xml:space="preserve"><value>参加者だけが読めます。</value></data>
@@ -867,7 +867,6 @@
   <data name="This upload qualifies under copyright exemptions for non-profit purposes such as criticism, comment, news reporting, teaching, scholarship, or historical preservation/archiving." xml:space="preserve"><value>このアップロードは、批評、論評、報道、教育、研究、歴史的な保存・アーカイブなどの非営利目的の著作権の例外に該当します。</value></data>
   <data name="This username or email is unavailable." xml:space="preserve"><value>このユーザー名またはメールアドレスは使用できません。</value></data>
   <data name="this wiki" xml:space="preserve"><value>このウィキ</value></data>
-  <data name="This will remove it from public view but can be restored later." xml:space="preserve"><value>公開されなくなりますが、後で元に戻せます。</value></data>
   <data name="Time period" xml:space="preserve"><value>期間</value></data>
   <data name="TimeAgo.Day|other" xml:space="preserve"><value>{0}日</value></data>
   <data name="TimeAgo.Hour|other" xml:space="preserve"><value>{0}時間</value></data>
@@ -960,7 +959,6 @@
   <data name="Write your profile article" xml:space="preserve"><value>プロフィール記事を書きましょう</value></data>
   <data name="Wrote 10 talk posts." xml:space="preserve"><value>トークに10回投稿した。</value></data>
   <data name="XML sitemap" xml:space="preserve"><value>XMLサイトマップ</value></data>
-  <data name="Yes, Delete" xml:space="preserve"><value>削除する</value></data>
   <data name="Yesterday" xml:space="preserve"><value>昨日</value></data>
   <data name="You" xml:space="preserve"><value>あなた</value></data>
   <data name="You are submitting a copy for {0}." xml:space="preserve"><value>{0} のコピーを投稿しています。</value></data>
@@ -970,7 +968,6 @@
   <data name="You haven't edited any articles yet." xml:space="preserve"><value>まだ記事を編集していません。</value></data>
   <data name="You haven't started any conversations yet." xml:space="preserve"><value>まだ会話を始めていません。</value></data>
   <data name="You must be logged in to create articles. {0}." xml:space="preserve"><value>記事を作成するにはログインが必要です。{0}。</value></data>
-  <data name="You must be logged in to delete articles. {0}." xml:space="preserve"><value>記事を削除するにはログインが必要です。{0}。</value></data>
   <data name="You must be logged in to edit articles. {0}." xml:space="preserve"><value>記事を編集するにはログインが必要です。{0}。</value></data>
   <data name="You're viewing a prior revision." xml:space="preserve"><value>以前の版を表示しています。</value></data>
   <data name="Your account is locked out." xml:space="preserve"><value>アカウントはロックされています。</value></data>

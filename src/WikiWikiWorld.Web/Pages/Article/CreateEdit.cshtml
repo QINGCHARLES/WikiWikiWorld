@@ -1,5 +1,6 @@
 @page
 @model WikiWikiWorld.Web.Pages.Article.CreateEditModel
+@inject WikiWikiWorld.Web.Infrastructure.PermissionService Permissions
 @{
 	ViewData["Title"] = Model.IsEditMode ? L["Editing: {0}", Model.Title ?? string.Empty] : L["Create New Article"];
 	Model.AllowSearchEngineIndexingOfPage = !Model.IsEditMode;
@@ -202,7 +203,7 @@
 			</div>
 		</form>
 
-		@if (Model.IsEditMode)
+		@if (Model.IsEditMode && (Model.CanRevert || await Permissions.MayDeleteArticleAsync(User, Model.OriginalUrlSlug, HttpContext.RequestAborted)))
 		{
 			<div class="danger-zone">
 				<h2 class="danger-zone-title">@L["Danger Zone"]</h2>
@@ -224,10 +225,11 @@
                         </form>
                     }
                     
-                    <form method="get" action="/Article/Delete" class="danger-zone-form">
-                        <input type="hidden" name="UrlSlug" value="@Model.OriginalUrlSlug" />
+                    @if (await Permissions.MayDeleteArticleAsync(User, Model.OriginalUrlSlug, HttpContext.RequestAborted))
+                    {
+                    <div class="danger-zone-form">
                         <div class="danger-zone-item">
-                            <button type="submit" class="button button-danger" data-button-variant="negative">
+                            <a href="@(ArticleUrlHelper.BuildRelativePath(Model.OriginalUrlSlug, Model.SelectedType, "delete"))" class="button button-danger" data-button-variant="negative" rel="nofollow">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="3 6 5 6 21 6"></polyline>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -235,10 +237,11 @@
                                     <line x1="14" y1="11" x2="14" y2="17"></line>
                                 </svg>
                                 <span>@L["Title.DeleteArticle"]</span>
-                            </button>
-                            <p class="danger-zone-description">@L["Once you delete an article, there is no going back. Please be certain."]</p>
+                            </a>
+                            <p class="danger-zone-description">@L["Deleting hides the article and its history from readers. Only a site administrator can restore it."]</p>
                         </div>
-                    </form>
+                    </div>
+                    }
                 </div>
 			</div>
 		}

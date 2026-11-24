@@ -1,66 +1,79 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using WikiWikiWorld.Data.Extensions;
+using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Web.Infrastructure;
-using Microsoft.AspNetCore.Identity;
-using WikiWikiWorld.Data.Models;
-using WikiWikiWorld.Web.Services;
 
 namespace WikiWikiWorld.Web.Pages.Article;
 
 /// <summary>
-/// Page model for deleting articles.
+/// The confirmation page for deleting an article, reached at <c>/{slug}/delete</c> through <see cref="ArticleRouteTransformer"/>.
+/// It names the article, says what deleting does, and posts the deletion. Only Senior Editors and Administrators may
+/// delete articles; anyone may delete their own <c>@user</c> page.
 /// </summary>
-/// <param name="UserManager">The user manager.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
-/// <param name="ArticleRevisionService">The article revision workflow service.</param>
+/// <param name="Context">The site- and culture-filtered database context, used to find the article.</param>
+/// <param name="ArticleRevisionService">Performs the soft delete and enforces the same rules.</param>
+/// <param name="Permissions">Decides whether the account holds the DeleteArticles permission.</param>
 [Authorize]
-public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverService SiteResolverService, ArticleRevisionService ArticleRevisionService) : BasePageModel(SiteResolverService)
+public sealed class DeleteModel(
+	SiteResolverService SiteResolverService,
+	WikiWikiWorldDbContext Context,
+	ArticleRevisionService ArticleRevisionService,
+	PermissionService Permissions) : BasePageModel(SiteResolverService)
 {
-	private readonly UserManager<User> UserManager = UserManager;
-
 	/// <summary>
-	/// Gets or sets the URL slug of the article to delete.
+	/// Gets or sets the slug of the article to delete, from the route (with or without its <c>file:</c> prefix) or the form.
 	/// </summary>
 	[BindProperty(SupportsGet = true)]
 	public string UrlSlug { get; set; } = string.Empty;
 
 	/// <summary>
-	/// Gets any error message generated during processing.
+	/// Gets the current title of the article being deleted, shown in the question.
 	/// </summary>
-	public string ErrorMessage { get; private set; } = string.Empty;
+	public string ArticleTitle { get; private set; } = string.Empty;
 
 	/// <summary>
-	/// Handles the POST request to delete an article.
+	/// Gets the article's own path, for the Cancel link.
 	/// </summary>
-	/// <param name="Permissions">Decides whether the account may delete pages other than its own user page.</param>
-	/// <param name="CancellationToken">The cancellation token.</param>
-	/// <returns>A redirect to the home page, the page with errors, or a forbidden result for another account's user page or for an account without the DeleteArticles permission.</returns>
-	public async Task<IActionResult> OnPostAsync([FromServices] PermissionService Permissions, CancellationToken CancellationToken)
+	public string ArticlePath { get; private set; } = "/";
+
+	/// <summary>
+	/// Shows the confirmation for an article the account may delete.
+	/// </summary>
+	/// <param name="CancellationToken">The request cancellation token.</param>
+	/// <returns>The page; 404 when the article does not exist; 403 when the account may not delete it.</returns>
+	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
 	{
-		if (string.IsNullOrWhiteSpace(UrlSlug))
-		{
-			ErrorMessage = SharedResource.Text("Invalid article identifier.");
-			return Page();
-		}
+		AllowSearchEngineIndexingOfPage = false;
+		ArticleRevision? Article = await FindCurrentAsync(CancellationToken);
+		if (Article is null) return NotFound();
+		if (!await Permissions.MayDeleteArticleAsync(User, Article.UrlSlug, CancellationToken)) return Forbid();
 
-		if (!User.Identity?.IsAuthenticated ?? true)
-		{
-			return Challenge();
-		}
+		ArticleTitle = Article.Title;
+		ArticlePath = ArticleUrlHelper.BuildArticlePath(Article);
+		return Page();
+	}
 
-		Guid? CurrentUserId = GetCurrentUserId();
-		if (CurrentUserId is null)
-		{
-			return Challenge();
-		}
+	/// <summary>
+	/// Deletes the article (a soft delete of every revision) and sends the account to the home page, since the article
+	/// page no longer exists.
+	/// </summary>
+	/// <param name="CancellationToken">The request cancellation token.</param>
+	/// <returns>A redirect to the home page; 404 when the article does not exist; 403 when the account may not delete it.</returns>
+	public async Task<IActionResult> OnPostAsync(CancellationToken CancellationToken)
+	{
+		Guid? CurrentUserId = PermissionService.GetUserId(User);
+		if (CurrentUserId is null) return Challenge();
 
 		try
 		{
 			bool MayDeleteArticles = await Permissions.HasPermissionAsync(User, Permission.DeleteArticles, CancellationToken);
-			await ArticleRevisionService.DeleteArticleAsync(UrlSlug, CurrentUserId.Value, MayDeleteArticles, CancellationToken);
+			await ArticleRevisionService.DeleteArticleAsync(ArticleUrlHelper.NormalizeLookupSlug(UrlSlug), CurrentUserId.Value, MayDeleteArticles, CancellationToken);
 		}
 		catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.NotFound)
 		{
-			return NotFound("Article not found.");
+			return NotFound();
 		}
 		catch (ArticleRevisionWorkflowException Ex) when (Ex.Kind == ArticleRevisionWorkflowFailureKind.Forbidden)
 		{
@@ -71,12 +84,17 @@ public sealed class DeleteModel(UserManager<User> UserManager, SiteResolverServi
 	}
 
 	/// <summary>
-	/// Gets the current user's identifier.
+	/// Loads the current revision for <see cref="UrlSlug"/> on this site and culture.
 	/// </summary>
-	/// <returns>The current user's identifier, or null if it cannot be parsed.</returns>
-	private Guid? GetCurrentUserId()
+	/// <param name="CancellationToken">The request cancellation token.</param>
+	/// <returns>The current revision, or null when the slug is blank or no such article exists.</returns>
+	private async Task<ArticleRevision?> FindCurrentAsync(CancellationToken CancellationToken)
 	{
-		string? UserIdString = UserManager.GetUserId(User);
-		return Guid.TryParse(UserIdString, out Guid ParsedId) ? ParsedId : null;
+		if (string.IsNullOrWhiteSpace(UrlSlug)) return null;
+
+		return await Context.ArticleRevisions
+			.WithSpecification(new ArticleRevisionsBySlugSpec(ArticleUrlHelper.NormalizeLookupSlug(UrlSlug), IsCurrent: true))
+			.AsNoTracking()
+			.FirstOrDefaultAsync(CancellationToken);
 	}
 }

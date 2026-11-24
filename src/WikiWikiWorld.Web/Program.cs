@@ -474,6 +474,7 @@ App.MapGet("/robots.txt", (SiteResolverService SiteResolver, HttpContext Context
             Disallow: /Profile/Messages
             Disallow: /Article/CreateEdit
             Disallow: /Article/Delete
+            Disallow: /*/delete$
             Disallow: /api/
             Disallow: /openapi/
             Disallow: /wiki:api-docs/

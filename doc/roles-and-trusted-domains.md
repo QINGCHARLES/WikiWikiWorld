@@ -16,7 +16,7 @@ permission. Moving a permission to another role is a one-line change there.
 | Permission | Gates |
 |---|---|
 | `UseAdminTools` | `/Admin/DomainRedirects`, `/Admin/MigrateFiles` (MigrateFiles also keeps its single-operator check) |
-| `DeleteArticles` | `Article/Delete` and `DELETE /api/article/{slug}`, except an account's own `@user` page. The article menu shows "Delete article" only to holders. |
+| `DeleteArticles` | The `/{slug}/delete` confirmation page and `DELETE /api/article/{slug}`, except an account's own `@user` page. The article menu and the editor show their delete controls only to accounts that may delete that article (`PermissionService.MayDeleteArticleAsync`). |
 | `ReviewTrustedLinkDomains` | `/Admin/TrustedDomains` (confirm, deny, withdraw), and the pending-count badge on the account menu |
 
 Permissions are checked against the database on every request (`PermissionService`, cached once per request). A role

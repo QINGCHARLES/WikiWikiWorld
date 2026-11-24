@@ -91,6 +91,19 @@ public sealed class PermissionService(WikiWikiWorldDbContext Context)
 	}
 
 	/// <summary>
+	/// Decides whether the principal may delete an article, by the rule <c>ArticleRevisionService.DeleteArticleAsync</c>
+	/// enforces: an <c>@user</c> page only by its owner, any other page with <see cref="Permission.DeleteArticles"/>.
+	/// </summary>
+	/// <param name="User">The request principal.</param>
+	/// <param name="UrlSlug">The article's stored slug.</param>
+	/// <param name="CancellationToken">The request cancellation token.</param>
+	/// <returns>True when the delete would be allowed; used to show or hide delete controls.</returns>
+	public async Task<bool> MayDeleteArticleAsync(ClaimsPrincipal User, string UrlSlug, CancellationToken CancellationToken) =>
+		ArticleRevisionService.IsUserPageSlug(UrlSlug)
+			? User.Identity?.IsAuthenticated == true && string.Equals(UrlSlug[1..], User.Identity.Name, StringComparison.OrdinalIgnoreCase)
+			: await HasPermissionAsync(User, Permission.DeleteArticles, CancellationToken);
+
+	/// <summary>
 	/// Loads an account's active (not soft-deleted) role names, reusing the result for the rest of the request.
 	/// </summary>
 	/// <param name="UserId">The account identifier.</param>

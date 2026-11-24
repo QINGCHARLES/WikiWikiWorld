@@ -235,10 +235,10 @@ else if(Model.DisplayedRevision is not null)
 							</svg>
 							<span>@L["Report article"]</span>
 						</a>
-						@if (!Model.IsPriorRevision && await Permissions.HasPermissionAsync(User, WikiWikiWorld.Web.Infrastructure.Permission.DeleteArticles, HttpContext.RequestAborted))
+						@if (!Model.IsPriorRevision && Model.CurrentRevision is { } Current && await Permissions.MayDeleteArticleAsync(User, Current.UrlSlug, HttpContext.RequestAborted))
 						{
 							<hr />
-							<a href="#" class="menu-item-danger">
+							<a href="@($"{Model.CurrentArticlePath}/delete")" class="menu-item-danger" rel="nofollow">
 								<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 									<use href="@IconSpriteUrl#Delete"></use>
 								</svg>
