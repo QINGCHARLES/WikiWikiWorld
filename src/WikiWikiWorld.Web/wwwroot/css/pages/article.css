@@ -16,6 +16,25 @@ main > article > p:first-of-type::first-line {
     text-transform: uppercase;
 }
 
+/* {{Hatnote}}: a short italic pointer to another article sharing this one's name, above the lead. A div, not a p,
+   so the lead's first paragraph keeps the uppercase first line above. */
+.hatnote {
+    margin-block: 0 1.25rem;
+    padding-inline-start: 1.5rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    /* #555 rather than --color-text-muted (#777), which is below 4.5:1 contrast at this size. */
+    color: var(--color-muted);
+}
+
+.hatnote em {
+    font-style: normal;
+}
+
+.hatnote a {
+    text-decoration: underline;
+}
+
 article :where(p, li, dt, dd, blockquote) a:not(.button) {
     text-decoration: underline;
     text-underline-offset: .2rem;

@@ -162,6 +162,7 @@ Stylistic elements for editorial presentation:
 ### Taxonomy, References & Maintenance
 Directives for wiki organization and references:
 
+* [**Hatnote** `{{Hatnote}}`](/wiki:hatnote) — One italic line above the lead pointing to another article with the same name.
 * [**Stub Notice** `{{Stub}}`](/wiki:stub) — Incomplete article alert with a quick link to the editor.
 * [**Footnotes** `{{Footnote}}` / `{{Footnotes}}`](/wiki:footnotes) — Inline numeric superscript notes and collected notes list.
 * [**Citations & Bibliography** `{{Citation}}` / `{{Citations}}`](/wiki:citations) — Bibliographic references (`†N`) and aggregated bibliography.
@@ -813,6 +814,35 @@ or without attribution:
 * **Quotation Marks:** Surrounding straight double quotes (`"..."`) are automatically removed and styled using CSS quotes.
 * **Attribution:** Any text after the `|#|` separator renders as a styled `<cite>` attribution line beneath the quote.
 * **Placement:** Can be placed inline or as a standalone block between paragraphs to highlight key takeaways.
+
+---
+*Return to the [Formatting Guide](/wiki:formatting).*"""
+    },
+    {
+        "slug": "wiki:hatnote",
+        "title": "Wiki: Hatnote Directive",
+        "display_title": "Wiki: Hatnote Directive",
+        "text": """The `{{Hatnote}}` directive puts one short italic line at the top of an article, above the lead, pointing readers to another article with the same name.
+
+## Syntax
+
+Write it on a line of its own among the top lines, after the eyebrow and any header image:
+
+```markdown
+{{ShortDescription American women's magazine first published in 1973}}
+{{Eyebrow MAGAZINE}}
+{{Hatnote For the 1955–1957 men's magazine, see [*Playgirl* (1955–1957)](/playgirl-1955-1957).}}
+```
+
+The text can hold links and *italics*. Italic words show upright, because the hatnote itself is italic.
+
+## When to use it
+
+* Only when two Magazedia articles share a name: two unrelated magazines, or national editions such as *GQ (USA)* and *GQ (UK)*.
+* One hatnote per article, and one sentence: "For …, see …." or "Not to be confused with …."
+* Link only to an article that exists.
+
+When you save, the wiki points out a hatnote written below the lead, where it would no longer sit at the top of the page.
 
 ---
 *Return to the [Formatting Guide](/wiki:formatting).*"""

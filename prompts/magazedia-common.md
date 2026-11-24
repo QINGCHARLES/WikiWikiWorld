@@ -1,6 +1,6 @@
 # Magazedia common article rules
 
-Version 2, 23 November 2026 (version 1 plus pull quotes, and paragraph and section length). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
+Version 3, 23 November 2026 (version 2 plus hatnotes). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters. These rules apply to every Magazedia article. The magazine and issue prompts add the rules for their kind of article; where one of them says it overrides a rule here, follow it.
 
@@ -203,6 +203,14 @@ An issue takes the issue value matching its publication's own article: an issue 
 
 **Header images are outside these prompts' scope.** A page-header image (`{{HeaderImage …}}`) is chosen, cropped, uploaded, and positioned by an editor as a separate revision, so do not add one, propose one, or ask about one. When you revise an existing article that already contains a `{{HeaderImage …}}` line, keep that line exactly as it is, in the same position among the top lines; do not alter its file reference or `Focus` setting, and do not remove it.
 
+**Hatnote, only for a shared name.** When another Magazedia article has the same or a confusable name, such as an unrelated magazine with the same title or another national edition, add one hatnote as the next top line, after the Eyebrow and any HeaderImage:
+
+```markdown
+{{Hatnote For the 1955–1957 men's magazine, see [*Playgirl* (1955–1957)](/playgirl-1955-1957).}}
+```
+
+Write one sentence, "For …, see …." or "Not to be confused with …", linking only to an article confirmed to exist. Add no hatnote for a subject that has no Magazedia article, and do not use one to introduce the article. Propose the matching hatnote for the other article in the Notes for the editor. Saving reports a hatnote placed below the lead.
+
 **Display title.** The article's `DisplayTitle` (sent with the article when it is published, not written in its text) is the page heading only. It is plain text and never Markdown: never italicise it, because `*Stash*` shows the asterisks. Leave it empty or equal to the title, unless a line break should replace a ` - ` separator (`Outlander\nIssue 01`) or a logo token is wanted. The article's `Title` names it everywhere else.
 
 ## 8. Infoboxes
@@ -324,7 +332,7 @@ Do not restate the article, list every source consulted, or describe routine wor
 Before publishing, silently check and correct:
 
 1. No sentence in the article describes research difficulties, unavailable evidence, source limitations, or omitted details; anything the editor should know is in the Notes for the editor.
-2. One plain-text ShortDescription is the first line and one permitted Eyebrow the second; no HeaderImage has been added and any existing one is unchanged; the DisplayTitle has no Markdown.
+2. One plain-text ShortDescription is the first line and one permitted Eyebrow the second; no HeaderImage has been added and any existing one is unchanged; any hatnote is a single top line pointing to an existing article with a shared name (section 7); the DisplayTitle has no Markdown.
 3. Publication names are italicized, not bolded; every internal link is a root-relative `/slug` link to an article confirmed to exist, used once per subject; every non-Latin name in prose is romanized under section 5.
 4. No inline code or code block holds anything but real code or markup being discussed; escaped punctuation renders as intended.
 5. Websites are written as printed; dead ones are unlinked or linked only to a working archive capture at their first mention. YouTube videos and channels use `{{YouTubeLink}}`. No email address or private contact detail remains unless section 6 allows it.

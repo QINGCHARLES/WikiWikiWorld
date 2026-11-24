@@ -39,6 +39,7 @@ Directive names are case-sensitive. Named properties are generally case-insensit
 | `Eyebrow` | `EyebrowExtension` | Block metadata | Article-type label above the title |
 | `Source` | `SourceExtension` | Block metadata | File or image provenance |
 | `HeaderImage` | `HeaderImageExtension` | Block metadata | Article hero image |
+| `Hatnote` | `HatnoteExtension` | Block | Top-of-article pointer to another article sharing the name |
 | `Stub` | `StubExtension` | Block | Incomplete-article notice |
 | `Image` | `ImageExtension` | Inline | Wiki-hosted image |
 | `YouTube` | `YouTubeExtension` | Block | Controlled click-to-load YouTube video |
@@ -174,6 +175,25 @@ Sets the article hero image by referring to a current file article in the same s
 - An unresolved reference produces no hero image.
 
 ## Article content directives
+
+### `Hatnote`
+
+Renders one short italic line above the lead that points readers to another article sharing this one's name, like a Wikipedia hatnote.
+
+```markdown
+{{ShortDescription …}}
+{{Eyebrow MAGAZINE}}
+{{Hatnote For the 1955–1957 men's magazine, see [*Playgirl* (1955–1957)](/playgirl-1955-1957).}}
+```
+
+| Parameter | Required | Features |
+| --- | --- | --- |
+| Text | Yes | Inline Markdown: links, `*italic*` (shown upright inside the italic line), `**bold**` |
+
+- Write it on a line of its own among the top lines, after `{{Eyebrow}}` and any `{{HeaderImage}}`. It renders where it is written, as `<div class="hatnote" role="note">`, so the lead's first paragraph keeps its uppercase first line.
+- A directive with no text, or with other text after its closing braces on the same line, is not a hatnote and stays visible as text.
+- Saving reports a hatnote written after the lead or any other article content (see [Save warnings](#save-warnings)).
+- Use it only when two Magazedia articles share a name, such as two unrelated magazines or national editions. One hatnote per article, one sentence: "For …, see …." or "Not to be confused with …."
 
 ### `Stub`
 
@@ -539,6 +559,7 @@ Title=Acquisition |#| Date=October 1998 |#| Description=The title was acquired b
 Saving an article never fails because of these checks, but `ArticleSaveWarnings` reports, with line numbers:
 
 - infobox problems (see [Infobox warnings](#warnings));
+- a `{{Hatnote}}` written after the lead or other article content, where it no longer sits at the top;
 - email addresses, which articles include only when the address itself is notable;
 - YouTube addresses and raw channel IDs written into the text, which belong in `{{YouTubeLink}}` (or a citation's `url=`);
 - `{{YouTubeLink}}` directives that do not validate, with the reason.

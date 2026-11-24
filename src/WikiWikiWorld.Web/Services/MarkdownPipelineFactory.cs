@@ -123,6 +123,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(HeaderImageExt)
 			.Use(EyebrowExt)
 			.Use(SubtitleExt)
+			.Use(new HatnoteExtension())
 			.Use(RedirectExt)
 			.Use(CategoryExt)
 			.Use(new CategoryArticlesExtension())
