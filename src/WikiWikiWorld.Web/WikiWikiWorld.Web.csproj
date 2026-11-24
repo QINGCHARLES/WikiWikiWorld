@@ -33,6 +33,8 @@
   <ItemGroup>
     <Folder Include="Pages\Identity\" />
     <None Update="ThirdPartyNotices/Django-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Local-only (git-ignored) development settings, including the dev JWT secret: never ship them in a published image. -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
 </Project>
