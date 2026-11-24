@@ -1,6 +1,6 @@
 # Magazedia common article rules
 
-Version 3, 23 November 2026 (version 2 plus hatnotes). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
+Version 4, 24 November 2026 (version 3 plus trusted-domain proposals). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters. These rules apply to every Magazedia article. The magazine and issue prompts add the rules for their kind of article; where one of them says it overrides a rule here, follow it.
 
@@ -315,6 +315,7 @@ Write the article, then publish it yourself unless you were told only to draft i
 - **Update:** `GET` the article, change its text, and `PUT` UTF-8 JSON with its `CanonicalArticleId`, `Title`, `DisplayTitle`, `Type`, `Text`, and a `RevisionReason` that says what changed. `GET` again just before the `PUT`; if the revision changed since you read it, merge rather than overwrite. `wiki_api.py` prints UTF-8: when reading its output in Python on Windows, decode it as UTF-8 (for example `sys.stdin.reconfigure(encoding="utf-8")`), or text such as "–" and "№" turns into "â€“" and "â„–" in your copy.
 - **Save warnings:** every successful save returns `Warnings`: infobox problems, email addresses, YouTube addresses or channel IDs written into the text, and invalid `{{YouTubeLink}}`. Fix each one and save again, unless the warning is a deliberate exception allowed by section 6 (a notable email address); say so in the Notes for the editor.
 - **Check the page:** load the published page and confirm that the title, infobox, citations, and any structured blocks render, and that no directive shows as raw text.
+- **Trusted domains:** links to most sites are marked `nofollow`; links to trusted domains are not. After publishing, look at the external links in the article (text, infobox, citations, External links) and pick out the **official** ones: the publication's own site, its publisher's or owner's site, and national or university libraries, archives, museums, and government sites. `GET api/trusted-domains` lists the trusted domains (each covers its subdomains) and your earlier proposals. For each official domain not yet trusted or proposed, propose it once: save UTF-8 JSON such as `{"Domain": "vogue.com", "Reason": "Official site of Vogue magazine"}` to a file and send it with `python scripts/wiki_api.py request prod POST api/trusted-domains --json domain.json`, saying in the reason whose site it is. Never propose a site where anyone can publish (blogs, Medium, Substack, social networks, wikis), a shop, or an ordinary secondary source such as a newspaper. A `409` means it is already trusted or waiting, so carry on. Do not propose a domain again after a `Denied`. An administrator decides each proposal.
 - **Several articles:** write each publication's article as its own task, one agent per magazine, rather than batching several into one generation.
 - **When you cannot publish:** output the finished article in one triple-backtick code block with the `markdown` language tag, with no nested code fences and nothing before it, followed by the Notes for the editor.
 
@@ -324,6 +325,7 @@ After publishing (or after the code block), give a section headed `Notes for the
 
 - **Published:** the slug, environment, and revision, or that the article was not published and why.
 - **Warnings kept:** any save warning deliberately left in place, and why.
+- **Domains proposed:** each trusted-domain proposal you made, with its reason.
 
 Do not restate the article, list every source consulted, or describe routine working steps.
 

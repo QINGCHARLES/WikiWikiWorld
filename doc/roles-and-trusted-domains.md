@@ -58,7 +58,7 @@ the same approval as any other production change.
 External links get `rel="nofollow noopener"` unless their host is trusted, in which case they get `rel="noopener"`.
 Trusting `example.com` also trusts every subdomain (`LinkDomainHelper.IsApprovedDomain`). Trust is global across sites.
 
-**Workflow.** Any member proposes a domain with a required reason at `/wiki:trusted-domains`. A pasted address is
+**Workflow.** Any member proposes a domain with a required reason at `/wiki:trusted-domains`, or through `POST /api/trusted-domains` (see [the API](api.md#trusted-domains-api); the article prompts tell MaggieTheBot to propose the official sites it links). A pasted address is
 reduced to its host: lowercase, punycode for IDN names, no `www.`. IP addresses, bare top-level domains, domains already
 trusted (directly or through a parent) and domains already waiting are refused. Administrators see a count on their
 avatar and an account-menu link to `/Admin/TrustedDomains`, where they confirm or deny, with an optional note shown to

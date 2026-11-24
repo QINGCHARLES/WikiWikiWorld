@@ -10,7 +10,9 @@ public sealed record TrustedDomainChanged(string Domain);
 
 /// <summary>The request was refused; nothing changed.</summary>
 /// <param name="Message">A translated explanation for the person who asked.</param>
-public sealed record TrustedDomainRefused(string Message);
+/// <param name="IsDuplicate">True when the domain is already trusted (directly or through a parent) or already waiting
+/// for review, so there is nothing to do; false when the request itself was wrong. The API maps these to 409 and 400.</param>
+public sealed record TrustedDomainRefused(string Message, bool IsDuplicate = false);
 
 /// <summary>The outcome of proposing or reviewing a trusted link domain.</summary>
 public union TrustedDomainOutcome(TrustedDomainChanged, TrustedDomainRefused);
@@ -167,12 +169,12 @@ public sealed partial class TrustedLinkDomainService(WikiWikiWorldDbContext Cont
 		{
 			return new TrustedDomainRefused(CoveringDomain == Domain
 				? SharedResource.Format("{0} is already trusted.", Domain)
-				: SharedResource.Format("{0} is already trusted, because {1} is.", Domain, CoveringDomain));
+				: SharedResource.Format("{0} is already trusted, because {1} is.", Domain, CoveringDomain), IsDuplicate: true);
 		}
 
 		if (await Context.TrustedLinkDomains.AnyAsync(Row => Row.Domain == Domain && Row.Status == TrustedLinkDomainStatus.Pending, CancellationToken))
 		{
-			return new TrustedDomainRefused(SharedResource.Format("{0} has already been proposed and is waiting for review.", Domain));
+			return new TrustedDomainRefused(SharedResource.Format("{0} has already been proposed and is waiting for review.", Domain), IsDuplicate: true);
 		}
 
 		Context.TrustedLinkDomains.Add(new TrustedLinkDomain
@@ -192,7 +194,7 @@ public sealed partial class TrustedLinkDomainService(WikiWikiWorldDbContext Cont
 		{
 			// Someone else proposed (or an administrator confirmed) the same domain between the check and the insert.
 			Context.ChangeTracker.Clear();
-			return new TrustedDomainRefused(SharedResource.Format("{0} has already been proposed and is waiting for review.", Domain));
+			return new TrustedDomainRefused(SharedResource.Format("{0} has already been proposed and is waiting for review.", Domain), IsDuplicate: true);
 		}
 
 		return new TrustedDomainChanged(Domain);

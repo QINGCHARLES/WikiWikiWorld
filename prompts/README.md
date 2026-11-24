@@ -4,7 +4,7 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 3 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-common.md](magazedia-common.md) | 4 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
 | [magazedia-magazine.md](magazedia-magazine.md) | 25 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
 | [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
@@ -38,6 +38,7 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 
 ## Change log
 
+- **24 November 2026 — common 4.** Trusted domains (section 11): after publishing, propose each official domain the article links to (the publication's or publisher's site, libraries, archives, museums, government) that is not yet trusted or proposed, through `POST api/trusted-domains` with a reason; never open-publishing sites, shops or ordinary secondary sources; a `409` means nothing to do. The Notes for the editor list the domains proposed.
 - **23 November 2026 — common 3.** `{{Hatnote}}`: when another Magazedia article shares the name, one line after the Eyebrow and any HeaderImage ("For …, see …." or "Not to be confused with …"), linking only to an existing article; propose the matching hatnote for the other article in the Notes for the editor. Final check 2 covers it.
 - **23 November 2026 — common 2, issue 5, magazine 25.**
   - Pull quotes: two in an article with three or more body sections, one in a shorter one, none when nothing qualifies. Each is a verbatim passage of 10 to 40 words that also appears, cited, in the prose of its section; attributed; with one to three bold words; placed between body paragraphs away from other boxes. The issue prompt no longer says to omit them.

@@ -180,6 +180,34 @@ Slashes get optional break points automatically. After saving, `GET` the article
 
 ---
 
+## Trusted Domains API
+
+Base Path: `/api/trusted-domains`. Requires a Bearer token. Trust is global across sites. Links to a trusted domain, or to any of its subdomains, render without `nofollow`. A proposal waits until an administrator confirms or denies it at `/Admin/TrustedDomains`. Members can also propose at `/wiki:trusted-domains`. See [roles and trusted link domains](roles-and-trusted-domains.md).
+
+### List Trusted Domains and Your Proposals
+- **Endpoint**: `GET /api/trusted-domains`
+- **Response** `200 OK`:
+  ```json
+  {
+    "Trusted": ["gq.com", "vogue.com"],
+    "MyProposals": [
+      { "Domain": "si.edu", "Status": "Pending", "DateProposed": "2026-11-24T06:07:05.55+00:00", "AdministratorNote": null }
+    ]
+  }
+  ```
+  `Status` is `Pending`, `Trusted`, `Denied` or `Revoked`. `AdministratorNote` is the reviewer's note, or the reason trust was withdrawn. `MyProposals` lists the caller's latest 50 proposals.
+
+### Propose a Domain
+- **Endpoint**: `POST /api/trusted-domains`
+- **Body** (`application/json`): `{ "Domain": "https://www.vogue.com/about", "Reason": "Official site of Vogue magazine" }`. `Domain` may be a bare domain or any address on the site; it is reduced to the host, lowercase, without `www.`. `Reason` is required and at most 1,000 characters.
+- **Responses**:
+  - `200 OK`: `{ "Domain": "vogue.com", "Status": "Pending" }`.
+  - `400 Bad Request`: the domain is not valid (an IP address, a bare top-level domain such as `gov`, or not a hostname), or the reason is missing or too long.
+  - `409 Conflict`: the domain is already trusted, directly or through a parent domain, or is already waiting for review. There is nothing to do.
+- Messages are in English on every culture.
+
+---
+
 ## File API
 
 Base Path: `/api/file`
