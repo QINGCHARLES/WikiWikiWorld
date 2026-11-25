@@ -767,6 +767,8 @@ Title=Magazine Inception |#| Date=January 1985 |#| Description=Founded by **Exam
 |~|
 Title=Major Format Overhaul |#| Date=Fall 1991 |#| Description=Switched to perfect binding and expanded coverage to consumer hardware.
 |~|
+Title=Renamed *Example Monthly* |#| Date=1995 |#| Description=*Example Magazine* becomes *Example Monthly*.
+|~|
 Title=Digital Transition |#| Date=2001 |#| Description=Ceased regular print run; archive migrated to digital distribution.
 }}
 ```
