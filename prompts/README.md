@@ -4,7 +4,7 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 5 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-common.md](magazedia-common.md) | 6 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
 | [magazedia-magazine.md](magazedia-magazine.md) | 26 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
 | [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
@@ -38,6 +38,7 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 
 ## Change log
 
+- **25 November 2026 — common 6.** Two pull quotes need at least four body paragraphs between them, normally in different sections; two lines from the same passage get one pull quote, not two. Final check 7 covers it, and saving warns when two pull quotes are closer.
 - **25 November 2026 — common 5, magazine 26.** No catalogue data in prose (section 4 and final check 11): ISSNs, ISBNs, barcodes, catalogue and registration numbers, and legal-form suffixes such as Limited or LLC stay out of the lead and body, unless the identifier itself is the fact. A suffix stays when it is part of the familiar name (Time Inc., Future plc) or tells apart two otherwise identical company names; naming a USPS filing as a source is fine, but a postal-registration number is not. The magazine prompt's ISSN rule now points to it, so the rule covers issue articles too.
 - **24 November 2026 — common 4.** Trusted domains (section 11): after publishing, propose each official domain the article links to (the publication's or publisher's site, libraries, archives, museums, government) that is not yet trusted or proposed, through `POST api/trusted-domains` with a reason; never open-publishing sites, shops or ordinary secondary sources; a `409` means nothing to do. The Notes for the editor list the domains proposed.
 - **23 November 2026 — common 3.** `{{Hatnote}}`: when another Magazedia article shares the name, one line after the Eyebrow and any HeaderImage ("For …, see …." or "Not to be confused with …"), linking only to an existing article; propose the matching hatnote for the other article in the Notes for the editor. Final check 2 covers it.

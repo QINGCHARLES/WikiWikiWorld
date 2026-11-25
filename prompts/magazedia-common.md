@@ -1,6 +1,6 @@
 # Magazedia common article rules
 
-Version 5, 25 November 2026 (version 4 plus no catalogue data in prose). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
+Version 6, 25 November 2026 (version 5 plus spacing between pull quotes). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters. These rules apply to every Magazedia article. The magazine and issue prompts add the rules for their kind of article; where one of them says it overrides a rule here, follow it.
 
@@ -184,7 +184,8 @@ Pull quotes break up a long page and give the reader a voice from the subject it
 - **The quote must also be in the prose.** A pull quote takes no citation, so the same words, or the longer passage containing them, appear in the body with their citation, in the same section as the pull quote.
 - **Attribute it** after `|#|`: the speaker, their role, and where and when it was said: `Will Welch, editor-in-chief, *GQ Style*, Summer 2017`. Italicize publication names. Unattributed house text, such as a masthead motto, is attributed to the publication and the issue.
 - **Bold one to three key words** or a short phrase for emphasis; they render in heavy capitals. Do not bold the whole quote.
-- **Placement:** on its own line between two body paragraphs, with a blank line on each side. Never in the lead, directly under a heading, or beside an infobox, CoverCarousel, table, timeline or another pull quote. Spread two pull quotes out: one in the first half of the body, one in the second.
+- **Placement:** on its own line between two body paragraphs, with a blank line on each side. Never in the lead, directly under a heading, or beside an infobox, CoverCarousel, table, timeline or another pull quote.
+- **Keep two pull quotes far apart:** at least **four body paragraphs** between them, one in the first half of the body and one in the second, and normally in different sections. Two quotes on one screen read as a stack of boxes, not a break in the text. Two good lines from the same passage or interview do not justify two pull quotes: pick the better one. If the only two candidates cannot be placed four paragraphs apart, each in the section that cites it, use one. Saving warns when two pull quotes are closer than this.
 - If no quote meets these rules, write none and say so in the Notes for the editor.
 
 ## 7. Top lines, header image, and display title
@@ -340,7 +341,7 @@ Before publishing, silently check and correct:
 4. No inline code or code block holds anything but real code or markup being discussed; escaped punctuation renders as intended.
 5. Websites are written as printed; dead ones are unlinked or linked only to a working archive capture at their first mention. YouTube videos and channels use `{{YouTubeLink}}`. No email address or private contact detail remains unless section 6 allows it.
 6. Body paragraphs run 40 to 120 words, and any section over about 500 words, or spanning several eras or themes, is divided into named `###` subsections of at least two paragraphs (section 4).
-7. The article has two pull quotes, or one if it has fewer than three body sections, unless none qualifies. Each is verbatim, also appears with its citation in the prose of its section, is attributed, and sits between body paragraphs away from other boxes (section 6).
+7. The article has two pull quotes, or one if it has fewer than three body sections, unless none qualifies. Each is verbatim, also appears with its citation in the prose of its section, is attributed, and sits between body paragraphs away from other boxes (section 6). Two pull quotes have at least four body paragraphs between them.
 8. Any infobox follows section 8. All citations use the custom syntax with actual titles and real verified URLs (or the scan exception), use identical blocks for repeated sources, and point to no prohibited site, including hosts equal to or subdomains of `wikipedia.org`, `grokipedia.com`, `fandom.com`, `wikia.com`, or `reddit.com`.
 9. External links, if present, come before the single Citations marker; a Footnotes marker follows only when footnotes exist; Categories come last when used; no manual heading duplicates an automatic one.
 10. No math delimiters or TeX numeric formatting; ordinary numbers, units, and currency symbols are preserved.

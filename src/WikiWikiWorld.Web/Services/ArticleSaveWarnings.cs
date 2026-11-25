@@ -10,8 +10,9 @@ namespace WikiWikiWorld.Web.Services;
 /// returns these messages in <c>Warnings</c> and the web editor shows them once on the saved article.
 /// </summary>
 /// <remarks>
-/// Besides the infobox checks in <see cref="InfoboxExtension.FindProblems"/> and misplaced hatnotes
-/// (<see cref="HatnoteExtension.FindProblems"/>), it reports email addresses (which
+/// Besides the infobox checks in <see cref="InfoboxExtension.FindProblems"/>, misplaced hatnotes
+/// (<see cref="HatnoteExtension.FindProblems"/>) and crowded pull quotes (<see cref="PullQuoteExtension.FindProblems"/>),
+/// it reports email addresses (which
 /// articles include only when the address itself is notable), YouTube addresses and raw channel IDs written into the
 /// text instead of <c>{{YouTubeLink}}</c>, and <c>{{YouTubeLink}}</c> directives that do not validate. Fenced code,
 /// code spans and the payloads of <c>{{Citation}}</c>, <c>{{Source}}</c> and <c>{{YouTube}}</c>, where addresses
@@ -29,7 +30,7 @@ public static partial class ArticleSaveWarnings
 	/// <param name="Pipeline">The site's article pipeline, used to parse infoboxes as they render.</param>
 	/// <param name="Catalog">The infobox schemas loaded at startup.</param>
 	/// <param name="SiteId">The site the article belongs to.</param>
-	/// <returns>One plain-English message per problem, infobox and hatnote problems first; empty when there are none or the
+	/// <returns>One plain-English message per problem, infobox, hatnote and pull-quote problems first; empty when there are none or the
 	/// text is blank.</returns>
 	public static IReadOnlyList<string> Find(string? Text, MarkdownPipeline Pipeline, InfoboxSchemaCatalog Catalog, int SiteId)
 	{
@@ -38,7 +39,12 @@ public static partial class ArticleSaveWarnings
 		if (string.IsNullOrWhiteSpace(Text)) return [];
 
 		MarkdownDocument Document = Markdown.Parse(Text, Pipeline);
-		List<string> Warnings = [.. InfoboxExtension.FindProblems(Document, Catalog, SiteId), .. HatnoteExtension.FindProblems(Document)];
+		List<string> Warnings =
+		[
+			.. InfoboxExtension.FindProblems(Document, Catalog, SiteId),
+			.. HatnoteExtension.FindProblems(Document),
+			.. PullQuoteExtension.FindProblems(Document)
+		];
 
 		// Masking with spaces keeps every remaining character at its original position, so line numbers stay right.
 		char[] Prose = Text.ToCharArray();

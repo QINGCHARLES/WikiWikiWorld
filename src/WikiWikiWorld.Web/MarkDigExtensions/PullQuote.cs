@@ -4,6 +4,7 @@ using Markdig.Helpers;
 using Markdig.Parsers;
 using Markdig.Renderers;
 using Markdig.Renderers.Html;
+using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
@@ -174,4 +175,50 @@ public sealed class PullQuoteExtension : IMarkdownExtension
 			HtmlRenderer.ObjectRenderers.Add(new PullQuoteInlineRenderer());
 		}
 	}
+
+	/// <summary>The fewest body paragraphs allowed between two pull quotes.</summary>
+	public const int MinParagraphsBetween = 4;
+
+	/// <summary>
+	/// Finds pull quotes that sit too close to the previous one. Two pull quotes on one screen read as a stack of boxes,
+	/// so the Magazedia prompts ask for at least <see cref="MinParagraphsBetween"/> body paragraphs between them.
+	/// </summary>
+	/// <param name="Document">The parsed article, with inlines.</param>
+	/// <returns>One message per crowded pull quote, naming its line; empty when there are none.</returns>
+	/// <remarks>Only top-level paragraphs that hold prose count. Headings, lists, tables and paragraphs made only of
+	/// directives (infoboxes, images, other pull quotes) do not.</remarks>
+	public static IReadOnlyList<string> FindProblems(MarkdownDocument Document)
+	{
+		ArgumentNullException.ThrowIfNull(Document);
+
+		List<string> Problems = [];
+		int? ParagraphsSinceQuote = null;
+		foreach (Block Block in Document)
+		{
+			if (Block is not ParagraphBlock { Inline: { } Inlines } Paragraph) continue;
+			if (Inlines.Descendants<PullQuoteInline>().Any())
+			{
+				if (ParagraphsSinceQuote < MinParagraphsBetween)
+				{
+					Problems.Add($"Line {Paragraph.Line + 1}: this {{{{PullQuote}}}} has only {ParagraphsSinceQuote} body "
+						+ $"paragraph(s) after the previous one. Keep at least {MinParagraphsBetween} paragraphs between pull "
+						+ "quotes, each in the section that cites it, or use just one.");
+				}
+				ParagraphsSinceQuote = 0;
+			}
+			else if (ParagraphsSinceQuote is not null && HasProse(Inlines))
+			{
+				ParagraphsSinceQuote++;
+			}
+		}
+		return Problems;
+	}
+
+	/// <summary>
+	/// Tells a prose paragraph from one made only of directives, which parse as leaf inlines with no literal text.
+	/// </summary>
+	/// <param name="Inlines">The paragraph's inline content.</param>
+	/// <returns><see langword="true"/> when the paragraph contains visible literal text.</returns>
+	private static bool HasProse(ContainerInline Inlines) =>
+		Inlines.Descendants<LiteralInline>().Any(Literal => !Literal.Content.IsEmptyOrWhitespace());
 }
