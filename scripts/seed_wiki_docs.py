@@ -780,7 +780,7 @@ Title=Digital Transition |#| Date=2001 |#| Description=Ceased regular print run;
 
 | Canonical Property | Required | Accepted Aliases | Description |
 | :--- | :--- | :--- | :--- |
-| **`Title`** | Yes | `Heading`, `Header`, `Name` | The headline of the milestone event. |
+| **`Title`** | Yes | `Heading`, `Header`, `Name` | The headline of the milestone event. Supports `*italics*` (for publication names) and `**bold**`; other formatting shows as typed. |
 | **`Date`** | No | `Time`, `Period`, `Year` | Date, year, or timeframe displayed in italics. |
 | **`Description`** | No | `Body`, `Content`, `Text`, `Desc` | Narrative explanation. Supports Markdown formatting (bold, italics, links). |
 

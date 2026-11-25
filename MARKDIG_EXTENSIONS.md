@@ -542,7 +542,7 @@ Title=Acquisition |#| Date=October 1998 |#| Description=The title was acquired b
 
 | Canonical property | Required | Aliases | Features |
 | --- | --- | --- | --- |
-| `Title` | Yes per item | `Heading`, `Header`, `Name` | Plain-text event heading |
+| `Title` | Yes per item | `Heading`, `Header`, `Name` | Event heading; `*italic*` and `**bold**` only |
 | `Date` | No | `Time`, `Period`, `Year` | Plain-text date or timeframe |
 | `Description` | No | `Body`, `Content`, `Text`, `Desc` | Markdown narrative |
 
@@ -550,7 +550,7 @@ Title=Acquisition |#| Date=October 1998 |#| Description=The title was acquired b
 - Property names and aliases are case-insensitive; unknown properties are ignored.
 - A milestone without a non-empty title is skipped.
 - If an equivalent property repeats, the last non-empty value wins.
-- Titles and dates are HTML-encoded.
+- Titles are HTML-encoded, then `*italic*` and `**bold**` spans become `<em>` and `<strong>` (use italics for publication names, such as `Title=Renamed *Example Monthly*`); other Markdown in a title stays literal. Dates are plain HTML-encoded text.
 - Descriptions support automatic links (except bare `www.` text, which stays plain), `{{YouTubeLink}}`, extra emphasis, and pipe tables. Raw HTML is disabled.
 - A nested directive's own `|#|` and `}}` do not split the milestone or end the timeline.
 

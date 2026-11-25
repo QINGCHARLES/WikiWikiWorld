@@ -12,7 +12,7 @@ namespace WikiWikiWorld.Web.MarkdigExtensions;
 /// <summary>
 /// A single timeline entry parsed from a <see cref="TimelineBlock"/>.
 /// </summary>
-/// <param name="Title">The required event title/heading.</param>
+/// <param name="Title">The required event title/heading; <c>*italic*</c> and <c>**bold**</c> spans are rendered, other Markdown stays literal.</param>
 /// <param name="Date">The optional date, year, or timeframe string.</param>
 /// <param name="Description">The optional narrative description text with Markdown support.</param>
 public sealed record TimelineEntry(string Title, string? Date, string? Description);
@@ -158,7 +158,7 @@ public class TimelineBlockRenderer : HtmlObjectRenderer<TimelineBlock>
 			Renderer.Write("<li class=\"timeline-item\">");
 			Renderer.Write("<div class=\"timeline-marker\" aria-hidden=\"true\"></div>");
 			Renderer.Write("<div class=\"timeline-content\">");
-			Renderer.Write($"<h3 class=\"timeline-title\">{WebUtility.HtmlEncode(Entry.Title)}</h3>");
+			Renderer.Write($"<h3 class=\"timeline-title\">{InlineEmphasis.ToHtml(Entry.Title)}</h3>");
 
 			if (!string.IsNullOrWhiteSpace(Entry.Date))
 			{

@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Markdig;
 using Markdig.Helpers;
 using Markdig.Parsers;
@@ -135,46 +134,21 @@ public sealed partial class PullQuoteInlineParser : InlineParser
 /// <summary>
 /// Renders a <see cref="PullQuoteInline"/> to HTML.
 /// </summary>
-public sealed partial class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline>
+public sealed class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline>
 {
 	/// <inheritdoc/>
 	protected override void Write(HtmlRenderer Renderer, PullQuoteInline InlineElement)
 	{
 		Renderer.Write("<blockquote class=\"pullquote\">");
-		Renderer.Write($"<p>\u201c{FormatInlineMarkup(InlineElement.QuoteText)}\u201d</p>");
+		Renderer.Write($"<p>\u201c{InlineEmphasis.ToHtml(InlineElement.QuoteText)}\u201d</p>");
 
 		if (!string.IsNullOrWhiteSpace(InlineElement.Attribution))
 		{
-			Renderer.Write($"<cite>{FormatInlineMarkup(InlineElement.Attribution)}</cite>");
+			Renderer.Write($"<cite>{InlineEmphasis.ToHtml(InlineElement.Attribution)}</cite>");
 		}
 
 		Renderer.Write("</blockquote>");
 	}
-
-	/// <summary>
-	/// HTML-encodes text while converting basic Markdown bold (<c>**text**</c>) and italic (<c>*text*</c>) spans.
-	/// </summary>
-	/// <param name="Text">The raw text to format.</param>
-	/// <returns>Safe HTML with <c>&lt;strong&gt;</c> and <c>&lt;em&gt;</c> tags.</returns>
-	private static string FormatInlineMarkup(string Text)
-	{
-		string Encoded = WebUtility.HtmlEncode(Text);
-		Encoded = BoldMarkupRegex().Replace(Encoded, "<strong>$1</strong>");
-		Encoded = ItalicMarkupRegex().Replace(Encoded, "<em>$1</em>");
-		return Encoded;
-	}
-
-	/// <summary>
-	/// Matches a <c>**bold**</c> span; group 1 is the inner text, which the stylesheet renders in wide caps.
-	/// </summary>
-	[GeneratedRegex(@"\*\*(.+?)\*\*")]
-	private static partial Regex BoldMarkupRegex();
-
-	/// <summary>
-	/// Matches a single-asterisk <c>*italic*</c> span that is not part of a <c>**bold**</c> marker; group 1 is the inner text.
-	/// </summary>
-	[GeneratedRegex(@"(?<!\*)\*([^*]+?)\*(?!\*)")]
-	private static partial Regex ItalicMarkupRegex();
 }
 
 /// <summary>
