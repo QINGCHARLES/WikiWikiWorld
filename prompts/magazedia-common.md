@@ -1,6 +1,6 @@
 # Magazedia common article rules
 
-Version 4, 24 November 2026 (version 3 plus trusted-domain proposals). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
+Version 5, 25 November 2026 (version 4 plus no catalogue data in prose). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters. These rules apply to every Magazedia article. The magazine and issue prompts add the rules for their kind of article; where one of them says it overrides a rule here, follow it.
 
@@ -103,6 +103,7 @@ Give each sentence a real actor as its subject and state the sourced fact. Apply
 - **Headings are labels:** use plain sentence-case nouns. A heading does not state a verdict or tease its contents.
 - **Concise is not compressed:** do not stack three or more nouns, drop “that” from a long clause, or hold a subject apart from its verb with a list or aside. If a shorter sentence takes longer to parse, use the longer one.
 - **Named actors in the timeline:** a Description names who did what (“Publisher X acquired *Title*”), not “Acquired by new owner.”
+- **No catalogue data in prose:** write as a journalist would, not as a library record reads. ISSNs, ISBNs, barcodes (EAN, UPC), OCLC and LCCN numbers, postal-registration numbers, and price or distribution codes go in the infobox, or nowhere; never in the lead, and never as “published … under ISSN ….” Name a company without a legal-form suffix such as Limited, Ltd, LLC, Inc., GmbH, or K.K.: “Traplet Publications,” not “Traplet Publications Limited.” Mention an identifier or legal name in the text only when it is itself the fact: an ISSN change, separate regional ISSNs, a printed misprint, or two companies that differ only by their legal form.
 
 ### Paragraphs and sections
 
@@ -343,3 +344,4 @@ Before publishing, silently check and correct:
 8. Any infobox follows section 8. All citations use the custom syntax with actual titles and real verified URLs (or the scan exception), use identical blocks for repeated sources, and point to no prohibited site, including hosts equal to or subdomains of `wikipedia.org`, `grokipedia.com`, `fandom.com`, `wikia.com`, or `reddit.com`.
 9. External links, if present, come before the single Citations marker; a Footnotes marker follows only when footnotes exist; Categories come last when used; no manual heading duplicates an automatic one.
 10. No math delimiters or TeX numeric formatting; ordinary numbers, units, and currency symbols are preserved.
+11. No ISSN, ISBN, barcode, catalogue or registration number, or company legal-form suffix appears in the lead or body prose, unless it is itself the fact being reported (section 4, “No catalogue data in prose”). Read the lead aloud: it should sound like the opening of a magazine feature, not a catalogue entry.
