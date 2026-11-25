@@ -172,7 +172,8 @@ public sealed class SitemapService : ISitemapService
 	public const int HtmlPageSize = 200;
 
 	private const string SitemapNamespace = "http://www.sitemaps.org/schemas/sitemap/0.9";
-	private static readonly TimeSpan XmlCacheDuration = TimeSpan.FromHours(6);
+	// Saving an article does not evict these caches, so the duration is how long a new article can be missing.
+	private static readonly TimeSpan XmlCacheDuration = TimeSpan.FromHours(1);
 	private static readonly TimeSpan HtmlCacheDuration = TimeSpan.FromHours(1);
 
 	// Section titles, descriptions and link labels are English translation keys; pages show them through L[...].
