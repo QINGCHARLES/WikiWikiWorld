@@ -58,6 +58,9 @@ public sealed class ArticleHistoryModel(WikiWikiWorldDbContext Context, SiteReso
 		if (SiteId <= 0 || string.IsNullOrWhiteSpace(Culture) || string.IsNullOrWhiteSpace(UrlSlug))
 			return BadRequest("Invalid parameters.");
 
+		// History is a maintenance view of an article, not content for search results.
+		AllowSearchEngineIndexingOfPage = false;
+
 		string RequestedUrlSlug = UrlSlug;
 		string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
 		UrlSlug = LookupUrlSlug;

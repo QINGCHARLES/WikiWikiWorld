@@ -61,6 +61,9 @@ public sealed class LinksModel(
             return BadRequest("Invalid parameters.");
         }
 
+        // Backlink lists are navigation aids with little standalone content, so keep them out of search results.
+        AllowSearchEngineIndexingOfPage = false;
+
         string RequestedUrlSlug = UrlSlug;
         string LookupUrlSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
         UrlSlug = LookupUrlSlug;

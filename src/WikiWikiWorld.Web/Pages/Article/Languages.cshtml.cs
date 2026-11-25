@@ -100,6 +100,9 @@ public sealed class LanguagesModel(
 	/// <returns>The page, a 404 for a missing article, or a redirect to the canonical address.</returns>
 	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
 	{
+		// The language list is an editing utility; the article itself carries the language alternates.
+		AllowSearchEngineIndexingOfPage = false;
+
 		string RequestedUrlSlug = UrlSlug;
 		IActionResult? Failure = await LoadArticleAsync(CancellationToken);
 		if (Failure is not null)
