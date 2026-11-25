@@ -31,6 +31,23 @@ the seed script only creates missing pages.
   - `/american-outdoor-guide/history` carries `<meta name="robots" content="noindex">`.
   - Zero restarts, and no `fail:`, `crit:` or exception log lines in the first minutes.
 
+## Content fix: timeline italics (MaggieTheBot)
+
+The owner asked for an audit of every live timeline, then for the titles and descriptions to be fixed.
+
+- Audit: read-only query of the production database found 67 current articles with timelines (491 event titles).
+  The working list is in `.local/audits/timeline-italics-2026-11-25.md`.
+- Edits: 198 exact replacements across 38 articles, saved through `PUT /api/article/{slug}` as MaggieTheBot with the
+  reason "Italicize publication names in timeline titles and descriptions". Each replacement only adds `*` markers
+  and had to match exactly once in the freshly fetched text; all matched, and every save returned 200 with no
+  warnings.
+- Scope: publications, books, films, DVDs, podcasts, TV shows and named special editions, following each article's
+  own body styling. Companies, venues, events, awards, websites and games stay plain.
+- Verified: all 38 pages return 200, their timelines show 73 italic event titles, and no timeline contains a literal
+  asterisk.
+- Not covered: a name that an article never italicizes anywhere, and that the review did not spot, may still be plain.
+- Undo: each article's history keeps the previous revision.
+
 ## Rollback
 
 Pass `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261125T202828Z-ab2dff6c16a0` (the API status-code
