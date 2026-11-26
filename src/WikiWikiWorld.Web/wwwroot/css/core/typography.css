@@ -33,7 +33,7 @@ p, h2, h3, h4 {
 /* The heading face is Lyon Display Black, cut tight for very large sizes. At subhead sizes the
    reset's 1.1 leading and its native fit look cramped, so open both a little. */
 h2, h3, h4 {
-    line-height: 1.2;
+    line-height: 1.35;
     letter-spacing: 0.01em;
 }
 
