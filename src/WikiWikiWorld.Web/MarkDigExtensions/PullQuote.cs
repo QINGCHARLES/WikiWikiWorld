@@ -155,7 +155,7 @@ public sealed class PullQuoteInlineRenderer : HtmlObjectRenderer<PullQuoteInline
 /// <summary>
 /// A Markdig extension that adds support for pull quotes.
 /// </summary>
-public sealed class PullQuoteExtension : IMarkdownExtension
+public sealed partial class PullQuoteExtension : IMarkdownExtension
 {
 	/// <inheritdoc/>
 	public void Setup(MarkdownPipelineBuilder Pipeline)
@@ -213,6 +213,59 @@ public sealed class PullQuoteExtension : IMarkdownExtension
 		}
 		return Problems;
 	}
+
+	/// <summary>
+	/// Finds pull quotes whose words do not appear in the article's own text. A pull quote carries no citation, so the
+	/// Magazedia prompts require the same words, or a longer passage holding them, in the prose with their citation.
+	/// </summary>
+	/// <param name="Document">The parsed article, with inlines and source positions.</param>
+	/// <param name="Text">The saved Markdown the document was parsed from.</param>
+	/// <returns>One message per pull quote missing from the prose; empty when there are none.</returns>
+	/// <remarks>The comparison ignores case, punctuation, emphasis and spacing, and leaves out every directive
+	/// (citations, infoboxes and the pull quotes themselves), so only the article's own text can match.</remarks>
+	public static IReadOnlyList<string> FindUnquoted(MarkdownDocument Document, string Text)
+	{
+		ArgumentNullException.ThrowIfNull(Document);
+		ArgumentNullException.ThrowIfNull(Text);
+
+		// Inline line numbers are not set by the parser, so each quote reports the line of the paragraph holding it.
+		List<(PullQuoteInline Quote, int Line)> Quotes =
+		[
+			.. Document.Descendants<ParagraphBlock>()
+				.Where(Paragraph => Paragraph.Inline is not null)
+				.SelectMany(Paragraph => Paragraph.Inline!.Descendants<PullQuoteInline>().Select(Quote => (Quote, Paragraph.Line)))
+		];
+		if (Quotes.Count == 0) return [];
+
+		string Prose = ComparableText(DirectiveRegex().Replace(Text, " "));
+		List<string> Problems = [];
+		foreach ((PullQuoteInline Quote, int Line) in Quotes)
+		{
+			string Words = ComparableText(Quote.QuoteText);
+			if (Words.Length > 0 && !Prose.Contains(Words, StringComparison.Ordinal))
+			{
+				Problems.Add($"Line {Line + 1}: this {{{{PullQuote}}}}'s words are not in the article text. Quote the "
+					+ "same words, with their citation, in the prose of its section, or remove the pull quote.");
+			}
+		}
+		return Problems;
+	}
+
+	/// <summary>
+	/// Reduces text to lower-case letters and digits separated by single spaces, so formatting cannot hide a match.
+	/// </summary>
+	/// <param name="Value">The text to reduce.</param>
+	/// <returns>The comparable form, with a leading and trailing space so matches fall on word boundaries.</returns>
+	private static string ComparableText(string Value) =>
+		" " + NonWordRegex().Replace(Value.ToLowerInvariant(), " ").Trim() + " ";
+
+	/// <summary>Any <c>{{…}}</c> directive, lazily matched, including ones that span lines.</summary>
+	[GeneratedRegex(@"\{\{.*?\}\}", RegexOptions.Singleline)]
+	private static partial Regex DirectiveRegex();
+
+	/// <summary>Runs of characters that are neither letters nor digits, including apostrophes.</summary>
+	[GeneratedRegex(@"[^\p{L}\p{N}]+")]
+	private static partial Regex NonWordRegex();
 
 	/// <summary>
 	/// Tells a prose paragraph from one made only of directives, which parse as leaf inlines with no literal text.

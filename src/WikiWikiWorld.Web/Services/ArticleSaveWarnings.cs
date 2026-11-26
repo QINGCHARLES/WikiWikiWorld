@@ -12,7 +12,8 @@ namespace WikiWikiWorld.Web.Services;
 /// <remarks>
 /// Besides the infobox checks in <see cref="InfoboxExtension.FindProblems"/>, misplaced hatnotes
 /// (<see cref="HatnoteExtension.FindProblems"/>) and crowded pull quotes (<see cref="PullQuoteExtension.FindProblems"/>),
-/// it reports email addresses (which
+/// it reports catalogue numbers written into the text (ISSN, ISBN, postal registration, LCCN, OCLC, company number),
+/// email addresses (which
 /// articles include only when the address itself is notable), YouTube addresses and raw channel IDs written into the
 /// text instead of <c>{{YouTubeLink}}</c>, and <c>{{YouTubeLink}}</c> directives that do not validate. Fenced code,
 /// code spans and the payloads of <c>{{Citation}}</c>, <c>{{Source}}</c> and <c>{{YouTube}}</c>, where addresses
@@ -43,7 +44,8 @@ public static partial class ArticleSaveWarnings
 		[
 			.. InfoboxExtension.FindProblems(Document, Catalog, SiteId),
 			.. HatnoteExtension.FindProblems(Document),
-			.. PullQuoteExtension.FindProblems(Document)
+			.. PullQuoteExtension.FindProblems(Document),
+			.. PullQuoteExtension.FindUnquoted(Document, Text)
 		];
 
 		// Masking with spaces keeps every remaining character at its original position, so line numbers stay right.
@@ -92,6 +94,13 @@ public static partial class ArticleSaveWarnings
 		{
 			Warnings.Add($"Line {LineOf(Text, Email.Index)}: {Email.Value} is an email address. Remove it unless the "
 				+ "address itself is notable, such as one printed as part of the publication's identity.");
+		}
+
+		foreach (Match Number in CatalogueNumberRegex().Matches(Current))
+		{
+			Warnings.Add($"Line {LineOf(Text, Number.Index)}: \"{Number.Value}\" is a catalogue number in the text. Put "
+				+ "ISSNs in the infobox and leave other catalogue numbers to citations. Keep one in the text only when "
+				+ "the number itself is the fact, such as an ISSN change or a printed misprint.");
 		}
 
 		return Warnings;
@@ -150,6 +159,13 @@ public static partial class ArticleSaveWarnings
 	/// <summary>A YouTube channel ID standing on its own: UC followed by 22 URL-safe base64 characters.</summary>
 	[GeneratedRegex(@"(?<![\w-])UC[A-Za-z0-9_-]{22}(?![\w-])")]
 	private static partial Regex ChannelIdRegex();
+
+	/// <summary>
+	/// A catalogue number written into prose: an ISSN, ISBN, USPS postal registration, LCCN, OCLC or UK company number
+	/// with its digits. Infobox keys such as <c>ISSN=</c> do not match, because a space or colon must follow the label.
+	/// </summary>
+	[GeneratedRegex(@"\b(?:ISSN:?\s+\d{4}-?\d{3}[\dXx]\b|ISBN(?:-1[03])?:?\s+[\d][\d\- ]{8,15}[\dXx]\b|USPS\s+\d{3}-?\d{3}\b|(?:LCCN|OCLC):?\s+\d{6,}\b|Company No\.?\s+[A-Z]{0,2}\d{6,8}\b)")]
+	private static partial Regex CatalogueNumberRegex();
 
 	/// <summary>An email address; the character before it may not be part of an address or a URL path.</summary>
 	[GeneratedRegex(@"(?<![\w.%+/@-])[\w.%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")]

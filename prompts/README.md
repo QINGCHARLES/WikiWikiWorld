@@ -4,16 +4,16 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 6 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-common.md](magazedia-common.md) | 7 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
 | [magazedia-magazine.md](magazedia-magazine.md) | 26 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
 | [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
 ## How an agent writes an article
 
-1. **Read both files, in order:** `magazedia-common.md`, then the magazine or issue prompt. The common rules apply to every article; the second file adds the rules for its kind of article and points back to common sections by number ("common rules, section 3"). Where the two disagree, the specific prompt wins only where it says it overrides a common rule.
+1. **Read both files, in order, before each article:** `magazedia-common.md`, then the magazine or issue prompt. The common rules apply to every article; the second file adds the rules for its kind of article and points back to common sections by number ("common rules, section 3"). Where the two disagree, the specific prompt wins only where it says it overrides a common rule.
 2. **Fill in the inputs.** `[MAGAZINE_NAME]` is the publication's name as requested. The issue prompt's section 1 lists its other inputs (issue designation, page images, known slugs). An agent working without a person supplies what it can establish and records the rest in the Notes for the editor.
 3. **Research, write, and verify** as the prompts direct. Inspected scans, including issues in the local archive at `M:\Magazedia\Magazines (Sorted)\`, may be cited without a URL (common rules, section 3).
-4. **Publish** through [`scripts/wiki_api.py`](../scripts/wiki_api.py) as `MaggieTheBot` on production, or `DevvyTheBot` on development (common rules, section 11). Fix every save warning the API returns, then load the page and check it renders.
+4. **Publish** through [`scripts/wiki_api.py`](../scripts/wiki_api.py) as `MaggieTheBot` on production, or `DevvyTheBot` on development (common rules, section 11), passing `--prompts` with the versions read in step 1. The tool refuses the save if a prompt has changed on `main` since then; reread it, recheck the draft and save again. Fix every save warning the API returns, then load the page and check it renders.
 5. **Report** the Notes for the editor in the reply (common rules, section 12): what was published, title and status decisions, conflicts, omissions, and articles worth adding.
 
 One agent writes one publication's article. To write several, give each publication its own agent.
@@ -32,11 +32,13 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 ## Changing a prompt
 
 - Put a rule in `magazedia-common.md` when it applies to both kinds of article; put it in the magazine or issue prompt only when it is specific to that kind. Never copy a rule into both.
-- Bump the changed file's version and date in its header and in the table above, and add a line to the change log below. A version number belongs to one file; the common rules are versioned separately from the other two.
+- Bump the changed file's version and date in its header and in the table above, and add a line to the change log below. Keep the header's `Version N, ` form: `wiki_api.py` reads it, and a bump makes the tool refuse saves from drafts written under the older version until they are rechecked. Push the change, since the tool compares against `main` and `origin/main`. A version number belongs to one file; the common rules are versioned separately from the other two.
 - Keep section numbers stable where possible. If a common section is renumbered, update every "common rules, section N" reference in the other two files.
 - Commit the change; the Git history is the archive of earlier versions. Do not leave dated copies in other folders.
 
 ## Change log
+
+- **26 November 2026 — common 7.** Publishing passes `--prompts` with the prompt versions followed, and `wiki_api.py` refuses an article save when they are older than `main`, so drafts written under superseded rules are rechecked; read the prompts before each article, not once per batch. New save warnings: catalogue numbers in the text, and pull quotes whose words are not in the prose.
 
 - **25 November 2026 — common 6.** Two pull quotes need at least four body paragraphs between them, normally in different sections; two lines from the same passage get one pull quote, not two. Final check 7 covers it, and saving warns when two pull quotes are closer.
 - **25 November 2026 — common 5, magazine 26.** No catalogue data in prose (section 4 and final check 11): ISSNs, ISBNs, barcodes, catalogue and registration numbers, and legal-form suffixes such as Limited or LLC stay out of the lead and body, unless the identifier itself is the fact. A suffix stays when it is part of the familiar name (Time Inc., Future plc) or tells apart two otherwise identical company names; naming a USPS filing as a source is fine, but a postal-registration number is not. The magazine prompt's ISSN rule now points to it, so the rule covers issue articles too.

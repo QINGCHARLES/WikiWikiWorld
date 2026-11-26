@@ -327,7 +327,7 @@ Renders a styled pull quote with optional attribution.
 - Surrounding straight or curly double quotes on the quote text are stripped; curly quotes are added by the renderer.
 - Emphasise a few key words or a short phrase, e.g. `{{PullQuote We didn’t wake up for less than **$10,000 a day**. |#| Linda Evangelista, *Vogue* — 1990}}`.
 - One pair of surrounding straight double quotes is removed from the quote.
-- Saving warns when a pull quote has fewer than four prose paragraphs since the previous one (see [Save warnings](#save-warnings)).
+- Saving warns when a pull quote has fewer than four prose paragraphs since the previous one, or when its words are not in the article's text (see [Save warnings](#save-warnings)).
 - Quote and attribution values are not parsed as nested Markdown.
 
 ## Collected reference directives
@@ -562,6 +562,8 @@ Saving an article never fails because of these checks, but `ArticleSaveWarnings`
 - infobox problems (see [Infobox warnings](#warnings));
 - a `{{Hatnote}}` written after the lead or other article content, where it no longer sits at the top;
 - a `{{PullQuote}}` with fewer than four prose paragraphs since the previous one (headings, tables and paragraphs made only of directives do not count);
+- a `{{PullQuote}}` whose words do not appear in the article's own text (case, punctuation, emphasis and directives such as citations are ignored);
+- catalogue numbers written into the text: `ISSN`, `ISBN`, `USPS`, `LCCN` or `OCLC` followed by its number, or `Company No.` with one (infobox keys such as `ISSN=` do not count);
 - email addresses, which articles include only when the address itself is notable;
 - YouTube addresses and raw channel IDs written into the text, which belong in `{{YouTubeLink}}` (or a citation's `url=`);
 - `{{YouTubeLink}}` directives that do not validate, with the reason.
