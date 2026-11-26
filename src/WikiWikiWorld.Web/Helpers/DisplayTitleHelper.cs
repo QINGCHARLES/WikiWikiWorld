@@ -5,15 +5,21 @@ using Microsoft.EntityFrameworkCore;
 namespace WikiWikiWorld.Web.Helpers;
 
 /// <summary>
-/// Parses and renders article <c>DisplayTitle</c> values, supporting embedded SVG logo
-/// tokens using the <c>[[Fallback Text|#|file-slug]]</c> syntax.
+/// Parses and renders article <c>DisplayTitle</c> values, supporting embedded SVG/image logo
+/// tokens using <c>[[Fallback Text|#|file-slug]]</c>, unmasked multi-color logos with <c>|#|color</c>,
+/// and separate light/dark logos separated by <c>|~|</c> or <c>,</c>.
 /// </summary>
 public static partial class DisplayTitleHelper
 {
 	/// <summary>
-	/// Matches <c>[[FallbackText|#|FileSlug]]</c> tokens inside a display title.
+	/// Separators accepted between light and dark file slugs inside the logo-file segment of a token.
 	/// </summary>
-	[GeneratedRegex(@"\[\[(?<fallback>[^\]|]+?)\|#\|(?<slug>[^\]]+?)\]\]", RegexOptions.CultureInvariant)]
+	private static readonly string[] ThemeSlugSeparators = ["|~|", ","];
+
+	/// <summary>
+	/// Matches <c>[[FallbackText|#|Options]]</c> tokens inside a display title.
+	/// </summary>
+	[GeneratedRegex(@"\[\[(?<fallback>[^\]|]+?)\|#\|(?<options>[^\]]+?)\]\]", RegexOptions.CultureInvariant)]
 	private static partial Regex LogoTokenRegex();
 
 	/// <summary>
@@ -148,9 +154,46 @@ public static partial class DisplayTitleHelper
 	};
 
 	/// <summary>
+	/// Determines whether any valid logo token in <paramref name="DisplayTitle"/> references
+	/// <paramref name="FileSlug"/> (either as its primary/light file or as its dark-mode file).
+	/// </summary>
+	/// <param name="DisplayTitle">The optional display title text to inspect.</param>
+	/// <param name="FileSlug">The file article slug to match, with or without a <c>file:</c> prefix.</param>
+	/// <returns><see langword="true"/> when a valid logo token references <paramref name="FileSlug"/>; otherwise, <see langword="false"/>.</returns>
+	public static bool ReferencesFileSlug(string? DisplayTitle, string? FileSlug)
+	{
+		if (string.IsNullOrWhiteSpace(DisplayTitle) || string.IsNullOrWhiteSpace(FileSlug))
+		{
+			return false;
+		}
+
+		string TargetSlug = ArticleUrlHelper.NormalizeLookupSlug(FileSlug.Trim());
+		if (string.IsNullOrWhiteSpace(TargetSlug))
+		{
+			return false;
+		}
+
+		foreach (Match TokenMatch in LogoTokenRegex().Matches(DisplayTitle))
+		{
+			if (!TryParseLogoOptions(TokenMatch.Groups["options"].Value, out ParsedLogoOptions Options))
+			{
+				continue;
+			}
+
+			if (string.Equals(Options.LightSlug, TargetSlug, StringComparison.OrdinalIgnoreCase)
+				|| (Options.DarkSlug is not null && string.Equals(Options.DarkSlug, TargetSlug, StringComparison.OrdinalIgnoreCase)))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
 	/// Renders a display title as safe HTML for an <c>&lt;h1&gt;</c> heading, resolving any
-	/// <c>[[FallbackText|#|file-slug]]</c> tokens against current file articles in the database.
-	/// Unresolved file slugs gracefully fall back to the HTML-encoded <c>FallbackText</c>.
+	/// <c>[[FallbackText|#|...]]</c> logo tokens against current file articles in the database.
+	/// Unresolved or malformed tokens gracefully fall back to the HTML-encoded <c>FallbackText</c>.
 	/// Visible text gains optional line breaks after slashes without changing stored titles or logo URLs.
 	/// </summary>
 	/// <param name="DisplayTitle">The optional display title containing markup or line breaks.</param>
@@ -184,13 +227,16 @@ public static partial class DisplayTitleHelper
 
 		if (Matches.Count > 0)
 		{
-			HashSet<string> LookupSlugs = new(StringComparer.OrdinalIgnoreCase);
+			HashSet<string> LookupSlugs = [with(StringComparer.OrdinalIgnoreCase)];
 			foreach (Match TokenMatch in Matches)
 			{
-				string RawSlug = TokenMatch.Groups["slug"].Value.Trim();
-				if (!string.IsNullOrWhiteSpace(RawSlug))
+				if (TryParseLogoOptions(TokenMatch.Groups["options"].Value, out ParsedLogoOptions Options))
 				{
-					LookupSlugs.Add(ArticleUrlHelper.NormalizeLookupSlug(RawSlug));
+					LookupSlugs.Add(Options.LightSlug);
+					if (Options.DarkSlug is not null)
+					{
+						LookupSlugs.Add(Options.DarkSlug);
+					}
 				}
 			}
 
@@ -260,19 +306,16 @@ public static partial class DisplayTitleHelper
 			string Line = Lines[i];
 			string TrimmedLine = Line.Trim();
 
-			// Check if the entire line is a single [[Fallback|#|slug]] token that resolves to a logo
+			// Check if the entire line is a single [[Fallback|#|...]] token that resolves to a logo
 			Match SingleTokenMatch = LogoTokenRegex().Match(TrimmedLine);
 			if (SingleTokenMatch.Success && SingleTokenMatch.Index == 0 && SingleTokenMatch.Length == TrimmedLine.Length)
 			{
 				string FallbackText = SingleTokenMatch.Groups["fallback"].Value.Trim();
-				string RawSlug = SingleTokenMatch.Groups["slug"].Value.Trim();
-				string NormalizedSlug = string.IsNullOrWhiteSpace(RawSlug)
-					? string.Empty
-					: ArticleUrlHelper.NormalizeLookupSlug(RawSlug);
+				string RawOptions = SingleTokenMatch.Groups["options"].Value;
 
-				if (ResolvedLogos.TryGetValue(NormalizedSlug, out ResolvedLogoFile? Logo))
+				if (TryBuildResolvedLogoHtml(FallbackText, RawOptions, ResolvedLogos, out string LogoHtml))
 				{
-					Builder.Append(BuildLogoHtml(FallbackText, Logo));
+					Builder.Append(LogoHtml);
 					PreviousWasInlineText = false;
 					continue;
 				}
@@ -291,7 +334,7 @@ public static partial class DisplayTitleHelper
 	}
 
 	/// <summary>
-	/// Renders text with optional slash breaks and resolves inline <c>[[FallbackText|#|file-slug]]</c> tokens.
+	/// Renders text with optional slash breaks and resolves inline <c>[[FallbackText|#|...]]</c> tokens.
 	/// </summary>
 	/// <param name="Line">The raw line text.</param>
 	/// <param name="ResolvedLogos">The dictionary of resolved logo files keyed by normalized slug.</param>
@@ -315,14 +358,11 @@ public static partial class DisplayTitleHelper
 			}
 
 			string FallbackText = TokenMatch.Groups["fallback"].Value.Trim();
-			string RawSlug = TokenMatch.Groups["slug"].Value.Trim();
-			string NormalizedSlug = string.IsNullOrWhiteSpace(RawSlug)
-				? string.Empty
-				: ArticleUrlHelper.NormalizeLookupSlug(RawSlug);
+			string RawOptions = TokenMatch.Groups["options"].Value;
 
-			if (ResolvedLogos.TryGetValue(NormalizedSlug, out ResolvedLogoFile? Logo))
+			if (TryBuildResolvedLogoHtml(FallbackText, RawOptions, ResolvedLogos, out string LogoHtml))
 			{
-				LineBuilder.Append(BuildLogoHtml(FallbackText, Logo));
+				LineBuilder.Append(LogoHtml);
 			}
 			else
 			{
@@ -348,17 +388,204 @@ public static partial class DisplayTitleHelper
 	private static string RenderText(string Text) => WebUtility.HtmlEncode(Text).Replace("/", "/<wbr>", StringComparison.Ordinal);
 
 	/// <summary>
-	/// Builds the accessible HTML markup for a resolved title logo graphic.
+	/// Parses the <c>|#|</c>-delimited options portion of a logo token into normalized file slugs and a render mode.
+	/// Single-slug tokens default to <see cref="LogoRenderMode.Mask"/>; light/dark pairs separated by <c>|~|</c>
+	/// or <c>,</c> default to <see cref="LogoRenderMode.Color"/>.
+	/// </summary>
+	/// <param name="OptionsText">The raw token text following the first <c>|#|</c> separator.</param>
+	/// <param name="Options">Receives the parsed slugs and render mode when valid.</param>
+	/// <returns><see langword="true"/> when the options segment is syntactically valid; otherwise, <see langword="false"/>.</returns>
+	private static bool TryParseLogoOptions(string OptionsText, out ParsedLogoOptions Options)
+	{
+		Options = default;
+		if (string.IsNullOrWhiteSpace(OptionsText))
+		{
+			return false;
+		}
+
+		string[] OptionSegments = OptionsText.Split("|#|", StringSplitOptions.None);
+		string[] RawSlugs = OptionSegments[0].Split(ThemeSlugSeparators, StringSplitOptions.None);
+
+		string LightSlug;
+		string? DarkSlug;
+		LogoRenderMode Mode;
+
+		if (RawSlugs.Length == 1)
+		{
+			if (!TryNormalizeNonEmptySlug(RawSlugs[0], out LightSlug))
+			{
+				return false;
+			}
+
+			DarkSlug = null;
+			Mode = LogoRenderMode.Mask;
+		}
+		else if (RawSlugs.Length == 2)
+		{
+			if (!TryNormalizeNonEmptySlug(RawSlugs[0], out LightSlug)
+				|| !TryNormalizeNonEmptySlug(RawSlugs[1], out string ParsedDarkSlug))
+			{
+				return false;
+			}
+
+			DarkSlug = ParsedDarkSlug;
+			Mode = LogoRenderMode.Color;
+		}
+		else
+		{
+			return false;
+		}
+
+		for (int i = 1; i < OptionSegments.Length; i++)
+		{
+			string Option = OptionSegments[i].Trim();
+			if (Option.Equals("color", StringComparison.OrdinalIgnoreCase)
+				|| Option.Equals("mode=color", StringComparison.OrdinalIgnoreCase))
+			{
+				Mode = LogoRenderMode.Color;
+			}
+			else if (Option.Equals("mask", StringComparison.OrdinalIgnoreCase)
+				|| Option.Equals("mode=mask", StringComparison.OrdinalIgnoreCase))
+			{
+				Mode = LogoRenderMode.Mask;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		if (DarkSlug is not null && string.Equals(LightSlug, DarkSlug, StringComparison.OrdinalIgnoreCase))
+		{
+			DarkSlug = null;
+		}
+
+		Options = new ParsedLogoOptions(LightSlug, DarkSlug, Mode);
+		return true;
+	}
+
+	/// <summary>
+	/// Trims a raw file slug, strips any <c>file:</c> prefix, and ensures a non-empty lookup slug remains.
+	/// </summary>
+	/// <param name="RawSlug">The authored file slug segment.</param>
+	/// <param name="NormalizedSlug">Receives the normalized database lookup slug.</param>
+	/// <returns><see langword="true"/> when a non-empty slug remains after normalization; otherwise, <see langword="false"/>.</returns>
+	private static bool TryNormalizeNonEmptySlug(string RawSlug, out string NormalizedSlug)
+	{
+		NormalizedSlug = string.Empty;
+		string Trimmed = RawSlug.Trim();
+		if (string.IsNullOrWhiteSpace(Trimmed))
+		{
+			return false;
+		}
+
+		string Candidate = ArticleUrlHelper.NormalizeLookupSlug(Trimmed);
+		if (string.IsNullOrWhiteSpace(Candidate))
+		{
+			return false;
+		}
+
+		NormalizedSlug = Candidate;
+		return true;
+	}
+
+	/// <summary>
+	/// Resolves parsed logo file slugs against loaded <see cref="ResolvedLogoFile"/> entries and builds the HTML fragment.
+	/// When a token specifies both light and dark slugs, both files must exist for the logo graphic to render.
 	/// </summary>
 	/// <param name="FallbackText">The accessible fallback name of the publication.</param>
-	/// <param name="Logo">The resolved logo file metadata.</param>
+	/// <param name="OptionsText">The raw token options segment following <c>FallbackText|#|</c>.</param>
+	/// <param name="ResolvedLogos">The dictionary of resolved logo files keyed by normalized slug.</param>
+	/// <param name="LogoHtml">Receives the rendered HTML when all referenced files resolve.</param>
+	/// <returns><see langword="true"/> when the token is valid and its referenced files exist; otherwise, <see langword="false"/>.</returns>
+	private static bool TryBuildResolvedLogoHtml(
+		string FallbackText,
+		string OptionsText,
+		Dictionary<string, ResolvedLogoFile> ResolvedLogos,
+		out string LogoHtml)
+	{
+		LogoHtml = string.Empty;
+		if (!TryParseLogoOptions(OptionsText, out ParsedLogoOptions Options)
+			|| !ResolvedLogos.TryGetValue(Options.LightSlug, out ResolvedLogoFile? LightLogo))
+		{
+			return false;
+		}
+
+		ResolvedLogoFile? DarkLogo = null;
+		if (Options.DarkSlug is not null && !ResolvedLogos.TryGetValue(Options.DarkSlug, out DarkLogo))
+		{
+			return false;
+		}
+
+		LogoHtml = BuildLogoHtml(FallbackText, LightLogo, DarkLogo, Options.RenderMode);
+		return true;
+	}
+
+	/// <summary>
+	/// Builds the accessible HTML markup for a resolved single or light/dark title logo graphic.
+	/// </summary>
+	/// <param name="FallbackText">The accessible fallback name of the publication.</param>
+	/// <param name="LightLogo">The primary or light-theme logo file metadata.</param>
+	/// <param name="DarkLogo">The optional dark-theme logo file metadata.</param>
+	/// <param name="Mode">Whether the logo renders as a monochrome CSS mask or an unmasked image.</param>
 	/// <returns>The HTML markup for the logo span.</returns>
-	private static string BuildLogoHtml(string FallbackText, ResolvedLogoFile Logo)
+	private static string BuildLogoHtml(
+		string FallbackText,
+		ResolvedLogoFile LightLogo,
+		ResolvedLogoFile? DarkLogo,
+		LogoRenderMode Mode)
 	{
 		string EncodedFallback = WebUtility.HtmlEncode(FallbackText);
-		string SafeUrl = WebUtility.HtmlEncode(Logo.ImageUrl);
-		return $"<span class=\"title-logo\"><span class=\"title-logo__graphic\" style=\"--logo-url: url('{SafeUrl}'); --logo-width: {Logo.WidthPx}; --logo-height: {Logo.HeightPx};\" aria-hidden=\"true\"></span><span class=\"visually-hidden\">{EncodedFallback} </span></span>";
+		if (DarkLogo is null)
+		{
+			string GraphicHtml = BuildSingleGraphicHtml(LightLogo, VariantClass: null, Mode);
+			return $"<span class=\"title-logo\">{GraphicHtml}<span class=\"visually-hidden\">{EncodedFallback} </span></span>";
+		}
+
+		string LightHtml = BuildSingleGraphicHtml(LightLogo, "title-logo__light", Mode);
+		string DarkHtml = BuildSingleGraphicHtml(DarkLogo, "title-logo__dark", Mode);
+		return $"<span class=\"title-logo title-logo--themed\">{LightHtml}{DarkHtml}<span class=\"visually-hidden\">{EncodedFallback} </span></span>";
 	}
+
+	/// <summary>
+	/// Builds the decorative element for one logo variant as either a CSS-masked <c>&lt;span&gt;</c> or an unmasked <c>&lt;img&gt;</c>.
+	/// </summary>
+	/// <param name="Logo">The resolved logo file metadata.</param>
+	/// <param name="VariantClass">An optional theme variant CSS class (<c>title-logo__light</c> or <c>title-logo__dark</c>).</param>
+	/// <param name="Mode">Whether to emit a CSS-masked span or an unmasked image element.</param>
+	/// <returns>The HTML string for the decorative graphic element.</returns>
+	private static string BuildSingleGraphicHtml(ResolvedLogoFile Logo, string? VariantClass, LogoRenderMode Mode)
+	{
+		string SafeUrl = WebUtility.HtmlEncode(Logo.ImageUrl);
+		if (Mode == LogoRenderMode.Color)
+		{
+			string ImageClass = VariantClass is null ? "title-logo__img" : $"title-logo__img {VariantClass}";
+			return $"<img class=\"{ImageClass}\" src=\"{SafeUrl}\" alt=\"\" width=\"{Logo.WidthPx}\" height=\"{Logo.HeightPx}\" style=\"--logo-width: {Logo.WidthPx}; --logo-height: {Logo.HeightPx};\" aria-hidden=\"true\" />";
+		}
+
+		string SpanClass = VariantClass is null ? "title-logo__graphic" : $"title-logo__graphic {VariantClass}";
+		return $"<span class=\"{SpanClass}\" style=\"--logo-url: url('{SafeUrl}'); --logo-width: {Logo.WidthPx}; --logo-height: {Logo.HeightPx};\" aria-hidden=\"true\"></span>";
+	}
+
+	/// <summary>
+	/// Specifies how a resolved title logo is painted in the heading.
+	/// </summary>
+	private enum LogoRenderMode
+	{
+		/// <summary>Paints a monochrome silhouette in <c>currentColor</c> using CSS <c>mask</c>.</summary>
+		Mask,
+
+		/// <summary>Renders an unmasked <c>&lt;img&gt;</c> preserving multi-color fills, shading, and SVG <c>color-scheme</c> styles.</summary>
+		Color
+	}
+
+	/// <summary>
+	/// Holds the normalized file slugs and rendering mode parsed from a logo token.
+	/// </summary>
+	/// <param name="LightSlug">The primary or light-mode file slug without any <c>file:</c> prefix.</param>
+	/// <param name="DarkSlug">The optional distinct dark-mode file slug without any <c>file:</c> prefix.</param>
+	/// <param name="RenderMode">The rendering mode for the logo element(s).</param>
+	private readonly record struct ParsedLogoOptions(string LightSlug, string? DarkSlug, LogoRenderMode RenderMode);
 
 	/// <summary>
 	/// Represents a resolved file revision for a display title logo.

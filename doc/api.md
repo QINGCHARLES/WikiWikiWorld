@@ -136,6 +136,9 @@ Leave it empty, or the same as `Title`, unless you need one of the two things it
 
 - **Line breaks**, written as a real newline (`\n` in JSON). Use one in place of the ` - ` separators in a title, so the heading breaks cleanly instead of wrapping at a stray hyphen. For example, the title `Outlander - Issue 01` gets the display title `"Outlander\nIssue 01"`.
 - **Logo tokens**: `[[Fallback Text|#|file-slug]]` shows the current image from the `File` article `file-slug` in place of the text, and falls back to `Fallback Text` if the file is missing. A token alone on its line is shown as a block logo. Example: `"[[Outlander|#|outlander-logo]]\nIssue 01"`.
+  - **Monochrome mask (default)**: `[[Outlander|#|outlander-logo]]` paints the file's alpha silhouette in `currentColor`.
+  - **Multi-color / unmasked**: `[[GQ|#|gq-logo|#|color]]` renders an unmasked `<img>` so multi-color, badge, and multi-tone shaded SVGs retain their fills (embedded SVGs inherit the heading's `color-scheme` for internal `@media (prefers-color-scheme: dark)` or `light-dark()` styles).
+  - **Light and dark logo pair**: `[[Mojo|#|mojo-logo-light|~|mojo-logo-dark]]` (or `[[Mojo|#|mojo-logo-light, mojo-logo-dark]]`) specifies separate light-mode and dark-mode `File` slugs within the file slot. Pairs render unmasked by default and switch with the active `color-scheme` (append `|#|mask` if both files are monochrome masks); both files must exist or the token falls back to `Fallback Text`.
 
 Slashes get optional break points automatically. After saving, `GET` the article and check that `DisplayTitle` contains no `*`, `_` or `<`.
 

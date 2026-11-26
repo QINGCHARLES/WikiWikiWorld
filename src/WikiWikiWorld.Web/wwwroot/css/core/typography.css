@@ -83,17 +83,63 @@ h1 .title-logo {
     margin-block: 0.08em 0.06em;
 }
 
-h1 .title-logo__graphic {
+h1 .title-logo--themed {
+    display: grid;
+    place-items: center;
+}
+
+h1 .title-logo--themed > :is(.title-logo__graphic, .title-logo__img) {
+    grid-area: 1 / 1;
+}
+
+h1 :is(.title-logo__graphic, .title-logo__img) {
     --logo-aspect: calc(var(--logo-width, 1) / var(--logo-height, 1));
     --logo-max-block: 1.75em;
     --logo-max-inline: min(86vw, 6.5em);
 
     display: block;
+    max-inline-size: none;
     inline-size: min(var(--logo-max-inline), calc(var(--logo-max-block) * var(--logo-aspect)));
     block-size: min(var(--logo-max-block), calc(var(--logo-max-inline) / var(--logo-aspect)));
     aspect-ratio: var(--logo-width, 1) / var(--logo-height, 1);
+}
+
+h1 .title-logo__graphic {
     background-color: currentColor;
     mask: var(--logo-url) center / contain no-repeat;
+}
+
+h1 .title-logo__img {
+    object-fit: contain;
+}
+
+/* Without light-dark() support, keep only the light-mode logo visible. */
+h1 .title-logo__dark {
+    display: none;
+}
+
+/* Switch dual light/dark logos from the active color-scheme via light-dark(), keeping them in
+   lockstep with :root and [data-theme] color-scheme (and still extruded by h1's drop-shadow filter). */
+@supports (color: light-dark(#000, #fff)) {
+    h1 .title-logo__dark {
+        display: block;
+    }
+
+    h1 .title-logo__img.title-logo__light {
+        mask: linear-gradient(light-dark(var(--color-black), transparent) 0 0);
+    }
+
+    h1 .title-logo__img.title-logo__dark {
+        mask: linear-gradient(light-dark(transparent, var(--color-black)) 0 0);
+    }
+
+    h1 .title-logo__graphic.title-logo__light {
+        background-color: light-dark(currentColor, transparent);
+    }
+
+    h1 .title-logo__graphic.title-logo__dark {
+        background-color: light-dark(transparent, currentColor);
+    }
 }
 
 .visually-hidden {

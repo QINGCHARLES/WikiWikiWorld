@@ -94,8 +94,7 @@ public sealed class LinksModel(
         string SearchTerm2 = $"](/{UrlSlug})";
         string FileSearchTerm1 = $"](file:{UrlSlug})";
         string FileSearchTerm2 = $"](/file:{UrlSlug})";
-        string DisplayTitleLogoTerm1 = $"|#|{UrlSlug}]]";
-        string DisplayTitleLogoTerm2 = $"|#|file:{UrlSlug}]]";
+        string DisplayTitleTokenPrefix = "[[";
         bool IncludeFileNamespaceTerms = CurrentArticle.Type == ArticleType.File;
 
         DisplayTitleHtml = await DisplayTitleHelper.RenderHtmlAsync(
@@ -119,10 +118,20 @@ public sealed class LinksModel(
                                 (r.Text.Contains(FileSearchTerm1) ||
                                  r.Text.Contains(FileSearchTerm2) ||
                                  (r.DisplayTitle != null &&
-                                    (r.DisplayTitle.Contains(DisplayTitleLogoTerm1) ||
-                                     r.DisplayTitle.Contains(DisplayTitleLogoTerm2)))))))
+                                    r.DisplayTitle.Contains(DisplayTitleTokenPrefix) &&
+                                    r.DisplayTitle.Contains(UrlSlug))))))
             .OrderByDescending(r => r.DateCreated)
             .ToListAsync(CancellationToken);
+
+        if (IncludeFileNamespaceTerms)
+        {
+            Backlinks.RemoveAll(Revision =>
+                !Revision.Text.Contains(SearchTerm1, StringComparison.OrdinalIgnoreCase)
+                && !Revision.Text.Contains(SearchTerm2, StringComparison.OrdinalIgnoreCase)
+                && !Revision.Text.Contains(FileSearchTerm1, StringComparison.OrdinalIgnoreCase)
+                && !Revision.Text.Contains(FileSearchTerm2, StringComparison.OrdinalIgnoreCase)
+                && !DisplayTitleHelper.ReferencesFileSlug(Revision.DisplayTitle, UrlSlug));
+        }
 
         return Page();
     }

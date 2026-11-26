@@ -112,7 +112,7 @@ Magazedia wikitext directives follow consistent syntax patterns:
 | Syntax Pattern | Meaning | Example |
 | :--- | :--- | :--- |
 | `{{Name}}` | Parameterless marker | `{{Stub}}`, `{{Footnotes}}`, `{{Citations}}`, `{{Categories}}` |
-| `{{Name VALUE}}` | Single positional parameter separated by space | `{{Subtitle ...}}`, `{{Eyebrow ...}}`, `{{ShortDescription ...}}`, `{{HeaderImage ...}}` |
+| `{{Name VALUE}}` | Single positional parameter separated by space | `{{Subtitle ...}}`, `{{Eyebrow ...}}`, `{{ShortDescription ...}}`, `{{HeaderImage ...}}`, `{{Redirect ...}}` |
 | `|#|` | Separates properties within a single item | `{{Citation author=... |#| title=...}}` |
 | `|~|` | Separates repeating items in a container block | `{{Timeline Title=... |~| Title=...}}` |
 | `Key=Value` | Named property assignment (case-insensitive keys) | `Layout=breakout`, `StartSeconds=30` |
@@ -130,6 +130,7 @@ Explore the dedicated documentation for each extension:
 ### Header & Metadata Directives
 Directives placed near the top of an article to define page metadata and headings:
 
+* [**Display Titles & Logo Tokens** `[[Fallback|#|file-slug]]`](/wiki:display-title) — Multi-line page headings and monochrome, multi-color (`|#|color`), or light/dark (`|~|` / `,`) publication logos.
 * [**Eyebrow Label** `{{Eyebrow}}`](/wiki:eyebrow) — Displays a classification badge above the title (`MAGAZINE`, `MAGAZINEISSUE`, `FRANCHISE`, `ZINE`, `ZINEISSUE`, `JOURNAL`, `JOURNALISSUE`, `NEWSLETTER`, `NEWSLETTERISSUE`, `PERSON`, `PUBLISHER`, `ORGANIZATION`).
 * [**Subtitle** `{{Subtitle}}`](/wiki:subtitle) — Adds an explanatory subtitle beneath the main title heading.
 * [**Short Description** `{{ShortDescription}}`](/wiki:short-description) — Summary snippet used for search engines and social cards.
@@ -164,6 +165,7 @@ Directives for wiki organization and references:
 
 * [**Hatnote** `{{Hatnote}}`](/wiki:hatnote) — One italic line above the lead pointing to another article with the same name.
 * [**Stub Notice** `{{Stub}}`](/wiki:stub) — Incomplete article alert with a quick link to the editor.
+* [**Redirects** `{{Redirect}}`](/wiki:redirects) — Forwards an alternate title or earlier publication name (`Redirect` article type) to a canonical article.
 * [**Footnotes** `{{Footnote}}` / `{{Footnotes}}`](/wiki:footnotes) — Inline numeric superscript notes and collected notes list.
 * [**Citations & Bibliography** `{{Citation}}` / `{{Citations}}`](/wiki:citations) — Bibliographic references (`†N`) and aggregated bibliography.
 * [**Categories** `{{Category}}` / `{{Categories}}`](/wiki:categories) — Article topic tags and category navigation button bar.
@@ -988,6 +990,91 @@ Place `{{Categories}}` at the very bottom of the article:
 * **Silent Inline Markers:** `{{Category ...}}` produces no direct inline output where it is written; it registers the article in the specified category.
 * **Styled Category Buttons:** `{{Categories}}` aggregates all tags and outputs a list of button badges linking to `/category:<slug>` (e.g. `/category:technology-magazines`).
 * **Slug Generation:** Category names are trimmed, lowercased, and converted to kebab-case (spaces replaced by hyphens).
+
+---
+*Return to the [Formatting Guide](/wiki:formatting).*"""
+    },
+    {
+        "slug": "wiki:display-title",
+        "title": "Wiki: Display Titles & Logo Tokens",
+        "display_title": "Wiki: Display Titles & Logo Tokens",
+        "text": """An article's **Display Title** (set in the editor's **Display Title** field, or as `DisplayTitle` through the API) customizes only the main `<h1>` heading at the top of the article and on its `/links` page. Everywhere else — browser tabs, search results, sitemaps, and category lists — the article is named by its canonical **Title**.
+
+Leave **Display Title** empty (or equal to **Title**) unless the heading needs explicit line breaks or a publication logo token.
+
+## Plain Text & Line Breaks
+
+**Display Title** is plain text, never Markdown or HTML. Characters such as `*`, `_`, and `<br>` appear literally in the heading, so do not wrap publication names in asterisks.
+
+* **Multi-line headings:** Enter a real line break to split a heading across lines — typically in place of ` - ` separators between a publication name and an issue designation:
+
+```text
+Outlander
+Issue 01
+```
+
+* **Slash breaks:** Forward slashes (`/`) automatically gain optional word-break opportunities (`SPRING/SUMMER` can wrap cleanly after `/`) without changing the stored text.
+
+## Logo Tokens
+
+A logo token replaces visible heading text with the current image from a `File` article in the same site and culture, while keeping `Fallback Text` for screen readers and falling back to `Fallback Text` if a referenced file is missing:
+
+```text
+[[Fallback Text|#|file-slug]]
+```
+
+Both bare slugs (`outlander-logo`) and `file:`-prefixed slugs (`file:outlander-logo`) are accepted. A token placed on a line by itself renders as a centered block logo above or below adjacent lines:
+
+```text
+[[Outlander|#|outlander-logo]]
+Issue 01
+```
+
+### 1. Monochrome Mask (Default)
+
+```text
+[[Outlander|#|outlander-logo]]
+```
+
+By default, a single-file token uses the file's alpha channel as a CSS `mask` painted in `currentColor`, so single-color wordmarks automatically match the heading color in both light and dark themes.
+
+### 2. Multi-Color & Shaded Logos (`|#|color`)
+
+```text
+[[GQ|#|gq-logo|#|color]]
+```
+
+Adding the `|#|color` option (or `|#|mode=color`) renders the logo as an unmasked `<img>` instead of a silhouette mask. Use this for:
+
+* Multi-color brand marks,
+* White-on-color rectangular badges whose outer canvas is transparent, and
+* Multi-tone shaded vector artwork.
+
+Unmasked logos still receive the heading's 3D extrusion shadow along their outer alpha silhouette. Because `<img src="….svg">` inherits the page's active `color-scheme`, a single SVG can adapt dark neutral inks for dark mode with an inline `<style>` block (`:root { color-scheme: light dark; }` and `@media (prefers-color-scheme: dark)` or `light-dark()`).
+
+### 3. Separate Light & Dark Logos (`|~|` or `,`)
+
+When a publication needs two distinct logo files for light and dark backgrounds, list the light slug first and the dark slug second inside the file slot, separated by `|~|` or `,`:
+
+```text
+[[Mojo|#|mojo-logo-light|~|mojo-logo-dark]]
+```
+
+or:
+
+```text
+[[Mojo|#|mojo-logo-light, mojo-logo-dark]]
+```
+
+* **Delimiters:** Use `|~|` or `,` between the two file slugs. `|#|` separates whole token options, not lists of values.
+* **Default mode:** Light/dark pairs render unmasked (`color`) by default and switch automatically with the active `color-scheme`. Append `|#|mask` (`[[Brand|#|brand-light|~|brand-dark|#|mask]]`) if both files are monochrome silhouettes.
+* **Resolution:** Both the light and dark `File` articles must exist and be active; if either slug is missing or an unknown `|#|` option is given, the token falls back cleanly to `Fallback Text`.
+
+## Rules and Backlinks
+
+* **Site and culture scope:** Referenced `File` articles must exist in the same site and culture as the article using the token.
+* **Accessibility:** The graphic is marked decorative (`aria-hidden="true"`) while `Fallback Text` remains in the `<h1>` for assistive technologies and plain-text extraction.
+* **File backlinks:** Visiting `/file:<slug>/links` lists articles referencing that file in `DisplayTitle`, including `|#|color` logos and either side of a `|~|` or `,` light/dark pair.
 
 ---
 *Return to the [Formatting Guide](/wiki:formatting).*"""
