@@ -49,6 +49,11 @@
 	@await RenderSectionAsync("PageHead", required: false)
 
 	@* <script defer src="https://cloud.umami.is/script.js" data-website-id="2681fe66-d481-4722-9df1-b50b7aa0010c"></script> *@
+	@* Analytics run only on the production English Magazedia host, so dev, other cultures and other sites send nothing. *@
+	@if (string.Equals(Context.Request.Host.Host, "en.magazedia.com", StringComparison.OrdinalIgnoreCase))
+	{
+		<script defer src="https://stats.magazedia.com/core.js" data-website-id="80f32dd9-f045-45c1-b758-ae0faee7efb6"></script>
+	}
 
 </head>
 <body>
