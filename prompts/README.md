@@ -4,8 +4,8 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 7 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
-| [magazedia-magazine.md](magazedia-magazine.md) | 26 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
+| [magazedia-common.md](magazedia-common.md) | 8 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-magazine.md](magazedia-magazine.md) | 27 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
 | [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
 ## How an agent writes an article
@@ -37,6 +37,8 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 - Commit the change; the Git history is the archive of earlier versions. Do not leave dated copies in other folders.
 
 ## Change log
+
+- **26 November 2026 — common 8, magazine 27.** A brand with several national editions gets an article under its bare name (*GQ* at `/gq`), never "(franchise)". Each edition article carries an edition hatnote pointing to it ("This article is about the US edition. For the magazine's other editions, see *GQ*."), added only once the brand article exists; until then the Notes for the editor name the missing brand article. Whoever publishes a brand article adds the hatnote to every existing edition article.
 
 - **26 November 2026 — common 7.** Publishing passes `--prompts` with the prompt versions followed, and `wiki_api.py` refuses an article save when they are older than `main`, so drafts written under superseded rules are rechecked; read the prompts before each article, not once per batch. New save warnings: catalogue numbers in the text, and pull quotes whose words are not in the prose.
 

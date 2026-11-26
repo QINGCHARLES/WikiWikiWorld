@@ -1,6 +1,6 @@
 # Magazedia magazine article prompt
 
-Version 26, 25 November 2026 (version 25 with the ISSN rule pointing to the common catalogue-data rule). Read `magazedia-common.md` first; this prompt adds the rules for an article about a whole publication. This is prompt metadata, not article text.
+Version 27, 26 November 2026 (version 26 plus brand articles). Read `magazedia-common.md` first; this prompt adds the rules for an article about a whole publication. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article about **[MAGAZINE_NAME]** for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters.
 
@@ -26,6 +26,7 @@ Distinguish the publication from its formal catalogue titles and familiar public
 
 Apply the common rules on titles (section 2) before drafting. In addition:
 
+- **Brand articles.** An article about a brand with several national editions (common rules, section 2) covers the brand's origin, owner and editions: when and where each launched, who published it, and whether it continues. Do not repeat an edition's own history; summarize it and link the edition article. After publishing, add the edition hatnote to every existing edition article (common rules, section 7).
 - **Separate articles.** Write two articles only when the change is substantial enough that they are different publications: for example, a new publisher with a restarted issue numbering, a different editorial identity, or a gap followed by an unrelated relaunch under an old name. A straight rename with continuous volume numbering, the same publisher, and the same format or columns is one article. When you split, write the article requested, link it to the other (section 4), and propose the second in the Notes for the editor.
 
 For a title with revivals, research the intervening runs and distinguish their publishers, editors, formats, schedules, and dates where supported. Two verified endpoints do not establish an uninterrupted run or hiatus between them. Do not call a revival the first or only one without evidence. Acquisition of a brand or its rights does not by itself establish resumed print publication. Scope a closure or “final issue” to the run it ended; do not make an earlier print closure exclude later physical issues. Date editorial characteristics and audience claims to the run they describe instead of applying the original magazine's profile to every later incarnation.

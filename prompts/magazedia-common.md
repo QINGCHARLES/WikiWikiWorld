@@ -1,6 +1,6 @@
 # Magazedia common article rules
 
-Version 7, 26 November 2026 (version 6 plus the prompt-version check and new save warnings). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
+Version 8, 26 November 2026 (version 7 plus brand titles and edition hatnotes). Shared by the magazine prompt (`magazedia-magazine.md`) and the issue prompt (`magazedia-issue.md`). Read this file first, then the prompt for the kind of article you are writing; see `prompts/README.md`. This is prompt metadata, not article text.
 
 You are writing a Wikipedia-style encyclopedic article for Magazedia, the wiki encyclopedia of magazines, fanzines, journals, mooks and newsletters. These rules apply to every Magazedia article. The magazine and issue prompts add the rules for their kind of article; where one of them says it overrides a rule here, follow it.
 
@@ -24,6 +24,7 @@ The requested name is a starting point, not an instruction: check whether the pu
 
 - **Renamed publications.** Title the article by the publication's current name or, for a closed title, its final name. Cover earlier names in History, and name the former title in the lead. For example, a request for *Vacation Magic* produces an article titled *Disney Files Magazine* that explains the 2007 renaming.
 - **No disambiguators.** Never add "(magazine)" or a similar parenthetical to a title. Magazedia is an encyclopedia of publications, so the plain name is the default. Use the word "Magazine" only when it is part of the publication's own name, never in parentheses. A parenthetical is acceptable only to separate two Magazedia subjects that share a name, such as a magazine and a newsletter, or national editions such as *GQ (UK)*.
+- **Editions and their brand.** A national edition takes the brand name with its country: *GQ (USA)*, *GQ (UK)*. The article about the brand as a whole, covering its origin, owner and editions, takes the bare name: *GQ* at `/gq`. Never title it "(franchise)", "(brand)" or "(international)".
 - **Publisher prefixes.** A possessive publisher prefix that appeared across a publisher's whole range, such as *Petersen's* on Petersen Publishing titles, is part of the full title but not usually the article title. Title the article by the name readers and the trade used, give the full masthead title in the opening sentence, and keep the prefix only when the publication was generally known by it.
 
 When the article uses a later name than the one requested, or a publication had earlier names, propose a redirect from each former name in the Notes for the editor.
@@ -205,13 +206,22 @@ An issue takes the issue value matching its publication's own article: an issue 
 
 **Header images are outside these prompts' scope.** A page-header image (`{{HeaderImage …}}`) is chosen, cropped, uploaded, and positioned by an editor as a separate revision, so do not add one, propose one, or ask about one. When you revise an existing article that already contains a `{{HeaderImage …}}` line, keep that line exactly as it is, in the same position among the top lines; do not alter its file reference or `Focus` setting, and do not remove it.
 
-**Hatnote, only for a shared name.** When another Magazedia article has the same or a confusable name, such as an unrelated magazine with the same title or another national edition, add one hatnote as the next top line, after the Eyebrow and any HeaderImage:
+**Hatnote, only for a shared name or a parent brand.** When another Magazedia article has the same or a confusable name, such as an unrelated magazine with the same title or another national edition, add one hatnote as the next top line, after the Eyebrow and any HeaderImage:
 
 ```markdown
 {{Hatnote For the 1955–1957 men's magazine, see [*Playgirl* (1955–1957)](/playgirl-1955-1957).}}
 ```
 
 Write one sentence, "For …, see …." or "Not to be confused with …", linking only to an article confirmed to exist. Add no hatnote for a subject that has no Magazedia article, and do not use one to introduce the article. Propose the matching hatnote for the other article in the Notes for the editor. Saving reports a hatnote placed below the lead.
+
+**Edition hatnote.** A national edition's article points to its brand article (section 2) with this hatnote, naming the edition by its adjective:
+
+```markdown
+{{Hatnote This article is about the US edition. For the magazine's other editions, see [*GQ*](/gq).}}
+```
+
+- Add it only when the brand article exists. If it does not, add no hatnote, and name the missing brand article in the Notes for the editor ("*GQ* brand article needed"), along with any existing edition articles that will need the hatnote. Never link to a page that does not exist, and never create an empty brand article just to have something to link to.
+- When you publish a brand article, add this hatnote to every existing edition article of that brand in the same task, and list the editions in the brand article, linking those that have articles. Use one `{{Hatnote}}` per article: if an edition article already has a shared-name hatnote, combine the two into one sentence.
 
 **Display title.** The article's `DisplayTitle` (sent with the article when it is published, not written in its text) is the page heading only. It is plain text and never Markdown: never italicise it, because `*Stash*` shows the asterisks. Leave it empty or equal to the title, unless a line break should replace a ` - ` separator (`Outlander\nIssue 01`) or a logo token is wanted. The article's `Title` names it everywhere else.
 
@@ -337,7 +347,7 @@ Do not restate the article, list every source consulted, or describe routine wor
 Before publishing, silently check and correct:
 
 1. No sentence in the article describes research difficulties, unavailable evidence, source limitations, or omitted details; anything the editor should know is in the Notes for the editor.
-2. One plain-text ShortDescription is the first line and one permitted Eyebrow the second; no HeaderImage has been added and any existing one is unchanged; any hatnote is a single top line pointing to an existing article with a shared name (section 7); the DisplayTitle has no Markdown.
+2. One plain-text ShortDescription is the first line and one permitted Eyebrow the second; no HeaderImage has been added and any existing one is unchanged; any hatnote is a single top line pointing to an existing article with a shared name or, for a national edition, to its existing brand article (section 7); the DisplayTitle has no Markdown.
 3. Publication names are italicized, not bolded; every internal link is a root-relative `/slug` link to an article confirmed to exist, used once per subject; every non-Latin name in prose is romanized under section 5.
 4. No inline code or code block holds anything but real code or markup being discussed; escaped punctuation renders as intended.
 5. Websites are written as printed; dead ones are unlinked or linked only to a working archive capture at their first mention. YouTube videos and channels use `{{YouTubeLink}}`. No email address or private contact detail remains unless section 6 allows it.
