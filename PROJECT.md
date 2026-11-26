@@ -249,7 +249,7 @@ The prompts in [prompts/](prompts/README.md) are the only instructions for writi
 The following items were deferred during the Cinepedia (`SiteId = 4`) bootstrap and are tracked here for future work:
 
 1. **Per-site configurable header paper-texture filter (Item 2.6):** Make `wwwroot/js/header-paper-texture.js` configurable per site so non-print sites like Cinepedia can disable or customize the paper-crumple WebGL effect on hero images.
-2. **Per-site footer configuration (Item 3.7):** Make the `_Layout.cshtml` footer tagline, social links, and copyright start year/site name configurable per site instead of hardcoded to Magazedia.
+2. **Per-site footers (Item 3.7):** The shared layout selects a compiled [Cinepedia footer](src/WikiWikiWorld.Web/Pages/Shared/Sites/Cinepedia/_Footer.cshtml) for site 4. Other sites use the [original footer](src/WikiWikiWorld.Web/Pages/Shared/_Footer.cshtml). The [site customization plan](doc/site-customization-plan.md#implementation-stages) covers the homepage, header, Markdown profiles, and optional article layout.
 3. **DMCA & Terms pages (Item 3.9):** Implement `/dmca:` (`Dmca.cshtml`) and `/terms:` (`Terms.cshtml`) pages with site-aware branding and contact emails.
 4. **Per-site home page category pills (Item 4.10):** Allow each site to define its own curated category pills instead of the hardcoded magazine categories in `IndexModel.Categories`.
 5. **Home page cover grid generalization (Item 4.11):** Decouple or generalize `IndexModel.OnGetAsync` (`LatestArticlesWithCoverCarouselSpec`) so the home page works across sites that do not use `{{CoverCarousel}}` or `{{Infobox}}`.

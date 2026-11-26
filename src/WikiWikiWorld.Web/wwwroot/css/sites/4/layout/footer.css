@@ -1,0 +1,26 @@
+body > footer {
+    display: grid;
+    gap: 1rem;
+    padding: var(--grid-gutter);
+    border-block-start: 2px solid currentColor;
+}
+
+body > footer > p {
+    margin: 0;
+    font-size: var(--step-2);
+}
+
+body > footer > p a {
+    font-weight: bold;
+}
+
+body > footer > nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+}
+
+body > footer a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}

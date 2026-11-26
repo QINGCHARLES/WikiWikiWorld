@@ -423,6 +423,7 @@
   <data name="Follow the people building the encyclopedia, one page at a time." xml:space="preserve"><value>تابع الذين يبنون الموسوعة صفحةً بعد صفحة.</value></data>
   <data name="Follow your device’s appearance." xml:space="preserve"><value>اتّبع مظهر جهازك.</value></data>
   <data name="Food &amp; Drink" xml:space="preserve"><value>الطعام والشراب</value></data>
+  <data name="Footer links" xml:space="preserve"><value>روابط التذييل</value></data>
   <data name="Footnotes" xml:space="preserve"><value>الحواشي</value></data>
   <data name="For local debugging, enable the {0} environment by setting the {1} environment variable to {0} and restarting the app." xml:space="preserve"><value>لتصحيح الأخطاء محليًا، فعّل بيئة {0} بضبط متغير البيئة {1} على {0} ثم أعد تشغيل التطبيق.</value></data>
   <data name="Found {0} legacy file(s): {1} ready to move, {2} orphaned (no DB match)." xml:space="preserve"><value>عُثر على {0} ملف قديم: {1} جاهز للنقل، و{2} يتيم (بلا مطابقة في قاعدة البيانات).</value></data>
@@ -959,6 +960,7 @@
   <data name="THE ENCYCLOPEDIA, IN THE MAKING" xml:space="preserve"><value>الموسوعة قيد الصنع</value></data>
   <data name="The field {0} must be a string with a maximum length of {1}." xml:space="preserve"><value>يجب ألا يتجاوز طول الحقل {0} {1} حرفًا.</value></data>
   <data name="The field {0} must be a string with a minimum length of {2} and a maximum length of {1}." xml:space="preserve"><value>يجب أن يكون طول الحقل {0} بين {2} و{1} حرفًا.</value></data>
+  <data name="The film encyclopedia" xml:space="preserve"><value>موسوعة السينما</value></data>
   <data name="The following canonical files have more revisions in the database than surviving files on disk. Older revisions were overwritten under the legacy layout and their bytes cannot be recovered." xml:space="preserve"><value>للملفات الأساسية التالية نسخ في قاعدة البيانات أكثر من الملفات المتبقية على القرص. كُتب فوق النسخ الأقدم في التخطيط القديم ولا يمكن استعادة بياناتها.</value></data>
   <data name="The following pages link here:" xml:space="preserve"><value>الصفحات التالية تربط هنا:</value></data>
   <data name="The image processor could not start. Reload the page and try again." xml:space="preserve"><value>تعذّر تشغيل معالج الصور. أعد تحميل الصفحة وحاول مجددًا.</value></data>

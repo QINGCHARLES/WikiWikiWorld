@@ -348,6 +348,7 @@
   <data name="Follow the people building the encyclopedia, one page at a time." xml:space="preserve"><value>百科事典を1ページずつ築く人たちを追いかけましょう。</value></data>
   <data name="Follow your device’s appearance." xml:space="preserve"><value>端末の表示設定に合わせます。</value></data>
   <data name="Food &amp; Drink" xml:space="preserve"><value>フード・ドリンク</value></data>
+  <data name="Footer links" xml:space="preserve"><value>フッターリンク</value></data>
   <data name="Footnotes" xml:space="preserve"><value>脚注</value></data>
   <data name="For local debugging, enable the {0} environment by setting the {1} environment variable to {0} and restarting the app." xml:space="preserve"><value>ローカルでデバッグするには、環境変数 {1} を {0} に設定してアプリを再起動し、{0} 環境を有効にしてください。</value></data>
   <data name="Found {0} legacy file(s): {1} ready to move, {2} orphaned (no DB match)." xml:space="preserve"><value>旧形式のファイルが{0}件見つかりました：移動可能 {1}件、孤立（DB に対応なし）{2}件。</value></data>
@@ -814,6 +815,7 @@
   <data name="THE ENCYCLOPEDIA, IN THE MAKING" xml:space="preserve"><value>つくられていく百科事典</value></data>
   <data name="The field {0} must be a string with a maximum length of {1}." xml:space="preserve"><value>{0}は{1}文字以内で入力してください。</value></data>
   <data name="The field {0} must be a string with a minimum length of {2} and a maximum length of {1}." xml:space="preserve"><value>{0}は{2}文字以上{1}文字以内で入力してください。</value></data>
+  <data name="The film encyclopedia" xml:space="preserve"><value>映画百科事典</value></data>
   <data name="The following canonical files have more revisions in the database than surviving files on disk. Older revisions were overwritten under the legacy layout and their bytes cannot be recovered." xml:space="preserve"><value>次の正規ファイルは、データベース上の版がディスクに残るファイルより多くあります。古い版は旧形式で上書きされており、データは復元できません。</value></data>
   <data name="The following pages link here:" xml:space="preserve"><value>次のページがここにリンクしています：</value></data>
   <data name="The image processor could not start. Reload the page and try again." xml:space="preserve"><value>画像処理を開始できませんでした。ページを再読み込みしてもう一度お試しください。</value></data>

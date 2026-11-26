@@ -1,0 +1,10 @@
+<footer>
+	<p><a href="/">Cinepedia</a> &mdash; @L["The film encyclopedia"]</p>
+	<nav aria-label="@L["Footer links"]">
+		<a href="/Search">@L["Search"]</a>
+		<a href="/info:sitemap">@L["Sitemap"]</a>
+		<a href="/privacy-policy:">@L["Privacy Policy"]</a>
+		<a href="@(User?.Identity is { IsAuthenticated: true, Name: { } SettingsUserName } ? $"/@{Uri.EscapeDataString(SettingsUserName)}/settings" : "/settings/theme:")">@L["Theme"]</a>
+	</nav>
+	<small>@HL["Content is available under {0} unless otherwise noted.", new Microsoft.AspNetCore.Html.HtmlString("<a href=\"https://creativecommons.org/licenses/by-sa/4.0/\">CC BY-SA 4.0</a>")]</small>
+</footer>
