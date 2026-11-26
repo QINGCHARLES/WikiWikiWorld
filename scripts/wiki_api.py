@@ -209,7 +209,12 @@ def CallApi(
     return 0 if 200 <= Status < 300 else 1
 
 
-PromptFiles = {"common": "magazedia-common.md", "magazine": "magazedia-magazine.md", "issue": "magazedia-issue.md"}
+PromptFiles = {
+    "common": "magazedia-common.md",
+    "magazine": "magazedia-magazine.md",
+    "issue": "magazedia-issue.md",
+    "brand": "magazedia-brand.md",
+}
 
 
 def ReadPromptVersion(Ref: str, FileName: str) -> int | None:
@@ -238,7 +243,7 @@ def CurrentPromptVersions() -> dict[str, int]:
 def CheckPromptVersions(Declared: str | None) -> str | None:
     """Check the --prompts declaration for an article save; return an error message, or None when it may proceed.
 
-    The writer declares the prompt versions it followed, such as "common=6,magazine=26". Saving is refused when any
+    The writer declares the prompt versions it followed, such as "common=9,magazine=28", adding "brand=1" for a brand article. Saving is refused when any
     is older than the newest on main, so a draft written under superseded rules is rechecked before it is published.
     "skip" is for saves that are not article writing, such as category pages or mechanical repairs.
     """
@@ -247,8 +252,9 @@ def CheckPromptVersions(Declared: str | None) -> str | None:
     if Declared is not None and Declared.strip().lower() == "skip":
         return None
     Current = CurrentPromptVersions()
-    Example = (f"common={Current.get('common', 'N')},magazine={Current.get('magazine', 'N')} "
-               f"(or common={Current.get('common', 'N')},issue={Current.get('issue', 'N')})")
+    Common, Magazine = Current.get('common', 'N'), Current.get('magazine', 'N')
+    Example = (f"common={Common},magazine={Magazine} (or common={Common},issue={Current.get('issue', 'N')}; "
+               f"for a brand article common={Common},magazine={Magazine},brand={Current.get('brand', 'N')})")
     if Declared is None:
         return ("Saving a Magazedia article needs --prompts with the prompt versions the article follows, currently "
                 f"--prompts {Example}; --prompts skip only for saves that are not article writing. " + Reread)
@@ -258,8 +264,8 @@ def CheckPromptVersions(Declared: str | None) -> str | None:
         if Name not in PromptFiles or not Number.isdigit():
             return f"Could not read --prompts {Declared!r}; write it as {Example}."
         Given[Name] = int(Number)
-    if "common" not in Given or ("magazine" in Given) == ("issue" in Given):
-        return f"--prompts needs common plus exactly one of magazine or issue: {Example}."
+    if "common" not in Given or ("magazine" in Given) == ("issue" in Given) or ("brand" in Given and "magazine" not in Given):
+        return f"--prompts needs common plus exactly one of magazine or issue, and brand only with magazine: {Example}."
     Stale = [f"{Name} {Given[Name]} (current {Current[Name]})" for Name in Given
              if Name in Current and Given[Name] != Current[Name]]
     if Stale:

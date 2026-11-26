@@ -4,13 +4,14 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 8 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
-| [magazedia-magazine.md](magazedia-magazine.md) | 27 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
+| [magazedia-common.md](magazedia-common.md) | 9 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-magazine.md](magazedia-magazine.md) | 28 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
+| [magazedia-brand.md](magazedia-brand.md) | 1 | Added to the magazine prompt for an article about a brand with several national editions, titled by its bare name (*GQ*): editions table, brand infobox, edition hatnotes |
 | [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
 ## How an agent writes an article
 
-1. **Read both files, in order, before each article:** `magazedia-common.md`, then the magazine or issue prompt. The common rules apply to every article; the second file adds the rules for its kind of article and points back to common sections by number ("common rules, section 3"). Where the two disagree, the specific prompt wins only where it says it overrides a common rule.
+1. **Read both files, in order, before each article:** `magazedia-common.md`, then the magazine or issue prompt. For a brand article, read `magazedia-brand.md` after the magazine prompt. The common rules apply to every article; the second file adds the rules for its kind of article and points back to common sections by number ("common rules, section 3"). Where the two disagree, the specific prompt wins only where it says it overrides a common rule.
 2. **Fill in the inputs.** `[MAGAZINE_NAME]` is the publication's name as requested. The issue prompt's section 1 lists its other inputs (issue designation, page images, known slugs). An agent working without a person supplies what it can establish and records the rest in the Notes for the editor.
 3. **Research, write, and verify** as the prompts direct. Inspected scans, including issues in the local archive at `M:\Magazedia\Magazines (Sorted)\`, may be cited without a URL (common rules, section 3).
 4. **Publish** through [`scripts/wiki_api.py`](../scripts/wiki_api.py) as `MaggieTheBot` on production, or `DevvyTheBot` on development (common rules, section 11), passing `--prompts` with the versions read in step 1. The tool refuses the save if a prompt has changed on `main` since then; reread it, recheck the draft and save again. Fix every save warning the API returns, then load the page and check it renders.
@@ -37,6 +38,8 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 - Commit the change; the Git history is the archive of earlier versions. Do not leave dated copies in other folders.
 
 ## Change log
+
+- **26 November 2026 — common 9, magazine 28, brand 1.** Brand articles get their own add-on, `magazedia-brand.md`, read after the common and magazine prompts: it replaces the magazine prompt's structure and editorial-profile rules with a brand lead, an editions table, a brand infobox and the edition-hatnote backfill. Brand saves pass `--prompts common=N,magazine=N,brand=N`.
 
 - **26 November 2026 — common 8, magazine 27.** A brand with several national editions gets an article under its bare name (*GQ* at `/gq`), never "(franchise)". Each edition article carries an edition hatnote pointing to it ("This article is about the US edition. For the magazine's other editions, see *GQ*."), added only once the brand article exists; until then the Notes for the editor name the missing brand article. Whoever publishes a brand article adds the hatnote to every existing edition article.
 
