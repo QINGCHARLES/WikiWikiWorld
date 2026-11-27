@@ -34,12 +34,16 @@ public class ArticleApiController(
     InfoboxSchemaCatalog InfoboxSchemas) : ControllerBase
 {
     /// <summary>
-    /// Gets an article revision.
+    /// Gets an article's current revision, or the revision named by a timestamp.
     /// </summary>
+    /// <remarks>
+    /// A requested revision that does not parse or does not exist is an error rather than a fallback to the current
+    /// revision, so a client can never mistake the current text for an older one.
+    /// </remarks>
     /// <param name="UrlSlug">The URL slug of the article.</param>
-    /// <param name="Revision">The optional revision date string.</param>
+    /// <param name="Revision">The optional revision timestamp, <c>yyyyMMddHHmmss</c> with up to seven further fractional-second digits, in UTC; it matches the earliest revision created within the span those digits name.</param>
     /// <param name="CancellationToken">The cancellation token.</param>
-    /// <returns>The article revision.</returns>
+    /// <returns>The requested or current revision; 400 for an unreadable timestamp; 404 when no such revision exists.</returns>
     [HttpGet("{UrlSlug}")]
     [ProducesResponseType<ArticleRevision>(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -51,26 +55,20 @@ public class ArticleApiController(
             return BadRequest("Invalid parameters.");
         }
 
-        (int SiteId, string Culture) = SiteResolverService.ResolveSiteAndCulture();
-
-        ArticleRevision? SpecificRevision = null;
-        ArticleRevision? CurrentRevision;
-
-        // If a revision is specified, parse the date and retrieve the specific revision
-        if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
+        if (!string.IsNullOrWhiteSpace(Revision))
         {
-            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
-            SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
+            if (!RevisionDateParser.TryParseRevisionRange(Revision, out DateTimeOffset RevisionFrom, out DateTimeOffset RevisionUntil))
+            {
+                return BadRequest("Revision must be a UTC timestamp of 14 to 21 digits (yyyyMMddHHmmss plus optional fractional seconds).");
+            }
+
+            ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionFrom, RevisionUntil);
+            ArticleRevision? SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
+            return SpecificRevision is null ? NotFound("Article revision not found.") : Ok(SpecificRevision);
         }
 
-        // Return the current revision
         ArticleRevisionsBySlugSpec CurrentSpec = new(UrlSlug, IsCurrent: true);
-        CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
-
-        if (SpecificRevision is not null)
-        {
-            return Ok(SpecificRevision);
-        }
+        ArticleRevision? CurrentRevision = await Context.ArticleRevisions.WithSpecification(CurrentSpec).FirstOrDefaultAsync(CancellationToken);
 
         if (CurrentRevision is null)
         {

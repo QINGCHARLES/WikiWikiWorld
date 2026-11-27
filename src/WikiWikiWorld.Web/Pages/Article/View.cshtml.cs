@@ -301,9 +301,9 @@ public sealed class ViewModel(
 
         ArticleRevision? SpecificRevision = null;
 
-		if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset RevisionDate))
+		if (!string.IsNullOrWhiteSpace(Revision) && RevisionDateParser.TryParseRevisionRange(Revision, out DateTimeOffset RevisionFrom, out DateTimeOffset RevisionUntil))
 		{
-			ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionDate);
+			ArticleRevisionBySlugAndDateSpec SpecificSpec = new(UrlSlug, RevisionFrom, RevisionUntil);
 			SpecificRevision = await Context.ArticleRevisions.WithSpecification(SpecificSpec).FirstOrDefaultAsync(CancellationToken);
 		}
 		if (SpecificRevision is null)

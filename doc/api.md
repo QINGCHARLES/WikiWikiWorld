@@ -58,7 +58,7 @@ Base Path: `/api/article`
 - **Endpoint**: `GET /api/article/{UrlSlug}`
 - **Description**: Retrieves a specific or current article revision.
 - **Query Parameters**:
-  - `Revision` (optional string): Allows retrieving a specific revision by date string. If omitted, the latest current revision is returned.
+  - `Revision` (optional string): a UTC timestamp naming an earlier revision, `yyyyMMddHHmmss` followed by up to seven fractional-second digits (the history page's revision links use all 21). It returns the earliest revision created within the span those digits name, so `20261126065328` finds a revision saved at 06:53:28.72194. If omitted, the latest current revision is returned. A requested revision is never replaced by the current one: an unreadable timestamp is a `400` and a missing revision a `404`.
 - **Responses**:
   - `200 OK`: Returns the corresponding article revision object.
     ```json
@@ -80,8 +80,8 @@ Base Path: `/api/article`
         "DateDeleted": null
     }
     ```
-  - `400 Bad Request`: Missing or invalid `UrlSlug`.
-  - `404 Not Found`: No revision found for the specific criteria.
+  - `400 Bad Request`: Missing or invalid `UrlSlug`, or a `Revision` that is not a 14-to-21-digit timestamp.
+  - `404 Not Found`: The article does not exist, or no revision was created within the requested `Revision` span.
 
 ### Create Article Revision
 - **Endpoint**: `POST /api/article/{UrlSlug}`

@@ -32,4 +32,29 @@ public static class RevisionDateParser
 
 		return false;
 	}
+
+	/// <summary>
+	/// Parses a revision timestamp into the span of instants it names, so a lookup can match a stored revision
+	/// whose creation time has more precision than the timestamp. Fourteen digits (<c>yyyyMMddHHmmss</c>) name a whole
+	/// second; each further digit, up to seven fractional digits, narrows the span tenfold, so the full 21-digit form
+	/// names a single tick.
+	/// </summary>
+	/// <param name="Revision">The revision timestamp: 14 to 21 digits, read as UTC.</param>
+	/// <param name="From">The first instant the timestamp covers (inclusive).</param>
+	/// <param name="Until">The first instant after the span (exclusive).</param>
+	/// <returns>True if the timestamp parsed; otherwise, false.</returns>
+	public static bool TryParseRevisionRange(string Revision, out DateTimeOffset From, out DateTimeOffset Until)
+	{
+		Until = default;
+		if (!TryParseRevisionDate(Revision, out From))
+			return false;
+
+		int FractionDigits = Revision.Length - 14;
+		long SpanTicks = TimeSpan.TicksPerSecond;
+		for (int i = 0; i < FractionDigits; i++)
+			SpanTicks /= 10;
+
+		Until = From.AddTicks(SpanTicks);
+		return true;
+	}
 }

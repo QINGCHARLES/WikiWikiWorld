@@ -26,11 +26,11 @@ public sealed class SourceModel(WikiWikiWorldDbContext Context, SiteResolverServ
 	/// <returns>The source page, a namespace redirect, or a 404 for an unknown revision.</returns>
 	public async Task<IActionResult> OnGetAsync([FromRoute] string? UrlSlug, [FromRoute] string? Revision, CancellationToken CancellationToken)
 	{
-		if (string.IsNullOrWhiteSpace(UrlSlug) || Revision is null || !RevisionDateParser.TryParseRevisionDate(Revision, out DateTimeOffset DateCreated))
+		if (string.IsNullOrWhiteSpace(UrlSlug) || Revision is null || !RevisionDateParser.TryParseRevisionRange(Revision, out DateTimeOffset RevisionFrom, out DateTimeOffset RevisionUntil))
 			return NotFound();
 
 		string LookupSlug = ArticleUrlHelper.NormalizeLookupSlug(UrlSlug);
-		ArticleRevisionBySlugAndDateSpec Spec = new(LookupSlug, DateCreated);
+		ArticleRevisionBySlugAndDateSpec Spec = new(LookupSlug, RevisionFrom, RevisionUntil);
 		var SavedRevision = await Context.ArticleRevisions.WithSpecification(Spec)
 			.Select(r => new { r.UrlSlug, r.Title, r.Type, r.Text })
 			.FirstOrDefaultAsync(CancellationToken);
