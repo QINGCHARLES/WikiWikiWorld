@@ -44,6 +44,10 @@ public sealed class Footnote(BlockParser? Parser) : ContainerBlock(Parser)
 /// <param name="Parser">The block parser.</param>
 public sealed class FootnotesBlock(BlockParser Parser) : ContainerBlock(Parser)
 {
+	/// <summary>
+	/// Gets or sets the unique HTML <c>id</c> assigned to the rendered footnotes heading.
+	/// </summary>
+	public string HeadingId { get; set; } = "footnotes";
 }
 
 // --- Parsers ---
@@ -140,9 +144,10 @@ public sealed class FootnotesBlockRenderer : HtmlObjectRenderer<FootnotesBlock>
 	{
 		if (Block.Count > 0)
 		{
+			string HeadingText = SharedResource.Text("Footnotes");
 			Renderer.Write("<div class=\"footnotes\">");
 			Renderer.Write("<hr />");
-			Renderer.Write("<h2>").WriteEscape(SharedResource.Text("Footnotes")).Write("</h2>");
+			HeadingAnchorExtension.WriteGeneratedHeading(Renderer, Block, Block.HeadingId, HeadingText);
 			Renderer.Write("<ol class=\"footnote-list\">");
 			Renderer.WriteChildren(Block);
 			Renderer.Write("</ol>");
@@ -220,6 +225,10 @@ public sealed class FootnoteExtension : IMarkdownExtension
 		if (Inlines.Count == 0) return;
 
 		FootnotesBlock? TargetBlock = Document.Descendants<FootnotesBlock>().FirstOrDefault();
+		if (TargetBlock is not null)
+		{
+			TargetBlock.HeadingId = HeadingAnchorExtension.ReserveId(Document, "footnotes");
+		}
 		int Counter = 1;
 
 		foreach (FootnoteInline Inline in Inlines)

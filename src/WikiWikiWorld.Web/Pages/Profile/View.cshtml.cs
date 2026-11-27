@@ -51,7 +51,13 @@ public sealed class ViewModel(
 
 		if (Overview.ProfileArticle is { } ProfileArticle)
 		{
-			RenderedArticle Rendered = await ArticleRenderer.RenderAsync(ProfileArticle, SiteId, Culture, $"{Header.ArticlePath}/edit", CancellationToken);
+			RenderedArticle Rendered = await ArticleRenderer.RenderAsync(
+				ProfileArticle,
+				SiteId,
+				Culture,
+				$"{Header.ArticlePath}/edit",
+				CancellationToken,
+				IncludeHeadingAnchors: false);
 			ProfileArticleHtml = Rendered.Html;
 		}
 

@@ -434,6 +434,8 @@
   <data name="Link" xml:space="preserve"><value>リンク</value></data>
   <data name="Link copied" xml:space="preserve"><value>リンクをコピーしました</value></data>
   <data name="Link removed." xml:space="preserve"><value>リンクを解除しました。</value></data>
+  <data name="Link to section" xml:space="preserve"><value>セクションへのリンク</value></data>
+  <data name="Link to section: {0}" xml:space="preserve"><value>セクションへのリンク: {0}</value></data>
   <data name="Link.History" xml:space="preserve"><value>履歴</value></data>
   <data name="Link.LogIn" xml:space="preserve"><value>ログイン</value></data>
   <data name="Linked to {0}." xml:space="preserve"><value>{0}にリンクしました。</value></data>

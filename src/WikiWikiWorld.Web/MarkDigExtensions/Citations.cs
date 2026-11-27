@@ -72,6 +72,11 @@ public sealed class CitationsBlock(BlockParser Parser) : LeafBlock(Parser)
 	/// Gets or sets the collection of citations to be rendered in this block.
 	/// </summary>
 	public Dictionary<string, Citation> Citations { get; set; } = [];
+
+	/// <summary>
+	/// Gets or sets the unique HTML <c>id</c> assigned to the rendered citations heading.
+	/// </summary>
+	public string HeadingId { get; set; } = "citations";
 }
 
 // --- Parsers ---
@@ -203,9 +208,10 @@ public sealed class CitationsRenderer : HtmlObjectRenderer<CitationsBlock>
 		if (Block.Citations is null || Block.Citations.Count == 0)
 			return;
 
+		string HeadingText = SharedResource.Text("Citations");
 		Renderer.Write("<div class=\"citations\">");
 		Renderer.Write("<hr />");
-		Renderer.Write("<h2>").WriteEscape(SharedResource.Text("Citations")).Write("</h2>");
+		HeadingAnchorExtension.WriteGeneratedHeading(Renderer, Block, Block.HeadingId, HeadingText);
 		Renderer.Write("<ol class=\"citation-list\">");
 
 		foreach (Citation Citation in Block.Citations.Values.OrderBy(c => c.Number))
@@ -479,6 +485,7 @@ public sealed class CitationExtension : IMarkdownExtension
 		if (Block != null)
 		{
 			Block.Citations = CitationsMap;
+			Block.HeadingId = HeadingAnchorExtension.ReserveId(Document, "citations");
 		}
 	}
 

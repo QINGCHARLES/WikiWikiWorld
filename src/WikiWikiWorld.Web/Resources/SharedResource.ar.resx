@@ -529,6 +529,8 @@
   <data name="Link" xml:space="preserve"><value>ربط</value></data>
   <data name="Link copied" xml:space="preserve"><value>نُسخ الرابط</value></data>
   <data name="Link removed." xml:space="preserve"><value>أُزيل الرابط.</value></data>
+  <data name="Link to section" xml:space="preserve"><value>رابط إلى القسم</value></data>
+  <data name="Link to section: {0}" xml:space="preserve"><value>رابط إلى القسم: {0}</value></data>
   <data name="Link.History" xml:space="preserve"><value>السجل</value></data>
   <data name="Link.LogIn" xml:space="preserve"><value>سجّل الدخول</value></data>
   <data name="Linked to {0}." xml:space="preserve"><value>رُبطت بـ{0}.</value></data>

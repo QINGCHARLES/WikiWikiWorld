@@ -46,6 +46,72 @@ article :where(p, li, dt, dd, blockquote) a:not(.button) {
     }
 }
 
+/* Section anchor links on major article subheads (h2, plus generated Footnotes/Citations headings).
+   The chain and check glyphs match icons.svg#Links and icons.svg#Check via CSS masks so rendered
+   article HTML stays free of repeated inline SVGs. */
+article h2 > a.heading-anchor {
+    --heading-anchor-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 0.95em;
+    block-size: 0.95em;
+    margin-inline-start: 0.28em;
+    vertical-align: -0.08em;
+    border-radius: var(--shape-xs);
+    color: var(--color-muted);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+
+    &::before {
+        content: "";
+        inline-size: 0.72em;
+        block-size: 0.72em;
+        background-color: currentColor;
+        mask: var(--heading-anchor-icon) center / contain no-repeat;
+    }
+
+    &:hover {
+        color: var(--color-hyperlinks);
+        background-color: var(--color-brand-lime-surface);
+    }
+
+    &:focus-visible {
+        color: var(--color-hyperlinks);
+        outline: 2px solid var(--color-hyperlinks);
+        outline-offset: 2px;
+        opacity: 1;
+    }
+
+    &[data-copied="true"] {
+        --heading-anchor-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+        color: var(--color-hyperlinks);
+        opacity: 1;
+    }
+}
+
+article h2:is(:hover, :target) > a.heading-anchor {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    article h2 > a.heading-anchor {
+        opacity: 0.42;
+    }
+
+    article h2:target > a.heading-anchor,
+    article h2 > a.heading-anchor:is(:active, :focus-visible, [data-copied="true"]) {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    article h2 > a.heading-anchor {
+        transition: none;
+    }
+}
+
 /* How far floated asides pull into the right margin. --grid-max-width is in ch, and ch resolves
    in each element's own font, so asides that switch to the sans font used to float to a different
    right edge than serif ones. Registering the property makes it compute once on the article (in

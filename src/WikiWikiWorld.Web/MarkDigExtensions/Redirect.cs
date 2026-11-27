@@ -5,7 +5,9 @@ using Markdig.Renderers;
 using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Net;
+using System.Text;
 using WikiWikiWorld.Web.Helpers;
 
 namespace WikiWikiWorld.Web.MarkdigExtensions;
@@ -413,15 +415,29 @@ public sealed class RedirectExtension : IMarkdownExtension
 	}
 
 	/// <summary>
-	/// Validates that an optional URL fragment contains only safe anchor characters.
+	/// Validates that an optional URL fragment contains only safe Unicode anchor characters (letters, digits,
+	/// combining marks, hyphens, underscores, and periods).
 	/// </summary>
 	/// <param name="Fragment">The raw fragment text after <c>#</c>.</param>
 	/// <returns><see langword="true"/> when the fragment is safe to append to a local URL; otherwise <see langword="false"/>.</returns>
 	private static bool IsValidFragment(string Fragment)
 	{
-		foreach (char Ch in Fragment)
+		foreach (Rune Character in Fragment.EnumerateRunes())
 		{
-			if (!(char.IsLetterOrDigit(Ch) || Ch is '-' or '_' or '.'))
+			if (Character == Rune.ReplacementChar)
+			{
+				return false;
+			}
+
+			UnicodeCategory Category = Rune.GetUnicodeCategory(Character);
+			bool Allowed = Rune.IsLetterOrDigit(Character)
+				|| Category is UnicodeCategory.LetterNumber
+					or UnicodeCategory.OtherNumber
+					or UnicodeCategory.NonSpacingMark
+					or UnicodeCategory.SpacingCombiningMark
+					or UnicodeCategory.EnclosingMark
+				|| Character.Value is '-' or '_' or '.';
+			if (!Allowed)
 			{
 				return false;
 			}

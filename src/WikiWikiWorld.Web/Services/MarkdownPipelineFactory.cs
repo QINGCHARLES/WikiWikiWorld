@@ -1,4 +1,5 @@
 using Markdig;
+using Markdig.Extensions.AutoIdentifiers;
 using Markdig.Extensions.MediaLinks;
 using Markdig.Renderers;
 using WikiWikiWorld.Web.MarkdigExtensions;
@@ -145,7 +146,18 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 			.Use(LinksExt)
 			.Use(new BareWwwTextExtension())
 			.UseAdvancedExtensions()
+			.Use(new HeadingAnchorExtension())
 			.DisableHtml();
+
+		int AutoIdentifierIndex = Builder.Extensions.FindIndex(Extension => Extension is AutoIdentifierExtension);
+		if (AutoIdentifierIndex >= 0)
+		{
+			Builder.Extensions[AutoIdentifierIndex] = new AutoIdentifierExtension(AutoIdentifierOptions.None);
+		}
+		else
+		{
+			Builder.UseAutoIdentifiers(AutoIdentifierOptions.None);
+		}
 
 		Builder.Extensions.TryRemove<MediaLinkExtension>();
 

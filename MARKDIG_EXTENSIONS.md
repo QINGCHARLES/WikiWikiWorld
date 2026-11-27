@@ -357,7 +357,7 @@ The archive closed in 2005.{{Footnote See *Archive Quarterly*, issue 18.}}
 - Footnotes are numbered in document order starting at 1.
 - Every `Footnote` occurrence gets its own number; custom footnotes are not de-duplicated.
 - References and list items include forward and return links.
-- The first `Footnotes` block receives the entries. Use exactly one.
+- The first `Footnotes` block receives the entries and renders with `id="footnotes"` (or `footnotes-1`, etc., if an authored heading already uses `footnotes`). Use exactly one.
 - Without a `Footnotes` block, references still appear but no collected list is rendered.
 - Nested raw HTML remains disabled.
 - Markdig's separate `[^label]` footnote syntax is also available; see [Built-in footnotes](#built-in-footnotes).
@@ -392,7 +392,7 @@ The publication began in 1993.{{Citation author=Smith, Jane |#| author=Doe, John
 - Unknown properties are retained internally but are not rendered.
 - Identical raw citation payloads are de-duplicated into one bibliography entry with multiple back-links. Property reordering or other textual changes create a different citation.
 - Citations are numbered by the first occurrence of each unique payload.
-- The first `Citations` block receives the bibliography. Use exactly one.
+- The first `Citations` block receives the bibliography and renders with `id="citations"` (or `citations-1`, etc., if an authored heading already uses `citations`). Use exactly one.
 - Without a `Citations` block, inline references still appear but no bibliography is rendered.
 - External citation and DOI links open in a new tab and receive the trusted-domain `rel` policy.
 - Markdig's `""cited text""` syntax is unrelated; it produces a semantic `<cite>` element rather than a bibliography entry.
@@ -615,7 +615,7 @@ The ISSN identifies the serial publication.
 
 ### Heading auto-identifiers
 
-Headings receive generated IDs. Duplicate IDs gain `-1`, `-2`, and so on. A heading can be referenced by its exact text.
+Headings receive Unicode-preserving generated IDs (`AutoIdentifierOptions.None`), retaining native-script letters and marks across languages rather than collapsing non-Latin headings to `section`. Duplicate IDs gain `-1`, `-2`, and so on. On full article views (`ArticleRenderer` with `IncludeHeadingAnchors: true`), top-level `h2` headings and generated `Footnotes`/`Citations` headings also emit a trailing `a.heading-anchor` link. A heading can be referenced by its exact text.
 
 ```markdown
 ## Publication history

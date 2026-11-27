@@ -25,13 +25,14 @@ public interface IArticleRenderer
 	/// <param name="EditUrl">The article edit URL used by stub banners.</param>
 	/// <param name="CancellationToken">A cancellation token.</param>
 	/// <param name="CategoryPage">One-based page of indexed category members.</param>
+	/// <param name="IncludeHeadingAnchors">Whether top-level <c>h2</c> and generated reference headings emit trailing section anchor links.</param>
 	/// <returns>The rendered article content and extracted metadata.</returns>
 	Task<RenderedArticle> RenderAsync(
 		ArticleRevision Revision,
 		int SiteId,
 		string Culture,
 		string EditUrl,
-		CancellationToken CancellationToken, int CategoryPage = 1);
+		CancellationToken CancellationToken, int CategoryPage = 1, bool IncludeHeadingAnchors = true);
 }
 
 /// <summary>
@@ -119,7 +120,7 @@ public sealed class ArticleRenderer(
 		int SiteId,
 		string Culture,
 		string EditUrl,
-		CancellationToken CancellationToken, int CategoryPage = 1)
+		CancellationToken CancellationToken, int CategoryPage = 1, bool IncludeHeadingAnchors = true)
 	{
 		MarkdownPipeline Pipeline = MarkdownPipelineFactory.GetPipeline();
 		MarkdownDocument Document = Markdown.Parse(Revision.Text, Pipeline);
@@ -144,6 +145,10 @@ public sealed class ArticleRenderer(
 
 		FootnoteExtension.ReprocessFootnotes(Document, Pipeline);
 		CitationExtension.ReprocessCitations(Document);
+		if (IncludeHeadingAnchors)
+		{
+			HeadingAnchorExtension.Enrich(Document);
+		}
 
 		string? FileSourceUrl = Document.GetData(SourceExtension.UrlKey) as string;
 

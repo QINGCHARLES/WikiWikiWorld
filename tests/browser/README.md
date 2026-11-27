@@ -3,7 +3,7 @@
 From the repository root:
 
 ```powershell
-node --test tests/browser/recipient-autocomplete.test.cjs tests/browser/admin-article-picker.test.cjs
+node --test tests/browser/recipient-autocomplete.test.cjs tests/browser/admin-article-picker.test.cjs tests/browser/heading-anchor.test.cjs
 ```
 
 These tests use Node's built-in test runner and execute the actual page scripts (`wwwroot/js/recipient-autocomplete.js`, loaded by `Pages/Profile/NewMessage.cshtml`, and the inline script in `Pages/Admin/DomainRedirects.cshtml`) in an isolated event/DOM harness. No npm packages, frontend build, server, database, or credentials are needed. Node 24.19.0 is verified.
