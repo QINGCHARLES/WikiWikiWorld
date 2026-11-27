@@ -4,9 +4,9 @@ These are the only prompts for writing Magazedia articles. Every agent that writ
 
 | File | Version | Use it for |
 | --- | --- | --- |
-| [magazedia-common.md](magazedia-common.md) | 9 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
-| [magazedia-magazine.md](magazedia-magazine.md) | 28 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
-| [magazedia-brand.md](magazedia-brand.md) | 1 | Added to the magazine prompt for an article about a brand with several national editions, titled by its bare name (*GQ*): editions table, brand infobox, edition hatnotes |
+| [magazedia-common.md](magazedia-common.md) | 10 | Every article. Article-only output, titles, sources, prose, romanization, Markdown and formatting (code, websites, YouTube, email), top lines and display title, infoboxes, citations, end matter and categories, publishing, Notes for the editor, shared final checks |
+| [magazedia-magazine.md](magazedia-magazine.md) | 29 | An article about a whole publication: a magazine, zine, journal, mook, newsletter, or fictional magazine |
+| [magazedia-brand.md](magazedia-brand.md) | 2 | Added to the magazine prompt for an article about a brand with several national editions, titled by its bare name (*GQ*): editions table, brand infobox, edition hatnotes |
 | [magazedia-issue.md](magazedia-issue.md) | 5 | An article about one issue of a publication, usually from page scans |
 
 ## How an agent writes an article
@@ -38,6 +38,8 @@ The prompts describe the site's actual behaviour. When any of these change, upda
 - Commit the change; the Git history is the archive of earlier versions. Do not leave dated copies in other folders.
 
 ## Change log
+
+- **27 November 2026 — common 10, magazine 29, brand 2.** Bold policy (common section 6, "Bold"): the lead bolds the subject at its first mention (`***Magazine Name***`, or the issue designation in an issue article) and its other names, each once, replacing the rule that never bolded the opening title; the body bolds only names the publication created, once each and about one per section at most; never people, companies, dates, figures, links or claims. Pull quotes bold one complete phrase that carries the point instead of one to three words. Final checks 3 and 7 cover it; the magazine and brand lead examples now bold the name.
 
 - **26 November 2026 — common 9, magazine 28, brand 1.** Brand articles get their own add-on, `magazedia-brand.md`, read after the common and magazine prompts: it replaces the magazine prompt's structure and editorial-profile rules with a brand lead, an editions table, a brand infobox and the edition-hatnote backfill. Brand saves pass `--prompts common=N,magazine=N,brand=N`.
 
