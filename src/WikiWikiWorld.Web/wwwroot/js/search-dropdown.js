@@ -120,9 +120,9 @@
 		}
 	});
 
-	// Keep focus in the input when a suggestion is pressed, so the panel stays rendered until the click lands
-	// (Safari does not focus links on click, which would otherwise hide the panel first).
-	Form.addEventListener("pointerdown", Event =>
+	// Keep the panel visible until the native link click. iOS Safari can blur the input despite
+	// a canceled pointerdown, so prevent the focus change on mousedown instead.
+	Form.addEventListener("mousedown", Event =>
 	{
 		if (Event.target instanceof Element && Event.target.closest("#search-suggestions"))
 		{
