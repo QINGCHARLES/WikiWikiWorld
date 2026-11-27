@@ -11,7 +11,8 @@ namespace WikiWikiWorld.Web.Services;
 /// </summary>
 /// <remarks>
 /// Besides the infobox checks in <see cref="InfoboxExtension.FindProblems"/>, misplaced hatnotes
-/// (<see cref="HatnoteExtension.FindProblems"/>) and crowded pull quotes (<see cref="PullQuoteExtension.FindProblems"/>),
+/// (<see cref="HatnoteExtension.FindProblems"/>), invalid image options (<see cref="ImageExtension.FindProblems"/>),
+/// and crowded pull quotes (<see cref="PullQuoteExtension.FindProblems"/>),
 /// it reports catalogue numbers written into the text (ISSN, ISBN, postal registration, LCCN, OCLC, company number),
 /// email addresses (which
 /// articles include only when the address itself is notable), YouTube addresses and raw channel IDs written into the
@@ -31,7 +32,7 @@ public static partial class ArticleSaveWarnings
 	/// <param name="Pipeline">The site's article pipeline, used to parse infoboxes as they render.</param>
 	/// <param name="Catalog">The infobox schemas loaded at startup.</param>
 	/// <param name="SiteId">The site the article belongs to.</param>
-	/// <returns>One plain-English message per problem, infobox, hatnote and pull-quote problems first; empty when there are none or the
+	/// <returns>One plain-English message per problem, infobox, hatnote, image and pull-quote problems first; empty when there are none or the
 	/// text is blank.</returns>
 	public static IReadOnlyList<string> Find(string? Text, MarkdownPipeline Pipeline, InfoboxSchemaCatalog Catalog, int SiteId)
 	{
@@ -44,6 +45,7 @@ public static partial class ArticleSaveWarnings
 		[
 			.. InfoboxExtension.FindProblems(Document, Catalog, SiteId),
 			.. HatnoteExtension.FindProblems(Document),
+			.. ImageExtension.FindProblems(Document),
 			.. PullQuoteExtension.FindProblems(Document),
 			.. PullQuoteExtension.FindUnquoted(Document, Text)
 		];

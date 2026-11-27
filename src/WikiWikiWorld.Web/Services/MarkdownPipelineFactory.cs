@@ -95,7 +95,7 @@ public sealed class MarkdownPipelineFactory : IMarkdownPipelineFactory
 	private static MarkdownPipeline BuildPipeline(IReadOnlyList<string> ApprovedLinkDomains)
 	{
 		ShortDescriptionExtension ShortDescExt = new();
-		ImageExtension ImageExt = new();
+		ImageExtension ImageExt = new(ApprovedLinkDomains);
 		HeaderImageExtension HeaderImageExt = new();
 		EyebrowExtension EyebrowExt = new();
 		SubtitleExtension SubtitleExt = new();

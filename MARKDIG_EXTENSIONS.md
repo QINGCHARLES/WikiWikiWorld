@@ -210,23 +210,29 @@ Renders an incomplete-article notice at the directive's location. It is normally
 
 ### `Image`
 
-Renders an image from a current file article in the same site and culture.
+Renders an image from a current file article in the same site and culture. Written on its own line, it renders a semantic `<figure class="article-image ...">` with optional framing, caption, and credit; written inside prose, it renders an inline `<img>`.
 
 ```markdown
-{{Image file:wired-1-spread |#| Layout=breakout |#| Alt=Two-page opening spread |#| Caption=The opening spread}}
+{{Image file:playboy-rabbithead-logo |#| Layout=aside |#| Size=small |#| Frame=paper |#| Alt=Playboy Rabbit Head emblem |#| Caption=The Rabbit Head logo, designed by Art Paul for *Playboy*. |#| Credit=Art Paul / Playboy}}
 ```
 
 | Parameter | Required | Allowed values or behavior |
 | --- | --- | --- |
 | File article slug | Yes | Bare slug or `file:`-prefixed slug |
-| `Layout` | No | `full`, `breakout`, or `max`; any other value adds no layout class |
+| `Layout` | No | `center` (default), `aside` (floated `inline-end`), `start` (floated `inline-start`), `full`, `breakout`, or `max` |
+| `Size` | No | `small`, `medium`, or `large` (applies to `center`, `aside`, and `start`; defaults to `medium` on `aside`/`start` and is ignored on `full`/`breakout`/`max`) |
+| `Frame` | No | `none` (default), `border` (hairline edge), `paper` (light specimen mat), or `dark` (dark mat for white/light logos) |
 | `Alt` | No | Plain alternate text; falls back to the file article title |
-| `Caption` | No | Parsed and stored, but currently not rendered |
+| `Caption` | No | Caption rendered inside `<figcaption>` with safe inline Markdown (emphasis and links) |
+| `Credit` | No | Attribution line rendered beneath the caption in muted text with safe inline Markdown |
+| `Link` | No | `file` (default; wraps the image in a link to its file article) or `none` |
 
-- This is an inline directive and can appear within prose.
-- Named properties are case-insensitive.
-- Canonical examples should use `|#|` between properties. The current parser also accepts a bare `|` within the property tail.
+- Named properties and enum values are case-insensitive.
+- Canonical syntax uses `|#|` between properties (and accepts legacy bare `|` before recognized property names).
+- `Layout=aside` and `Layout=start` float into the margin rail on wide viewports and stack centered below `44rem` via `@container article-body`.
+- Emits `width` and `height` attributes when known on the file revision, along with `loading="lazy" decoding="async"`.
 - An unresolved article, missing canonical file, or missing file revision renders the site's `missing-image.png` fallback.
+- Unknown property names, unsupported `Layout`/`Size`/`Frame`/`Link` values, and `Size` combined with `full`/`breakout`/`max` produce save warnings (see [Save warnings](#save-warnings)).
 
 ### `YouTube`
 
@@ -561,6 +567,7 @@ Saving an article never fails because of these checks, but `ArticleSaveWarnings`
 
 - infobox problems (see [Infobox warnings](#warnings));
 - a `{{Hatnote}}` written after the lead or other article content, where it no longer sits at the top;
+- `{{Image}}` directives with unknown properties, unsupported `Layout`/`Size`/`Frame`/`Link` values, or `Size` combined with `full`/`breakout`/`max`;
 - a `{{PullQuote}}` with fewer than four prose paragraphs since the previous one (headings, tables and paragraphs made only of directives do not count);
 - a `{{PullQuote}}` whose words do not appear in the article's own text (case, punctuation, emphasis and directives such as citations are ignored);
 - catalogue numbers written into the text: `ISSN`, `ISBN`, `USPS`, `LCCN` or `OCLC` followed by its number, or `Company No.` with one (infobox keys such as `ISSN=` do not count);

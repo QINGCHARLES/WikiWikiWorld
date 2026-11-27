@@ -425,12 +425,12 @@ Use `|#|` to separate the display label from the outbound link.
         "slug": "wiki:images",
         "title": "Wiki: Image Directive",
         "display_title": "Wiki: Image Directive",
-        "text": """The `{{Image}}` directive embeds an image from an existing file article into the flow of an article.
+        "text": """The `{{Image}}` directive embeds an image from an existing file article into an article. Placed on its own line, it renders a semantic figure with optional framing, caption, and credit.
 
 ## Syntax
 
 ```markdown
-{{Image file:slug-of-file |#| Layout=full |#| Alt=Descriptive text |#| Caption=Caption text}}
+{{Image file:slug-of-file |#| Layout=aside |#| Size=small |#| Frame=paper |#| Alt=Descriptive text |#| Caption=Caption text |#| Credit=Artist / Publication}}
 ```
 
 or simply by slug:
@@ -444,20 +444,27 @@ or simply by slug:
 | Parameter | Required | Description |
 | :--- | :--- | :--- |
 | **Slug** (Positional) | Yes | The URL slug of the target file article. Accepts bare slug or `file:` prefix. |
-| **`Layout=`** | No | Layout width: `full`, `breakout`, or `max`. Defaults to standard column width. |
+| **`Layout=`** | No | Placement and width: `center` (default), `aside` (floated right in LTR), `start` (floated left in LTR), `full`, `breakout`, or `max`. |
+| **`Size=`** | No | Width preset for `center`, `aside`, and `start`: `small`, `medium` (default for `aside`/`start`), or `large`. Ignored on `full`/`breakout`/`max`. |
+| **`Frame=`** | No | Surface treatment: `none` (default), `border` (hairline edge), `paper` (light specimen mat), or `dark` (dark mat for white/light logos). |
 | **`Alt=`** | No | Alternate text for screen readers and accessibility. Defaults to the file article title. |
-| **`Caption=`** | No | Caption text associated with the image figure. |
+| **`Caption=`** | No | Caption text rendered beneath the image. Supports inline Markdown (italics, bold, links). |
+| **`Credit=`** | No | Attribution line rendered beneath the caption in muted text. Supports inline Markdown. |
+| **`Link=`** | No | `file` (default; links to the file article page) or `none`. |
 
 ## Layout Options
 
-* **`Layout=full`** — Matches the standard width of the reading column.
-* **`Layout=breakout`** — Extends slightly wider than the prose text for visual emphasis.
-* **`Layout=max`** — Expands to the maximum available container width, ideal for double-page spreads.
+* **`Layout=center`** — Centered figure at natural size up to the reading column width (default).
+* **`Layout=aside`** — Floats to the inline-end margin so prose wraps beside it; stacks centered on narrow screens.
+* **`Layout=start`** — Floats to the inline-start margin so prose wraps beside it; stacks centered on narrow screens.
+* **`Layout=full`** — Matches the full width of the reading column.
+* **`Layout=breakout`** — Extends wider than the prose column on both sides for visual emphasis.
+* **`Layout=max`** — Expands to the maximum hero container width, ideal for double-page spreads.
 
 ## Example
 
 ```markdown
-{{Image file:byte-1975-circuit-board |#| Layout=breakout |#| Alt=Close-up of wire-wrapped circuit board |#| Caption=Figure 1: Wire-wrapped prototyping board from the construction article.}}
+{{Image file:byte-1975-circuit-board |#| Layout=breakout |#| Frame=border |#| Alt=Close-up of wire-wrapped circuit board |#| Caption=**WIRE-WRAPPED PROTOTYPE** — Prototyping board from the *Byte* construction article. |#| Credit=Byte, September 1975}}
 ```
 
 > [!TIP]
