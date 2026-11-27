@@ -47,12 +47,21 @@ h1 {
     font-weight: 800;
     letter-spacing: -0.2rem;
     text-transform: uppercase;
-    /* A filter shadows everything the heading paints, so title text and SVG title logos get
-       identical depth (text-shadow never reaches the logo). See --extrusion in variables.css. */
+    /* The shared silhouette filter gives text and SVG logos the same depth. */
     filter: var(--extrusion);
     text-align: center;
     color: var(--color-foreground);
     line-height: 1.0;
+}
+
+/* WebKit can round fractional drop-shadow offsets to zero. Use two whole-pixel layers
+   and a shorter soft shadow for narrow headings. */
+@media (max-width: 30rem) {
+    h1 {
+        --extrusion-outer-color: transparent;
+        --extrusion-ambient-offset: 0.15rem;
+        --extrusion-ambient-blur: 0.4rem;
+    }
 }
 
 /* Display titles wrap at spaces and generated slash opportunities. The server estimates the widest
