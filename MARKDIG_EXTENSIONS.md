@@ -224,7 +224,8 @@ Renders an image from a current file article in the same site and culture. Writt
 | `Frame` | No | `none` (default), `border` (hairline edge), `paper` (light specimen mat), or `dark` (dark mat for white/light logos) |
 | `Alt` | No | Plain alternate text; falls back to the file article title |
 | `Caption` | No | Caption rendered inside `<figcaption>` with safe inline Markdown (emphasis and links) |
-| `Credit` | No | Attribution line rendered beneath the caption in muted text with safe inline Markdown |
+| `CaptionPosition` | No | `bottom` (default) or `top` (renders `Caption` above the image while `Credit` stays at the bottom; framed figures style top captions as a flush header band) |
+| `Credit` | No | Attribution line rendered beneath the image/caption in muted text with safe inline Markdown |
 | `Link` | No | `file` (default; wraps the image in a link to its file article) or `none` |
 
 - Named properties and enum values are case-insensitive.
@@ -232,7 +233,7 @@ Renders an image from a current file article in the same site and culture. Writt
 - `Layout=aside` and `Layout=start` float into the margin rail on wide viewports and stack centered below `44rem` via `@container article-body`.
 - Emits `width` and `height` attributes when known on the file revision, along with `loading="lazy" decoding="async"`.
 - An unresolved article, missing canonical file, or missing file revision renders the site's `missing-image.png` fallback.
-- Unknown property names, unsupported `Layout`/`Size`/`Frame`/`Link` values, and `Size` combined with `full`/`breakout`/`max` produce save warnings (see [Save warnings](#save-warnings)).
+- Unknown property names, unsupported `Layout`/`Size`/`Frame`/`CaptionPosition`/`Link` values, `Size` combined with `full`/`breakout`/`max`, and `CaptionPosition=top` without `Caption` produce save warnings (see [Save warnings](#save-warnings)).
 
 ### `YouTube`
 
@@ -567,7 +568,7 @@ Saving an article never fails because of these checks, but `ArticleSaveWarnings`
 
 - infobox problems (see [Infobox warnings](#warnings));
 - a `{{Hatnote}}` written after the lead or other article content, where it no longer sits at the top;
-- `{{Image}}` directives with unknown properties, unsupported `Layout`/`Size`/`Frame`/`Link` values, or `Size` combined with `full`/`breakout`/`max`;
+- `{{Image}}` directives with unknown properties, unsupported `Layout`/`Size`/`Frame`/`CaptionPosition`/`Link` values, `Size` combined with `full`/`breakout`/`max`, or `CaptionPosition=top` without `Caption`;
 - a `{{PullQuote}}` with fewer than four prose paragraphs since the previous one (headings, tables and paragraphs made only of directives do not count);
 - a `{{PullQuote}}` whose words do not appear in the article's own text (case, punctuation, emphasis and directives such as citations are ignored);
 - catalogue numbers written into the text: `ISSN`, `ISBN`, `USPS`, `LCCN` or `OCLC` followed by its number, or `Company No.` with one (infobox keys such as `ISSN=` do not count);

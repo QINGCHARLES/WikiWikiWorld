@@ -448,8 +448,9 @@ or simply by slug:
 | **`Size=`** | No | Width preset for `center`, `aside`, and `start`: `small`, `medium` (default for `aside`/`start`), or `large`. Ignored on `full`/`breakout`/`max`. |
 | **`Frame=`** | No | Surface treatment: `none` (default), `border` (hairline edge), `paper` (light specimen mat), or `dark` (dark mat for white/light logos). |
 | **`Alt=`** | No | Alternate text for screen readers and accessibility. Defaults to the file article title. |
-| **`Caption=`** | No | Caption text rendered beneath the image. Supports inline Markdown (italics, bold, links). |
-| **`Credit=`** | No | Attribution line rendered beneath the caption in muted text. Supports inline Markdown. |
+| **`Caption=`** | No | Caption text rendered with the image. Supports inline Markdown (italics, bold, links). |
+| **`CaptionPosition=`** | No | `bottom` (default) or `top` (places `Caption` above the image while `Credit` stays at the bottom). |
+| **`Credit=`** | No | Attribution line rendered beneath the image in muted text. Supports inline Markdown. |
 | **`Link=`** | No | `file` (default; links to the file article page) or `none`. |
 
 ## Layout Options

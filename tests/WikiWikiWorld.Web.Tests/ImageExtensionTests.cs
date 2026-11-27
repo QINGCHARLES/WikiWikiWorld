@@ -231,21 +231,83 @@ public sealed class ImageExtensionTests
 	}
 
 	/// <summary>
+	/// Verifies <c>CaptionPosition=top</c> places the caption above the image while keeping <c>Credit</c> at the bottom,
+	/// falls back to bottom credit rendering when no caption exists, and supports explicit <c>CaptionPosition=bottom</c>.
+	/// </summary>
+	[Fact]
+	public async Task SupportsCaptionPositionTopWithBottomCredit()
+	{
+		TrustedLinkDomainList TrustedDomains = new();
+		TrustedDomains.Replace(["trusted.example"]);
+
+		string MarkdownSource = string.Join("\n\n",
+		[
+			"{{Image file:rabbit-logo |#| Frame=border |#| CaptionPosition=top |#| Caption=**RABBIT HEAD** Design by Art Paul |#| Credit=Art Paul / [*Playboy*](https://trusted.example/art)}}",
+			"{{Image file:rabbit-logo |#| CaptionPosition=top |#| Caption=Caption only on top.}}",
+			"{{Image file:rabbit-logo |#| CaptionPosition=top |#| Credit=Credit stays at bottom.}}",
+			"{{Image file:rabbit-logo |#| CaptionPosition=bottom |#| Caption=Explicit bottom. |#| Credit=Credit}}"
+		]);
+
+		string Html = await RenderWithSampleFileAsync(MarkdownSource, TrustedDomains);
+		using IDocument Document = new HtmlParser().ParseDocument(Html);
+
+		IHtmlCollection<IElement> Figures = Document.QuerySelectorAll("figure.article-image");
+		Assert.Equal(4, Figures.Length);
+
+		// 1. Top caption + bottom credit
+		IElement TopWithCredit = Figures[0];
+		Assert.Contains("article-image--caption-top", TopWithCredit.ClassList);
+		Assert.Equal(3, TopWithCredit.Children.Length);
+		IElement TopCaption = TopWithCredit.Children[0];
+		Assert.Equal("figcaption", TopCaption.TagName.ToLowerInvariant());
+		Assert.Contains("article-image__caption--top", TopCaption.ClassList);
+		Assert.Equal("RABBIT HEAD", Assert.Single(TopCaption.QuerySelectorAll("strong")).TextContent);
+		Assert.Equal("article-image__media", TopWithCredit.Children[1].ClassName);
+		IElement Footer = TopWithCredit.Children[2];
+		Assert.Equal("div", Footer.TagName.ToLowerInvariant());
+		Assert.Equal("article-image__footer", Footer.ClassName);
+		IElement FooterLink = Assert.Single(Footer.QuerySelectorAll("a"));
+		Assert.Equal("noopener", FooterLink.GetAttribute("rel"));
+
+		// 2. Top caption only (no footer)
+		IElement TopOnly = Figures[1];
+		Assert.Contains("article-image--caption-top", TopOnly.ClassList);
+		Assert.Equal(2, TopOnly.Children.Length);
+		Assert.Equal("figcaption", TopOnly.Children[0].TagName.ToLowerInvariant());
+		Assert.Equal("article-image__media", TopOnly.Children[1].ClassName);
+		Assert.Empty(TopOnly.QuerySelectorAll(".article-image__footer"));
+
+		// 3. Credit only with CaptionPosition=top still renders credit at bottom in figcaption
+		IElement CreditOnly = Figures[2];
+		Assert.DoesNotContain("article-image--caption-top", CreditOnly.ClassList);
+		Assert.Equal(2, CreditOnly.Children.Length);
+		Assert.Equal("article-image__media", CreditOnly.Children[0].ClassName);
+		Assert.Equal("figcaption", CreditOnly.Children[1].TagName.ToLowerInvariant());
+		Assert.Equal("Credit stays at bottom.", Assert.Single(CreditOnly.QuerySelectorAll(".article-image__credit")).TextContent);
+
+		// 4. Explicit CaptionPosition=bottom
+		IElement ExplicitBottom = Figures[3];
+		Assert.DoesNotContain("article-image--caption-top", ExplicitBottom.ClassList);
+		Assert.Equal("article-image__media", ExplicitBottom.Children[0].ClassName);
+		Assert.Equal("figcaption", ExplicitBottom.Children[1].TagName.ToLowerInvariant());
+	}
+
+	/// <summary>
 	/// Verifies <see cref="ArticleSaveWarnings.Find"/> reports unknown properties, invalid enum values,
-	/// and ineffective <c>Size</c> combinations while staying silent on valid directives.
+	/// and ineffective <c>Size</c> or <c>CaptionPosition</c> combinations while staying silent on valid directives.
 	/// </summary>
 	[Fact]
 	public void SaveWarningsReportInvalidImageOptionsAndAcceptValidDirectives()
 	{
 		MarkdownPipeline Pipeline = new MarkdownPipelineFactory(new TrustedLinkDomainList()).GetPipeline();
 
-		const string Valid = "{{Image file:rabbit-logo |#| Layout=aside |#| Size=small |#| Frame=paper |#| Alt=Logo |#| Caption=Caption |#| Credit=Credit |#| Link=file}}";
+		const string Valid = "{{Image file:rabbit-logo |#| Layout=aside |#| Size=small |#| Frame=paper |#| Alt=Logo |#| Caption=Caption |#| CaptionPosition=top |#| Credit=Credit |#| Link=file}}";
 		Assert.Empty(ArticleSaveWarnings.Find(Valid, Pipeline, TestInfoboxSchemas.Catalog, 1));
 
 		string Invalid = string.Join("\n\n",
 		[
-			"{{Image file:rabbit-logo |#| Align=right |#| Layout=floating |#| Size=huge |#| Frame=gold |#| Link=popup}}",
-			"{{Image file:rabbit-logo |#| Layout=full |#| Size=small}}"
+			"{{Image file:rabbit-logo |#| Align=right |#| Layout=floating |#| Size=huge |#| Frame=gold |#| CaptionPosition=side |#| Link=popup}}",
+			"{{Image file:rabbit-logo |#| Layout=full |#| Size=small |#| CaptionPosition=top}}"
 		]);
 
 		IReadOnlyList<string> Warnings = ArticleSaveWarnings.Find(Invalid, Pipeline, TestInfoboxSchemas.Catalog, 1);
@@ -253,8 +315,10 @@ public sealed class ImageExtensionTests
 		Assert.Contains(Warnings, w => w.Contains("Line 1:", StringComparison.Ordinal) && w.Contains("Layout=\"floating\"", StringComparison.Ordinal));
 		Assert.Contains(Warnings, w => w.Contains("Line 1:", StringComparison.Ordinal) && w.Contains("Size=\"huge\"", StringComparison.Ordinal));
 		Assert.Contains(Warnings, w => w.Contains("Line 1:", StringComparison.Ordinal) && w.Contains("Frame=\"gold\"", StringComparison.Ordinal));
+		Assert.Contains(Warnings, w => w.Contains("Line 1:", StringComparison.Ordinal) && w.Contains("CaptionPosition=\"side\"", StringComparison.Ordinal));
 		Assert.Contains(Warnings, w => w.Contains("Line 1:", StringComparison.Ordinal) && w.Contains("Link=\"popup\"", StringComparison.Ordinal));
 		Assert.Contains(Warnings, w => w.Contains("Line 3:", StringComparison.Ordinal) && w.Contains("Size=\"small\" has no effect with Layout=full", StringComparison.Ordinal));
+		Assert.Contains(Warnings, w => w.Contains("Line 3:", StringComparison.Ordinal) && w.Contains("CaptionPosition=\"top\" has no effect without Caption", StringComparison.Ordinal));
 	}
 
 	/// <summary>

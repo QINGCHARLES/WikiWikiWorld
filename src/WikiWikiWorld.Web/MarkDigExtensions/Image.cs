@@ -41,6 +41,9 @@ internal interface IImageDirectiveNode
 	/// <summary>Gets the optional caption text (with inline Markdown).</summary>
 	string? Caption { get; }
 
+	/// <summary>Gets the raw <c>CaptionPosition=</c> value, if specified.</summary>
+	string? CaptionPosition { get; }
+
 	/// <summary>Gets the optional attribution credit text (with inline Markdown).</summary>
 	string? Credit { get; }
 
@@ -72,6 +75,7 @@ internal interface IImageDirectiveNode
 /// <param name="Frame">The raw <c>Frame=</c> value, if provided.</param>
 /// <param name="Alt">The trimmed alternate text, if non-empty.</param>
 /// <param name="Caption">The trimmed caption Markdown, if non-empty.</param>
+/// <param name="CaptionPosition">The raw <c>CaptionPosition=</c> value, if provided.</param>
 /// <param name="Credit">The trimmed credit Markdown, if non-empty.</param>
 /// <param name="Link">The raw <c>Link=</c> value, if provided.</param>
 /// <param name="UnknownProperties">Unrecognized property keys in source order.</param>
@@ -82,6 +86,7 @@ internal sealed record class ParsedImageDirective(
 	string? Frame,
 	string? Alt,
 	string? Caption,
+	string? CaptionPosition,
 	string? Credit,
 	string? Link,
 	IReadOnlyList<string> UnknownProperties);
@@ -109,6 +114,9 @@ public sealed class ImageBlock(BlockParser Parser) : LeafBlock(Parser), IImageDi
 
 	/// <summary>Gets or initializes the optional caption for the image.</summary>
 	public string? Caption { get; init; }
+
+	/// <summary>Gets or initializes the optional caption placement (<c>bottom</c> or <c>top</c>).</summary>
+	public string? CaptionPosition { get; init; }
 
 	/// <summary>Gets or initializes the optional attribution credit for the image.</summary>
 	public string? Credit { get; init; }
@@ -148,6 +156,9 @@ public sealed class ImageInline : LeafInline, IImageDirectiveNode
 
 	/// <summary>Gets or initializes the optional caption for the image.</summary>
 	public string? Caption { get; init; }
+
+	/// <summary>Gets or initializes the optional caption placement (<c>bottom</c> or <c>top</c>).</summary>
+	public string? CaptionPosition { get; init; }
 
 	/// <summary>Gets or initializes the alternate text for the image.</summary>
 	public string? Alt { get; init; }
@@ -190,6 +201,9 @@ internal static partial class ImageDirectiveParser
 	private static readonly FrozenSet<string> AllowedLinks =
 		FrozenSet.Create(StringComparer.OrdinalIgnoreCase, "file", "none");
 
+	private static readonly FrozenSet<string> AllowedCaptionPositions =
+		FrozenSet.Create(StringComparer.OrdinalIgnoreCase, "bottom", "top");
+
 	/// <summary>
 	/// Parses the inner payload (between <c>{{Image </c> and <c>}}</c>) into structured options.
 	/// </summary>
@@ -216,6 +230,7 @@ internal static partial class ImageDirectiveParser
 		string? Frame = null;
 		string? Alt = null;
 		string? Caption = null;
+		string? CaptionPosition = null;
 		string? Credit = null;
 		string? Link = null;
 		List<string> UnknownProperties = [];
@@ -255,6 +270,10 @@ internal static partial class ImageDirectiveParser
 				{
 					Caption = string.IsNullOrWhiteSpace(Value) ? null : Value;
 				}
+				else if (Key.Equals("CaptionPosition", StringComparison.OrdinalIgnoreCase))
+				{
+					CaptionPosition = Value;
+				}
 				else if (Key.Equals("Credit", StringComparison.OrdinalIgnoreCase))
 				{
 					Credit = string.IsNullOrWhiteSpace(Value) ? null : Value;
@@ -277,6 +296,7 @@ internal static partial class ImageDirectiveParser
 			Frame,
 			Alt,
 			Caption,
+			CaptionPosition,
 			Credit,
 			Link,
 			UnknownProperties);
@@ -326,6 +346,19 @@ internal static partial class ImageDirectiveParser
 			? RawLink.Trim().ToLowerInvariant()
 			: "file";
 
+	/// <summary>Normalizes the caption position token, defaulting to <c>bottom</c> when omitted or invalid.</summary>
+	/// <param name="RawCaptionPosition">The authored <c>CaptionPosition=</c> value.</param>
+	/// <returns>The normalized lowercase caption position (<c>bottom</c> or <c>top</c>).</returns>
+	internal static string ResolveCaptionPosition(string? RawCaptionPosition)
+		=> !string.IsNullOrWhiteSpace(RawCaptionPosition) && AllowedCaptionPositions.Contains(RawCaptionPosition.Trim())
+			? RawCaptionPosition.Trim().ToLowerInvariant()
+			: "bottom";
+
+	/// <summary>Checks whether a caption position value is valid.</summary>
+	/// <param name="Value">The authored caption position value.</param>
+	/// <returns><see langword="true"/> when the value is recognized; otherwise, <see langword="false"/>.</returns>
+	internal static bool IsValidCaptionPosition(string Value) => AllowedCaptionPositions.Contains(Value.Trim());
+
 	/// <summary>Checks whether a layout value is valid.</summary>
 	/// <param name="Value">The authored layout value.</param>
 	/// <returns><see langword="true"/> when the value is recognized; otherwise, <see langword="false"/>.</returns>
@@ -350,7 +383,7 @@ internal static partial class ImageDirectiveParser
 	/// Matches a bare <c>|</c> separator only when followed by a recognized image property assignment,
 	/// preserving legacy syntax without splitting literal pipes inside captions or credits.
 	/// </summary>
-	[GeneratedRegex(@"\|(?=\s*(?:Layout|Size|Frame|Alt|Caption|Credit|Link|Type)\s*=)", RegexOptions.IgnoreCase)]
+	[GeneratedRegex(@"\|(?=\s*(?:Layout|Size|Frame|Alt|CaptionPosition|Caption|Credit|Link|Type)\s*=)", RegexOptions.IgnoreCase)]
 	private static partial Regex LegacyPropertySeparatorRegex();
 }
 
@@ -400,6 +433,7 @@ public sealed class ImageBlockParser : BlockParser
 			Frame = Parsed.Frame,
 			Alt = Parsed.Alt,
 			Caption = Parsed.Caption,
+			CaptionPosition = Parsed.CaptionPosition,
 			Credit = Parsed.Credit,
 			Link = Parsed.Link,
 			UnknownProperties = Parsed.UnknownProperties
@@ -454,6 +488,7 @@ public sealed class ImageInlineParser : InlineParser
 			Frame = Parsed.Frame,
 			Alt = Parsed.Alt,
 			Caption = Parsed.Caption,
+			CaptionPosition = Parsed.CaptionPosition,
 			Credit = Parsed.Credit,
 			Link = Parsed.Link,
 			UnknownProperties = Parsed.UnknownProperties
@@ -565,6 +600,9 @@ public sealed class ImageBlockRenderer(MarkdownPipeline InlinePipeline) : HtmlOb
 		string Layout = ImageDirectiveParser.ResolveLayout(Block.Layout);
 		string? Size = ImageDirectiveParser.ResolveSize(Block.Size, Layout);
 		string Frame = ImageDirectiveParser.ResolveFrame(Block.Frame);
+		bool HasCaption = !string.IsNullOrWhiteSpace(Block.Caption);
+		bool HasCredit = !string.IsNullOrWhiteSpace(Block.Credit);
+		bool CaptionOnTop = HasCaption && ImageDirectiveParser.ResolveCaptionPosition(Block.CaptionPosition) == "top";
 
 		Renderer.Write($"<figure class=\"article-image article-image--{Layout}");
 		if (Size is not null)
@@ -575,7 +613,19 @@ public sealed class ImageBlockRenderer(MarkdownPipeline InlinePipeline) : HtmlOb
 		{
 			Renderer.Write($" article-image--frame-{Frame}");
 		}
+		if (CaptionOnTop)
+		{
+			Renderer.Write(" article-image--caption-top");
+		}
 		Renderer.Write("\">");
+
+		if (CaptionOnTop)
+		{
+			Renderer.Write("<figcaption class=\"article-image__caption article-image__caption--top\">");
+			Renderer.Write("<span class=\"article-image__caption-text\">");
+			ImageRenderHelper.WriteInlineMarkdown(Renderer, Block.Caption!, InlinePipeline);
+			Renderer.Write("</span></figcaption>");
+		}
 
 		Renderer.Write("<div class=\"article-image__media\">");
 		if (Block.CachedArticle is { CanonicalFileId: not null } Article && Block.CachedFile is { } File)
@@ -588,9 +638,16 @@ public sealed class ImageBlockRenderer(MarkdownPipeline InlinePipeline) : HtmlOb
 		}
 		Renderer.Write("</div>");
 
-		bool HasCaption = !string.IsNullOrWhiteSpace(Block.Caption);
-		bool HasCredit = !string.IsNullOrWhiteSpace(Block.Credit);
-		if (HasCaption || HasCredit)
+		if (CaptionOnTop)
+		{
+			if (HasCredit)
+			{
+				Renderer.Write("<div class=\"article-image__footer\"><span class=\"article-image__credit\">");
+				ImageRenderHelper.WriteInlineMarkdown(Renderer, Block.Credit!, InlinePipeline);
+				Renderer.Write("</span></div>");
+			}
+		}
+		else if (HasCaption || HasCredit)
 		{
 			Renderer.Write("<figcaption class=\"article-image__caption\">");
 			if (HasCaption)
@@ -771,7 +828,7 @@ public sealed class ImageExtension(IReadOnlyList<string>? ApprovedDomains = null
 			foreach (string Unknown in Node.UnknownProperties)
 			{
 				Problems.Add($"Line {LineNumber}: {{{{Image}}}} has an unknown property \"{Unknown}\". "
-					+ "Supported properties are Layout, Size, Frame, Alt, Caption, Credit, and Link.");
+					+ "Supported properties are Layout, Size, Frame, Alt, Caption, CaptionPosition, Credit, and Link.");
 			}
 
 			if (Node.Layout is not null && !ImageDirectiveParser.IsValidLayout(Node.Layout))
@@ -802,6 +859,20 @@ public sealed class ImageExtension(IReadOnlyList<string>? ApprovedDomains = null
 			{
 				Problems.Add($"Line {LineNumber}: {{{{Image}}}} Frame=\"{Node.Frame}\" is not supported. "
 					+ "Use none, border, paper, or dark.");
+			}
+
+			if (Node.CaptionPosition is not null)
+			{
+				if (!ImageDirectiveParser.IsValidCaptionPosition(Node.CaptionPosition))
+				{
+					Problems.Add($"Line {LineNumber}: {{{{Image}}}} CaptionPosition=\"{Node.CaptionPosition}\" is not supported. "
+						+ "Use bottom or top.");
+				}
+				else if (ImageDirectiveParser.ResolveCaptionPosition(Node.CaptionPosition) == "top" &&
+					string.IsNullOrWhiteSpace(Node.Caption))
+				{
+					Problems.Add($"Line {LineNumber}: {{{{Image}}}} CaptionPosition=\"{Node.CaptionPosition}\" has no effect without Caption.");
+				}
 			}
 
 			if (Node.Link is not null && !ImageDirectiveParser.IsValidLink(Node.Link))
