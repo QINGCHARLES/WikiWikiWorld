@@ -161,17 +161,23 @@
     }
 }
 
-/* Home - recent articles grid (0.7:1 portrait issue covers and 2-column landscape header cards) */
+/* Home - recent articles grid (0.7:1 portrait issue covers and 2-column landscape header cards).
+   Breaks out of main's 65ch prose column so columns scale with the viewport up to 115rem (8 columns). */
 .home-cover-grid {
     --cover-grid-min: 12.5rem;
     --cover-grid-gap: 1.5rem;
+    --cover-grid-max: 115rem;
+    --cover-grid-inline-size: min(100vw - 2 * var(--grid-gutter), var(--cover-grid-max));
 
     container: home-grid / inline-size;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--cover-grid-min)), 1fr));
     grid-auto-flow: dense;
     gap: var(--cover-grid-gap);
+    inline-size: var(--cover-grid-inline-size);
+    max-inline-size: none;
     margin-block: 2rem;
+    margin-inline: calc((100% - var(--cover-grid-inline-size)) / 2);
 }
 
 .cover-item {
