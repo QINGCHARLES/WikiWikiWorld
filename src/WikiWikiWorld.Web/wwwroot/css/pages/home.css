@@ -155,7 +155,97 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .home-categories-toggle svg {
+    .home-categories-toggle svg,
+    .cover-item {
         transition: none;
     }
+}
+
+/* Home - recent articles grid (0.7:1 portrait issue covers and 2-column landscape header cards) */
+.home-cover-grid {
+    --cover-grid-min: 12.5rem;
+    --cover-grid-gap: 1.5rem;
+
+    container: home-grid / inline-size;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--cover-grid-min)), 1fr));
+    grid-auto-flow: dense;
+    gap: var(--cover-grid-gap);
+    margin-block: 2rem;
+}
+
+.cover-item {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 4px;
+    transition: transform 0.2s ease-in-out;
+
+    &:hover {
+        transform: translateY(-5px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 4px;
+    }
+
+    & img {
+        display: block;
+        inline-size: 100%;
+        block-size: auto;
+        object-fit: cover;
+        aspect-ratio: 0.7 / 1;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgb(var(--color-black-rgb) / 0.1);
+    }
+
+    &:hover img {
+        box-shadow: 0 4px 16px rgb(var(--color-black-rgb) / 0.2);
+    }
+}
+
+.cover-item--header {
+    container: header-card / inline-size;
+
+    & img {
+        aspect-ratio: 3 / 2;
+        object-position: top;
+    }
+
+    & img[data-focus="center"] {
+        object-position: center;
+    }
+
+    & img[data-focus="bottom"] {
+        object-position: bottom;
+    }
+}
+
+/* Once at least two 12.5rem columns plus one 1.5rem gap (26.5rem) fit, header-backed cards span two
+   columns (~1.48:1 landscape) and match the exact image height of a single-column 0.7:1 cover in the
+   same grid: 1 column width W = (cardInlineSize - gap) / 2, and W / 0.7 = 5 * (cardInlineSize - gap) / 7. */
+@container home-grid (inline-size >= 26.5rem) {
+    .cover-item--header {
+        grid-column: span 2;
+
+        & img {
+            aspect-ratio: 1.48 / 1;
+        }
+    }
+
+    @supports (block-size: 1cqi) {
+        .cover-item--header img {
+            aspect-ratio: auto;
+            block-size: calc(5 * (100cqi - var(--cover-grid-gap)) / 7);
+        }
+    }
+}
+
+.cover-title {
+    margin-block-start: 0.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.3;
 }

@@ -112,7 +112,7 @@ public sealed class HeaderImageBlockParser : BlockParser
 	/// </summary>
 	/// <param name="Value">The raw <c>Focus=</c> value.</param>
 	/// <returns>"top", "center" or "bottom"; <see langword="null"/> for anything else, so the default framing applies.</returns>
-	private static string? NormalizeFocus(string Value) => Value.Trim().ToLowerInvariant() switch
+	internal static string? NormalizeFocus(string Value) => Value.Trim().ToLowerInvariant() switch
 	{
 		"top" => "top",
 		"center" or "centre" => "center",

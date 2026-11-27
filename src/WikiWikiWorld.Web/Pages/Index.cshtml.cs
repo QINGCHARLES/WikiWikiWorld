@@ -9,7 +9,7 @@ using WikiWikiWorld.Web.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
-/// Page model for the home page, displaying a grid of recent articles with covers.
+/// Page model for the home page, displaying a grid of recent articles with covers or fallback header images.
 /// </summary>
 /// <param name="Context">The database context.</param>
 /// <param name="SiteResolverService">The site resolver service.</param>
@@ -77,91 +77,165 @@ public sealed class IndexModel(
 	];
 
 	/// <summary>
-	/// Gets the list of articles with their cover image information to display.
+	/// Gets the list of articles with their resolved cover or header image information to display.
 	/// </summary>
 	public List<ArticleWithCover> ArticlesWithCovers { get; private set; } = [];
 
 	/// <summary>
-	/// Handles the GET request to populate the article grid.
+	/// Handles the GET request to populate the article grid, preferring each article's cover image and
+	/// falling back to its first resolved header image when no cover is available.
 	/// </summary>
 	/// <param name="CancellationToken">A cancellation token.</param>
 	public async Task OnGetAsync(CancellationToken CancellationToken)
 	{
-		LatestArticlesWithCoverCarouselSpec LatestSpec = new(50);
+		LatestArticlesWithCoverOrHeaderSpec LatestSpec = new(SiteId, Culture, 50);
 		var Articles = await Context.ArticleRevisions
 			.WithSpecification(LatestSpec)
-			.Where(x => x.SiteId == SiteId && x.Culture == Culture)
 			.Select(x => new { x.Title, x.UrlSlug, x.Text, x.DateCreated })
 			.ToListAsync(CancellationToken);
 
-		List<string> CoverSlugs = [.. Articles
-			.Select(a => ArticleCoverReference.Extract(a.Text))
-			.OfType<string>()
-			.Select(SlugHelper.GenerateSlug)
-			.Distinct(StringComparer.OrdinalIgnoreCase)];
-
-		if (CoverSlugs.Count == 0)
+		if (Articles.Count == 0)
 		{
 			return;
 		}
 
-		var CoverArticles = await Context.ArticleRevisions
-			.AsNoTracking()
-			.Where(x => x.SiteId == SiteId && x.Culture == Culture && CoverSlugs.Contains(x.UrlSlug) && x.IsCurrent && x.DateDeleted == null && x.CanonicalFileId.HasValue)
-			.Select(x => new { x.UrlSlug, CanonicalFileId = x.CanonicalFileId!.Value })
-			.ToListAsync(CancellationToken);
-
-		List<Guid> FileIds = [.. CoverArticles
-			.Select(c => c.CanonicalFileId)
-			.Distinct()];
-
-		var Files = await Context.FileRevisions
-			.AsNoTracking()
-			.Where(f => FileIds.Contains(f.CanonicalFileId) && f.IsCurrent == true)
-			.Select(f => new { f.CanonicalFileId, f.Id, f.Filename })
-			.ToListAsync(CancellationToken);
-
-		Dictionary<string, Guid> CoverArticleLookup = CoverArticles.ToDictionary(a => a.UrlSlug, a => a.CanonicalFileId, StringComparer.OrdinalIgnoreCase);
-		Dictionary<Guid, (int Id, string Filename)> FileLookup = Files.ToDictionary(f => f.CanonicalFileId, f => (f.Id, f.Filename));
+		List<(string Title, string UrlSlug, DateTimeOffset DateCreated, string? CoverSlug, IReadOnlyList<HeaderImageReference> Headers)> Candidates =
+			[with(capacity: Articles.Count)];
+		HashSet<string> ImageSlugs = [with(StringComparer.OrdinalIgnoreCase)];
 
 		foreach (var Article in Articles)
 		{
-			string? CoverImageSlug = ArticleCoverReference.Extract(Article.Text);
-			if (string.IsNullOrEmpty(CoverImageSlug))
+			string? RawCoverSlug = ArticleCoverReference.Extract(Article.Text);
+			string? NormalizedCoverSlug = !string.IsNullOrEmpty(RawCoverSlug)
+				? SlugHelper.GenerateSlug(RawCoverSlug)
+				: null;
+			if (!string.IsNullOrEmpty(NormalizedCoverSlug))
 			{
-				continue;
-			}
-			CoverImageSlug = SlugHelper.GenerateSlug(CoverImageSlug);
-
-			if (!CoverArticleLookup.TryGetValue(CoverImageSlug, out Guid CanonicalFileId))
-			{
-				continue;
+				ImageSlugs.Add(NormalizedCoverSlug);
 			}
 
-			if (!FileLookup.TryGetValue(CanonicalFileId, out (int Id, string Filename) File))
+			IReadOnlyList<HeaderImageReference> Headers = ArticleCoverReference.ExtractHeaders(Article.Text);
+			foreach (HeaderImageReference Header in Headers)
 			{
-				continue;
+				string NormalizedHeaderSlug = SlugHelper.GenerateSlug(Header.Slug);
+				if (!string.IsNullOrEmpty(NormalizedHeaderSlug))
+				{
+					ImageSlugs.Add(NormalizedHeaderSlug);
+				}
 			}
 
-			string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, CanonicalFileId, File.Id, File.Filename);
-			ArticlesWithCovers.Add(new ArticleWithCover(
-				Article.Title,
-				Article.UrlSlug,
-				ImageUrl,
-				Article.DateCreated
-			));
+			Candidates.Add((Article.Title, Article.UrlSlug, Article.DateCreated, NormalizedCoverSlug, Headers));
 		}
+
+		if (ImageSlugs.Count == 0)
+		{
+			return;
+		}
+
+		var ImageArticles = await Context.ArticleRevisions
+			.AsNoTracking()
+			.Where(x => x.SiteId == SiteId && x.Culture == Culture && ImageSlugs.Contains(x.UrlSlug) && x.IsCurrent && x.DateDeleted == null && x.CanonicalFileId.HasValue)
+			.Select(x => new { x.UrlSlug, CanonicalFileId = x.CanonicalFileId!.Value })
+			.ToListAsync(CancellationToken);
+
+		List<Guid> FileIds = [.. ImageArticles
+			.Select(c => c.CanonicalFileId)
+			.Distinct()];
+
+		if (FileIds.Count == 0)
+		{
+			return;
+		}
+
+		var Files = await Context.FileRevisions
+			.AsNoTracking()
+			.Where(f => FileIds.Contains(f.CanonicalFileId) && f.IsCurrent == true && f.DateDeleted == null)
+			.Select(f => new { f.CanonicalFileId, f.Id, f.Filename })
+			.ToListAsync(CancellationToken);
+
+		Dictionary<string, Guid> ImageArticleLookup = ImageArticles.ToDictionary(
+			a => a.UrlSlug,
+			a => a.CanonicalFileId,
+			StringComparer.OrdinalIgnoreCase);
+		Dictionary<Guid, (int Id, string Filename)> FileLookup = Files.ToDictionary(
+			f => f.CanonicalFileId,
+			f => (f.Id, f.Filename));
+
+		foreach ((string Title, string UrlSlug, DateTimeOffset DateCreated, string? CoverSlug, IReadOnlyList<HeaderImageReference> Headers) in Candidates)
+		{
+			if (TryResolveImageUrl(SiteId, CoverSlug, ImageArticleLookup, FileLookup, out string? CoverUrl))
+			{
+				ArticlesWithCovers.Add(new ArticleWithCover(
+					Title,
+					UrlSlug,
+					CoverUrl,
+					DateCreated));
+				continue;
+			}
+
+			foreach (HeaderImageReference Header in Headers)
+			{
+				string NormalizedHeaderSlug = SlugHelper.GenerateSlug(Header.Slug);
+				if (TryResolveImageUrl(SiteId, NormalizedHeaderSlug, ImageArticleLookup, FileLookup, out string? HeaderUrl))
+				{
+					ArticlesWithCovers.Add(new ArticleWithCover(
+						Title,
+						UrlSlug,
+						HeaderUrl,
+						DateCreated,
+						IsHeaderImage: true,
+						ImageFocus: Header.Focus));
+					break;
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Resolves a normalized file-article slug to its public sitefiles URL when both the file article and its current file revision exist.
+	/// </summary>
+	/// <param name="SiteId">The current site identifier.</param>
+	/// <param name="NormalizedSlug">The normalized file-article slug, or <see langword="null"/>.</param>
+	/// <param name="ImageArticleLookup">Lookup from file-article slug to canonical file ID.</param>
+	/// <param name="FileLookup">Lookup from canonical file ID to current file revision ID and filename.</param>
+	/// <param name="ImageUrl">Receives the resolved image URL when found.</param>
+	/// <returns><see langword="true"/> when the image resolved; otherwise <see langword="false"/>.</returns>
+	private static bool TryResolveImageUrl(
+		int SiteId,
+		string? NormalizedSlug,
+		Dictionary<string, Guid> ImageArticleLookup,
+		Dictionary<Guid, (int Id, string Filename)> FileLookup,
+		[System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? ImageUrl)
+	{
+		if (!string.IsNullOrEmpty(NormalizedSlug) &&
+			ImageArticleLookup.TryGetValue(NormalizedSlug, out Guid CanonicalFileId) &&
+			FileLookup.TryGetValue(CanonicalFileId, out (int Id, string Filename) File))
+		{
+			ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, CanonicalFileId, File.Id, File.Filename);
+			return true;
+		}
+
+		ImageUrl = null;
+		return false;
 	}
 }
 
 /// <summary>
-/// Represents an article summary with its cover image for display on the index page.
+/// Represents an article summary with its resolved cover or fallback header image for display on the index page.
 /// </summary>
 /// <param name="Title">The title of the article.</param>
 /// <param name="UrlSlug">The URL slug of the article.</param>
-/// <param name="ImageUrl">The URL of the cover image.</param>
-/// <param name="DateCreated">The creation date of the article.</param>
-public sealed record ArticleWithCover(string Title, string UrlSlug, string ImageUrl, DateTimeOffset DateCreated);
+/// <param name="ImageUrl">The URL of the cover or header image.</param>
+/// <param name="DateCreated">The creation date of the current article revision.</param>
+/// <param name="IsHeaderImage"><see langword="true"/> when <paramref name="ImageUrl"/> came from a fallback <c>{{HeaderImage}}</c> rather than a cover.</param>
+/// <param name="ImageFocus">Optional vertical focus (<c>"top"</c>, <c>"center"</c>, or <c>"bottom"</c>) for header images.</param>
+public sealed record ArticleWithCover(
+	string Title,
+	string UrlSlug,
+	string ImageUrl,
+	DateTimeOffset DateCreated,
+	bool IsHeaderImage = false,
+	string? ImageFocus = null);
 
 /// <summary>
 /// A home-page category pill linking to <c>/category:{Slug}</c>.
