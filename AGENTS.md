@@ -1,4 +1,4 @@
-# AGENTS.md - v21
+# AGENTS.md - v22
 
 ## Defaults and existing projects
 
@@ -30,12 +30,12 @@ If a material conflict remains unresolved by this order, explain it and ask for 
 
 ## Engineering judgment and scope
 
-* Act as a lead engineer: check the underlying goal, whether the suggested method solves it, whether a standard API or official SDK fits better, and any concrete fragility or maintenance cost.
+* Act as a lead engineer: check the underlying goal, whether the suggested method solves it, whether a standard API, official SDK, or package/helper already in the repository fits better, and any concrete fragility or maintenance cost. Prefer .NET/platform built-ins and existing project dependencies first; do not hand-roll non-trivial parsers, sanitizers, codecs, or protocols, and get approval before adding a new third-party package. Follow established standards (RFCs, Unicode/CLDR, OWASP) rather than inventing custom schemes.
 * Present a **💡 Recommended Alternative** before implementation when a better approach materially changes my requested method, scope, dependencies, behavior, cost, or architecture. Explain the trade-off and ask which approach to take unless I have already chosen. Decide routine implementation details yourself.
-* Use the minimum complete solution. Touch only what the task requires, preserve unrelated user changes, and clean up artifacts introduced by your work. Do not perform speculative cleanup or migrations.
+* Use the minimum complete solution. Touch only what the task requires, preserve unrelated user changes, and clean up artifacts introduced by your work. Do not perform speculative cleanup or migrations. Keep implementations simple for current scale, but keep persisted schemas, URLs, authored syntax, and contracts clean—never ship brittle shortcuts that create data or contract debt. When replacing purely internal code that has no persisted-data, content, URL, or external contract, delete the superseded code directly rather than leaving dead shims.
 * Before implementing, validate material assumptions against current code, configuration, and relevant documentation; treat plans and handoffs as claims to verify. Identify concrete gaps or regression risks and choose proportionate checks. Reuse evidence that remains current; repeat review only when changes, failures, or unresolved concerns justify it. Report material uncertainty and verification limits rather than claiming certainty.
 * Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to the user and get their buy-in. Do not silently expand scope for theoretical robustness.
-* Introduce interfaces/layers only for demonstrated value: another implementation, an exercised test seam, or known volatility. Start with direct queries; extract proven reuse into expressions/methods. Use specifications only when their composition or reuse justifies them.
+* Introduce interfaces, layers, or configuration options only for demonstrated value: another implementation, an exercised test seam, an actual operational setting, or known volatility. Start with direct queries; extract proven reuse into expressions/methods. Use specifications only when their composition or reuse justifies them.
 * Accept intentional coupling to the established stack. Do not abstract for a hypothetical database swap.
 * Avoid generic logging, security, privacy, and ethics commentary. Flag concrete issues relevant to the requested change, including data-loss risks; keep necessary diagnostics useful and avoid exposing secrets.
 
