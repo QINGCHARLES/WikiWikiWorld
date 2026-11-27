@@ -1,0 +1,152 @@
+@page
+@model WikiWikiWorld.Web.Pages.Admin.UsersModel
+@{
+	ViewData["Title"] = L["Manage users"];
+	RegisteredUsersPage Results = Model.Results;
+	Guid? CurrentAccountId = Model.CurrentAccountId;
+}
+@section PageHead {
+	<link rel="stylesheet" href="~/css/pages/admin-users.css" asp-append-version="true" />
+}
+
+<figure></figure>
+<hgroup>
+	<h1>@L["Manage users"]</h1>
+	<p class="subtitle">@L["Registered accounts across all sites"]</p>
+</hgroup>
+
+<article class="admin-users">
+	@if (Model.StatusMessage is string StatusMessage)
+	{
+		<p role="status">@StatusMessage</p>
+	}
+	@if (Model.ErrorMessage is string ErrorMessage)
+	{
+		<p role="alert">@ErrorMessage</p>
+	}
+	<search aria-label="@L["Find registered users"]">
+		<form method="get" asp-page="/Admin/Users">
+			<div>
+				<label for="search">@L["Search by username"]</label>
+				<input type="search" id="search" name="search" value="@Model.Search" autocapitalize="none" spellcheck="false" />
+			</div>
+			<div>
+				<label for="disabled">@L["Account status"]</label>
+				<select id="disabled" name="disabled">
+					<option value="">@L["All statuses"]</option>
+					<option value="false" selected="@(Model.Disabled is false)">@L["Enabled"]</option>
+					<option value="true" selected="@(Model.Disabled is true)">@L["Disabled"]</option>
+				</select>
+			</div>
+			<div>
+				<label for="role">@L["Role"]</label>
+				<select id="role" name="role">
+					<option value="">@L["All roles"]</option>
+					@foreach (RegisteredUserRole Role in Results.Roles)
+					{
+						<option value="@Role.Id" selected="@(Role.Id == Model.Role)">@Role.Name</option>
+					}
+				</select>
+			</div>
+			<div>
+				<label for="oldest">@L["Sort by"]</label>
+				<select id="oldest" name="oldest">
+					<option value="false" selected="@(!Model.Oldest)">@L["Newest registrations"]</option>
+					<option value="true" selected="@Model.Oldest">@L["Oldest registrations"]</option>
+				</select>
+			</div>
+			<button type="submit" class="button" data-button-variant="primary">@L["Search"]</button>
+			<a asp-page="/Admin/Users">@L["Clear filters"]</a>
+		</form>
+	</search>
+
+	@if (Results.Accounts.Count == 0)
+	{
+		<p>@L["No matching users found."]</p>
+	}
+	else
+	{
+		<p id="user-results">@L["Showing {0}–{1} of {2}", (Results.PageNumber - 1) * UserAdministrationService.PageSize + 1,
+			(Results.PageNumber - 1) * UserAdministrationService.PageSize + Results.Accounts.Count, Results.TotalCount]</p>
+		<div class="user-table" role="region" aria-labelledby="user-results" tabindex="0">
+			<table aria-label="@L["Registered users"]">
+				<thead>
+					<tr>
+						<th scope="col">@L["Username"]</th>
+						<th scope="col">@L["Email"]</th>
+						<th scope="col" aria-sort="@(Model.Oldest ? "ascending" : "descending")">@L["Registered"]</th>
+						<th scope="col">@L["Status"]</th>
+						<th scope="col">@L["Actions"]</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (RegisteredUser Account in Results.Accounts)
+					{
+						string AccountName = Account.UserName ?? Account.Id.ToString();
+						DateTime RegisteredUtc = Account.DateCreated.UtcDateTime;
+						<tr>
+							<th scope="row">
+								@if (Account.UserName is string UserName)
+								{
+									<a href="@($"/@{Uri.EscapeDataString(UserName)}/profile")"><bdi>@UserName</bdi></a>
+								}
+								else
+								{
+									<bdi>@AccountName</bdi>
+								}
+							</th>
+							<td><bdi>@(Account.Email ?? "—")</bdi></td>
+							<td><time datetime="@RegisteredUtc.ToString("O", CultureInfo.InvariantCulture)">@RegisteredUtc.ToString("d", CultureInfo.CurrentCulture)</time></td>
+							<td>@(Account.IsDisabled ? L["Disabled"] : L["Enabled"])</td>
+							<td>
+								@if (Account.Id == CurrentAccountId)
+								{
+									<span>@L["Your account"]</span>
+								}
+								else
+								{
+									<form method="post" asp-page="/Admin/Users" asp-route-search="@Model.Search"
+										asp-route-disabled="@Model.Disabled" asp-route-role="@Model.Role" asp-route-oldest="@Model.Oldest"
+										asp-route-pagenumber="@Results.PageNumber">
+										<input type="hidden" name="accountid" value="@Account.Id" />
+										@if (Account.IsDisabled)
+										{
+											<button type="submit" class="button" name="setdisabled" value="false"
+												aria-label="@L["Enable {0}", AccountName]">@L["Enable"]</button>
+										}
+										else
+										{
+											<details>
+												<summary aria-label="@L["Disable {0}", AccountName]">@L["Disable"]</summary>
+												<p>@L["This signs the user out and revokes their API tokens."]</p>
+												<button type="submit" class="button" data-button-variant="negative-quiet" name="setdisabled" value="true"
+													aria-label="@L["Confirm disabling {0}", AccountName]">@L["Confirm disable"]</button>
+											</details>
+										}
+									</form>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+		@if (Results.PageCount > 1)
+		{
+			<nav aria-label="@L["User directory pages"]">
+				@if (Results.PageNumber > 1)
+				{
+					<a asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-disabled="@Model.Disabled"
+						asp-route-role="@Model.Role" asp-route-oldest="@Model.Oldest" asp-route-pagenumber="@(Results.PageNumber - 1)">@L["Previous"]</a>
+				}
+				<span>@L["Page {0} of {1}", Results.PageNumber, Results.PageCount]</span>
+				@if (Results.PageNumber < Results.PageCount)
+				{
+					<a asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-disabled="@Model.Disabled"
+						asp-route-role="@Model.Role" asp-route-oldest="@Model.Oldest" asp-route-pagenumber="@(Results.PageNumber + 1)">@L["Next"]</a>
+				}
+			</nav>
+		}
+	}
+</article>

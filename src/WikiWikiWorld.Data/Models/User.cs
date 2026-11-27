@@ -7,6 +7,11 @@ namespace WikiWikiWorld.Data.Models;
 /// </summary>
 public sealed class User : IdentityUser<Guid>
 {
+	/// <summary>
+	/// Gets or sets whether an administrator has suspended the account's access.
+	/// </summary>
+	public bool IsDisabled { get; set; }
+
     /// <summary>
     /// Gets or sets the GUID of the user's profile picture.
     /// </summary>

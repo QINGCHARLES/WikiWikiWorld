@@ -38,7 +38,7 @@ public sealed class AuthApiController(
 	public const int MaxTokenLifetimeDays = 365;
 
 	/// <summary>
-	/// Issues a JWT token for valid credentials, refusing development accounts outside Development.
+	/// Issues a JWT token for an enabled account with valid credentials, refusing development accounts outside Development.
 	/// </summary>
 	/// <remarks>
 	/// Tokens last 24 hours unless <see cref="LoginModel.ExpiresInDays"/> asks for longer, up to
@@ -65,7 +65,8 @@ public sealed class AuthApiController(
 		}
 
 		User? TargetUser = await UserManager.FindByNameAsync(Model.Username);
-		if (TargetUser is null || DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, TargetUser.UserName, TargetUser.Email))
+		if (TargetUser is null || TargetUser.IsDisabled
+			|| DevelopmentAccountPolicy.IsBlocked(Environment.EnvironmentName, TargetUser.UserName, TargetUser.Email))
 		{
 			return Unauthorized("Invalid credentials.");
 		}

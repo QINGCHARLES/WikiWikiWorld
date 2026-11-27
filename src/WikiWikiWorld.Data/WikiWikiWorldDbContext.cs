@@ -166,6 +166,7 @@ public class WikiWikiWorldDbContext : IdentityDbContext<User, Role, Guid>
 		{
 			b.ToTable("Users");
 			b.HasQueryFilter(SoftDeleteFilter, u => u.DateDeleted == null);
+			b.Property(u => u.IsDisabled).HasDefaultValue(false);
 		});
 
 		Builder.Entity<Role>(b =>

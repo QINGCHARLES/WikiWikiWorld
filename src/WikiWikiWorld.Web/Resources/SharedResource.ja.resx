@@ -25,6 +25,7 @@
   <data name="About this talk page" xml:space="preserve"><value>このトークページについて</value></data>
   <data name="Account menu for {0}" xml:space="preserve"><value>{0} のアカウントメニュー</value></data>
   <data name="Account menu for {0}, {1}" xml:space="preserve"><value>{0} のアカウントメニュー、{1}</value></data>
+  <data name="Account status" xml:space="preserve"><value>アカウントの状態</value></data>
   <data name="AccountMenu.PendingTrustedDomains|other" xml:space="preserve"><value>信頼ドメインの提案 {0} 件が審査待ち</value></data>
   <data name="Actions" xml:space="preserve"><value>操作</value></data>
   <data name="Active days" xml:space="preserve"><value>活動日数</value></data>
@@ -47,6 +48,8 @@
   <data name="All changes" xml:space="preserve"><value>すべての変更</value></data>
   <data name="All contributions" xml:space="preserve"><value>すべての投稿</value></data>
   <data name="All required fields must be filled out." xml:space="preserve"><value>必須項目をすべて入力してください。</value></data>
+  <data name="All roles" xml:space="preserve"><value>すべてのロール</value></data>
+  <data name="All statuses" xml:space="preserve"><value>すべての状態</value></data>
   <data name="almost {0} ago" xml:space="preserve"><value>{0}近く前</value></data>
   <data name="Already have an account?" xml:space="preserve"><value>すでにアカウントをお持ちですか？</value></data>
   <data name="already linked here" xml:space="preserve"><value>ここにリンク済み</value></data>
@@ -153,6 +156,7 @@
   <data name="Choose…" xml:space="preserve"><value>選択…</value></data>
   <data name="Citations" xml:space="preserve"><value>出典</value></data>
   <data name="Cite primary sources where possible." xml:space="preserve"><value>可能な限り一次資料を引用しましょう。</value></data>
+  <data name="Clear filters" xml:space="preserve"><value>絞り込みを解除</value></data>
   <data name="Clear list" xml:space="preserve"><value>リストを空にする</value></data>
   <data name="Clear list…" xml:space="preserve"><value>リストを空にする…</value></data>
   <data name="Clear this list?" xml:space="preserve"><value>このリストを空にしますか？</value></data>
@@ -168,6 +172,8 @@
   <data name="Configured Domain Redirects ({0})" xml:space="preserve"><value>設定済みのドメイン転送（{0}）</value></data>
   <data name="Confirm" xml:space="preserve"><value>承認</value></data>
   <data name="Confirm and link" xml:space="preserve"><value>確認してリンク</value></data>
+  <data name="Confirm disable" xml:space="preserve"><value>無効化を確定</value></data>
+  <data name="Confirm disabling {0}" xml:space="preserve"><value>{0} の無効化を確定</value></data>
   <data name="Confirm merge" xml:space="preserve"><value>統合を確定</value></data>
   <data name="Confirm password" xml:space="preserve"><value>パスワード（確認）</value></data>
   <data name="Confirmed by" xml:space="preserve"><value>承認者</value></data>
@@ -248,6 +254,10 @@
   <data name="Device.Phone" xml:space="preserve"><value>スマートフォン</value></data>
   <data name="Device.Tablet" xml:space="preserve"><value>タブレット</value></data>
   <data name="Dimensions" xml:space="preserve"><value>サイズ（ピクセル）</value></data>
+  <data name="Disable" xml:space="preserve"><value>無効にする</value></data>
+  <data name="Disable {0}" xml:space="preserve"><value>{0} を無効にする</value></data>
+  <data name="Disabled" xml:space="preserve"><value>無効</value></data>
+  <data name="Disabled account {0}." xml:space="preserve"><value>アカウント {0} を無効にしました。</value></data>
   <data name="Discuss" xml:space="preserve"><value>ディスカッション</value></data>
   <data name="Discussed" xml:space="preserve"><value>議論</value></data>
   <data name="Discussion: {0}" xml:space="preserve"><value>ディスカッション：{0}</value></data>
@@ -295,6 +305,10 @@
   <data name="Email" xml:space="preserve"><value>メールアドレス</value></data>
   <data name="Email '{0}' is already taken." xml:space="preserve"><value>メールアドレス「{0}」はすでに使われています。</value></data>
   <data name="Email '{0}' is invalid." xml:space="preserve"><value>メールアドレス「{0}」は無効です。</value></data>
+  <data name="Enable" xml:space="preserve"><value>有効にする</value></data>
+  <data name="Enable {0}" xml:space="preserve"><value>{0} を有効にする</value></data>
+  <data name="Enabled" xml:space="preserve"><value>有効</value></data>
+  <data name="Enabled account {0}." xml:space="preserve"><value>アカウント {0} を有効にしました。</value></data>
   <data name="Encyclopedia articles and publication entries" xml:space="preserve"><value>百科事典の記事と刊行物の項目</value></data>
   <data name="Enter a domain, such as example.com." xml:space="preserve"><value>example.com のようなドメインを入力してください。</value></data>
   <data name="Enter a full domain, such as example.com or example.gov.uk, not just a top-level domain." xml:space="preserve"><value>トップレベルドメインだけでなく、example.com や example.gov.uk のような完全なドメインを入力してください。</value></data>
@@ -332,6 +346,7 @@
   <data name="Filter by starting letter" xml:space="preserve"><value>頭文字で絞り込む</value></data>
   <data name="Find a page title" xml:space="preserve"><value>ページ名を検索</value></data>
   <data name="Find a page…" xml:space="preserve"><value>ページを検索…</value></data>
+  <data name="Find registered users" xml:space="preserve"><value>登録ユーザーを探す</value></data>
   <data name="Firehose" xml:space="preserve"><value>ファイアホース</value></data>
   <data name="Firehose — Recent changes" xml:space="preserve"><value>ファイアホース — 最近の更新</value></data>
   <data name="Firehose.ChangesNewestFirst|other" xml:space="preserve"><value>{0}件の変更 · 新しい順</value></data>
@@ -473,6 +488,7 @@
   <data name="Make public…" xml:space="preserve"><value>公開する…</value></data>
   <data name="Make this list public?" xml:space="preserve"><value>このリストを公開しますか？</value></data>
   <data name="Making your header on your device… Large pictures can take a while." xml:space="preserve"><value>端末上でヘッダーを作成しています… 大きな画像は時間がかかることがあります。</value></data>
+  <data name="Manage users" xml:space="preserve"><value>ユーザー管理</value></data>
   <data name="Map legacy or alternate domains to specific articles. Requests to these domains receive an {0} to the target article on that culture. Because mappings link to the canonical article identifier, {1}." xml:space="preserve"><value>旧ドメインや別ドメインを特定の記事に割り当てます。これらのドメインへのリクエストは、その言語の転送先記事への{0}を受け取ります。割り当ては記事の正規IDにひもづくため、{1}。</value></data>
   <data name="Markdown supported" xml:space="preserve"><value>Markdown 対応</value></data>
   <data name="Markdown supported · Blank line for new paragraph" xml:space="preserve"><value>Markdown 対応 · 空行で段落を分けます</value></data>
@@ -513,6 +529,7 @@
   <data name="New list name" xml:space="preserve"><value>新しいリストの名前</value></data>
   <data name="New list…" xml:space="preserve"><value>新しいリスト…</value></data>
   <data name="Newer" xml:space="preserve"><value>新しい順へ</value></data>
+  <data name="Newest registrations" xml:space="preserve"><value>登録が新しい順</value></data>
   <data name="News &amp; Politics" xml:space="preserve"><value>ニュース・政治</value></data>
   <data name="Newsletter" xml:space="preserve"><value>ニュースレター</value></data>
   <data name="Newsletter Issue" xml:space="preserve"><value>ニュースレターの号</value></data>
@@ -534,6 +551,7 @@
   <data name="No legacy-layout files found. Nothing to migrate." xml:space="preserve"><value>旧形式のファイルはありません。移行するものはありません。</value></data>
   <data name="No matching articles found." xml:space="preserve"><value>一致する記事はありません。</value></data>
   <data name="No matching edits this week." xml:space="preserve"><value>今週は該当する編集がありません。</value></data>
+  <data name="No matching users found." xml:space="preserve"><value>該当するユーザーが見つかりませんでした。</value></data>
   <data name="No new header was created." xml:space="preserve"><value>新しいヘッダーは作成されませんでした。</value></data>
   <data name="No pages currently link to this article." xml:space="preserve"><value>現在この記事にリンクしているページはありません。</value></data>
   <data name="No picture selected." xml:space="preserve"><value>画像が選ばれていません。</value></data>
@@ -565,6 +583,7 @@
   <data name="Notifications" xml:space="preserve"><value>通知</value></data>
   <data name="Now" xml:space="preserve"><value>現在</value></data>
   <data name="Older" xml:space="preserve"><value>古い順へ</value></data>
+  <data name="Oldest registrations" xml:space="preserve"><value>登録が古い順</value></data>
   <data name="On Deadline" xml:space="preserve"><value>締め切り厳守</value></data>
   <data name="On this device" xml:space="preserve"><value>この端末</value></data>
   <data name="on {0}" xml:space="preserve"><value>{0} で</value></data>
@@ -671,6 +690,9 @@
   <data name="redirects survive article renames and slug changes" xml:space="preserve"><value>記事名やスラッグが変わっても転送は維持されます</value></data>
   <data name="Reference, guide, and policy pages" xml:space="preserve"><value>参考資料・ガイド・方針のページ</value></data>
   <data name="Referenced by:" xml:space="preserve"><value>参照元：</value></data>
+  <data name="Registered" xml:space="preserve"><value>登録日</value></data>
+  <data name="Registered accounts across all sites" xml:space="preserve"><value>全サイトの登録アカウント</value></data>
+  <data name="Registered users" xml:space="preserve"><value>登録ユーザー</value></data>
   <data name="Regular" xml:space="preserve"><value>常連</value></data>
   <data name="Religion &amp; Belief" xml:space="preserve"><value>宗教・信仰</value></data>
   <data name="Remember me" xml:space="preserve"><value>ログイン状態を保持</value></data>
@@ -705,6 +727,7 @@
   <data name="Revision History" xml:space="preserve"><value>版の履歴</value></data>
   <data name="Revision History: {0}" xml:space="preserve"><value>版の履歴：{0}</value></data>
   <data name="Revisions" xml:space="preserve"><value>版</value></data>
+  <data name="Role" xml:space="preserve"><value>ロール</value></data>
   <data name="Save Changes" xml:space="preserve"><value>変更を保存</value></data>
   <data name="Save introduction" xml:space="preserve"><value>紹介文を保存</value></data>
   <data name="Save note" xml:space="preserve"><value>メモを保存</value></data>
@@ -721,6 +744,7 @@
   <data name="Search" xml:space="preserve"><value>検索</value></data>
   <data name="Search all articles for “{0}”" xml:space="preserve"><value>すべての記事から「{0}」を検索</value></data>
   <data name="Search articles" xml:space="preserve"><value>記事を検索</value></data>
+  <data name="Search by username" xml:space="preserve"><value>ユーザー名で検索</value></data>
   <data name="Search engines follow links to these sites. Every other outside link is marked nofollow." xml:space="preserve"><value>これらのサイトへのリンクは検索エンジンにフォローされます。それ以外の外部リンクにはすべて nofollow が付きます。</value></data>
   <data name="Search for target article by title or slug..." xml:space="preserve"><value>転送先の記事をタイトルかスラッグで検索...</value></data>
   <data name="Search suggestions" xml:space="preserve"><value>検索候補</value></data>
@@ -760,6 +784,7 @@
   <data name="Some websites block direct image imports. If your link doesn’t work, download the picture, then choose Open image or drag it here. Your picture is processed in your browser; it won’t be uploaded to the wiki until you choose to upload the finished header." xml:space="preserve"><value>直接の画像読み込みを禁止しているサイトもあります。リンクがうまくいかないときは、画像をダウンロードしてから「画像を開く」を選ぶか、ここにドラッグしてください。画像はブラウザ内で処理され、完成したヘッダーをアップロードするまでウィキには送られません。</value></data>
   <data name="Soon" xml:space="preserve"><value>近日</value></data>
   <data name="Sort" xml:space="preserve"><value>並べ替え</value></data>
+  <data name="Sort by" xml:space="preserve"><value>並べ替え</value></data>
   <data name="Sort entries" xml:space="preserve"><value>項目を並べ替え</value></data>
   <data name="Source" xml:space="preserve"><value>出典</value></data>
   <data name="Source for {0}" xml:space="preserve"><value>「{0}」のソース</value></data>
@@ -811,6 +836,7 @@
   <data name="That list no longer exists. Reload to see your lists." xml:space="preserve"><value>そのリストはもうありません。ページを再読み込みしてリストを確認してください。</value></data>
   <data name="That proposal has already been reviewed. The list has been refreshed." xml:space="preserve"><value>この提案はすでに審査済みです。一覧を更新しました。</value></data>
   <data name="That recipient was not found. Choose another account below." xml:space="preserve"><value>その宛先は見つかりません。下で別のアカウントを選んでください。</value></data>
+  <data name="The account is unavailable or was changed. Refresh the directory and try again." xml:space="preserve"><value>アカウントを利用できないか、変更されています。一覧を更新してから再試行してください。</value></data>
   <data name="The chosen URL slug conflicts with a reserved system path and cannot be used." xml:space="preserve"><value>選んだURLスラッグはシステムの予約パスと重なるため使えません。</value></data>
   <data name="The current version was published on {0}." xml:space="preserve"><value>現在の版は{0}に公開されました。</value></data>
   <data name="The Development environment shouldn't be enabled for deployed applications." xml:space="preserve"><value>デプロイしたアプリケーションでは Development 環境を有効にしないでください。</value></data>
@@ -867,6 +893,7 @@
   <data name="This removes {0} from “{1}” and deletes the list. Your other lists stay untouched. There is no undo." xml:space="preserve"><value>「{1}」から{0}を削除し、リストも削除します。ほかのリストはそのままです。元に戻せません。</value></data>
   <data name="This removes {0} from “{1}”. Your other lists stay untouched. There is no undo." xml:space="preserve"><value>「{1}」から{0}を削除します。ほかのリストはそのままです。元に戻せません。</value></data>
   <data name="This revision was published on {0}." xml:space="preserve"><value>この版は{0}に公開されました。</value></data>
+  <data name="This signs the user out and revokes their API tokens." xml:space="preserve"><value>ユーザーをログアウトさせ、API トークンを失効させます。</value></data>
   <data name="This subject has no posts." xml:space="preserve"><value>この話題には投稿がありません。</value></data>
   <data name="This upload qualifies under copyright exemptions for non-profit purposes such as criticism, comment, news reporting, teaching, scholarship, or historical preservation/archiving." xml:space="preserve"><value>このアップロードは、批評、論評、報道、教育、研究、歴史的な保存・アーカイブなどの非営利目的の著作権の例外に該当します。</value></data>
   <data name="This username or email is unavailable." xml:space="preserve"><value>このユーザー名またはメールアドレスは使用できません。</value></data>
@@ -917,6 +944,7 @@
   <data name="Use 8–100 characters, including uppercase and lowercase letters, a number and a symbol." xml:space="preserve"><value>8〜100文字で、英大文字・英小文字・数字・記号をそれぞれ含めてください。</value></data>
   <data name="Use Markdown formatting for rich text. Embed a video with {0}." xml:space="preserve"><value>書式には Markdown を使います。動画は {0} で埋め込めます。</value></data>
   <data name="User" xml:space="preserve"><value>利用者</value></data>
+  <data name="User directory pages" xml:space="preserve"><value>ユーザー一覧のページ</value></data>
   <data name="User home pages cannot have an attached file." xml:space="preserve"><value>利用者ページにはファイルを添付できません。</value></data>
   <data name="User pages" xml:space="preserve"><value>利用者ページ</value></data>
   <data name="Username" xml:space="preserve"><value>ユーザー名</value></data>
@@ -969,11 +997,13 @@
   <data name="You are viewing the current revision of this article." xml:space="preserve"><value>この記事の現在の版を表示しています。</value></data>
   <data name="You can have up to {0} lists." xml:space="preserve"><value>リストは{0}件まで作成できます。</value></data>
   <data name="You can only submit one URL at a time. To send us multiple publications in one go, bundle them into a single archive (zip, rar, 7z, etc.) and submit the URL to that archive." xml:space="preserve"><value>一度に送れるURLは1つです。複数の刊行物をまとめて送るには、1つのアーカイブ（zip、rar、7z など）にまとめて、そのURLを送ってください。</value></data>
+  <data name="You cannot disable your own account." xml:space="preserve"><value>自分のアカウントは無効にできません。</value></data>
   <data name="You haven't edited any articles yet." xml:space="preserve"><value>まだ記事を編集していません。</value></data>
   <data name="You haven't started any conversations yet." xml:space="preserve"><value>まだ会話を始めていません。</value></data>
   <data name="You must be logged in to create articles. {0}." xml:space="preserve"><value>記事を作成するにはログインが必要です。{0}。</value></data>
   <data name="You must be logged in to edit articles. {0}." xml:space="preserve"><value>記事を編集するにはログインが必要です。{0}。</value></data>
   <data name="You're viewing a prior revision." xml:space="preserve"><value>以前の版を表示しています。</value></data>
+  <data name="Your account" xml:space="preserve"><value>自分のアカウント</value></data>
   <data name="Your account is locked out." xml:space="preserve"><value>アカウントはロックされています。</value></data>
   <data name="Your first post (Markdown supported)" xml:space="preserve"><value>最初の投稿（Markdown 対応）</value></data>
   <data name="your profile article" xml:space="preserve"><value>あなたのプロフィール記事</value></data>

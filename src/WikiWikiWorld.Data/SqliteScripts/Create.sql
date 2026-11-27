@@ -18,7 +18,8 @@ CREATE TABLE Users (
     AccessFailedCount INTEGER NOT NULL,
     ProfilePicGuid TEXT NULL,
     DateCreated TEXT NOT NULL,
-    DateDeleted TEXT NULL
+    DateDeleted TEXT NULL,
+    IsDisabled INTEGER NOT NULL DEFAULT 0 CHECK (IsDisabled IN (0, 1))
 );
 
 CREATE UNIQUE INDEX IX_Users_NormalizedUserName ON Users (NormalizedUserName);

@@ -10,7 +10,7 @@ namespace WikiWikiWorld.Web.Infrastructure;
 /// </summary>
 public enum Permission
 {
-	/// <summary>Use the pages under <c>/Admin</c> (domain redirects, file migration).</summary>
+	/// <summary>Manage user accounts, domain redirects, and file migration under <c>/Admin</c>.</summary>
 	UseAdminTools,
 
 	/// <summary>Delete any article. Owners may still delete their own <c>@user</c> page without this.</summary>

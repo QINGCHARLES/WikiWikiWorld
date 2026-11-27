@@ -46,7 +46,7 @@ public sealed class LoginModel(
 	}
 
 	/// <summary>
-	/// Handles the POST request to authenticate the user.
+	/// Handles the POST request to authenticate an enabled account.
 	/// </summary>
 	/// <returns>A redirect to <see cref="ReturnUrl"/> (or the home page) on success, or the page with errors on failure.</returns>
 	public async Task<IActionResult> OnPostAsync()
@@ -58,7 +58,7 @@ public sealed class LoginModel(
 
 		// Find user by UserName (instead of Email)
 		User? TargetUser = await UserManager.FindByNameAsync(Input.UserName);
-		if (TargetUser is null)
+		if (TargetUser is null || TargetUser.IsDisabled)
 		{
 			ModelState.AddModelError(string.Empty, SharedResource.Text("Invalid username or password."));
 			return Page();

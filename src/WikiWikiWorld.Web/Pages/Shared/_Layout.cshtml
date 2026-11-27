@@ -92,6 +92,7 @@
 						: "?";
 					// Administrators see how many trusted-domain proposals wait for review, on the avatar and in the menu.
 					bool CanReviewDomains = await Permissions.HasPermissionAsync(User!, WikiWikiWorld.Web.Infrastructure.Permission.ReviewTrustedLinkDomains, Context.RequestAborted);
+					bool CanUseAdminTools = await Permissions.HasPermissionAsync(User!, WikiWikiWorld.Web.Infrastructure.Permission.UseAdminTools, Context.RequestAborted);
 					int PendingDomainCount = CanReviewDomains ? await TrustedDomains.CountPendingAsync(Context.RequestAborted) : 0;
 					string AccountMenuLabel = PendingDomainCount > 0
 						? L["Account menu for {0}, {1}", UserName, SharedResource.Plural("AccountMenu.PendingTrustedDomains", PendingDomainCount)]
@@ -131,6 +132,10 @@
 							<a href="@($"/@{UserName}/bookmarks")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Bookmarks"></use></svg><span>@L["My Bookmarks"]</span></a>
 							<a href="@($"/@{UserName}/messages")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Messages"></use></svg><span>@L["Messages"]</span></a>
 							<a href="@($"/@{UserName}/notifications")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Notifications"></use></svg><span>@L["Notifications"]</span></a>
+							@if (CanUseAdminTools)
+							{
+								<a asp-page="/Admin/Users"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg><span>@L["Manage users"]</span></a>
+							}
 							@if (CanReviewDomains)
 							{
 								<a href="/Admin/TrustedDomains">

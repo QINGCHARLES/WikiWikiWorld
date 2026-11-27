@@ -15,7 +15,7 @@ permission. Moving a permission to another role is a one-line change there.
 
 | Permission | Gates |
 |---|---|
-| `UseAdminTools` | `/Admin/DomainRedirects`, `/Admin/MigrateFiles` (MigrateFiles also keeps its single-operator check) |
+| `UseAdminTools` | `/Admin/Users`, `/Admin/DomainRedirects`, `/Admin/MigrateFiles` (MigrateFiles also keeps its single-operator check) |
 | `DeleteArticles` | The `/{slug}/delete` confirmation page and `DELETE /api/article/{slug}`, except an account's own `@user` page. The article menu and the editor show their delete controls only to accounts that may delete that article (`PermissionService.MayDeleteArticleAsync`). |
 | `ReviewTrustedLinkDomains` | `/Admin/TrustedDomains` (confirm, deny, withdraw), and the pending-count badge on the account menu |
 
@@ -52,6 +52,26 @@ docker run --rm --user 1654:1654 --network none \
 This relies on the SDK container's default entrypoint, which passes the extra arguments to the app. It was run on
 2026-11-24 to make QINGCHARLES an Administrator. Each later production role change is the owner's decision and needs
 the same approval as any other production change.
+
+## Account administration
+
+Administrators can open **Manage users** in the account menu on any site. The directory starts with the
+newest registrations and can filter by username fragment, access status, and role. Administrators can
+disable other accounts and enable them again. Disabling preserves the account, roles, and contributions.
+It blocks new sign-ins and invalidates existing browser sessions and API tokens on the next request.
+Re-enabled users sign in or request a new token. Temporary password lockouts retain their own schedule.
+
+Before starting this build on an existing database, run
+[`AddUserDisabledStatus.sql`](../src/WikiWikiWorld.Data/SqliteScripts/AddUserDisabledStatus.sql) through the
+[database maintenance runner](database-maintenance.md) with
+[`VerifyUserDisabledStatus.sql`](../src/WikiWikiWorld.Data/SqliteScripts/VerifyUserDisabledStatus.sql) and
+[`CheckUserDisabledStatusBefore.sql`](../src/WikiWikiWorld.Data/SqliteScripts/CheckUserDisabledStatusBefore.sql).
+The additive column defaults existing and new accounts to enabled. Fresh databases get it from `Create.sql`.
+Older builds tolerate the added column, but a rollback to one of those builds stops enforcing disabled
+status. Account for any disabled users before resuming traffic on an older build.
+
+Applied to development `data/app.db` on 2026-11-27 at 20:46 UTC. The runner verified the schema, integrity,
+and foreign keys. Backup: `data/.db-backups/app.db-20261127T204628Z-mvt5314f.db`.
 
 ## Trusted link domains
 

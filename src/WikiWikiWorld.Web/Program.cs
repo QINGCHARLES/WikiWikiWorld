@@ -178,6 +178,7 @@ Builder.Services.AddScoped<ArticleLanguageService>();
 Builder.Services.AddSingleton<TrustedLinkDomainList>();
 Builder.Services.AddScoped<TrustedLinkDomainService>();
 Builder.Services.AddScoped<PermissionService>();
+Builder.Services.AddScoped<UserAdministrationService>();
 Builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 Builder.Services.AddSingleton<IMarkdownPipelineFactory, MarkdownPipelineFactory>();
 Builder.Services.AddScoped<ISitemapService, SitemapService>();
@@ -209,17 +210,22 @@ Builder.Services.Configure<IdentityOptions>(options =>
     options.SignIn.RequireConfirmedAccount = false;
 });
 
-// Preserve Identity's security-stamp validation while refusing test-account cookies outside Development.
+// Check access and the security stamp on each request so a disabled account loses its existing session immediately.
 Builder.Services.ConfigureApplicationCookie(Options =>
 {
     Options.Events.OnValidatePrincipal = async Context =>
     {
-        await SecurityStampValidator.ValidatePrincipalAsync(Context);
-        if (DevelopmentAccountPolicy.IsBlocked(Builder.Environment.EnvironmentName, Context.Principal?.Identity?.Name))
+        SignInManager<User> SignInManager = Context.HttpContext.RequestServices.GetRequiredService<SignInManager<User>>();
+        User? Account = await SignInManager.ValidateSecurityStampAsync(Context.Principal);
+        if (Account is null || Account.IsDisabled || Account.DateDeleted is not null
+            || DevelopmentAccountPolicy.IsBlocked(Builder.Environment.EnvironmentName, Account.UserName, Account.Email))
         {
             Context.RejectPrincipal();
             await Context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return;
         }
+
+        await SecurityStampValidator.ValidatePrincipalAsync(Context);
     };
     // There is no access-denied page. Answer 403 instead of redirecting to one; the status-code page then shows the
     // not-found page (with 404), so a refused account cannot tell an admin page exists.
@@ -272,9 +278,8 @@ Builder.Services.AddAuthentication(options =>
     };
     options.Events = new JwtBearerEvents
     {
-        // Tokens can last up to a year, so each request re-checks the account: it must still exist, not be
-        // deleted, and carry the security stamp the token was issued with. Changing the stamp (a password
-        // change, or UserManager.UpdateSecurityStampAsync) revokes every token for that account.
+        // Tokens can last up to a year. Each request verifies that the account is enabled and that its security
+        // stamp still matches the one issued with the token.
         OnTokenValidated = async Context =>
         {
             if (DevelopmentAccountPolicy.IsBlocked(Builder.Environment.EnvironmentName, Context.Principal?.Identity?.Name))
@@ -288,7 +293,7 @@ Builder.Services.AddAuthentication(options =>
             UserManager<User> UserManager = Context.HttpContext.RequestServices.GetRequiredService<UserManager<User>>();
             User? TokenUser = UserId is null ? null : await UserManager.FindByIdAsync(UserId);
 
-            if (TokenUser is null || TokenUser.DateDeleted is not null || string.IsNullOrEmpty(TokenStamp)
+            if (TokenUser is null || TokenUser.IsDisabled || TokenUser.DateDeleted is not null || string.IsNullOrEmpty(TokenStamp)
                 || !string.Equals(TokenStamp, await UserManager.GetSecurityStampAsync(TokenUser), StringComparison.Ordinal))
             {
                 Context.Fail("Invalid credentials.");
