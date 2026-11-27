@@ -91,7 +91,7 @@ Base Path: `/api/article`
   - `Title` (required string)
   - `DisplayTitle` (optional string): the page heading. Plain text, not Markdown; see [Display titles](#display-titles).
   - `Type` (required string): `"Article"`, `"Category"`, `"File"`, `"User"`, `"Info"`
-  - `Text` (required string)
+  - `Text` (required string): stored with LF line endings; CRLF and lone CR are converted on every create and update.
   - `RevisionReason` (required string)
   - `Source` (optional string): Used only if `Type` is `"File"`.
   - `File` (required file): The image file (required if `Type` is `"File"`, ignored otherwise).

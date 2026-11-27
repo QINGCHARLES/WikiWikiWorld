@@ -31,6 +31,7 @@ import ssl
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -72,6 +73,9 @@ def Send(
     BaseUrl, HostHeader = ResolveTarget(Environment, HostOverride)
     if HostHeader is not None:
         Headers = {**Headers, "Host": HostHeader}
+    # Percent-encode non-ASCII characters (as UTF-8) so Unicode slugs reach the server; ASCII, including existing
+    # %-escapes and the query string, is sent exactly as given.
+    Path_ = "".join(Character if Character.isascii() else urllib.parse.quote(Character) for Character in Path_)
     Request = urllib.request.Request(BaseUrl + Path_, data=Body, method=Method, headers=Headers)
     try:
         with urllib.request.urlopen(Request, context=ssl.create_default_context(), timeout=60) as Response:

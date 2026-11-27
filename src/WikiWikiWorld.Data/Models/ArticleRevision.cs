@@ -58,9 +58,14 @@ public sealed record ArticleRevision
     public Guid? CanonicalFileId { get; init; }
 
     /// <summary>
-    /// Gets the text content of the article.
+    /// Gets the text content of the article, with line breaks stored as LF.
     /// </summary>
-    public required string Text { get; init; }
+    /// <remarks>
+    /// Browser textareas submit CRLF and Windows tools often write it, so revisions saved through different paths
+    /// would otherwise mix line endings. Every new revision is normalized here (CRLF and lone CR become LF); rendering
+    /// is unaffected. Rows already stored with CRLF keep it until their next revision.
+    /// </remarks>
+    public required string Text { get; init => field = value.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n'); }
 
 	/// <summary>
 	/// Gets the derived category memberships saved with this revision; excluded from the public article JSON contract.

@@ -384,6 +384,12 @@ ContentTypeProvider.Mappings[".avif"] = "image/avif";
 
 WebApplication App = Builder.Build();
 
+// A development database copied from production has no DevvyTheBot (production blocks it); recreate it from .local.
+if (App.Environment.IsDevelopment())
+{
+    await DevelopmentAccountSeeder.EnsureAsync(App.Services, App.Environment.ContentRootPath, App.Lifetime.ApplicationStopping);
+}
+
 // Configure the HTTP request pipeline.
 if (!App.Environment.IsDevelopment())
 {
