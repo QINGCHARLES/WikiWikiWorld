@@ -73,6 +73,19 @@ status. Account for any disabled users before resuming traffic on an older build
 Applied to development `data/app.db` on 2026-11-27 at 20:46 UTC. The runner verified the schema, integrity,
 and foreign keys. Backup: `data/.db-backups/app.db-20261127T204628Z-mvt5314f.db`.
 
+Production release `release-20261127T204843Z-2152ce2c5fba` started on 2026-11-27 at 2:50 p.m. CST
+(20:50:44 UTC). The schema update completed first and passed integrity, foreign-key, and schema
+checks. Backup: `/opt/wiki/data/.db-backups/app.db-20261127T205033Z-4arpeg3b.db`.
+The deployed image and GHCR `latest` both resolve to
+`sha256:8e388b143edad864bcdffc3e76c21a6bc600b870249980d6e7b25548d334acc1`.
+Public HTTPS probes passed, including the sign-in redirect for anonymous requests to `/Admin/Users`.
+Signed-in suspension and re-enabling were verified against a disposable database in Chromium.
+
+The previous image is pinned as
+`ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261127T204843Z-2152ce2c5fba`
+for `/home/deploy/update.sh`. If rolling back, restore GHCR `latest` to the running digest and account
+for any suspended users before resuming traffic.
+
 ## Trusted link domains
 
 External links get `rel="nofollow noopener"` unless their host is trusted, in which case they get `rel="noopener"`.
