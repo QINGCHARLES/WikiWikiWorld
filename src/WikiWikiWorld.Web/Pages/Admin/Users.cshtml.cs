@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using WikiWikiWorld.Web.Configuration;
 using WikiWikiWorld.Web.Infrastructure;
 
 namespace WikiWikiWorld.Web.Pages.Admin;
@@ -8,9 +10,12 @@ namespace WikiWikiWorld.Web.Pages.Admin;
 /// </summary>
 /// <param name="UserAdministration">The service for browsing accounts and changing their access.</param>
 /// <param name="SiteResolverService">The service that resolves the current site context.</param>
+/// <param name="FileStorage">The configured root of public site files.</param>
+/// <param name="SiteConfiguration">The sites that can store a profile photo for a shared account.</param>
 [Authorize(Policy = nameof(Permission.UseAdminTools))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class UsersModel(UserAdministrationService UserAdministration, SiteResolverService SiteResolverService)
+public sealed class UsersModel(UserAdministrationService UserAdministration, SiteResolverService SiteResolverService,
+	IOptions<FileStorageOptions> FileStorage, IOptions<SiteConfiguration> SiteConfiguration)
 	: BasePageModel(SiteResolverService)
 {
 	/// <summary>Gets or sets the username filter.</summary>
@@ -38,6 +43,26 @@ public sealed class UsersModel(UserAdministrationService UserAdministration, Sit
 
 	/// <summary>Gets the signed-in administrator's account identifier.</summary>
 	public Guid? CurrentAccountId => PermissionService.GetUserId(User);
+
+	/// <summary>Finds a shared account's photo in the existing per-site profile folders, preferring the current site.</summary>
+	/// <param name="ProfilePicGuid">The stored profile photo identifier, if any.</param>
+	/// <returns>The public photo URL, or null so the directory can show an initial.</returns>
+	public string? GetAvatarUrl(Guid? ProfilePicGuid)
+	{
+		if (ProfilePicGuid is not Guid Picture) return null;
+
+		string FileName = $"{Picture}.png";
+		foreach (SiteInfo Site in SiteConfiguration.Value.Sites.OrderByDescending(Site => Site.SiteId == SiteId))
+		{
+			string Partition = Site.SiteId.ToString(CultureInfo.InvariantCulture);
+			if (System.IO.File.Exists(Path.Combine(FileStorage.Value.SiteFilesPath, Partition, "profilepics", FileName)))
+			{
+				return Url.Content($"~/sitefiles/{Partition}/profilepics/{FileName}");
+			}
+		}
+
+		return null;
+	}
 
 	/// <summary>Gets or sets the status notice carried across a redirect.</summary>
 	[TempData]

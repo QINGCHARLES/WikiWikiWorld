@@ -15,7 +15,7 @@ permission. Moving a permission to another role is a one-line change there.
 
 | Permission | Gates |
 |---|---|
-| `UseAdminTools` | `/Admin/Users`, `/Admin/DomainRedirects`, `/Admin/MigrateFiles` (MigrateFiles also keeps its single-operator check) |
+| `UseAdminTools` | `/Admin`, `/Admin/Users`, `/Admin/DomainRedirects`, `/Admin/MigrateFiles` (MigrateFiles also keeps its single-operator check) |
 | `DeleteArticles` | The `/{slug}/delete` confirmation page and `DELETE /api/article/{slug}`, except an account's own `@user` page. The article menu and the editor show their delete controls only to accounts that may delete that article (`PermissionService.MayDeleteArticleAsync`). |
 | `ReviewTrustedLinkDomains` | `/Admin/TrustedDomains` (confirm, deny, withdraw), and the pending-count badge on the account menu |
 
@@ -55,7 +55,8 @@ the same approval as any other production change.
 
 ## Account administration
 
-Administrators can open **Manage users** in the account menu on any site. The directory starts with the
+Administrators can open **Admin** in the account menu on any site and select **Users** from the overview
+or sidebar. The directory starts with the
 newest registrations and can filter by username fragment, access status, and role. Administrators can
 disable other accounts and enable them again. Disabling preserves the account, roles, and contributions.
 It blocks new sign-ins and invalidates existing browser sessions and API tokens on the next request.
@@ -94,8 +95,9 @@ Trusting `example.com` also trusts every subdomain (`LinkDomainHelper.IsApproved
 **Workflow.** Any member proposes a domain with a required reason at `/wiki:trusted-domains`, or through `POST /api/trusted-domains` (see [the API](api.md#trusted-domains-api); the article prompts tell MaggieTheBot to propose the official sites it links). A pasted address is
 reduced to its host: lowercase, punycode for IDN names, no `www.`. IP addresses, bare top-level domains, domains already
 trusted (directly or through a parent) and domains already waiting are refused. Administrators see a count on their
-avatar and an account-menu link to `/Admin/TrustedDomains`, where they confirm or deny, with an optional note shown to
-the proposer, or withdraw trust later. Each proposal is its own row in `TrustedLinkDomains`, recording who proposed,
+avatar and on the **Admin** account-menu link. **Trusted domains** in the workspace opens the review queue.
+Administrators can confirm selected proposals together without notes, or review a single proposal to confirm or
+deny it with an optional note. They can withdraw trust later. Each proposal is its own row in `TrustedLinkDomains`, recording who proposed,
 reviewed and withdrew it and when. A partial unique index allows one pending-or-trusted row per domain; denied and
 withdrawn rows are history, and the domain can be proposed again.
 

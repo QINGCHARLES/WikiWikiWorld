@@ -1,34 +1,29 @@
 @page
 @model WikiWikiWorld.Web.Pages.Admin.UsersModel
 @{
-	ViewData["Title"] = L["Manage users"];
+	ViewData["Title"] = L["Users"];
 	RegisteredUsersPage Results = Model.Results;
 	Guid? CurrentAccountId = Model.CurrentAccountId;
 }
-@section PageHead {
-	<link rel="stylesheet" href="~/css/pages/admin-users.css" asp-append-version="true" />
-}
+<header class="admin-heading">
+	<h1>@L["Users"]</h1>
+	<p>@L["Registered accounts across all sites"]</p>
+</header>
 
-<figure></figure>
-<hgroup>
-	<h1>@L["Manage users"]</h1>
-	<p class="subtitle">@L["Registered accounts across all sites"]</p>
-</hgroup>
-
-<article class="admin-users">
+<section class="admin-panel admin-users" aria-label="@L["Registered users"]">
 	@if (Model.StatusMessage is string StatusMessage)
 	{
-		<p role="status">@StatusMessage</p>
+		<p class="admin-notice" role="status">@StatusMessage</p>
 	}
 	@if (Model.ErrorMessage is string ErrorMessage)
 	{
-		<p role="alert">@ErrorMessage</p>
+		<p class="admin-notice" role="alert">@ErrorMessage</p>
 	}
 	<search aria-label="@L["Find registered users"]">
-		<form method="get" asp-page="/Admin/Users">
-			<div>
+		<form method="get" asp-page="/Admin/Users" class="admin-filters">
+			<div class="admin-search-field">
 				<label for="search">@L["Search by username"]</label>
-				<input type="search" id="search" name="search" value="@Model.Search" autocapitalize="none" spellcheck="false" />
+				<input type="search" id="search" name="search" value="@Model.Search" autocomplete="off" autocapitalize="none" spellcheck="false" />
 			</div>
 			<div>
 				<label for="disabled">@L["Account status"]</label>
@@ -55,53 +50,77 @@
 					<option value="true" selected="@Model.Oldest">@L["Oldest registrations"]</option>
 				</select>
 			</div>
-			<button type="submit" class="button" data-button-variant="primary">@L["Search"]</button>
-			<a asp-page="/Admin/Users">@L["Clear filters"]</a>
+			<div class="admin-actions">
+				<button type="submit" class="button" data-button-variant="primary">@L["Search"]</button>
+				<a asp-page="/Admin/Users" class="button" data-button-variant="quiet">@L["Clear filters"]</a>
+			</div>
 		</form>
 	</search>
 
 	@if (Results.Accounts.Count == 0)
 	{
-		<p>@L["No matching users found."]</p>
+		<p class="admin-empty">@L["No matching users found."]</p>
 	}
 	else
 	{
-		<p id="user-results">@L["Showing {0}–{1} of {2}", (Results.PageNumber - 1) * UserAdministrationService.PageSize + 1,
+		<p class="admin-result-count" id="user-results">@L["Showing {0}–{1} of {2}", (Results.PageNumber - 1) * UserAdministrationService.PageSize + 1,
 			(Results.PageNumber - 1) * UserAdministrationService.PageSize + Results.Accounts.Count, Results.TotalCount]</p>
-		<div class="user-table" role="region" aria-labelledby="user-results" tabindex="0">
-			<table aria-label="@L["Registered users"]">
-				<thead>
-					<tr>
-						<th scope="col">@L["Username"]</th>
-						<th scope="col">@L["Email"]</th>
-						<th scope="col" aria-sort="@(Model.Oldest ? "ascending" : "descending")">@L["Registered"]</th>
-						<th scope="col">@L["Status"]</th>
-						<th scope="col">@L["Actions"]</th>
+		<div class="admin-table admin-user-table" role="region" aria-labelledby="user-results" tabindex="0">
+			<table role="table" aria-label="@L["Registered users"]">
+				<thead role="rowgroup">
+					<tr role="row">
+						<th scope="col" role="columnheader">@L["Username"]</th>
+						<th scope="col" role="columnheader" class="admin-user-desktop-detail">@L["Email"]</th>
+						<th scope="col" role="columnheader" class="admin-user-desktop-detail" aria-sort="@(Model.Oldest ? "ascending" : "descending")">@L["Registered"]</th>
+						<th scope="col" role="columnheader">@L["Status"]</th>
+						<th scope="col" role="columnheader">@L["Actions"]</th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody role="rowgroup">
 					@foreach (RegisteredUser Account in Results.Accounts)
 					{
 						string AccountName = Account.UserName ?? Account.Id.ToString();
+						string? AvatarUrl = Model.GetAvatarUrl(Account.ProfilePicGuid);
 						DateTime RegisteredUtc = Account.DateCreated.UtcDateTime;
-						<tr>
-							<th scope="row">
-								@if (Account.UserName is string UserName)
-								{
-									<a href="@($"/@{Uri.EscapeDataString(UserName)}/profile")"><bdi>@UserName</bdi></a>
-								}
-								else
-								{
-									<bdi>@AccountName</bdi>
-								}
+						<tr role="row">
+							<th scope="row" role="rowheader">
+								<span class="admin-account-name">
+									<span class="admin-account-avatar" aria-hidden="true">
+										@if (AvatarUrl is not null)
+										{
+											<img src="@AvatarUrl" width="36" height="36" alt="" loading="lazy" decoding="async" />
+										}
+										else
+										{
+											@(string.IsNullOrWhiteSpace(Account.UserName) ? "?" : StringInfo.GetNextTextElement(Account.UserName).ToUpperInvariant())
+										}
+									</span>
+									@if (Account.UserName is string UserName)
+									{
+										<a href="@($"/@{Uri.EscapeDataString(UserName)}/profile")"><bdi>@UserName</bdi></a>
+									}
+									else
+									{
+										<bdi>@AccountName</bdi>
+									}
+								</span>
+								<details class="admin-user-mobile-detail">
+									<summary>@L["Account details"]</summary>
+									<dl>
+										<dt>@L["Email"]</dt>
+										<dd><bdi>@(Account.Email ?? "—")</bdi></dd>
+										<dt>@L["Registered"]</dt>
+										<dd><time datetime="@RegisteredUtc.ToString("O", CultureInfo.InvariantCulture)">@RegisteredUtc.ToString("d", CultureInfo.CurrentCulture)</time></dd>
+									</dl>
+								</details>
 							</th>
-							<td><bdi>@(Account.Email ?? "—")</bdi></td>
-							<td><time datetime="@RegisteredUtc.ToString("O", CultureInfo.InvariantCulture)">@RegisteredUtc.ToString("d", CultureInfo.CurrentCulture)</time></td>
-							<td>@(Account.IsDisabled ? L["Disabled"] : L["Enabled"])</td>
-							<td>
+							<td role="cell" class="admin-user-desktop-detail"><bdi>@(Account.Email ?? "—")</bdi></td>
+							<td role="cell" class="admin-user-desktop-detail"><time datetime="@RegisteredUtc.ToString("O", CultureInfo.InvariantCulture)">@RegisteredUtc.ToString("d", CultureInfo.CurrentCulture)</time></td>
+							<td role="cell"><span class="admin-status" data-status="@(Account.IsDisabled ? "disabled" : "enabled")">@(Account.IsDisabled ? L["Disabled"] : L["Enabled"])</span></td>
+							<td role="cell">
 								@if (Account.Id == CurrentAccountId)
 								{
-									<span>@L["Your account"]</span>
+									<span class="admin-muted">@L["Your account"]</span>
 								}
 								else
 								{
@@ -116,7 +135,7 @@
 										}
 										else
 										{
-											<details>
+											<details class="admin-confirm">
 												<summary aria-label="@L["Disable {0}", AccountName]">@L["Disable"]</summary>
 												<p>@L["This signs the user out and revokes their API tokens."]</p>
 												<button type="submit" class="button" data-button-variant="negative-quiet" name="setdisabled" value="true"
@@ -134,19 +153,19 @@
 
 		@if (Results.PageCount > 1)
 		{
-			<nav aria-label="@L["User directory pages"]">
+			<nav class="admin-pagination" aria-label="@L["User directory pages"]">
 				@if (Results.PageNumber > 1)
 				{
-					<a asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-disabled="@Model.Disabled"
+					<a class="button" asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-disabled="@Model.Disabled"
 						asp-route-role="@Model.Role" asp-route-oldest="@Model.Oldest" asp-route-pagenumber="@(Results.PageNumber - 1)">@L["Previous"]</a>
 				}
 				<span>@L["Page {0} of {1}", Results.PageNumber, Results.PageCount]</span>
 				@if (Results.PageNumber < Results.PageCount)
 				{
-					<a asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-disabled="@Model.Disabled"
+					<a class="button" asp-page="/Admin/Users" asp-route-search="@Model.Search" asp-route-disabled="@Model.Disabled"
 						asp-route-role="@Model.Role" asp-route-oldest="@Model.Oldest" asp-route-pagenumber="@(Results.PageNumber + 1)">@L["Next"]</a>
 				}
 			</nav>
 		}
 	}
-</article>
+</section>

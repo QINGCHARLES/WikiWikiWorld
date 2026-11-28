@@ -19,6 +19,11 @@ main {
     position: relative;
 }
 
+main.wide-content {
+    max-inline-size: none;
+    padding-inline: 0;
+}
+
 a {
     color: var(--color-hyperlinks);
     text-decoration: underline;

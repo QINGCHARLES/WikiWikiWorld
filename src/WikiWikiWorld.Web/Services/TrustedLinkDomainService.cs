@@ -211,6 +211,15 @@ public sealed partial class TrustedLinkDomainService(WikiWikiWorldDbContext Cont
 	public Task<TrustedDomainOutcome> ConfirmAsync(int Id, Guid ReviewerUserId, string? ReviewNote, CancellationToken CancellationToken) =>
 		ReviewAsync(Id, ReviewerUserId, ReviewNote, TrustedLinkDomainStatus.Trusted, CancellationToken);
 
+	/// <summary>Confirms the selected proposals that are still pending and refreshes the live trust list once.</summary>
+	/// <param name="Ids">The selected proposal identifiers.</param>
+	/// <param name="ReviewerUserId">The administrator confirming them.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>The number of proposals confirmed.</returns>
+	public Task<int> ConfirmManyAsync(int[] Ids, Guid ReviewerUserId, CancellationToken CancellationToken) =>
+		ReviewPendingAsync(Context.TrustedLinkDomains.Where(Row => Ids.Contains(Row.Id)),
+			ReviewerUserId, null, TrustedLinkDomainStatus.Trusted, CancellationToken);
+
 	/// <summary>
 	/// Turns down a pending proposal. The row is kept as history, and the domain can be proposed again.
 	/// </summary>
@@ -265,14 +274,17 @@ public sealed partial class TrustedLinkDomainService(WikiWikiWorldDbContext Cont
 		Context.TrustedLinkDomains.CountAsync(Row => Row.Status == TrustedLinkDomainStatus.Pending, CancellationToken);
 
 	/// <summary>
-	/// Lists proposals waiting for review, oldest first.
+	/// Loads a page of proposals waiting for review, oldest first.
 	/// </summary>
+	/// <param name="Offset">The number of pending proposals to skip.</param>
+	/// <param name="Limit">The maximum number of proposals to return.</param>
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>The pending rows; empty when the queue is clear.</returns>
-	public Task<IReadOnlyList<TrustedLinkDomainView>> GetPendingAsync(CancellationToken CancellationToken) =>
+	public Task<IReadOnlyList<TrustedLinkDomainView>> GetPendingAsync(int Offset, int Limit, CancellationToken CancellationToken) =>
 		LoadAsync(Context.TrustedLinkDomains
 			.Where(Row => Row.Status == TrustedLinkDomainStatus.Pending)
-			.OrderBy(Row => Row.DateProposed).ThenBy(Row => Row.Id), CancellationToken);
+			.OrderBy(Row => Row.DateProposed).ThenBy(Row => Row.Id)
+			.Skip(Offset).Take(Limit), CancellationToken);
 
 	/// <summary>
 	/// Lists the trusted domains alphabetically.
@@ -326,26 +338,43 @@ public sealed partial class TrustedLinkDomainService(WikiWikiWorldDbContext Cont
 			return new TrustedDomainRefused(SharedResource.Format("Keep the reason under {0} characters.", MaxNoteLength));
 		}
 
-		DateTimeOffset Now = DateTimeOffset.UtcNow;
-		int Updated = await Context.TrustedLinkDomains
-			.Where(Row => Row.Id == Id && Row.Status == TrustedLinkDomainStatus.Pending)
-			.ExecuteUpdateAsync(Setters => Setters
-				.SetProperty(Row => Row.Status, Decision)
-				.SetProperty(Row => Row.ReviewedByUserId, (Guid?)ReviewerUserId)
-				.SetProperty(Row => Row.DateReviewed, (DateTimeOffset?)Now)
-				.SetProperty(Row => Row.ReviewNote, Note), CancellationToken);
+		int Updated = await ReviewPendingAsync(Context.TrustedLinkDomains.Where(Row => Row.Id == Id),
+			ReviewerUserId, Note, Decision, CancellationToken);
 
 		if (Updated == 0)
 		{
 			return new TrustedDomainRefused(SharedResource.Text("That proposal has already been reviewed. The list has been refreshed."));
 		}
 
-		if (Decision == TrustedLinkDomainStatus.Trusted)
+		return new TrustedDomainChanged(await GetDomainAsync(Id, CancellationToken));
+	}
+
+	/// <summary>Records a review decision atomically for the selected rows that are still pending.</summary>
+	/// <param name="Selection">The query identifying the proposals to review.</param>
+	/// <param name="ReviewerUserId">The administrator recording the decision.</param>
+	/// <param name="Note">The validated review note or null.</param>
+	/// <param name="Decision">The status to assign to matching pending rows.</param>
+	/// <param name="CancellationToken">The cancellation token.</param>
+	/// <returns>The number of rows updated.</returns>
+	private async Task<int> ReviewPendingAsync(IQueryable<TrustedLinkDomain> Selection, Guid ReviewerUserId,
+		string? Note, TrustedLinkDomainStatus Decision, CancellationToken CancellationToken)
+	{
+		DateTimeOffset Now = DateTimeOffset.UtcNow;
+		int Updated = await Selection
+			.Where(Row => Row.Status == TrustedLinkDomainStatus.Pending)
+			.ExecuteUpdateAsync(Setters => Setters
+				.SetProperty(Row => Row.Status, Decision)
+				.SetProperty(Row => Row.ReviewedByUserId, (Guid?)ReviewerUserId)
+				.SetProperty(Row => Row.DateReviewed, (DateTimeOffset?)Now)
+				.SetProperty(Row => Row.ReviewNote, Note), CancellationToken);
+
+		if (Updated > 0 && Decision == TrustedLinkDomainStatus.Trusted)
 		{
-			await TrustedList.ReloadAsync(Context, CancellationToken);
+			// A committed confirmation must reach the renderer even if the request disconnects.
+			await TrustedList.ReloadAsync(Context, CancellationToken.None);
 		}
 
-		return new TrustedDomainChanged(await GetDomainAsync(Id, CancellationToken));
+		return Updated;
 	}
 
 	/// <summary>

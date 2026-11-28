@@ -19,6 +19,8 @@
 	// The document language follows the culture subdomain; the culture-selector root has none and stays English.
 	string DocumentLanguage = string.IsNullOrWhiteSpace(Model.Culture) ? "en" : Model.Culture;
 	string? DocumentDirection = WikiWikiWorld.Web.Helpers.SiteCultureHelper.IsRightToLeft(DocumentLanguage) ? "rtl" : null;
+	bool IsAdminWorkspace = ViewData["IsAdminWorkspace"] is true;
+	string? MainClass = ViewData["WideContent"] is true ? "wide-content" : null;
 }
 <!doctype html>
 <html lang="@DocumentLanguage" dir="@DocumentDirection" data-theme="@DataTheme">
@@ -49,8 +51,8 @@
 	@await RenderSectionAsync("PageHead", required: false)
 
 	@* <script defer src="https://cloud.umami.is/script.js" data-website-id="2681fe66-d481-4722-9df1-b50b7aa0010c"></script> *@
-	@* Analytics run only on the production English Magazedia host, so dev, other cultures and other sites send nothing. *@
-	@if (string.Equals(Context.Request.Host.Host, "en.magazedia.com", StringComparison.OrdinalIgnoreCase))
+	@* Analytics cover public pages on the production English Magazedia host. *@
+	@if (!IsAdminWorkspace && string.Equals(Context.Request.Host.Host, "en.magazedia.com", StringComparison.OrdinalIgnoreCase))
 	{
 		<script defer src="https://stats.magazedia.com/core.js" data-website-id="80f32dd9-f045-45c1-b758-ae0faee7efb6"></script>
 	}
@@ -90,7 +92,7 @@
 					string AvatarInitial = !string.IsNullOrEmpty(UserName)
 						? char.ToUpperInvariant(UserName[0]).ToString()
 						: "?";
-					// Administrators see how many trusted-domain proposals wait for review, on the avatar and in the menu.
+					// Keep the pending-review count on the avatar and on the single admin entry.
 					bool CanReviewDomains = await Permissions.HasPermissionAsync(User!, WikiWikiWorld.Web.Infrastructure.Permission.ReviewTrustedLinkDomains, Context.RequestAborted);
 					bool CanUseAdminTools = await Permissions.HasPermissionAsync(User!, WikiWikiWorld.Web.Infrastructure.Permission.UseAdminTools, Context.RequestAborted);
 					int PendingDomainCount = CanReviewDomains ? await TrustedDomains.CountPendingAsync(Context.RequestAborted) : 0;
@@ -134,9 +136,15 @@
 							<a href="@($"/@{UserName}/notifications")"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Notifications"></use></svg><span>@L["Notifications"]</span></a>
 							@if (CanUseAdminTools)
 							{
-								<a asp-page="/Admin/Users"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg><span>@L["Manage users"]</span></a>
+								<a asp-page="/Admin/Index">
+									<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Lock"></use></svg><span>@L["Admin"]</span>
+									@if (PendingDomainCount > 0)
+									{
+										<span class="account-menu-count">@PendingDomainCount<span class="visually-hidden"> @L["waiting"]</span></span>
+									}
+								</a>
 							}
-							@if (CanReviewDomains)
+							else if (CanReviewDomains)
 							{
 								<a href="/Admin/TrustedDomains">
 									<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><use href="@IconSpriteUrl#Links"></use></svg><span>@L["Trusted domains"]</span>
@@ -166,7 +174,7 @@
 			</div>
 		</nav>
 	</header>
-	<main role="main">
+	<main role="main" class="@MainClass">
 		@RenderBody()
 	</main>
 	<partial name="@(Model?.SiteId == 4 ? "~/Pages/Shared/Sites/Cinepedia/_Footer.cshtml" : "~/Pages/Shared/_Footer.cshtml")" />

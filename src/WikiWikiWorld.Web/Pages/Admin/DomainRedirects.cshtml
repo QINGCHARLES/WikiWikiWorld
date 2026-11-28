@@ -15,168 +15,145 @@
 	});
 }
 
-<figure>
+<header class="admin-heading">
 	<h1>@L["Domain Redirects"]</h1>
-</figure>
-
-<article>
 	<p>
 		@HL["Map legacy or alternate domains to specific articles. Requests to these domains receive an {0} to the target article on that culture. Because mappings link to the canonical article identifier, {1}.", UiFormat.Strong(L["HTTP 308 Permanent Redirect"]), UiFormat.Strong(L["redirects survive article renames and slug changes"])]
 	</p>
+</header>
 
+<div class="admin-stack">
 	@if (!string.IsNullOrEmpty(Model.SuccessMessage))
 	{
-		<div class="alert alert-success" role="alert">
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-				<polyline points="22 4 12 14.01 9 11.01"></polyline>
-			</svg>
-			<span>@Model.SuccessMessage</span>
-		</div>
+		<p class="admin-notice" role="status">@Model.SuccessMessage</p>
 	}
 
 	@if (!string.IsNullOrEmpty(Model.ErrorMessage))
 	{
-		<div class="alert alert-error" role="alert">
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="10"></circle>
-				<line x1="12" y1="8" x2="12" y2="12"></line>
-				<line x1="12" y1="16" x2="12.01" y2="16"></line>
-			</svg>
-			<span>@Model.ErrorMessage</span>
-		</div>
+		<p class="admin-notice" role="alert">@Model.ErrorMessage</p>
 	}
 
-	<section class="card" style="margin-block: 2rem; padding: 1.5rem; border: 1px solid var(--md-outline-variant); border-radius: 8px;">
+	<section class="admin-panel">
 		<h2>@L["Add Domain Redirect"]</h2>
-		<form method="post" asp-page-handler="Create" id="create-redirect-form" data-ui-text="@ScriptText">
-			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+		<form method="post" asp-page-handler="Create" id="create-redirect-form" class="admin-redirect-form" data-ui-text="@ScriptText">
+			<div class="admin-redirect-fields">
 				<div>
-					<div class="md3-field md3-filled">
-						<input asp-for="InputDomain" id="InputDomain" placeholder=" " required />
-						<label asp-for="InputDomain">@L["Incoming Domain (e.g. oldmag.com)"]</label>
-						<span class="md-line"></span>
-					</div>
-					<span class="form-help">@L["Enter bare domain or host without http://"]</span>
+					<label asp-for="InputDomain">@L["Incoming Domain (e.g. oldmag.com)"]</label>
+					<input asp-for="InputDomain" id="InputDomain" required autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="incoming-domain-help" />
+					<small id="incoming-domain-help">@L["Enter bare domain or host without http://"]</small>
 				</div>
 
 				<div>
-					<div class="md3-field md3-filled">
-						<select asp-for="InputSiteId" id="InputSiteId">
-							@foreach (SiteInfo Site in Model.Sites)
-							{
-								<option value="@Site.SiteId">@L["{0} (ID: {1})", Site.SiteName, Site.SiteId]</option>
-							}
-						</select>
-						<label asp-for="InputSiteId">@L["Target Site"]</label>
-						<span class="md-line"></span>
-					</div>
+					<label asp-for="InputSiteId">@L["Target Site"]</label>
+					<select asp-for="InputSiteId" id="InputSiteId">
+						@foreach (SiteInfo Site in Model.Sites)
+						{
+							<option value="@Site.SiteId">@L["{0} (ID: {1})", Site.SiteName, Site.SiteId]</option>
+						}
+					</select>
 				</div>
 
 				<div>
-					<div class="md3-field md3-filled">
-						<select asp-for="InputCulture" id="InputCulture">
-							@if (Model.Sites.Count > 0)
+					<label asp-for="InputCulture">@L["Target Culture"]</label>
+					<select asp-for="InputCulture" id="InputCulture">
+						@if (Model.Sites.Count > 0)
+						{
+							SiteInfo InitialSite = Model.Sites.FirstOrDefault(Site => Site.SiteId == Model.InputSiteId) ?? Model.Sites[0];
+							List<string> InitialCultures = DomainRedirectsModel.GetCulturesForSite(InitialSite);
+							foreach (string CultureCode in InitialCultures)
 							{
-								SiteInfo InitialSite = Model.Sites.FirstOrDefault(Site => Site.SiteId == Model.InputSiteId) ?? Model.Sites[0];
-								List<string> InitialCultures = DomainRedirectsModel.GetCulturesForSite(InitialSite);
-								foreach (string CultureCode in InitialCultures)
-								{
-									<option value="@CultureCode" selected="@(CultureCode == Model.InputCulture ? "selected" : null)">@CultureCode</option>
-								}
+								<option value="@CultureCode" selected="@(CultureCode == Model.InputCulture ? "selected" : null)">@CultureCode</option>
 							}
-							else
-							{
-								<option value="en">en</option>
-							}
-						</select>
-						<label asp-for="InputCulture">@L["Target Culture"]</label>
-						<span class="md-line"></span>
-					</div>
+						}
+						else
+						{
+							<option value="en">en</option>
+						}
+					</select>
 				</div>
 			</div>
 
-			<div style="margin-bottom: 1.5rem;">
-				<label style="display: block; font-weight: bold; margin-bottom: 0.5rem;">@L["Target Article"]</label>
+			<div>
 				
 				<input type="hidden" asp-for="InputCanonicalArticleId" id="InputCanonicalArticleId" />
 				<input type="hidden" asp-for="SelectedArticleTitle" id="SelectedArticleTitle" />
 
-				<div id="selected-article-display" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "flex" : "none"); align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: var(--md-surface-variant); border-radius: 6px; margin-bottom: 0.75rem;">
+				<div id="selected-article-display" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "flex" : "none")">
 					<div>
 						<strong>@L["Selected:"]</strong> <span id="selected-article-text">@Model.SelectedArticleTitle</span>
-						<br /><small style="color: var(--md-on-surface-variant);"><code id="selected-article-guid">@Model.InputCanonicalArticleId</code></small>
+						<br /><small><code id="selected-article-guid">@Model.InputCanonicalArticleId</code></small>
 					</div>
-					<button type="button" class="button" id="clear-article-btn" style="margin-left: auto; font-size: 0.85rem;" data-button-variant="naked">@L["Change"]</button>
+					<button type="button" class="button" id="clear-article-btn" data-button-variant="quiet">@L["Change"]</button>
 				</div>
 
 				<div id="article-search-container" style="display: @(Model.InputCanonicalArticleId != Guid.Empty ? "none" : "block");">
-					<div class="md3-field md3-filled" style="margin-bottom: 0.5rem;">
-						<input type="text" id="article-search-input" placeholder=" " autocomplete="off" />
-						<label for="article-search-input">@L["Search for target article by title or slug..."]</label>
-						<span class="md-line"></span>
-					</div>
-					<p id="article-picker-status" role="status"></p>
+					<label for="article-search-input">@L["Target Article"]</label>
+					<input type="search" id="article-search-input" placeholder="@L["Search for target article by title or slug..."]" autocomplete="off" />
+					<div id="article-picker-status" role="status"></div>
 					<button type="button" id="retry-cultures" class="button" style="display: none;">@L["Retry loading cultures"]</button>
-					<div id="search-spinner" style="display: none; font-size: 0.85rem; color: var(--md-primary);">@L["Searching..."]</div>
-					<div id="article-results-list" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--md-outline-variant); border-radius: 6px; display: none;"></div>
+					<div id="search-spinner" style="display: none;">@L["Searching..."]</div>
+					<div id="article-results-list" style="display: none;"></div>
 				</div>
 			</div>
 
-			<button type="submit" class="button" id="submit-btn">@L["Add Domain Redirect"]</button>
+			<button type="submit" class="button" id="submit-btn" data-button-variant="primary">@L["Add Domain Redirect"]</button>
 		</form>
 	</section>
 
-	<h2>@L["Configured Domain Redirects ({0})", Model.Redirects.Count]</h2>
+	<section class="admin-panel">
+		<h2 id="admin-redirects-title">@L["Configured Domain Redirects ({0})", Model.Redirects.Count]</h2>
 
-	@if (Model.Redirects.Count == 0)
-	{
-		<div class="alert alert-info">@L["No domain redirects configured yet."]</div>
-	}
-	else
-	{
-		<table class="table" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-			<thead>
-				<tr>
-					<th>@L["Domain"]</th>
-					<th>@L["Site"]</th>
-					<th>@L["Culture"]</th>
-					<th>@L["Target Article"]</th>
-					<th>@L["Created"]</th>
-					<th>@L["Actions"]</th>
-				</tr>
-			</thead>
-			<tbody>
-				@foreach (ArticleDomainRedirectAdminDto Item in Model.Redirects)
-				{
-					<tr>
-						<td><code>@Item.Domain</code></td>
-						<td>@Item.SiteName</td>
-						<td><span class="badge">@Item.Culture</span></td>
-						<td>
-							@if (!string.IsNullOrEmpty(Item.ArticleUrlSlug))
-							{
-								string Path = ArticleUrlHelper.BuildArticlePath(Item.ArticleUrlSlug, Item.ArticleType);
-								<a href="@Path" target="_blank" rel="noopener">@Item.ArticleTitle</a>
-								<br /><small style="color: var(--md-on-surface-variant);"><code>@Path</code></small>
-							}
-							else
-							{
-								<span>@Item.ArticleTitle</span>
-							}
-						</td>
-						<td><small>@Item.DateCreated.ToString("yyyy-MM-dd HH:mm") UTC</small></td>
-						<td>
-							<form method="post" asp-page-handler="Delete" asp-route-id="@Item.Id" data-confirm="@L["Are you sure you want to delete the redirect for {0}?", Item.Domain]" onsubmit="return confirm(this.dataset.confirm);">
-								<button type="submit" class="button" style="font-size: 0.85rem;" data-button-variant="negative-quiet">@L["Delete"]</button>
-							</form>
-						</td>
-					</tr>
-				}
-			</tbody>
-		</table>
-	}
-</article>
+		@if (Model.Redirects.Count == 0)
+		{
+			<p class="admin-empty">@L["No domain redirects configured yet."]</p>
+		}
+		else
+		{
+			<div class="admin-table" role="region" aria-labelledby="admin-redirects-title" tabindex="0">
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">@L["Domain"]</th>
+							<th scope="col">@L["Site"]</th>
+							<th scope="col">@L["Culture"]</th>
+							<th scope="col">@L["Target Article"]</th>
+							<th scope="col">@L["Created"]</th>
+							<th scope="col">@L["Actions"]</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (ArticleDomainRedirectAdminDto Item in Model.Redirects)
+						{
+							<tr>
+								<th scope="row"><code>@Item.Domain</code></th>
+								<td>@Item.SiteName</td>
+								<td>@Item.Culture</td>
+								<td>
+									@if (!string.IsNullOrEmpty(Item.ArticleUrlSlug))
+									{
+										string Path = ArticleUrlHelper.BuildArticlePath(Item.ArticleUrlSlug, Item.ArticleType);
+										<a href="@Path" target="_blank" rel="noopener">@Item.ArticleTitle</a>
+										<br /><small><code>@Path</code></small>
+									}
+									else
+									{
+										<span>@Item.ArticleTitle</span>
+									}
+								</td>
+								<td><small>@Item.DateCreated.ToString("yyyy-MM-dd HH:mm") UTC</small></td>
+								<td>
+									<form method="post" asp-page-handler="Delete" asp-route-id="@Item.Id" data-confirm="@L["Are you sure you want to delete the redirect for {0}?", Item.Domain]" onsubmit="return confirm(this.dataset.confirm);">
+										<button type="submit" class="button" data-button-variant="negative-quiet">@L["Delete"]</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+</div>
 
 <script>
 	document.addEventListener("DOMContentLoaded", function ()
@@ -322,15 +299,11 @@
 					{
 						const Row = document.createElement("button");
 						Row.type = "button";
-						Object.assign(Row.style, { display: "block", padding: "0.6rem 1rem", cursor: "pointer", width: "100%", textAlign: "start", background: "transparent", color: "inherit", font: "inherit", letterSpacing: "normal", border: "0", borderRadius: "0", borderBottom: "1px solid var(--md-outline-variant)" });
 						const Title = document.createElement("strong");
 						Title.textContent = Item.Title;
 						const Slug = document.createElement("small");
-						Slug.style.color = "var(--color-muted)";
 						Slug.textContent = ` (/${Item.UrlSlug})`;
 						Row.append(Title, Slug);
-						Row.addEventListener("mouseover", () => { Row.style.background = "var(--md-surface-variant)"; });
-						Row.addEventListener("mouseout", () => { Row.style.background = "transparent"; });
 						Row.addEventListener("click", () => SelectArticle(Item));
 						ResultsList.appendChild(Row);
 					}

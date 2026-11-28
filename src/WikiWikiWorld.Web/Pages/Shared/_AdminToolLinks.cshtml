@@ -1,0 +1,68 @@
+@model bool
+@using WikiWikiWorld.Web.Infrastructure
+@using WikiWikiWorld.Web.Pages.Admin
+@inject PermissionService Permissions
+@inject TrustedLinkDomainService TrustedDomains
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersions
+@{
+	bool ShowDetails = Model;
+	bool CanUseAdminTools = await Permissions.HasPermissionAsync(User, Permission.UseAdminTools, Context.RequestAborted);
+	bool CanReviewDomains = await Permissions.HasPermissionAsync(User, Permission.ReviewTrustedLinkDomains, Context.RequestAborted);
+	string? CurrentPage = ViewContext.RouteData.Values["page"] as string;
+	string IconSpriteUrl = FileVersions.AddFileVersionToPath(Context.Request.PathBase, Url.Content("~/icons.svg"));
+	List<(string Page, string Icon, string Label, string Description)> Tools = [];
+	if (CanUseAdminTools)
+	{
+		Tools.Add(("/Admin/Users", "Users", L["Users"], L["Find accounts and manage sign-in access."]));
+	}
+	if (CanReviewDomains)
+	{
+		Tools.Add(("/Admin/TrustedDomains", "Links", L["Trusted domains"], L["Review link-domain proposals and update trusted domains."]));
+	}
+	if (CanUseAdminTools)
+	{
+		Tools.Add(("/Admin/DomainRedirects", "Globe", L["Domain Redirects"], L["Forward alternate domains to specific articles."]));
+		if (MigrateFilesModel.CanOperate(User.Identity?.Name))
+		{
+			Tools.Add(("/Admin/MigrateFiles", "Upload", L["File migration"], L["Scan and move legacy image files."]));
+		}
+	}
+	int Pending = ShowDetails && CanReviewDomains ? await TrustedDomains.CountPendingAsync(Context.RequestAborted) : 0;
+}
+
+<ul class="@(ShowDetails ? "admin-tool-list" : "admin-nav-list")">
+	@if (!ShowDetails && CanUseAdminTools)
+	{
+		<li>
+			<a asp-page="/Admin/Index" aria-current="@(CurrentPage == "/Admin/Index" ? "page" : null)">
+				<svg width="19" height="19" aria-hidden="true"><use href="@IconSpriteUrl#Overview"></use></svg>
+				<span>@L["Overview"]</span>
+			</a>
+		</li>
+	}
+	@foreach ((string Page, string Icon, string Label, string Description) in Tools)
+	{
+		<li>
+			<a asp-page="@Page" aria-current="@(CurrentPage == Page ? "page" : null)">
+				<span class="admin-tool-icon">
+					<svg width="19" height="19" aria-hidden="true"><use href="@(IconSpriteUrl + "#" + Icon)"></use></svg>
+				</span>
+				<span class="admin-tool-label">
+					<span>@Label</span>
+					@if (ShowDetails)
+					{
+						<small>@Description</small>
+					}
+				</span>
+				@if (ShowDetails)
+				{
+					@if (Page == "/Admin/TrustedDomains" && Pending > 0)
+					{
+						<span class="admin-status" data-status="pending">@SharedResource.Plural("AccountMenu.PendingTrustedDomains", Pending)</span>
+					}
+					<svg width="16" height="16" class="admin-directional" aria-hidden="true"><use href="@IconSpriteUrl#ChevronRight"></use></svg>
+				}
+			</a>
+		</li>
+	}
+</ul>

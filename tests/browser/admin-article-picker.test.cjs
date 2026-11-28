@@ -28,6 +28,16 @@ function CreateHarness() {
 		'selected-article-guid', 'article-search-container', 'clear-article-btn', 'article-picker-status', 'retry-cultures'
 	].map(Id => [Id, new Element(Id === 'InputSiteId' || Id === 'InputCulture' ? 'select' : 'div')]));
 	Elements.InputSiteId.value = '1'; Elements.InputCulture.value = 'en';
+	Elements['create-redirect-form'] = {
+		dataset: {
+			uiText: JSON.stringify({
+				loadingCultures: 'Loading cultures…',
+				culturesFailed: 'Could not load cultures for this site. Retry loading cultures or choose another site.',
+				noArticles: 'No matching articles found.',
+				articlesFailed: 'Could not load articles. Type your search again to retry.'
+			})
+		}
+	};
 	Elements['article-results-list'].style.display = 'none';
 	Elements['search-spinner'].style.display = 'none';
 	Elements['retry-cultures'].style.display = 'none';

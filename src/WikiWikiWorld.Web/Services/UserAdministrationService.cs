@@ -52,7 +52,8 @@ public sealed class UserAdministrationService(WikiWikiWorldDbContext Context, IL
 		List<RegisteredUser> Accounts = await Ordered
 			.Skip((PageNumber - 1) * PageSize)
 			.Take(PageSize)
-			.Select(Account => new RegisteredUser(Account.Id, Account.UserName, Account.Email, Account.DateCreated, Account.IsDisabled))
+			.Select(Account => new RegisteredUser(Account.Id, Account.UserName, Account.Email, Account.DateCreated,
+				Account.IsDisabled, Account.ProfilePicGuid))
 			.ToListAsync(CancellationToken);
 
 		List<RegisteredUserRole> Roles = await Context.Roles.AsNoTracking().Where(Role => Role.Name != null)
@@ -97,7 +98,9 @@ public sealed class UserAdministrationService(WikiWikiWorldDbContext Context, IL
 /// <param name="Email">The registered email address, if available.</param>
 /// <param name="DateCreated">The recorded registration instant.</param>
 /// <param name="IsDisabled">Whether access has been disabled by an administrator.</param>
-public sealed record RegisteredUser(Guid Id, string? UserName, string? Email, DateTimeOffset DateCreated, bool IsDisabled);
+/// <param name="ProfilePicGuid">The portrait identifier, if the account has uploaded a photo.</param>
+public sealed record RegisteredUser(Guid Id, string? UserName, string? Email, DateTimeOffset DateCreated,
+	bool IsDisabled, Guid? ProfilePicGuid);
 
 /// <summary>Provides a role choice for filtering the administrator directory.</summary>
 /// <param name="Id">The role identifier.</param>

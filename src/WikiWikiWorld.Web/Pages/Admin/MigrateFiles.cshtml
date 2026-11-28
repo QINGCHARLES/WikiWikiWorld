@@ -2,30 +2,29 @@
 @using WikiWikiWorld.Web.Services
 @model WikiWikiWorld.Web.Pages.Admin.MigrateFilesModel
 @{
-	ViewData["Title"] = L["Migrate Files"];
+	ViewData["Title"] = L["File migration"];
 }
 
-<figure>
+<header class="admin-heading">
 	<h1>@L["Migrate Legacy Image Files"]</h1>
-</figure>
-
-<article>
 	<p>
 		@HL["Moves legacy files ({0}) into the revision-keyed layout ({1}). Scanning is read-only; nothing moves until you press {2}. No database changes are required — URLs are derived from the existing revision id and filename.", new Microsoft.AspNetCore.Html.HtmlString("<code>images/{CanonicalFileId}.ext</code>"), new Microsoft.AspNetCore.Html.HtmlString("<code>images/{CanonicalFileId}/{RevisionId}.ext</code>"), UiFormat.Strong(L["Migrate"])]
 	</p>
+</header>
 
+<section class="admin-panel admin-migration" aria-label="@L["File migration"]">
 	@if (Model.Report is null)
 	{
-		<div class="alert alert-danger">@L["Unable to load the migration report."]</div>
+		<div class="admin-notice" role="alert">@L["Unable to load the migration report."]</div>
 		return;
 	}
 
 	@if (!string.IsNullOrEmpty(Model.ResultMessage))
 	{
-		<div class="alert @(Model.MigrationRan ? "alert-success" : "alert-info")">@Model.ResultMessage</div>
+		<div class="admin-notice" role="status">@Model.ResultMessage</div>
 	}
 
-	<p><small>@L["Scanned root:"] <code>@Model.Report.RootPath</code></small></p>
+	<p class="admin-result-count"><small>@L["Scanned root:"] <code>@Model.Report.RootPath</code></small></p>
 
 	@{
 		int ReadyCount = Model.Report.Items.Count(I => I.Status == FileMigrationStatus.ReadyToMove);
@@ -34,83 +33,85 @@
 
 	@if (Model.Report.LostHistory.Count > 0)
 	{
-		<div class="alert alert-warning">
-			<strong>&#9888; @L["Lost revision history detected."]</strong>
+		<div class="admin-notice" role="alert">
+			<strong>@L["Lost revision history detected."]</strong>
 			@L["The following canonical files have more revisions in the database than surviving files on disk. Older revisions were overwritten under the legacy layout and their bytes cannot be recovered."]
 		</div>
-		<table class="table">
-			<thead>
-				<tr>
-					<th>@L["Canonical File Id"]</th>
-					<th>@L["DB Revisions"]</th>
-					<th>@L["Surviving Files"]</th>
-					<th>@L["Lost"]</th>
-				</tr>
-			</thead>
-			<tbody>
-				@foreach (LostRevisionGroup Group in Model.Report.LostHistory)
-				{
-					<tr class="table-danger">
-						<td><code>@Group.CanonicalFileId</code></td>
-						<td>@Group.RevisionCount</td>
-						<td>@Group.SurvivingFileCount</td>
-						<td><strong>@Group.LostRevisionCount</strong></td>
+		<div class="admin-table" role="region" aria-label="@L["Lost revision history detected."]" tabindex="0">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">@L["Canonical File Id"]</th>
+						<th scope="col">@L["DB Revisions"]</th>
+						<th scope="col">@L["Surviving Files"]</th>
+						<th scope="col">@L["Lost"]</th>
 					</tr>
-				}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					@foreach (LostRevisionGroup Group in Model.Report.LostHistory)
+					{
+						<tr>
+							<td><code>@Group.CanonicalFileId</code></td>
+							<td>@Group.RevisionCount</td>
+							<td>@Group.SurvivingFileCount</td>
+							<td><strong>@Group.LostRevisionCount</strong></td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
 	}
 
 	@if (Model.Report.Items.Count == 0)
 	{
-		<div class="alert alert-success">@L["No legacy-layout files found. Nothing to migrate."]</div>
+		<p class="admin-empty">@L["No legacy-layout files found. Nothing to migrate."]</p>
 	}
 	else
 	{
-		<p>
+		<p id="admin-migrate-results" class="admin-result-count">
 			@HL["Found {0} legacy file(s): {1} ready to move, {2} orphaned (no DB match).", UiFormat.Strong(Model.Report.Items.Count.ToString(CultureInfo.CurrentCulture)), UiFormat.Strong(ReadyCount.ToString(CultureInfo.CurrentCulture)), UiFormat.Strong(OrphanCount.ToString(CultureInfo.CurrentCulture))]
 		</p>
 
 		@if (ReadyCount > 0)
 		{
-			<form method="post" asp-page-handler="Migrate" data-confirm="@L["Move {0} file(s) into the revision-keyed layout?", ReadyCount]" onsubmit="return confirm(this.dataset.confirm);">
-				<button type="submit" class="btn btn-primary">@L["Migrate {0} file(s)", ReadyCount]</button>
+			<form class="admin-migration-action" method="post" asp-page-handler="Migrate" data-confirm="@L["Move {0} file(s) into the revision-keyed layout?", ReadyCount]" onsubmit="return confirm(this.dataset.confirm);">
+				<button type="submit" class="button" data-button-variant="primary">@L["Migrate {0} file(s)", ReadyCount]</button>
 			</form>
-			<br />
 		}
 
-		<table class="table">
-			<thead>
-				<tr>
-					<th>@L["Site"]</th>
-					<th>@L["Status"]</th>
-					<th>@L["Source"]</th>
-					<th>@L["Target"]</th>
-					<th>@L["Revisions"]</th>
-					<th>@L["Note"]</th>
-				</tr>
-			</thead>
-			<tbody>
-				@foreach (FileMigrationItem Item in Model.Report.Items)
-				{
-					string RowClass = Item.Status switch
-					{
-						FileMigrationStatus.Moved => "table-success",
-						FileMigrationStatus.Failed => "table-danger",
-						FileMigrationStatus.OrphanNoDbMatch => "table-warning",
-						FileMigrationStatus.AlreadyMigrated => "table-secondary",
-						_ => string.Empty
-					};
-					<tr class="@RowClass">
-						<td>@Item.SiteId</td>
-						<td>@Item.Status</td>
-						<td><code>@Item.SourceRelativePath</code></td>
-						<td>@(Item.TargetRelativePath is null ? "—" : Item.TargetRelativePath)</td>
-						<td>@Item.RevisionCount</td>
-						<td>@Item.Note</td>
+		<div class="admin-table" role="region" aria-labelledby="admin-migrate-results" tabindex="0">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">@L["Site"]</th>
+						<th scope="col">@L["Status"]</th>
+						<th scope="col">@L["Source"]</th>
+						<th scope="col">@L["Target"]</th>
+						<th scope="col">@L["Revisions"]</th>
+						<th scope="col">@L["Note"]</th>
 					</tr>
-				}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					@foreach (FileMigrationItem Item in Model.Report.Items)
+					{
+						string Status = Item.Status switch
+						{
+							FileMigrationStatus.Moved => "enabled",
+							FileMigrationStatus.Failed => "disabled",
+							FileMigrationStatus.OrphanNoDbMatch => "pending",
+							_ => string.Empty
+						};
+						<tr>
+							<td>@Item.SiteId</td>
+							<td><span class="admin-status" data-status="@Status">@Item.Status</span></td>
+							<td><code>@Item.SourceRelativePath</code></td>
+							<td>@(Item.TargetRelativePath is null ? "—" : Item.TargetRelativePath)</td>
+							<td>@Item.RevisionCount</td>
+							<td>@Item.Note</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
 	}
-</article>
+</section>

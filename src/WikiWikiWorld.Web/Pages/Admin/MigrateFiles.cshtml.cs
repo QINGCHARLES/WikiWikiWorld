@@ -31,18 +31,13 @@ public sealed class MigrateFilesModel(
 	public string? ResultMessage { get; private set; }
 
 	/// <summary>
-	/// Gets a value indicating whether files were actually moved on the last action.
-	/// </summary>
-	public bool MigrationRan { get; private set; }
-
-	/// <summary>
 	/// Loads a dry-run scan of legacy files.
 	/// </summary>
 	/// <param name="CancellationToken">The cancellation token.</param>
 	/// <returns>The page, or 404 when access is not permitted.</returns>
 	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
 	{
-		if (!IsAllowed())
+		if (!CanOperate(User.Identity?.Name))
 		{
 			return NotFound();
 		}
@@ -59,13 +54,12 @@ public sealed class MigrateFilesModel(
 	/// <returns>The page with results, or 404 when access is not permitted.</returns>
 	public async Task<IActionResult> OnPostMigrateAsync(CancellationToken CancellationToken)
 	{
-		if (!IsAllowed())
+		if (!CanOperate(User.Identity?.Name))
 		{
 			return NotFound();
 		}
 
 		AllowSearchEngineIndexingOfPage = false;
-		MigrationRan = true;
 		Report = await FileMigrationService.MigrateAsync(CancellationToken);
 
 		int Moved = Report.Items.Count(I => I.Status == FileMigrationStatus.Moved);
@@ -74,6 +68,9 @@ public sealed class MigrateFilesModel(
 		return Page();
 	}
 
-	private bool IsAllowed()
-		=> string.Equals(User.Identity?.Name, AllowedUsername, StringComparison.OrdinalIgnoreCase);
+	/// <summary>Checks the single-operator restriction in addition to the admin policy enforced by the page.</summary>
+	/// <param name="UserName">The signed-in account name.</param>
+	/// <returns>Whether this account is the permitted file-migration operator.</returns>
+	internal static bool CanOperate(string? UserName)
+		=> string.Equals(UserName, AllowedUsername, StringComparison.OrdinalIgnoreCase);
 }

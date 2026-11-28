@@ -1,0 +1,34 @@
+@model BasePageModel
+@{
+	Layout = "~/Pages/Shared/_Layout.cshtml";
+	Model.AllowSearchEngineIndexingOfPage = false;
+	ViewData["WideContent"] = true;
+	ViewData["IsAdminWorkspace"] = true;
+}
+
+@section PageHead {
+	<link rel="stylesheet" href="~/css/pages/admin.css" asp-append-version="true" />
+	@await RenderSectionAsync("PageHead", required: false)
+}
+
+@section Scripts {
+	@await RenderSectionAsync("Scripts", required: false)
+}
+
+<div class="admin-layout">
+	<a href="#admin-content" class="admin-skip">@L["Skip to content"]</a>
+	<aside class="admin-sidebar">
+		<nav class="admin-desktop-navigation" aria-label="@L["Admin navigation"]">
+			<partial name="_AdminToolLinks" model="false" />
+		</nav>
+		<details class="admin-mobile-navigation">
+			<summary>@L["Admin sections"]</summary>
+			<nav aria-label="@L["Admin navigation"]">
+				<partial name="_AdminToolLinks" model="false" />
+			</nav>
+		</details>
+	</aside>
+	<div id="admin-content" tabindex="-1">
+		@RenderBody()
+	</div>
+</div>

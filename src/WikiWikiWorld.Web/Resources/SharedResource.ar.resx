@@ -23,6 +23,7 @@
   <data name="A space for contributors to coordinate edits, verify facts, and resolve citations." xml:space="preserve"><value>مساحة للمساهمين لتنسيق التعديلات والتحقق من الحقائق وحل مسائل المراجع.</value></data>
   <data name="A target article must be selected." xml:space="preserve"><value>يجب اختيار مقالة هدف.</value></data>
   <data name="About this talk page" xml:space="preserve"><value>عن صفحة النقاش هذه</value></data>
+  <data name="Account details" xml:space="preserve"><value>تفاصيل الحساب</value></data>
   <data name="Account menu for {0}" xml:space="preserve"><value>قائمة حساب {0}</value></data>
   <data name="Account menu for {0}, {1}" xml:space="preserve"><value>قائمة حساب {0}، {1}</value></data>
   <data name="Account status" xml:space="preserve"><value>حالة الحساب</value></data>
@@ -45,6 +46,9 @@
   <data name="Add Domain Redirect" xml:space="preserve"><value>إضافة تحويل نطاق</value></data>
   <data name="Add note" xml:space="preserve"><value>إضافة ملاحظة</value></data>
   <data name="adding missing information" xml:space="preserve"><value>إضافة المعلومات الناقصة</value></data>
+  <data name="Admin" xml:space="preserve"><value>الإدارة</value></data>
+  <data name="Admin navigation" xml:space="preserve"><value>التنقل في لوحة الإدارة</value></data>
+  <data name="Admin sections" xml:space="preserve"><value>أقسام الإدارة</value></data>
   <data name="Administrator's note" xml:space="preserve"><value>ملاحظة المشرف</value></data>
   <data name="Adult" xml:space="preserve"><value>للبالغين</value></data>
   <data name="After linking, this article and all of these will list each other as translations:" xml:space="preserve"><value>بعد الربط، ستُدرج هذه المقالة وكل هذه المقالات بعضها بعضًا كترجمات:</value></data>
@@ -211,6 +215,7 @@
   <data name="Confirm disabling {0}" xml:space="preserve"><value>تأكيد تعطيل حساب {0}</value></data>
   <data name="Confirm merge" xml:space="preserve"><value>تأكيد الدمج</value></data>
   <data name="Confirm password" xml:space="preserve"><value>تأكيد كلمة المرور</value></data>
+  <data name="Confirm selected" xml:space="preserve"><value>تأكيد المحدد</value></data>
   <data name="Confirmed by" xml:space="preserve"><value>اعتمده</value></data>
   <data name="Confirming a domain makes every link to it, and to its subdomains, followed by search engines on every page, straight away." xml:space="preserve"><value>اعتماد نطاق يجعل محركات البحث تتبع كل رابط إليه وإلى نطاقاته الفرعية، في كل صفحة، فورًا.</value></data>
   <data name="Consumer &amp; Shopping" xml:space="preserve"><value>الاستهلاك والتسوق</value></data>
@@ -373,6 +378,7 @@
   <data name="File" xml:space="preserve"><value>ملف</value></data>
   <data name="file article" xml:space="preserve"><value>مقالة ملف</value></data>
   <data name="File History" xml:space="preserve"><value>سجل الملف</value></data>
+  <data name="File migration" xml:space="preserve"><value>ترحيل الملفات</value></data>
   <data name="File Size" xml:space="preserve"><value>حجم الملف</value></data>
   <data name="FileHistory.VersionsRecorded|few" xml:space="preserve"><value>{0} نسخ مسجّلة لهذا الملف.</value></data>
   <data name="FileHistory.VersionsRecorded|many" xml:space="preserve"><value>{0} نسخة مسجّلة لهذا الملف.</value></data>
@@ -386,6 +392,7 @@
   <data name="Filter by starting letter" xml:space="preserve"><value>تصفية حسب الحرف الأول</value></data>
   <data name="Find a page title" xml:space="preserve"><value>ابحث عن عنوان صفحة</value></data>
   <data name="Find a page…" xml:space="preserve"><value>ابحث عن صفحة…</value></data>
+  <data name="Find accounts and manage sign-in access." xml:space="preserve"><value>ابحث عن الحسابات وتحكّم في إمكانية تسجيل الدخول.</value></data>
   <data name="Find registered users" xml:space="preserve"><value>البحث عن المستخدمين المسجّلين</value></data>
   <data name="Firehose" xml:space="preserve"><value>السجل الحي</value></data>
   <data name="Firehose — Recent changes" xml:space="preserve"><value>السجل الحي — أحدث التعديلات</value></data>
@@ -441,6 +448,7 @@
   <data name="Footer links" xml:space="preserve"><value>روابط التذييل</value></data>
   <data name="Footnotes" xml:space="preserve"><value>الحواشي</value></data>
   <data name="For local debugging, enable the {0} environment by setting the {1} environment variable to {0} and restarting the app." xml:space="preserve"><value>لتصحيح الأخطاء محليًا، فعّل بيئة {0} بضبط متغير البيئة {1} على {0} ثم أعد تشغيل التطبيق.</value></data>
+  <data name="Forward alternate domains to specific articles." xml:space="preserve"><value>أعد توجيه النطاقات البديلة إلى مقالات محددة.</value></data>
   <data name="Found {0} legacy file(s): {1} ready to move, {2} orphaned (no DB match)." xml:space="preserve"><value>عُثر على {0} ملف قديم: {1} جاهز للنقل، و{2} يتيم (بلا مطابقة في قاعدة البيانات).</value></data>
   <data name="Frame a picture for {0}. Check how it looks on different screens, then download your header." xml:space="preserve"><value>أطّر صورة لـ{0}. تحقّق من مظهرها على الشاشات المختلفة، ثم نزّل ترويستك.</value></data>
   <data name="Frame your header" xml:space="preserve"><value>أطّر ترويستك</value></data>
@@ -583,7 +591,7 @@
   <data name="Make public…" xml:space="preserve"><value>جعلها عامة…</value></data>
   <data name="Make this list public?" xml:space="preserve"><value>جعل هذه القائمة عامة؟</value></data>
   <data name="Making your header on your device… Large pictures can take a while." xml:space="preserve"><value>جارٍ إعداد ترويستك على جهازك… قد تستغرق الصور الكبيرة بعض الوقت.</value></data>
-  <data name="Manage users" xml:space="preserve"><value>إدارة المستخدمين</value></data>
+  <data name="Manage accounts and site operations across the wiki network." xml:space="preserve"><value>إدارة الحسابات وعمليات المواقع في شبكة الويكي.</value></data>
   <data name="Map legacy or alternate domains to specific articles. Requests to these domains receive an {0} to the target article on that culture. Because mappings link to the canonical article identifier, {1}." xml:space="preserve"><value>اربط النطاقات القديمة أو البديلة بمقالات محددة. تتلقى الطلبات إلى هذه النطاقات {0} إلى المقالة الهدف بتلك اللغة. ولأن الروابط تشير إلى المعرّف الأساسي للمقالة، {1}.</value></data>
   <data name="Markdown supported" xml:space="preserve"><value>يدعم Markdown</value></data>
   <data name="Markdown supported · Blank line for new paragraph" xml:space="preserve"><value>يدعم Markdown · سطر فارغ لفقرة جديدة</value></data>
@@ -599,7 +607,6 @@
   <data name="Message {0}" xml:space="preserve"><value>مراسلة {0}</value></data>
   <data name="Messages" xml:space="preserve"><value>الرسائل</value></data>
   <data name="Migrate" xml:space="preserve"><value>ترحيل</value></data>
-  <data name="Migrate Files" xml:space="preserve"><value>ترحيل الملفات</value></data>
   <data name="Migrate Legacy Image Files" xml:space="preserve"><value>ترحيل ملفات الصور القديمة</value></data>
   <data name="Migrate {0} file(s)" xml:space="preserve"><value>ترحيل {0} ملف</value></data>
   <data name="Migration complete: {0} moved, {1} failed. No database changes were required." xml:space="preserve"><value>اكتمل الترحيل: نُقل {0}، وفشل {1}. لم تكن هناك حاجة لتغييرات في قاعدة البيانات.</value></data>
@@ -705,6 +712,7 @@
   <data name="Other" xml:space="preserve"><value>أخرى</value></data>
   <data name="Other languages" xml:space="preserve"><value>لغات أخرى</value></data>
   <data name="over {0} ago" xml:space="preserve"><value>منذ أكثر من {0}</value></data>
+  <data name="Overview" xml:space="preserve"><value>نظرة عامة</value></data>
   <data name="Page Not Found" xml:space="preserve"><value>الصفحة غير موجودة</value></data>
   <data name="Page {0}" xml:space="preserve"><value>الصفحة {0}</value></data>
   <data name="Page {0} of {1}" xml:space="preserve"><value>الصفحة {0} من {1}</value></data>
@@ -720,6 +728,7 @@
   <data name="Passwords must have at least one uppercase ('A'-'Z')." xml:space="preserve"><value>يجب أن تحتوي كلمة المرور على حرف لاتيني كبير واحد على الأقل (A-Z).</value></data>
   <data name="Passwords must use at least {0} different characters." xml:space="preserve"><value>يجب أن تستخدم كلمة المرور {0} أحرف مختلفة على الأقل.</value></data>
   <data name="Past 12 months" xml:space="preserve"><value>آخر 12 شهرًا</value></data>
+  <data name="Pending proposal pages" xml:space="preserve"><value>صفحات الاقتراحات المعلّقة</value></data>
   <data name="Performing Arts" xml:space="preserve"><value>فنون الأداء</value></data>
   <data name="Permission from the Rightsholder" xml:space="preserve"><value>إذن من صاحب الحقوق</value></data>
   <data name="Person" xml:space="preserve"><value>شخص</value></data>
@@ -831,8 +840,11 @@
   <data name="Return to Article" xml:space="preserve"><value>العودة إلى المقالة</value></data>
   <data name="Revert to Previous Revision" xml:space="preserve"><value>الرجوع إلى النسخة السابقة</value></data>
   <data name="Reverts the article to the revision before the current one. The current revision will be soft-deleted." xml:space="preserve"><value>يُرجع المقالة إلى النسخة التي تسبق الحالية. ستُحذف النسخة الحالية حذفًا مؤقتًا.</value></data>
+  <data name="Review guidelines" xml:space="preserve"><value>إرشادات المراجعة</value></data>
+  <data name="Review link-domain proposals and update trusted domains." xml:space="preserve"><value>راجع اقتراحات نطاقات الروابط وحدّث النطاقات الموثوقة.</value></data>
   <data name="Review proposals ({0} waiting)" xml:space="preserve"><value>مراجعة المقترحات ({0} بانتظار المراجعة)</value></data>
-  <data name="Review trusted domains" xml:space="preserve"><value>مراجعة النطاقات الموثوقة</value></data>
+  <data name="Review with note" xml:space="preserve"><value>مراجعة مع ملاحظة</value></data>
+  <data name="Review with note for {0}" xml:space="preserve"><value>مراجعة {0} مع ملاحظة</value></data>
   <data name="Revision feed" xml:space="preserve"><value>سجل النسخ</value></data>
   <data name="Revision History" xml:space="preserve"><value>سجل النسخ</value></data>
   <data name="Revision History: {0}" xml:space="preserve"><value>سجل النسخ: {0}</value></data>
@@ -849,6 +861,7 @@
   <data name="Saved, but the article needs attention." xml:space="preserve"><value>حُفظت، لكن المقالة تحتاج إلى مراجعة.</value></data>
   <data name="Say whose site it is, such as &quot;Official site of Rolling Stone magazine&quot;." xml:space="preserve"><value>اذكر لمن يعود الموقع، مثل "الموقع الرسمي لمجلة Rolling Stone".</value></data>
   <data name="Say why this domain should be trusted, such as whose official site it is." xml:space="preserve"><value>اذكر سبب توثيق هذا النطاق، مثل الجهة التي يعود إليها موقعه الرسمي.</value></data>
+  <data name="Scan and move legacy image files." xml:space="preserve"><value>افحص ملفات الصور القديمة وانقلها.</value></data>
   <data name="Scanned root:" xml:space="preserve"><value>المجلد الذي فُحص:</value></data>
   <data name="Science &amp; Nature" xml:space="preserve"><value>العلوم والطبيعة</value></data>
   <data name="Search" xml:space="preserve"><value>بحث</value></data>
@@ -872,6 +885,8 @@
   <data name="Search.SuggestionsAvailable|zero" xml:space="preserve"><value>لا اقتراحات.</value></data>
   <data name="Search: {0}" xml:space="preserve"><value>بحث: {0}</value></data>
   <data name="Searching..." xml:space="preserve"><value>جارٍ البحث...</value></data>
+  <data name="Select at least one proposal to confirm." xml:space="preserve"><value>حدد اقتراحًا واحدًا على الأقل لتأكيده.</value></data>
+  <data name="Select {0}" xml:space="preserve"><value>تحديد {0}</value></data>
   <data name="Selected article could not be found for the specified site and culture." xml:space="preserve"><value>تعذّر العثور على المقالة المختارة في الموقع واللغة المحددين.</value></data>
   <data name="Selected:" xml:space="preserve"><value>المختارة:</value></data>
   <data name="Send message" xml:space="preserve"><value>إرسال الرسالة</value></data>
@@ -904,6 +919,7 @@
   <data name="Sitemap.OtherLanguages" xml:space="preserve"><value>لغات أخرى</value></data>
   <data name="Sitemap.XmlSitemapLink" xml:space="preserve"><value>خريطة الموقع (XML)</value></data>
   <data name="Size" xml:space="preserve"><value>الحجم</value></data>
+  <data name="Skip to content" xml:space="preserve"><value>انتقل إلى المحتوى</value></data>
   <data name="Small corrections. New discoveries. A better archive with every contribution." xml:space="preserve"><value>تصحيحات صغيرة. اكتشافات جديدة. أرشيف أفضل مع كل مساهمة.</value></data>
   <data name="Some websites block direct image imports. Download the picture, then choose Open image or drag it here. The picture stays in your browser until you choose to upload the finished header." xml:space="preserve"><value>تمنع بعض المواقع استيراد الصور مباشرة. نزّل الصورة، ثم اختر «فتح صورة» أو اسحبها إلى هنا. تبقى الصورة في متصفحك حتى تختار رفع الترويسة الجاهزة.</value></data>
   <data name="Some websites block direct image imports. If your link doesn’t work, download the picture, then choose Open image or drag it here. Your picture is processed in your browser; it won’t be uploaded to the wiki until you choose to upload the finished header." xml:space="preserve"><value>تمنع بعض المواقع استيراد الصور مباشرة. إن لم يعمل رابطك، نزّل الصورة ثم اختر «فتح صورة» أو اسحبها إلى هنا. تُعالَج صورتك في متصفحك، ولن تُرفع إلى الويكي حتى تختار رفع الترويسة الجاهزة.</value></data>
@@ -1001,6 +1017,7 @@
   <data name="The publication was issued so long ago that its copyright protection has legally expired, or the creator explicitly dedicated it to the public domain." xml:space="preserve"><value>صدر الإصدار منذ زمن بعيد بحيث انتهت حماية حقوق نشره قانونيًا، أو خصّصه مُنشئه صراحةً للملك العام.</value></data>
   <data name="The publisher or creator released this specific issue under a license that allows for free redistribution and sharing (e.g., CC BY, CC BY-NC)." xml:space="preserve"><value>أصدر الناشر أو المُنشئ هذا العدد تحديدًا بموجب رخصة تتيح إعادة التوزيع والمشاركة بحرية (مثل CC BY وCC BY-NC).</value></data>
   <data name="The pulse" xml:space="preserve"><value>النبض</value></data>
+  <data name="The selected proposals are no longer waiting for review." xml:space="preserve"><value>الاقتراحات المحددة لم تعد بانتظار المراجعة.</value></data>
   <data name="The title of this article has changed from &quot;{0}&quot; to &quot;{1}&quot;." xml:space="preserve"><value>تغيّر عنوان هذه المقالة من «{0}» إلى «{1}».</value></data>
   <data name="The URL of the article this is the header for, e.g. spider-man or gq-style-usa-summer-2023." xml:space="preserve"><value>عنوان المقالة التي هذه ترويستها، مثل spider-man أو gq-style-usa-summer-2023.</value></data>
   <data name="The URL of this article has changed from &quot;{0}&quot; to &quot;{1}&quot;." xml:space="preserve"><value>تغيّر عنوان URL لهذه المقالة من «{0}» إلى «{1}».</value></data>
@@ -1093,6 +1110,7 @@
   <data name="To" xml:space="preserve"><value>إلى</value></data>
   <data name="To see the canonical URL, visit:" xml:space="preserve"><value>لرؤية العنوان الأساسي، انتقل إلى:</value></data>
   <data name="Today" xml:space="preserve"><value>اليوم</value></data>
+  <data name="Tools" xml:space="preserve"><value>الأدوات</value></data>
   <data name="Top" xml:space="preserve"><value>الأعلى</value></data>
   <data name="Top bar" xml:space="preserve"><value>الشريط العلوي</value></data>
   <data name="Topic and index category pages" xml:space="preserve"><value>صفحات تصنيفات المواضيع والفهارس</value></data>
@@ -1131,6 +1149,7 @@
   <data name="Username '{0}' is already taken." xml:space="preserve"><value>اسم المستخدم ‎'{0}'‎ مستخدم بالفعل.</value></data>
   <data name="Username '{0}' is invalid, can only contain letters or digits." xml:space="preserve"><value>اسم المستخدم ‎'{0}'‎ غير صالح، ويجب أن يحتوي على حروف أو أرقام فقط.</value></data>
   <data name="Usernames, separated by commas" xml:space="preserve"><value>أسماء المستخدمين، مفصولة بفواصل</value></data>
+  <data name="Users" xml:space="preserve"><value>المستخدمون</value></data>
   <data name="Veteran" xml:space="preserve"><value>مخضرم</value></data>
   <data name="Video Games" xml:space="preserve"><value>ألعاب الفيديو</value></data>
   <data name="View" xml:space="preserve"><value>عرض</value></data>
@@ -1216,6 +1235,7 @@
   <data name="{0} MB" xml:space="preserve"><value>{0} م.ب</value></data>
   <data name="{0} must contain 1–{1} characters." xml:space="preserve"><value>يجب أن يحتوي {0} على 1 إلى {1} حرف.</value></data>
   <data name="{0} of {1}" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="{0} of {1} selected proposals confirmed." xml:space="preserve"><value>تم تأكيد {0} من أصل {1} من الاقتراحات المحددة.</value></data>
   <data name="{0} on {1} between {2} and {3}." xml:space="preserve"><value>{0} خلال {1} بين {2} و{3}.</value></data>
   <data name="{0} progress: {1} of {2}" xml:space="preserve"><value>تقدّم {0}: {1} من {2}</value></data>
   <data name="{0} to link this article to another language." xml:space="preserve"><value>{0} لربط هذه المقالة بلغة أخرى.</value></data>

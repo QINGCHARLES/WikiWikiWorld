@@ -1,0 +1,15 @@
+@page
+@model WikiWikiWorld.Web.Pages.Admin.IndexModel
+@{
+	ViewData["Title"] = L["Overview"];
+}
+
+<header class="admin-heading">
+	<h1>@L["Overview"]</h1>
+	<p>@L["Manage accounts and site operations across the wiki network."]</p>
+</header>
+
+<section class="admin-panel admin-tools" aria-labelledby="admin-tools-title">
+	<h2 id="admin-tools-title">@L["Tools"]</h2>
+	<partial name="_AdminToolLinks" model="true" />
+</section>

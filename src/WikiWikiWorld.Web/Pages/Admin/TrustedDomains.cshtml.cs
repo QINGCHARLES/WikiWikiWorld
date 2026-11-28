@@ -14,6 +14,8 @@ public sealed class TrustedDomainsModel(
 	SiteResolverService SiteResolverService,
 	TrustedLinkDomainService TrustedDomains) : BasePageModel(SiteResolverService)
 {
+	private const int PageSize = 50;
+
 	/// <summary>
 	/// Gets or sets the result of the last action (kept across the redirect).
 	/// </summary>
@@ -27,9 +29,19 @@ public sealed class TrustedDomainsModel(
 	public string? ErrorMessage { get; set; }
 
 	/// <summary>
-	/// Gets the proposals waiting for review, oldest first.
+	/// Gets the current page of proposals waiting for review, oldest first.
 	/// </summary>
 	public IReadOnlyList<TrustedLinkDomainView> Pending { get; private set; } = [];
+
+	/// <summary>Gets or sets the current page of the pending queue.</summary>
+	[BindProperty(SupportsGet = true)]
+	public int PageNumber { get; set; } = 1;
+
+	/// <summary>Gets the total number of pending proposals across all pages.</summary>
+	public int PendingCount { get; private set; }
+
+	/// <summary>Gets the number of pages in the pending queue.</summary>
+	public int PageCount { get; private set; } = 1;
 
 	/// <summary>
 	/// Gets the trusted domains, alphabetically.
@@ -49,7 +61,10 @@ public sealed class TrustedDomainsModel(
 	public async Task<IActionResult> OnGetAsync(CancellationToken CancellationToken)
 	{
 		AllowSearchEngineIndexingOfPage = false;
-		Pending = await TrustedDomains.GetPendingAsync(CancellationToken);
+		PendingCount = await TrustedDomains.CountPendingAsync(CancellationToken);
+		PageCount = Math.Max(1, (int)Math.Ceiling((double)PendingCount / PageSize));
+		PageNumber = Math.Clamp(PageNumber, 1, PageCount);
+		Pending = await TrustedDomains.GetPendingAsync((PageNumber - 1) * PageSize, PageSize, CancellationToken);
 		Trusted = await TrustedDomains.GetTrustedAsync(CancellationToken);
 		History = await TrustedDomains.GetHistoryAsync(CancellationToken);
 		return Page();
@@ -67,6 +82,40 @@ public sealed class TrustedDomainsModel(
 	/// <returns>A redirect back to the queue with the outcome.</returns>
 	public Task<IActionResult> OnPostConfirmAsync(int Id, string? Note, CancellationToken CancellationToken) =>
 		ActAsync((UserId, Token) => TrustedDomains.ConfirmAsync(Id, UserId, Note, Token), "{0} is now trusted. Its links are followed.", CancellationToken);
+
+	/// <summary>Confirms selected pending proposals with no reviewer note and reports how many changed.</summary>
+	/// <param name="SelectedIds">The identifiers posted by the queue checkboxes.</param>
+	/// <param name="CancellationToken">The request cancellation token.</param>
+	/// <returns>A redirect back to the pending queue, or a refusal for an invalid request.</returns>
+	public async Task<IActionResult> OnPostConfirmSelectedAsync([FromForm] int[]? SelectedIds, CancellationToken CancellationToken)
+	{
+		Guid? UserId = PermissionService.GetUserId(User);
+		if (UserId is null) return Challenge();
+		if (!ModelState.IsValid || SelectedIds is { Length: > PageSize } || SelectedIds?.Any(Id => Id <= 0) == true)
+		{
+			return BadRequest();
+		}
+
+		if (SelectedIds is null or [])
+		{
+			ErrorMessage = SharedResource.Text("Select at least one proposal to confirm.");
+		}
+		else
+		{
+			int[] Ids = [.. SelectedIds.Distinct()];
+			int Confirmed = await TrustedDomains.ConfirmManyAsync(Ids, UserId.Value, CancellationToken);
+			if (Confirmed > 0)
+			{
+				SuccessMessage = SharedResource.Format("{0} of {1} selected proposals confirmed.", Confirmed, Ids.Length);
+			}
+			else
+			{
+				ErrorMessage = SharedResource.Text("The selected proposals are no longer waiting for review.");
+			}
+		}
+
+		return RedirectToPage(new { pagenumber = PageNumber > 1 ? (int?)PageNumber : null });
+	}
 
 	/// <summary>
 	/// Denies a pending proposal; the proposer sees the outcome and note on their page.
@@ -112,6 +161,6 @@ public sealed class TrustedDomainsModel(
 				throw new InvalidOperationException("The review action returned no outcome.");
 		}
 
-		return RedirectToPage();
+		return RedirectToPage(new { pagenumber = PageNumber > 1 ? (int?)PageNumber : null });
 	}
 }
