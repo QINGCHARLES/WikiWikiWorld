@@ -87,6 +87,20 @@ The previous image is pinned as
 for `/home/deploy/update.sh`. If rolling back, restore GHCR `latest` to the running digest and account
 for any suspended users before resuming traffic.
 
+### Integrated admin workspace release
+
+Production started serving commit `6638c7e4f93f` at 9:19 p.m. CST on 2026-11-27 (03:19:56 UTC on 2026-11-28).
+Release `release-20261128T031814Z-6638c7e4f93f` and GHCR `latest` resolve to
+`sha256:169d5145ee57aac2443b586ae1edc0ac59446cda79694655bd43ffc32e5d267e`. The release uses the existing database schema.
+
+All 474 .NET tests, 13 article-picker tests, and localization checks passed from the release source.
+Production served the expected stylesheet and public HTTPS pages, redirected anonymous admin requests to
+sign-in, and ran with zero restarts. Admin roles, account actions, bulk domain confirmation, and the
+responsive layout were exercised on a disposable development database before deployment.
+
+For rollback, pass `ghcr.io/qingcharles/wikiwikiworld:rollback-before-release-20261128T031814Z-6638c7e4f93f`
+(`sha256:1a9ea142fb2c8be2049e8a62c1b90a211ac1641e44d059e49b10c85c7c706278`) to `/home/deploy/update.sh` and point GHCR `latest` to the running digest after verification.
+
 ## Trusted link domains
 
 External links get `rel="nofollow noopener"` unless their host is trusted, in which case they get `rel="noopener"`.
