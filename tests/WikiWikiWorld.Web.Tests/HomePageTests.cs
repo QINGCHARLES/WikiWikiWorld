@@ -86,6 +86,7 @@ public sealed class HomePageTests : IDisposable
 	/// <summary>
 	/// Verifies that the home page prefers resolved covers, falls back to resolved headers (preserving focus),
 	/// orders by revision creation date, and scopes strictly to current standard articles in the active site and culture.
+	/// Checks that grid entries are classified separately from their artwork and receive the configured logo or fitted text.
 	/// </summary>
 	/// <returns>A task that completes when SQLite query and fallback assertions finish.</returns>
 	[Fact]
@@ -97,6 +98,7 @@ public sealed class HomePageTests : IDisposable
 		string BothCoverUrl = SeedImageFile("cover-of-032c-1", "032c-1-cover.jpg");
 		SeedImageFile("header-for-032c-1", "032c-1-header.avif");
 		string PlayboyHeaderUrl = SeedImageFile("header-for-playboy", "playboy-header.avif");
+		string PlayboyLogoUrl = SeedImageFile("playboy-logo", "playboy-logo.svg");
 		string BackupHeaderUrl = SeedImageFile("header-for-george-backup", "george-header.avif");
 		string FallbackHeaderUrl = SeedImageFile("header-for-broken-cover-issue", "broken-cover-header.avif");
 		SeedImageFile("deleted-file-slug", "deleted.avif", IsDeletedFile: true);
@@ -158,19 +160,27 @@ public sealed class HomePageTests : IDisposable
 		AddArticle(
 			1, "en", "playboy", "Playboy",
 			"{{ShortDescription American men's lifestyle and entertainment magazine}}\n{{Eyebrow MAGAZINE}}\n{{HeaderImage file:header-for-playboy |#| Focus=centre}}",
-			BaseTime.AddMinutes(2));
+			BaseTime.AddMinutes(2), DisplayTitle: "[[Playboy|#|playboy-logo]]");
 		AddArticle(
 			1, "en", "032c-no-1", "032c - No. 1",
-			"{{HeaderImage file:header-for-032c-1 |#| Focus=bottom}}\n{{CoverCarousel CoverImage=file:cover-of-032c-1}}",
+			"{{Eyebrow MAGAZINEISSUE}}\n{{HeaderImage file:header-for-032c-1 |#| Focus=bottom}}\n{{CoverCarousel CoverImage=file:cover-of-032c-1}}",
 			BaseTime.AddMinutes(3));
 		AddArticle(
 			1, "en", "george", "George",
 			"{{HeaderImage file:missing-first-header |#| Focus=top}}\n{{HeaderImage file:header-for-george-backup |#| Focus=bottom}}",
-			BaseTime.AddMinutes(4));
+			BaseTime.AddMinutes(4), DisplayTitle: "[[George|#|missing-george-logo]]");
 		AddArticle(
 			1, "en", "issue-with-missing-cover", "Issue With Missing Cover",
 			"{{HeaderImage file:header-for-broken-cover-issue}}\n{{CoverCarousel CoverImage=file:does-not-exist}}",
-			BaseTime.AddMinutes(5));
+			BaseTime.AddMinutes(5), DisplayTitle: "[[Playboy|#|playboy-logo]]\nIssue 1");
+		AddArticle(
+			1, "en", "header-only-issue", "Header Only Issue",
+			"{{HeaderImage file:header-for-broken-cover-issue}}\n{{PublicationIssueInfobox CoverDate=2024-03}}",
+			BaseTime.AddMinutes(6));
+		AddArticle(
+			1, "en", "wired", "Wired",
+			"{{CoverCarousel CoverImage=file:cover-of-wired-1}}\n{{Infobox Publication ISSN=1059-1028}}",
+			BaseTime.AddMinutes(7));
 
 		await Context.SaveChangesAsync();
 
@@ -181,10 +191,29 @@ public sealed class HomePageTests : IDisposable
 			Page.ArticlesWithCovers,
 			Item =>
 			{
+				Assert.Equal("wired", Item.UrlSlug);
+				Assert.Equal(CoverIssueUrl, Item.ImageUrl);
+				Assert.Equal(HomeCoverKind.Publication, Item.Kind);
+				Assert.Equal("Wired", Item.TitleHtml);
+				Assert.Contains("--title-word-chars: 5", Item.TitleFitStyle);
+			},
+			Item =>
+			{
+				Assert.Equal("header-only-issue", Item.UrlSlug);
+				Assert.Equal(FallbackHeaderUrl, Item.ImageUrl);
+				Assert.Equal(HomeCoverKind.Issue, Item.Kind);
+				Assert.Equal("Header Only Issue", Item.TitleHtml);
+				Assert.Contains("--title-word-chars: 6", Item.TitleFitStyle);
+			},
+			Item =>
+			{
 				Assert.Equal("issue-with-missing-cover", Item.UrlSlug);
 				Assert.Equal(FallbackHeaderUrl, Item.ImageUrl);
 				Assert.True(Item.IsHeaderImage);
 				Assert.Null(Item.ImageFocus);
+				Assert.Equal(HomeCoverKind.Issue, Item.Kind);
+				Assert.Contains(PlayboyLogoUrl, Item.TitleHtml);
+				Assert.EndsWith("Issue 1", Item.TitleHtml);
 			},
 			Item =>
 			{
@@ -192,6 +221,8 @@ public sealed class HomePageTests : IDisposable
 				Assert.Equal(BackupHeaderUrl, Item.ImageUrl);
 				Assert.True(Item.IsHeaderImage);
 				Assert.Equal("bottom", Item.ImageFocus);
+				Assert.Equal(HomeCoverKind.Article, Item.Kind);
+				Assert.Equal("George", Item.TitleHtml);
 			},
 			Item =>
 			{
@@ -199,6 +230,7 @@ public sealed class HomePageTests : IDisposable
 				Assert.Equal(BothCoverUrl, Item.ImageUrl);
 				Assert.False(Item.IsHeaderImage);
 				Assert.Null(Item.ImageFocus);
+				Assert.Equal(HomeCoverKind.Issue, Item.Kind);
 			},
 			Item =>
 			{
@@ -206,6 +238,9 @@ public sealed class HomePageTests : IDisposable
 				Assert.Equal(PlayboyHeaderUrl, Item.ImageUrl);
 				Assert.True(Item.IsHeaderImage);
 				Assert.Equal("center", Item.ImageFocus);
+				Assert.Equal(HomeCoverKind.Publication, Item.Kind);
+				Assert.Contains(PlayboyLogoUrl, Item.TitleHtml);
+				Assert.Null(Item.TitleFitStyle);
 			},
 			Item =>
 			{
@@ -213,6 +248,8 @@ public sealed class HomePageTests : IDisposable
 				Assert.Equal(CoverIssueUrl, Item.ImageUrl);
 				Assert.False(Item.IsHeaderImage);
 				Assert.Null(Item.ImageFocus);
+				Assert.Equal(HomeCoverKind.Issue, Item.Kind);
+				Assert.Equal("Wired Issue 1", Item.TitleHtml);
 			});
 	}
 
@@ -273,6 +310,7 @@ public sealed class HomePageTests : IDisposable
 	/// <param name="IsCurrent">Whether the revision is current.</param>
 	/// <param name="IsDeleted">Whether the revision is soft-deleted.</param>
 	/// <param name="Type">The article namespace type.</param>
+	/// <param name="DisplayTitle">An optional authored heading, including logo tokens.</param>
 	private void AddArticle(
 		int SiteId,
 		string Culture,
@@ -282,7 +320,8 @@ public sealed class HomePageTests : IDisposable
 		DateTimeOffset Created,
 		bool IsCurrent = true,
 		bool IsDeleted = false,
-		ArticleType Type = ArticleType.Article)
+		ArticleType Type = ArticleType.Article,
+		string? DisplayTitle = null)
 	{
 		Context.ArticleRevisions.Add(new ArticleRevision
 		{
@@ -290,6 +329,7 @@ public sealed class HomePageTests : IDisposable
 			SiteId = SiteId,
 			Culture = Culture,
 			Title = Title,
+			DisplayTitle = DisplayTitle,
 			UrlSlug = Slug,
 			Type = Type,
 			Text = Text,

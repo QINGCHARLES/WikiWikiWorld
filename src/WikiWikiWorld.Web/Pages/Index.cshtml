@@ -31,9 +31,15 @@
 		<div class="home-cover-grid">
 			@foreach (ArticleWithCover Article in Model.ArticlesWithCovers)
 			{
-				<a href="/@Article.UrlSlug" class="@(Article.IsHeaderImage ? "cover-item cover-item--header" : "cover-item")">
-					<img src="@Article.ImageUrl" alt="@Article.Title" data-focus="@Article.ImageFocus" />
-					<div class="cover-title">@Article.Title</div>
+				string? TitleVariant = Article.Kind switch
+				{
+					HomeCoverKind.Publication => "cover-title--publication",
+					HomeCoverKind.Issue => "cover-title--issue",
+					_ => null
+				};
+				<a href="/@Article.UrlSlug" aria-label="@Article.Title" class="@(Article.IsHeaderImage ? "cover-item cover-item--header" : "cover-item")">
+					<img src="@Article.ImageUrl" alt="" data-focus="@Article.ImageFocus" />
+					<span class="cover-title display-title @TitleVariant" style="@Article.TitleFitStyle" aria-hidden="true" data-ignore="true">@Html.Raw(Article.TitleHtml)</span>
 				</a>
 			}
 		</div>

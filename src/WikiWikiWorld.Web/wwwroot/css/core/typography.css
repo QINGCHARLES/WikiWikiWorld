@@ -41,12 +41,15 @@ strong {
     font-weight: bold;
 }
 
-h1 {
-    font-size: var(--step-6);
+h1, .display-title {
     font-family: system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-weight: 800;
-    letter-spacing: -0.2rem;
     text-transform: uppercase;
+}
+
+h1 {
+    font-size: var(--step-6);
+    letter-spacing: -0.2rem;
     /* The shared silhouette filter gives text and SVG logos the same depth. */
     filter: var(--extrusion);
     text-align: center;
@@ -64,89 +67,88 @@ h1 {
     }
 }
 
-/* Display titles wrap at spaces and generated slash opportunities. The server estimates the widest
-   unbreakable word (--title-word-em at 1em, over --title-word-chars characters; see
-   DisplayTitleHelper.BuildFitStyle), and the heading drops below --step-6 only when that word would not
-   fit the heading's width: the hgroup container (cqi) on article pages, otherwise the viewport less
-   both gutters. The -0.2rem letter-spacing does not scale with the font, so it is added back per
-   character. break-word splits a word only when it still cannot fit a line on its own, so a word the
-   estimate underrates never runs off the screen. */
-h1.display-title {
+/* DisplayTitleHelper estimates the widest word at 1em. Fit it to the available width, accounting for
+   the space saved by negative letter-spacing. Normal wrapping and generated slash breaks handle
+   multiword titles, and break-word handles any word the estimate underrates. */
+.display-title {
     --title-column: calc(100vw - 2 * var(--grid-gutter));
+    --title-tracking: 0.2rem;
+
+    text-wrap: balance;
     overflow-wrap: break-word;
     word-break: normal;
-    font-size: min(var(--step-6), calc((var(--title-column) + var(--title-word-chars, 0) * 0.2rem) / var(--title-word-em, 0.01)));
+    line-height: 1;
+    letter-spacing: calc(-1 * var(--title-tracking));
+    font-size: min(var(--title-max-size, var(--step-6)), calc((var(--title-column) + var(--title-word-chars, 0) * var(--title-tracking)) / var(--title-word-em, 0.01)));
 }
 
-/* Without container query units the property would make font-size invalid (inheriting body size),
-   so only browsers that support cqi swap the viewport estimate for the hgroup's real width. */
+/* Use the article heading group's width when container query units are available. */
 @supports (width: 1cqi) {
     hgroup > h1.display-title {
         --title-column: 100cqi;
     }
 }
 
-h1 .title-logo {
+.title-logo {
     display: flex;
     justify-content: center;
     margin-block: 0.08em 0.06em;
 }
 
-h1 .title-logo--themed {
+.title-logo--themed {
     display: grid;
     place-items: center;
 }
 
-h1 .title-logo--themed > :is(.title-logo__graphic, .title-logo__img) {
+.title-logo--themed > :is(.title-logo__graphic, .title-logo__img) {
     grid-area: 1 / 1;
 }
 
-h1 :is(.title-logo__graphic, .title-logo__img) {
+.title-logo > :is(.title-logo__graphic, .title-logo__img) {
     --logo-aspect: calc(var(--logo-width, 1) / var(--logo-height, 1));
-    --logo-max-block: 1.75em;
-    --logo-max-inline: min(86vw, 6.5em);
+    --logo-block-limit: 1.75em;
+    --logo-inline-limit: min(var(--logo-available-inline-size, 86vw), 6.5em);
 
     display: block;
     max-inline-size: none;
-    inline-size: min(var(--logo-max-inline), calc(var(--logo-max-block) * var(--logo-aspect)));
-    block-size: min(var(--logo-max-block), calc(var(--logo-max-inline) / var(--logo-aspect)));
+    inline-size: min(var(--logo-inline-limit), calc(var(--logo-block-limit) * var(--logo-aspect)));
+    block-size: min(var(--logo-block-limit), calc(var(--logo-inline-limit) / var(--logo-aspect)));
     aspect-ratio: var(--logo-width, 1) / var(--logo-height, 1);
 }
 
-h1 .title-logo__graphic {
+.title-logo__graphic {
     background-color: currentColor;
     mask: var(--logo-url) center / contain no-repeat;
 }
 
-h1 .title-logo__img {
+.title-logo__img {
     object-fit: contain;
 }
 
 /* Without light-dark() support, keep only the light-mode logo visible. */
-h1 .title-logo__dark {
+.title-logo > .title-logo__dark {
     display: none;
 }
 
-/* Switch dual light/dark logos from the active color-scheme via light-dark(), keeping them in
-   lockstep with :root and [data-theme] color-scheme (and still extruded by h1's drop-shadow filter). */
+/* Switch dual light/dark logos from the active color-scheme via light-dark(). */
 @supports (color: light-dark(#000, #fff)) {
-    h1 .title-logo__dark {
+    .title-logo > .title-logo__dark {
         display: block;
     }
 
-    h1 .title-logo__img.title-logo__light {
+    .title-logo__img.title-logo__light {
         mask: linear-gradient(light-dark(var(--color-black), transparent) 0 0);
     }
 
-    h1 .title-logo__img.title-logo__dark {
+    .title-logo__img.title-logo__dark {
         mask: linear-gradient(light-dark(transparent, var(--color-black)) 0 0);
     }
 
-    h1 .title-logo__graphic.title-logo__light {
+    .title-logo__graphic.title-logo__light {
         background-color: light-dark(currentColor, transparent);
     }
 
-    h1 .title-logo__graphic.title-logo__dark {
+    .title-logo__graphic.title-logo__dark {
         background-color: light-dark(transparent, currentColor);
     }
 }

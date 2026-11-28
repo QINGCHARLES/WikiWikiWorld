@@ -217,18 +217,25 @@ public static partial class DisplayTitleHelper
 			? (FallbackTitle ?? string.Empty)
 			: DisplayTitle;
 
-		if (string.IsNullOrWhiteSpace(Source))
-		{
-			return string.Empty;
-		}
+		Dictionary<string, ResolvedLogoFile> ResolvedLogos = await LoadLogosAsync([Source], Context, SiteId, Culture, CancellationToken);
+		return RenderHtml(DisplayTitle, FallbackTitle, ResolvedLogos);
+	}
 
-		MatchCollection Matches = LogoTokenRegex().Matches(Source);
-		Dictionary<string, ResolvedLogoFile> ResolvedLogos = new(StringComparer.OrdinalIgnoreCase);
-
-		if (Matches.Count > 0)
+	/// <summary>Resolves all logo tokens for a set of titles with one batch per table.</summary>
+	/// <param name="Titles">The authored titles whose logo tokens should be resolved.</param>
+	/// <param name="Context">The database context used to resolve file slugs.</param>
+	/// <param name="SiteId">The current site identifier.</param>
+	/// <param name="Culture">The current culture code.</param>
+	/// <param name="CancellationToken">A cancellation token.</param>
+	/// <returns>A lookup by normalized file slug, excluding missing and deleted files.</returns>
+	internal static async Task<Dictionary<string, ResolvedLogoFile>> LoadLogosAsync(
+		IEnumerable<string?> Titles, WikiWikiWorldDbContext Context, int SiteId, string Culture, CancellationToken CancellationToken)
+	{
+		HashSet<string> LookupSlugs = [with(StringComparer.OrdinalIgnoreCase)];
+		foreach (string? Title in Titles)
 		{
-			HashSet<string> LookupSlugs = [with(StringComparer.OrdinalIgnoreCase)];
-			foreach (Match TokenMatch in Matches)
+			if (string.IsNullOrWhiteSpace(Title)) continue;
+			foreach (Match TokenMatch in LogoTokenRegex().Matches(Title))
 			{
 				if (TryParseLogoOptions(TokenMatch.Groups["options"].Value, out ParsedLogoOptions Options))
 				{
@@ -240,62 +247,55 @@ public static partial class DisplayTitleHelper
 				}
 			}
 
-			if (LookupSlugs.Count > 0)
+		}
+
+		Dictionary<string, ResolvedLogoFile> ResolvedLogos = new(StringComparer.OrdinalIgnoreCase);
+		if (LookupSlugs.Count == 0) return ResolvedLogos;
+
+		List<string> SlugList = [.. LookupSlugs];
+		var FileArticles = await Context.ArticleRevisions
+			.AsNoTracking()
+			.Where(A => A.SiteId == SiteId && A.Culture == Culture && A.IsCurrent && A.DateDeleted == null
+				&& A.Type == ArticleType.File && A.CanonicalFileId != null && SlugList.Contains(A.UrlSlug))
+			.Select(A => new { A.UrlSlug, CanonicalFileId = A.CanonicalFileId!.Value })
+			.ToListAsync(CancellationToken);
+		if (FileArticles.Count == 0) return ResolvedLogos;
+
+		List<Guid> CanonicalFileIds = [.. FileArticles.Select(A => A.CanonicalFileId).Distinct()];
+		var CurrentFiles = await Context.FileRevisions
+			.AsNoTracking()
+			.Where(F => CanonicalFileIds.Contains(F.CanonicalFileId) && F.IsCurrent == true && F.DateDeleted == null)
+			.Select(F => new { F.CanonicalFileId, F.Id, F.Filename, F.ImageWidthPixels, F.ImageHeightPixels })
+			.ToListAsync(CancellationToken);
+
+		Dictionary<Guid, ResolvedLogoFile> FilesByCanonicalId = [];
+		foreach (var File in CurrentFiles)
+		{
+			int WidthPx = File.ImageWidthPixels is > 0 ? File.ImageWidthPixels.Value : 1;
+			int HeightPx = File.ImageHeightPixels is > 0 ? File.ImageHeightPixels.Value : 1;
+			string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, File.CanonicalFileId, File.Id, File.Filename);
+			FilesByCanonicalId[File.CanonicalFileId] = new ResolvedLogoFile(ImageUrl, WidthPx, HeightPx);
+		}
+
+		foreach (var Article in FileArticles)
+		{
+			if (FilesByCanonicalId.TryGetValue(Article.CanonicalFileId, out ResolvedLogoFile? File))
 			{
-				List<string> SlugList = [.. LookupSlugs];
-				var FileArticles = await Context.ArticleRevisions
-					.AsNoTracking()
-					.Where(A => A.SiteId == SiteId
-						&& A.Culture == Culture
-						&& A.IsCurrent
-						&& A.DateDeleted == null
-						&& A.Type == ArticleType.File
-						&& A.CanonicalFileId != null
-						&& SlugList.Contains(A.UrlSlug))
-					.Select(A => new
-					{
-						A.UrlSlug,
-						CanonicalFileId = A.CanonicalFileId!.Value
-					})
-					.ToListAsync(CancellationToken);
-
-				if (FileArticles.Count > 0)
-				{
-					List<Guid> CanonicalFileIds = [.. FileArticles.Select(A => A.CanonicalFileId).Distinct()];
-					var CurrentFiles = await Context.FileRevisions
-						.AsNoTracking()
-						.Where(F => CanonicalFileIds.Contains(F.CanonicalFileId)
-							&& F.IsCurrent == true
-							&& F.DateDeleted == null)
-						.Select(F => new
-						{
-							F.CanonicalFileId,
-							F.Id,
-							F.Filename,
-							F.ImageWidthPixels,
-							F.ImageHeightPixels
-						})
-						.ToListAsync(CancellationToken);
-
-					Dictionary<Guid, (int Id, string Filename, int WidthPx, int HeightPx)> FilesByCanonicalId = [];
-					foreach (var FileItem in CurrentFiles)
-					{
-						int WidthPx = FileItem.ImageWidthPixels is > 0 ? FileItem.ImageWidthPixels.Value : 1;
-						int HeightPx = FileItem.ImageHeightPixels is > 0 ? FileItem.ImageHeightPixels.Value : 1;
-						FilesByCanonicalId[FileItem.CanonicalFileId] = (FileItem.Id, FileItem.Filename, WidthPx, HeightPx);
-					}
-
-					foreach (var ArticleItem in FileArticles)
-					{
-						if (FilesByCanonicalId.TryGetValue(ArticleItem.CanonicalFileId, out (int Id, string Filename, int WidthPx, int HeightPx) FileData))
-						{
-							string ImageUrl = ImageUrlHelper.BuildImageUrl(SiteId, ArticleItem.CanonicalFileId, FileData.Id, FileData.Filename);
-							ResolvedLogos[ArticleItem.UrlSlug] = new ResolvedLogoFile(ImageUrl, FileData.WidthPx, FileData.HeightPx);
-						}
-					}
-				}
+				ResolvedLogos[Article.UrlSlug] = File;
 			}
 		}
+		return ResolvedLogos;
+	}
+
+	/// <summary>Renders an authored title with logos from an existing lookup, encoding all visible text.</summary>
+	/// <param name="DisplayTitle">The optional title containing logo tokens or line breaks.</param>
+	/// <param name="FallbackTitle">The canonical title used when the display title is empty.</param>
+	/// <param name="ResolvedLogos">The existing lookup of files referenced by logo tokens.</param>
+	/// <returns>Safe title markup with fallback text for unresolved or malformed logo tokens.</returns>
+	internal static string RenderHtml(string? DisplayTitle, string? FallbackTitle, Dictionary<string, ResolvedLogoFile> ResolvedLogos)
+	{
+		string Source = string.IsNullOrWhiteSpace(DisplayTitle) ? (FallbackTitle ?? string.Empty) : DisplayTitle;
+		if (string.IsNullOrWhiteSpace(Source)) return string.Empty;
 
 		string[] Lines = Source.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n');
 		StringBuilder Builder = new();
@@ -593,5 +593,5 @@ public static partial class DisplayTitleHelper
 	/// <param name="ImageUrl">The public URL to the SVG/image file.</param>
 	/// <param name="WidthPx">The intrinsic width in pixels.</param>
 	/// <param name="HeightPx">The intrinsic height in pixels.</param>
-	private sealed record ResolvedLogoFile(string ImageUrl, int WidthPx, int HeightPx);
+	internal sealed record ResolvedLogoFile(string ImageUrl, int WidthPx, int HeightPx);
 }

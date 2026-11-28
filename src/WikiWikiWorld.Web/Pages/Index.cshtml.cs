@@ -1,8 +1,8 @@
 namespace WikiWikiWorld.Web.Pages;
 
-using WikiWikiWorld.Data;
+using Markdig;
+using Markdig.Syntax;
 using WikiWikiWorld.Web.MarkdigExtensions;
-using WikiWikiWorld.Data.Models;
 using WikiWikiWorld.Data.Specifications;
 using WikiWikiWorld.Data.Extensions;
 using WikiWikiWorld.Web.Infrastructure;
@@ -17,6 +17,15 @@ public sealed class IndexModel(
 	WikiWikiWorldDbContext Context,
 	SiteResolverService SiteResolverService) : BasePageModel(SiteResolverService)
 {
+	/// <summary>
+	/// Parses the existing publication directives for grid labels without rendering or enriching the articles.
+	/// </summary>
+	private static readonly MarkdownPipeline PublicationPipeline = new MarkdownPipelineBuilder()
+		.Use(new EyebrowExtension())
+		.Use(new InfoboxExtension())
+		.DisableHtml()
+		.Build();
+
 	/// <summary>
 	/// Curated top-level magazine categories shown as pills on the home page, in display order.
 	/// </summary>
@@ -83,15 +92,16 @@ public sealed class IndexModel(
 
 	/// <summary>
 	/// Handles the GET request to populate the article grid, preferring each article's cover image and
-	/// falling back to its first resolved header image when no cover is available.
+	/// falling back to its first resolved header image. Resolves display titles for both publications and issues.
 	/// </summary>
 	/// <param name="CancellationToken">A cancellation token.</param>
+	/// <returns>A task that completes after the grid artwork and titles are resolved.</returns>
 	public async Task OnGetAsync(CancellationToken CancellationToken)
 	{
 		LatestArticlesWithCoverOrHeaderSpec LatestSpec = new(SiteId, Culture, 50);
 		var Articles = await Context.ArticleRevisions
 			.WithSpecification(LatestSpec)
-			.Select(x => new { x.Title, x.UrlSlug, x.Text, x.DateCreated })
+			.Select(x => new { x.Title, x.DisplayTitle, x.UrlSlug, x.Text, x.DateCreated })
 			.ToListAsync(CancellationToken);
 
 		if (Articles.Count == 0)
@@ -99,8 +109,8 @@ public sealed class IndexModel(
 			return;
 		}
 
-		List<(string Title, string UrlSlug, DateTimeOffset DateCreated, string? CoverSlug, IReadOnlyList<HeaderImageReference> Headers)> Candidates =
-			[with(capacity: Articles.Count)];
+		List<(string Title, string? DisplayTitle, string UrlSlug, DateTimeOffset DateCreated,
+			HomeCoverKind Kind, string? CoverSlug, IReadOnlyList<HeaderImageReference> Headers)> Candidates = [with(capacity: Articles.Count)];
 		HashSet<string> ImageSlugs = [with(StringComparer.OrdinalIgnoreCase)];
 
 		foreach (var Article in Articles)
@@ -124,7 +134,8 @@ public sealed class IndexModel(
 				}
 			}
 
-			Candidates.Add((Article.Title, Article.UrlSlug, Article.DateCreated, NormalizedCoverSlug, Headers));
+			HomeCoverKind Kind = GetCoverKind(Article.Text, SiteId == 1 && !string.IsNullOrEmpty(NormalizedCoverSlug));
+			Candidates.Add((Article.Title, Article.DisplayTitle, Article.UrlSlug, Article.DateCreated, Kind, NormalizedCoverSlug, Headers));
 		}
 
 		if (ImageSlugs.Count == 0)
@@ -161,34 +172,74 @@ public sealed class IndexModel(
 			f => f.CanonicalFileId,
 			f => (f.Id, f.Filename));
 
-		foreach ((string Title, string UrlSlug, DateTimeOffset DateCreated, string? CoverSlug, IReadOnlyList<HeaderImageReference> Headers) in Candidates)
+		Dictionary<string, DisplayTitleHelper.ResolvedLogoFile> Logos = await DisplayTitleHelper.LoadLogosAsync(
+			Candidates.Select(c => c.DisplayTitle), Context, SiteId, Culture, CancellationToken);
+		foreach (var Candidate in Candidates)
 		{
-			if (TryResolveImageUrl(SiteId, CoverSlug, ImageArticleLookup, FileLookup, out string? CoverUrl))
+			string TitleHtml = DisplayTitleHelper.RenderHtml(Candidate.DisplayTitle, Candidate.Title, Logos);
+			string? TitleFitStyle = DisplayTitleHelper.BuildFitStyle(Candidate.DisplayTitle, Candidate.Title);
+			if (TryResolveImageUrl(SiteId, Candidate.CoverSlug, ImageArticleLookup, FileLookup, out string? CoverUrl))
 			{
 				ArticlesWithCovers.Add(new ArticleWithCover(
-					Title,
-					UrlSlug,
+					Candidate.Title,
+					Candidate.UrlSlug,
 					CoverUrl,
-					DateCreated));
+					Candidate.DateCreated,
+					Candidate.Kind,
+					TitleHtml,
+					TitleFitStyle));
 				continue;
 			}
 
-			foreach (HeaderImageReference Header in Headers)
+			foreach (HeaderImageReference Header in Candidate.Headers)
 			{
 				string NormalizedHeaderSlug = SlugHelper.GenerateSlug(Header.Slug);
 				if (TryResolveImageUrl(SiteId, NormalizedHeaderSlug, ImageArticleLookup, FileLookup, out string? HeaderUrl))
 				{
 					ArticlesWithCovers.Add(new ArticleWithCover(
-						Title,
-						UrlSlug,
+						Candidate.Title,
+						Candidate.UrlSlug,
 						HeaderUrl,
-						DateCreated,
+						Candidate.DateCreated,
+						Candidate.Kind,
+						TitleHtml,
+						TitleFitStyle,
 						IsHeaderImage: true,
 						ImageFocus: Header.Focus));
 					break;
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Classifies a grid entry using its eyebrow, then its publication infobox. A cover reference can
+	/// identify a legacy Magazedia issue even if its cover file is missing and the grid uses its header.
+	/// </summary>
+	/// <param name="Text">The article Markdown.</param>
+	/// <param name="HasLegacyIssueCover">Whether the Magazedia article references a cover.</param>
+	/// <returns>The grid entry's publication kind, or <see cref="HomeCoverKind.Article"/> for other subjects.</returns>
+	private static HomeCoverKind GetCoverKind(string Text, bool HasLegacyIssueCover)
+	{
+		MarkdownDocument Document = Markdown.Parse(Text, PublicationPipeline);
+		EyebrowBlock? Eyebrow = Document.Descendants<EyebrowBlock>().FirstOrDefault(x => !x.IsMalformed);
+		if (Eyebrow is not null)
+		{
+			return Eyebrow.Type switch
+			{
+				EyebrowType.Magazine or EyebrowType.Zine or EyebrowType.Journal or EyebrowType.Newsletter => HomeCoverKind.Publication,
+				EyebrowType Type when EyebrowExtension.IsPublicationIssue(Type) => HomeCoverKind.Issue,
+				_ => HomeCoverKind.Article
+			};
+		}
+
+		foreach (InfoboxBlock Box in Document.OfType<InfoboxBlock>().Where(x => x.ClosingPosition >= 0))
+		{
+			if (string.Equals(Box.TypeName, InfoboxBlockParser.LegacyTypeName, StringComparison.OrdinalIgnoreCase)) return HomeCoverKind.Issue;
+			if (string.Equals(Box.TypeName, "Publication", StringComparison.OrdinalIgnoreCase)) return HomeCoverKind.Publication;
+		}
+
+		return HasLegacyIssueCover ? HomeCoverKind.Issue : HomeCoverKind.Article;
 	}
 
 	/// <summary>
@@ -227,6 +278,9 @@ public sealed class IndexModel(
 /// <param name="UrlSlug">The URL slug of the article.</param>
 /// <param name="ImageUrl">The URL of the cover or header image.</param>
 /// <param name="DateCreated">The creation date of the current article revision.</param>
+/// <param name="Kind">The subject classification used to select the title's visibility.</param>
+/// <param name="TitleHtml">The safely rendered title overlay, including any logo configured for the article.</param>
+/// <param name="TitleFitStyle">The article heading's width estimates for fitting title text to the card, when applicable.</param>
 /// <param name="IsHeaderImage"><see langword="true"/> when <paramref name="ImageUrl"/> came from a fallback <c>{{HeaderImage}}</c> rather than a cover.</param>
 /// <param name="ImageFocus">Optional vertical focus (<c>"top"</c>, <c>"center"</c>, or <c>"bottom"</c>) for header images.</param>
 public sealed record ArticleWithCover(
@@ -234,8 +288,24 @@ public sealed record ArticleWithCover(
 	string UrlSlug,
 	string ImageUrl,
 	DateTimeOffset DateCreated,
+	HomeCoverKind Kind,
+	string TitleHtml,
+	string? TitleFitStyle,
 	bool IsHeaderImage = false,
 	string? ImageFocus = null);
+
+/// <summary>Distinguishes publication brands and issues from other articles in the homepage grid.</summary>
+public enum HomeCoverKind
+{
+	/// <summary>An article about another subject.</summary>
+	Article,
+
+	/// <summary>A periodical or magazine brand.</summary>
+	Publication,
+
+	/// <summary>An individual issue of a periodical.</summary>
+	Issue
+}
 
 /// <summary>
 /// A home-page category pill linking to <c>/category:{Slug}</c>.
